@@ -1,0 +1,21 @@
+/* Main menu style */
+.main-menu {
+    background-color: #f0f8ff !important; /* Light blue for main menus */
+    font-weight: bold; /* Make the main menu bold */
+  }
+  
+  /* Submenu style */
+  .submenu {
+    background-color: #f9f9f9 !important; /* Light gray for submenus */
+  }
+  
+  /* Optional: Add hover effect to highlight rows */
+  .main-menu:hover,
+  .submenu:hover {
+    background-color: #e0e0e0; /* Change on hover */
+  }
+  
+  /* Additional styling for nested submenus */
+  .submenu td {
+    padding-left: 20px; /* Ensure padding for nested submenus */
+  }

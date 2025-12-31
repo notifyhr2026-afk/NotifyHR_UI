@@ -1,0 +1,59 @@
+/* Left side image section */
+.login-image-section {
+  background: linear-gradient(135deg, #4e73df 0%, #224abe 100%);
+  color: white;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-image-section img {
+  max-width: 75%;
+  animation: floatUp 3s ease-in-out infinite alternate;
+}
+
+/* Floating animation for image */
+@keyframes floatUp {
+  from { transform: translateY(10px); }
+  to { transform: translateY(-10px); }
+}
+
+/* Login card styling */
+.login-card {
+  animation: fadeInUp 0.6s ease-in-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.form-control:focus {
+  border-color: #4e73df;
+  box-shadow: 0 0 0 0.2rem rgba(78, 115, 223, 0.25);
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+  .login-image-section {
+    display: none;
+  }
+}
+.invalid-feedback {
+  font-size: 0.85rem;
+  color: #dc3545;
+}
+
+.is-valid {
+  border-color: #198754 !important;
+}
+
+.is-invalid {
+  border-color: #dc3545 !important;
+}

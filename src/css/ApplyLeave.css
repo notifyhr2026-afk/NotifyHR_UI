@@ -1,0 +1,7 @@
+.apply-leave-card {
+  transition: all 0.3s ease;
+}
+
+.apply-leave-card:hover {
+  transform: translateY(-3px);
+}
