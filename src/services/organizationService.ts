@@ -1,4 +1,4 @@
-import axiosInstance from '../api/axiosInstance'; // Import the existing axios instance
+import axiosInstance from '../api/axiosIdentityInstance'; // Import the existing axios instance
 import { Organization } from '../types/organization';
 import { OrganizationTypes } from '../types/OrganizationTypes';
 

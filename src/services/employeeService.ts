@@ -46,6 +46,10 @@ const employeeService = {
     const { data } = await api.get('Master/employmentTypes');
     return data;
   },
+  getPositionChangeStatus: async () => {
+    const { data } = await api.get('Master/positionChangeStatus');
+    return data;
+  },
 };
 
 export default employeeService;

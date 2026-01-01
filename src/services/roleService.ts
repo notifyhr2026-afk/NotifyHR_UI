@@ -1,4 +1,4 @@
-import axiosInstance from '../api/axiosInstance';
+import axiosInstance from '../api/axiosIdentityInstance';
 import { SaveRoleFeaturePermissionsRequest }  from '../types/SaveRoleFeaturePermissionsRequest';
 
 /* ===================== GET ROLES ===================== */

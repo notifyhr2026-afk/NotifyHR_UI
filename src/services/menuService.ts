@@ -1,6 +1,6 @@
 // src/services/menuService.ts
 
-import axiosInstance from '../api/axiosInstance';
+import axiosInstance from '../api/axiosIdentityInstance';
 import { MenuItem } from '../types/menuTypes';
 
 const normalizeMenu = (data: any): MenuItem => ({

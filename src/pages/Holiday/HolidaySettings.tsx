@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Card, Form, Row, Col, Button } from "react-bootstrap";
+import { Card, Form, Row, Col, Button, Spinner } from "react-bootstrap";
+import holidayService from "../../services/holidayService";
 
 interface SettingType {
   holidaySettingTypeID: number;
@@ -12,33 +13,57 @@ interface SettingType {
 
 const HolidaySettings: React.FC = () => {
   const [settings, setSettings] = useState<SettingType[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Mock Load (Replace with API)
   useEffect(() => {
-    setSettings([
-      { holidaySettingTypeID: 1, settingKey: "TotalHolidays", description: "Total number of holidays in a year", dataType: "Integer", defaultValue: "12", isActive: true },
-      { holidaySettingTypeID: 2, settingKey: "OptionalHolidays", description: "Number of optional holidays", dataType: "Integer", defaultValue: "2", isActive: true },
-      { holidaySettingTypeID: 3, settingKey: "NormalHolidays", description: "Number of normal holidays", dataType: "Integer", defaultValue: "10", isActive: true },
-      { holidaySettingTypeID: 4, settingKey: "HolidayCarryForward", description: "Carry forward unused holidays", dataType: "Boolean", defaultValue: "False", isActive: true },
-      { holidaySettingTypeID: 5, settingKey: "MaxHolidayAccrual", description: "Maximum number of holidays a user can accumulate", dataType: "Integer", defaultValue: "15", isActive: true },
-      { holidaySettingTypeID: 6, settingKey: "SpecialHolidays", description: "Number of special (extra) holidays", dataType: "Integer", defaultValue: "1", isActive: true },
-      { holidaySettingTypeID: 7, settingKey: "HolidayEligibility", description: "Eligibility for holiday entitlement", dataType: "Boolean", defaultValue: "True", isActive: true }
-    ]);
+    loadSettings();
   }, []);
 
-  const updateField = (index: number, field: string, value: any) => {
+  const loadSettings = async () => {
+    try {
+      const response = await holidayService.getOrgDetailsAsync(1);
+
+      // API returns { Table: [...] }
+      const mappedData: SettingType[] = response.Table.map((item: any) => ({
+        holidaySettingTypeID: item.HolidaySettingTypeID,
+        settingKey: item.SettingKey,
+        description: item.Description,
+        dataType: item.DataType,
+        defaultValue: item.DefaultValue,
+        isActive: item.IsActive
+      }));
+
+      setSettings(mappedData);
+    } catch (error) {
+      console.error("Failed to load holiday settings", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const updateField = (index: number, field: keyof SettingType, value: any) => {
     const copy = [...settings];
-    (copy[index] as any)[field] = value;
+    copy[index] = { ...copy[index], [field]: value };
     setSettings(copy);
   };
 
-  const saveAll = () => {
-    console.log("Saving settings:", settings);
-    alert("Settings saved!");
-    // Call API here
+  const saveSingle = (setting: SettingType) => {
+    console.log("Saving single setting:", setting);
+    alert(`Saved setting: ${setting.settingKey}`);
+
+    // TODO: Call update API here
+    // holidayService.updateHolidaySetting(setting)
   };
 
-  return (    
+  if (loading) {
+    return (
+      <div className="text-center mt-5">
+        <Spinner animation="border" />
+      </div>
+    );
+  }
+
+  return (
     <Card className="p-4 mt-5 shadow">
       <h3 className="mb-4">Holiday Setting Types</h3>
 
@@ -46,54 +71,62 @@ const HolidaySettings: React.FC = () => {
         <Card key={s.holidaySettingTypeID} className="p-3 mb-3 border">
           <Row className="mb-2">
             <Col md={6}>
-              <strong>HolidaySettingTypeID:</strong> {s.holidaySettingTypeID}
+              <strong>ID:</strong> {s.holidaySettingTypeID}
             </Col>
             <Col md={6}>
-              <strong>SettingKey:</strong> {s.settingKey}
+              <strong>Key:</strong> {s.settingKey}
             </Col>
           </Row>
 
           <Row className="mb-2">
-            <Col md={12}>
+            <Col>
               <strong>Description:</strong> {s.description}
             </Col>
           </Row>
 
           <Row className="mb-3">
             <Col md={6}>
-              <strong>DataType:</strong> {s.dataType}
+              <strong>Data Type:</strong> {s.dataType}
             </Col>
           </Row>
 
-          <Row>
-            <Col md={6}>
+          <Row className="align-items-end">
+            <Col md={5}>
               <Form.Group>
                 <Form.Label>Default Value</Form.Label>
                 <Form.Control
                   value={s.defaultValue}
-                  onChange={(e) => updateField(index, "defaultValue", e.target.value)}
+                  onChange={(e) =>
+                    updateField(index, "defaultValue", e.target.value)
+                  }
                 />
               </Form.Group>
             </Col>
 
-            <Col md={4} className="d-flex align-items-center">
+            <Col md={4}>
               <Form.Check
                 type="checkbox"
                 label="Is Active"
                 checked={s.isActive}
-                onChange={(e) => updateField(index, "isActive", e.target.checked)}
+                onChange={(e) =>
+                  updateField(index, "isActive", e.target.checked)
+                }
                 className="mt-4"
               />
+            </Col>
+
+            <Col md={3} className="text-end">
+              <Button
+                variant="primary"
+                className="mt-4"
+                onClick={() => saveSingle(s)}
+              >
+                Save
+              </Button>
             </Col>
           </Row>
         </Card>
       ))}
-
-      <div className="text-end">
-        <Button size="lg" onClick={saveAll}>
-          Save All Settings
-        </Button>
-      </div>
     </Card>
   );
 };

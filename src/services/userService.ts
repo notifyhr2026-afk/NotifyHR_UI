@@ -1,4 +1,4 @@
-import axiosInstance from '../api/axiosInstance'; 
+import axiosInstance from '../api/axiosIdentityInstance'; 
 
 const userService = {
     getOrgDetailsAsync: async (organizationID : number) => {
