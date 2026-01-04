@@ -13,8 +13,10 @@ const apiConfig = {
 };
 
 // const apiConfig = {
-//     baseURL: 'http://localhost:36522/api',
-//     HRserviceURL: 'http://localhost:36523/api'
+//     IdentityURL: 'http://localhost:36522/api',
+//     HRserviceURL: 'http://localhost:36523/api',
+//     AttendanceserviceURL: 'http://localhost:36524/api',
+//     RecruitmentserviceURL: 'http://localhost:36525/api'
 // };
 
 export default apiConfig;
