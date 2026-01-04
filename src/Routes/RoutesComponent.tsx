@@ -35,9 +35,9 @@ import ManageHolidays from '../pages/Holiday/ManageHolidays';
 import HolidayList from '../pages/Holiday/HolidayList';
 import ShiftManagement from '../pages/Shift/ShiftManagement';
 import PlanList from '../pages/Organization/PlanManagement';
-import ManageJobRequisitions from '../components/Recruitment/ManageJobRequisitions';
-import JobRecruiter from '../components/Recruitment/JobRecruiter';
-import ManageJobRequisitionApprovals from '../components/Recruitment/ManageJobRequisitionApprovals';
+import ManageJobRequisitions from '../pages/Recruitment/ManageJobRequisitions';
+import ManageJobRequisitionRecruiters from '../pages/Recruitment/ManageJobRequisitionRecruiters';
+import ManageJobRequisitionApprovals from '../pages/Recruitment/ManageJobRequisitionApprovals';
 import { EmployeeProvider } from '../context/EmployeeContext';
 import RoleMenuPermissions from '../pages/Features/RoleMenuPermissions';
 import AssignedRoles from '../pages/Organization/AssignedRoles';
@@ -54,6 +54,9 @@ import EmployeeSalaryAssignment from '../pages/Payroll/EmployeeSalaryAssignment'
 import EmployeeSalaryBackupView from '../pages/Payroll/EmployeeSalaryBackupView';
 import TaxSectionMaster from '../pages/Payroll/TaxSectionMaster';
 import EmployeeTaxDeclaration from '../pages/Payroll/EmployeeTaxDeclaration';
+import RecruiterApprovalPage from '../pages/Recruitment/RecruiterApprovalPage';
+import ManageCandidates from '../pages/Recruitment/ManageCandidate';
+import CandidateList from '../pages/Recruitment/CandidateList';
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -97,7 +100,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="AttendanceCalendar" element={<AttendanceCalendar />} />
         <Route path="plans" element={<PlanList />} />
         <Route path="JobRequisition" element={<ManageJobRequisitions />} />
-        <Route path="JobRecruiter" element={<JobRecruiter />} />
+        <Route path="ManageJobRequisitionRecruiters" element={<ManageJobRequisitionRecruiters />} />
         <Route path="JobRequisitionApprovals" element={<ManageJobRequisitionApprovals />} />
         <Route path="RoleMenuPermissions" element={<RoleMenuPermissions />} />
         <Route path="ManagePositions" element={<ManagePositions />} />
@@ -114,9 +117,11 @@ const RoutesComponent: React.FC = () => {
         <Route path="/EmployeeSalaryBackupView/:employeeId" element={<EmployeeSalaryBackupView />} />
         <Route path="/TaxSectionMaster" element={<TaxSectionMaster />} />
         <Route path="/EmployeeTaxDeclaration" element={<EmployeeTaxDeclaration />} />
-
+        <Route path="/RecruiterApprovalPage" element={<RecruiterApprovalPage />} />
+        <Route path="/CandidateList" element={<CandidateList />} />
+        <Route path="/candidates/manage/:CandidateID" element={<ManageCandidates />}/>
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
-        <Route
+        <Route 
           path="Employees/manageEmployee/:employeeID"
           element={
             <EmployeeProvider>
@@ -125,6 +130,7 @@ const RoutesComponent: React.FC = () => {
           }
         />
       </Route>
+      
     </Routes>
   );
 };
