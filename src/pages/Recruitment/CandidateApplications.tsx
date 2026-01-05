@@ -11,6 +11,8 @@ interface CandidateApplication {
   currentStage: string;
   applicationStatus: string;
   notes: string;
+  expectedMinSalary?: number;
+  expectedMaxSalary?: number;
 }
 
 interface CandidateInterview {
@@ -58,6 +60,8 @@ const CandidateApplications: React.FC = () => {
       currentStage: 'Interview',
       applicationStatus: 'Interview Scheduled',
       notes: 'Initial Interview Completed',
+      expectedMinSalary: 5,
+      expectedMaxSalary: 8,
     },
     {
       id: 2,
@@ -67,11 +71,12 @@ const CandidateApplications: React.FC = () => {
       currentStage: 'Screening',
       applicationStatus: 'Under Review',
       notes: 'CV Review in Progress',
+      expectedMinSalary: 4,
+      expectedMaxSalary: 6,
     },
   ]);
 
   const [showModal, setShowModal] = useState(false);
-  const [validated, setValidated] = useState(false);
   const [editApplication, setEditApplication] =
     useState<CandidateApplication | null>(null);
 
@@ -83,6 +88,8 @@ const CandidateApplications: React.FC = () => {
     currentStage: '',
     applicationStatus: '',
     notes: '',
+    expectedMinSalary: 0,
+    expectedMaxSalary: 0,
   });
 
   /* ================== INTERVIEW STATE ================== */
@@ -129,12 +136,17 @@ const CandidateApplications: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
+    setFormData((prev) => ({
+      ...prev,
+      [id]:
+        id === 'expectedMinSalary' || id === 'expectedMaxSalary'
+          ? parseFloat(value)
+          : value,
+    }));
   };
 
   const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     if (editApplication) {
       setApplications((prev) =>
         prev.map((a) => (a.id === editApplication.id ? formData : a))
@@ -142,9 +154,7 @@ const CandidateApplications: React.FC = () => {
     } else {
       setApplications((prev) => [...prev, { ...formData, id: Date.now() }]);
     }
-
     setShowModal(false);
-    setValidated(false);
   };
 
   const handleAdd = () => {
@@ -156,6 +166,8 @@ const CandidateApplications: React.FC = () => {
       currentStage: '',
       applicationStatus: '',
       notes: '',
+      expectedMinSalary: 0,
+      expectedMaxSalary: 0,
     });
     setEditApplication(null);
     setShowModal(true);
@@ -242,6 +254,7 @@ const CandidateApplications: React.FC = () => {
             <th>Job Requisition</th>
             <th>Applied Date</th>
             <th>Status</th>
+            <th>Expected Salary (Min - Max Lacs)</th>
             <th>Notes</th>
             <th>Actions</th>
           </tr>
@@ -252,6 +265,9 @@ const CandidateApplications: React.FC = () => {
               <td>{application.jobRequisition}</td>
               <td>{application.appliedDate}</td>
               <td>{application.applicationStatus}</td>
+              <td>
+                {application.expectedMinSalary} - {application.expectedMaxSalary}
+              </td>
               <td>{application.notes}</td>
               <td>
                 <Button
@@ -296,15 +312,43 @@ const CandidateApplications: React.FC = () => {
               />
             </Form.Group>
 
-            <Form.Group className="mt-3">
-              <Form.Label>Applied Date</Form.Label>
-              <Form.Control
-                type="date"
-                id="appliedDate"
-                value={formData.appliedDate}
-                onChange={handleInputChange}
-              />
-            </Form.Group>
+            <Row className="mt-3">
+              <Col md={6}>
+                <Form.Group>
+                  <Form.Label>Applied Date</Form.Label>
+                  <Form.Control
+                    type="date"
+                    id="appliedDate"
+                    value={formData.appliedDate}
+                    onChange={handleInputChange}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Label>Expected Min Salary (Lacs)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    id="expectedMinSalary"
+                    value={formData.expectedMinSalary}
+                    onChange={handleInputChange}
+                    min={0}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Label>Expected Max Salary (Lacs)</Form.Label>
+                  <Form.Control
+                    type="number"
+                    id="expectedMaxSalary"
+                    value={formData.expectedMaxSalary}
+                    onChange={handleInputChange}
+                    min={0}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
 
             <Form.Group className="mt-3">
               <Form.Label>Status</Form.Label>
@@ -405,9 +449,7 @@ const CandidateApplications: React.FC = () => {
               <Form.Label>Round</Form.Label>
               <Select
                 options={roundOptions}
-                value={roundOptions.find(
-                  (o) => o.value === interviewForm.round
-                )}
+                value={roundOptions.find((o) => o.value === interviewForm.round)}
                 onChange={handleRoundChange}
               />
             </Col>
@@ -430,10 +472,7 @@ const CandidateApplications: React.FC = () => {
             </thead>
             <tbody>
               {interviews
-                .filter(
-                  (i) =>
-                    i.applicationId === selectedApplication?.id
-                )
+                .filter((i) => i.applicationId === selectedApplication?.id)
                 .map((i) => (
                   <tr key={i.id}>
                     <td>{i.interviewDate}</td>

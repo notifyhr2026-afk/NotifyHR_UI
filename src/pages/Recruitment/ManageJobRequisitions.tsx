@@ -18,6 +18,8 @@ interface JobRequisition {
   JobDescription: string;
   MinExperienceYears: number;
   MaxExperienceYears: number;
+  MinSalary: number;
+  MaxSalary: number;
   Status: string;
   CreatedDate: string;
   ModifiedDate?: string;
@@ -81,6 +83,8 @@ const ManageJobRequisitions: React.FC = () => {
       JobDescription: "Frontend Developer with React and TypeScript skills",
       MinExperienceYears: 2,
       MaxExperienceYears: 5,
+      MinSalary: 5,
+      MaxSalary: 10,
       Status: "Open",
       CreatedDate: "2025-12-01",
     },
@@ -102,6 +106,8 @@ const ManageJobRequisitions: React.FC = () => {
     JobDescription: "",
     MinExperienceYears: 0,
     MaxExperienceYears: 0,
+    MinSalary: 0,
+    MaxSalary: 0,
     Status: "Open",
     CreatedDate: new Date().toISOString().slice(0, 10),
   });
@@ -121,7 +127,12 @@ const ManageJobRequisitions: React.FC = () => {
         id === "PositionID" ||
         id === "DepartmentID" ||
         id === "EmploymentTypeID" ||
-        id === "RequestedBy"
+        id === "RequestedBy" ||
+        id === "NoOfOpenings" ||
+        id === "MinExperienceYears" ||
+        id === "MaxExperienceYears" ||
+        id === "MinSalary" ||
+        id === "MaxSalary"
           ? parseInt(value)
           : value,
     }));
@@ -143,6 +154,8 @@ const ManageJobRequisitions: React.FC = () => {
       JobDescription: "",
       MinExperienceYears: 0,
       MaxExperienceYears: 0,
+      MinSalary: 0,
+      MaxSalary: 0,
       Status: "Open",
       CreatedDate: new Date().toISOString().slice(0, 10),
     });
@@ -217,6 +230,8 @@ const ManageJobRequisitions: React.FC = () => {
             <th>Employment Type</th>
             <th>NoOfOpenings</th>
             <th>RequestedBy</th>
+            <th>Experience (Yrs)</th>
+            <th>Salary (Lacs)</th>
             <th>Status</th>
             <th>Target Start</th>
             <th>Actions</th>
@@ -232,6 +247,12 @@ const ManageJobRequisitions: React.FC = () => {
               <td>{employmentTypes.find((e) => e.id === r.EmploymentTypeID)?.name}</td>
               <td>{r.NoOfOpenings}</td>
               <td>{users.find((u) => u.id === r.RequestedBy)?.name}</td>
+              <td>
+                {r.MinExperienceYears}-{r.MaxExperienceYears}
+              </td>
+              <td>
+                {r.MinSalary}-{r.MaxSalary}
+              </td>
               <td>
                 <span
                   className={`badge ${
@@ -277,6 +298,7 @@ const ManageJobRequisitions: React.FC = () => {
         </Modal.Header>
         <Modal.Body>
           <Form noValidate validated={validated} onSubmit={handleSave}>
+            {/* First Row */}
             <Row className="mb-3">
               <Col md={4}>
                 <Form.Group controlId="JobRequisitionNo">
@@ -289,15 +311,10 @@ const ManageJobRequisitions: React.FC = () => {
                   />
                 </Form.Group>
               </Col>
-
               <Col md={4}>
                 <Form.Group controlId="BranchID">
                   <Form.Label>Branch</Form.Label>
-                  <Form.Select
-                    required
-                    value={formData.BranchID}
-                    onChange={handleInputChange}
-                  >
+                  <Form.Select required value={formData.BranchID} onChange={handleInputChange}>
                     <option value="">Select Branch</option>
                     {branches.map((b) => (
                       <option key={b.id} value={b.id}>
@@ -307,15 +324,10 @@ const ManageJobRequisitions: React.FC = () => {
                   </Form.Select>
                 </Form.Group>
               </Col>
-
               <Col md={4}>
                 <Form.Group controlId="PositionID">
                   <Form.Label>Position</Form.Label>
-                  <Form.Select
-                    required
-                    value={formData.PositionID}
-                    onChange={handleInputChange}
-                  >
+                  <Form.Select required value={formData.PositionID} onChange={handleInputChange}>
                     <option value="">Select Position</option>
                     {positions.map((p) => (
                       <option key={p.id} value={p.id}>
@@ -327,6 +339,7 @@ const ManageJobRequisitions: React.FC = () => {
               </Col>
             </Row>
 
+            {/* Second Row */}
             <Row className="mb-3">
               <Col md={4}>
                 <Form.Group controlId="DepartmentID">
@@ -345,7 +358,6 @@ const ManageJobRequisitions: React.FC = () => {
                   </Form.Select>
                 </Form.Group>
               </Col>
-
               <Col md={4}>
                 <Form.Group controlId="EmploymentTypeID">
                   <Form.Label>Employment Type</Form.Label>
@@ -363,7 +375,6 @@ const ManageJobRequisitions: React.FC = () => {
                   </Form.Select>
                 </Form.Group>
               </Col>
-
               <Col md={4}>
                 <Form.Group controlId="NoOfOpenings">
                   <Form.Label>No Of Openings</Form.Label>
@@ -377,15 +388,12 @@ const ManageJobRequisitions: React.FC = () => {
               </Col>
             </Row>
 
+            {/* Third Row */}
             <Row className="mb-3">
               <Col md={4}>
                 <Form.Group controlId="RequestedBy">
                   <Form.Label>Requested By</Form.Label>
-                  <Form.Select
-                    required
-                    value={formData.RequestedBy}
-                    onChange={handleInputChange}
-                  >
+                  <Form.Select required value={formData.RequestedBy} onChange={handleInputChange}>
                     <option value="">Select User</option>
                     {users.map((u) => (
                       <option key={u.id} value={u.id}>
@@ -395,7 +403,6 @@ const ManageJobRequisitions: React.FC = () => {
                   </Form.Select>
                 </Form.Group>
               </Col>
-
               <Col md={4}>
                 <Form.Group controlId="RequestedDate">
                   <Form.Label>Requested Date</Form.Label>
@@ -407,7 +414,6 @@ const ManageJobRequisitions: React.FC = () => {
                   />
                 </Form.Group>
               </Col>
-
               <Col md={4}>
                 <Form.Group controlId="TargetStartDate">
                   <Form.Label>Target Start Date</Form.Label>
@@ -421,6 +427,7 @@ const ManageJobRequisitions: React.FC = () => {
               </Col>
             </Row>
 
+            {/* Fourth Row - Experience and Salary */}
             <Row className="mb-3">
               <Col md={3}>
                 <Form.Group controlId="MinExperienceYears">
@@ -433,7 +440,6 @@ const ManageJobRequisitions: React.FC = () => {
                   />
                 </Form.Group>
               </Col>
-
               <Col md={3}>
                 <Form.Group controlId="MaxExperienceYears">
                   <Form.Label>Max Experience (Years)</Form.Label>
@@ -445,15 +451,36 @@ const ManageJobRequisitions: React.FC = () => {
                   />
                 </Form.Group>
               </Col>
+              <Col md={3}>
+                <Form.Group controlId="MinSalary">
+                  <Form.Label>Min Salary (Lacs)</Form.Label>
+                  <Form.Control
+                    required
+                    type="number"
+                    value={formData.MinSalary}
+                    onChange={handleInputChange}
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group controlId="MaxSalary">
+                  <Form.Label>Max Salary (Lacs)</Form.Label>
+                  <Form.Control
+                    required
+                    type="number"
+                    value={formData.MaxSalary}
+                    onChange={handleInputChange}
+                  />
+                </Form.Group>
+              </Col>
+            </Row>
 
+            {/* Fifth Row - Status & Description */}
+            <Row className="mb-3">
               <Col md={3}>
                 <Form.Group controlId="Status">
                   <Form.Label>Status</Form.Label>
-                  <Form.Select
-                    required
-                    value={formData.Status}
-                    onChange={handleInputChange}
-                  >
+                  <Form.Select required value={formData.Status} onChange={handleInputChange}>
                     <option value="">Select Status</option>
                     {statuses.map((s) => (
                       <option key={s.id} value={s.name}>
@@ -463,8 +490,7 @@ const ManageJobRequisitions: React.FC = () => {
                   </Form.Select>
                 </Form.Group>
               </Col>
-
-              <Col md={3}>
+              <Col md={9}>
                 <Form.Group controlId="JobDescription">
                   <Form.Label>Job Description</Form.Label>
                   <Form.Control

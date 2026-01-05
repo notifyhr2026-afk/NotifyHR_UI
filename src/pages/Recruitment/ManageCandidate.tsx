@@ -7,6 +7,7 @@ import CandidateSkills from "./CandidateSkills";
 import CandidateDocuments from "./CandidateDocuments";
 import CandidateInterview from "./CandidateInterview";
 import CandidateApplications from "./CandidateApplications";
+import CandidateOffers from "./CandidateOffers";
 
 const ManageCandidate: React.FC = () => {
   return (
@@ -35,12 +36,12 @@ const ManageCandidate: React.FC = () => {
           </Accordion.Body>
         </Accordion.Item>
 
-        {/* <Accordion.Item eventKey="3">
-          <Accordion.Header>Interview Details</Accordion.Header>
+        <Accordion.Item eventKey="3">
+          <Accordion.Header>Offers Details</Accordion.Header>
           <Accordion.Body>
-            <CandidateInterview />
+            <CandidateOffers />
           </Accordion.Body>
-        </Accordion.Item> */}
+        </Accordion.Item>
 
        
       </Accordion>
