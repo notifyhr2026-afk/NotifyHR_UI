@@ -267,7 +267,7 @@ const CandidateApplications: React.FC = () => {
                     variant="outline-success"
                     onClick={() => handleScheduleInterview(application)}
                   >
-                    Schedule Interview
+                    Interview Scheduled
                   </Button>
                 )}
               </td>

@@ -35,12 +35,12 @@ const ManageCandidate: React.FC = () => {
           </Accordion.Body>
         </Accordion.Item>
 
-        <Accordion.Item eventKey="3">
+        {/* <Accordion.Item eventKey="3">
           <Accordion.Header>Interview Details</Accordion.Header>
           <Accordion.Body>
             <CandidateInterview />
           </Accordion.Body>
-        </Accordion.Item>
+        </Accordion.Item> */}
 
        
       </Accordion>

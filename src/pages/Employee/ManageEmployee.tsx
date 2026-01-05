@@ -11,6 +11,7 @@ import EmployeeExitDetails from '../../components/Employee/EmployeeExitDetails';
 import ProbationDetails from '../../components/Employee/ProbationDetails';
 import EmployeeAsset from '../../components/Employee/EmployeeAsset';
 import Accordion from 'react-bootstrap/Accordion';
+import EmployeeRoles from '../../components/Employee/EmployeeRoles';
 
 const ManageEmployee: React.FC = () => {
   return (
@@ -18,6 +19,7 @@ const ManageEmployee: React.FC = () => {
       <h2 className="mb-4">Manage - Employee</h2>
 
       <Accordion defaultActiveKey="0" flush>
+        
         <Accordion.Item eventKey="0">
           <Accordion.Header>Employee Details</Accordion.Header>
           <Accordion.Body>
@@ -72,7 +74,14 @@ const ManageEmployee: React.FC = () => {
           </Accordion.Body>
         </Accordion.Item>
 
-        <Accordion.Item eventKey="8">
+         <Accordion.Item eventKey="8">
+          <Accordion.Header>Employee Roles</Accordion.Header>
+          <Accordion.Body>
+            <EmployeeRoles />
+          </Accordion.Body>
+        </Accordion.Item>
+
+        <Accordion.Item eventKey="9">
           <Accordion.Header>Exit Details</Accordion.Header>
           <Accordion.Body>
             <EmployeeExitDetails />
