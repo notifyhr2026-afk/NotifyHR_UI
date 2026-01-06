@@ -20,6 +20,7 @@ interface MenuItem {
   icon?: string;
   link?: string | null;
   subMenu?: MenuItem[];
+  featureIcon?: string | null; // ✅ optional
 }
 
 interface SideMenuProps {
@@ -65,15 +66,17 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
       if (item.featureID == null) return;
 
       if (!featureMap.has(item.featureID)) {
+        // Create root feature menu item
         featureMap.set(item.featureID, {
           menuID: -item.featureID,
           menuName: item.featureName || 'Feature',
           menuKey: 'feature-' + item.featureID,
-          menuIcon: 'bi bi-grid',
+          menuIcon: item.menuIcon,
           menuOrder: 0,
           routeUrl: null,
           isActive: true,
           featureID: item.featureID,
+          featureIcon: item.featureIcon ?? null, // only for display
           subMenu: [],
         });
         roots.push(featureMap.get(item.featureID)!);
@@ -194,8 +197,9 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
                       e.currentTarget.style.color = isActive ? colors.activeText : colors.defaultText;
                     }}
                   >
+                    {/* ✅ Use featureIcon if available */}
                     <i
-                      className={`bi ${item.menuIcon || 'bi-circle-fill'} me-2`}
+                      className={`bi ${item.featureIcon || item.menuIcon || 'bi-circle-fill'} me-2`}
                       style={{
                         fontSize: '1.4rem',
                         width: isOpen ? 'auto' : '100%',
