@@ -50,7 +50,7 @@ const Home: React.FC = () => {
         <div className="container">
           <span className="navbar-brand fw-bold fs-4">Notify HR</span>
           <div className="d-flex gap-2">
-            <Link to="/demo" className="btn btn-outline-light">
+            <Link to="/RequestDemo" className="btn btn-outline-light">
               Request Demo
             </Link>
             <Link to="/login" className="btn btn-light text-primary fw-semibold">

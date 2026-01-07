@@ -2,6 +2,7 @@
 import React from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Home from '../pages/Main/Home';
+import RequestDemo from '../pages/Main/RequestDemo';
 import LoginPage from '../pages/Main/Login';
 import Dashboard from '../pages/Main/Dashboard';
 import DashboardLayout from '../components/DashboardLayout';
@@ -40,7 +41,7 @@ import RoleMenuPermissions from '../pages/Features/RoleMenuPermissions';
 import AssignedRoles from '../pages/Organization/AssignedRoles';
 import AssignedPositions from '../pages/Organization/AssignedPositions';
 import AttendanceCalendar from '../pages/Attendance/AttendanceCalendar';
-import EmployeeAttendanceLogs from '../pages/Attendance/EmployeeAttendanceLogs';
+import EmployeeAttendanceLogs from '../pages/Attendance/AttendancePage';
 import SalaryComponentMaster from '../pages/Payroll/SalaryComponentMaster';
 import OrgPayrollCyclePage from '../pages/Payroll/OrgPayrollCyclePage';
 import SalaryStructureMaster from '../pages/Payroll/SalaryStructureMaster';
@@ -58,14 +59,18 @@ import ManageJobRequisitions from '../pages/Recruitment/ManageJobRequisitions';
 import ManageJobRequisitionRecruiters from '../pages/Recruitment/ManageJobRequisitionRecruiters';
 import ManageJobRequisitionApprovals from '../pages/Recruitment/ManageJobRequisitionApprovals';
 
+import HelpdeskDashboard from '../pages/helpdesk/Dashboard';
+import CreateTicket from '../pages/helpdesk/CreateTicket';
+import TicketDetails from '../pages/helpdesk/TicketDetails';
+
 const RoutesComponent: React.FC = () => {
   return (
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Home />} />
       <Route path="login" element={<LoginPage />} />
-      <Route path="ResetPassword" element={<ResetPassword />} />
-
+      <Route path="RequestDemo" element={<RequestDemo />} />
+      <Route path="/" element={<Home />} />
       {/* Dashboard layout routes */}
       <Route path="/" element={<DashboardLayout />}>
         <Route path="menus" element={<Menus />} />
@@ -120,6 +125,10 @@ const RoutesComponent: React.FC = () => {
         <Route path="JobRequisition" element={<ManageJobRequisitions />} />
         <Route path="ManageJobRequisitionRecruiters" element={<ManageJobRequisitionRecruiters />} />
         <Route path="JobRequisitionApprovals" element={<ManageJobRequisitionApprovals />} />
+
+         <Route path="/HelpdeskDashboard" element={<HelpdeskDashboard />} />
+        <Route path="/create" element={<CreateTicket />} />
+        <Route path="/ticket/:id" element={<TicketDetails />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
           path="Employees/manageEmployee/:employeeID"

@@ -21,7 +21,7 @@ const ManageOrganization: React.FC = () => {
     //{ key: "2", title: "Features", component: <FeaturesSection /> },
     // { key: "3", title: "Assign Roles", component: <AssignRolesSection /> },
     // { key: "4", title: "Manage Role Permissions", component: <ManageRolePermissionsSection /> },
-    { key: "5", title: "Subscription Info", component: <SubscriptionInfoSection /> },
+    { key: "5", title: "Plan Info", component: <SubscriptionInfoSection /> },
     { key: "6", title: "Invoice Info", component: <InvoiceInfoSection /> },
     { key: "7", title: "Payment Info", component: <PaymentInfoSection /> },
     // { key: "8", title: "Assign Menu", component: <AssignMenu /> },
