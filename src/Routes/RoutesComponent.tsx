@@ -19,7 +19,6 @@ import AssignRoles from '../pages/Organization/AssignRoles';
 import AssignPositions from '../pages/Organization/AssignPositions';
 import ManagePositions from '../pages/Organization/ManagePositions';
 import OrganizationLeavePolicies from '../pages/Leave/OrganizationLeavePolicies';
-import ResetPassword from '../pages/Main/ResetPassword';
 import ChangePassword from '../pages/Main/ChangePassword';
 import EmployeeList from '../pages/Employee/EmployeeList';
 import ApplyLeave from '../pages/Leave/ApplyLeave';
