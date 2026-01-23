@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Modal, Form, Row, Col } from 'react-bootstrap';
 import organizationService from '../../services/organizationService';
 import { Organization } from '../../types/organization';
-import { OrganizationTypes } from '../../types/OrganizationTypes';
+import { OrganizationTypes } from '../../types/organizationTypes'
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
