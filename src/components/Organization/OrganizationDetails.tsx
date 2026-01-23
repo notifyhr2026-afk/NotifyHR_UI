@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Button, Col, Form, Row } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import { getOrgDetailsAsync,getOrganizationTypes } from "../../services/organizationService";
-import { OrganizationTypes } from '../../types/OrganizationTypes';
 
 interface OrganizationForm {
   OrganizationName: string;
