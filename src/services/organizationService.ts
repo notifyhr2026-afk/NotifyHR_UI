@@ -1,6 +1,6 @@
 import axiosInstance from '../api/axiosIdentityInstance'; // Import the existing axios instance
 import { Organization } from '../types/organization';
-import { OrganizationTypes } from '../types/OrganizationTypes';
+import { organizationTypes } from '../types/organizationTypes';
 
 // Service to get all organizations
 export const getOrganizations = async (): Promise<Organization[]> => {
@@ -14,9 +14,9 @@ export const getOrganizations = async (): Promise<Organization[]> => {
 };
 
 // Service to get all organization types
-export const getOrganizationTypes = async (): Promise<OrganizationTypes[]> => {
+export const getOrganizationTypes = async (): Promise<organizationTypes[]> => {
     try {
-        const response = await axiosInstance.get<OrganizationTypes[]>('/Organizations/GetAllOrganizationTypes');
+        const response = await axiosInstance.get<organizationTypes[]>('/Organizations/GetAllOrganizationTypes');
         return response.data;
     } catch (error) {
         console.error('Failed to fetch GetAllOrganizationTypes:', error);

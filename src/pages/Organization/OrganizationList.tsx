@@ -3,14 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { Button, Modal, Form, Row, Col } from 'react-bootstrap';
 import organizationService from '../../services/organizationService';
 import { Organization } from '../../types/organization';
-import { OrganizationTypes } from '../../types/organizationTypes'
+import { organizationTypes } from '../../types/organizationTypes'
 import 'react-toastify/dist/ReactToastify.css';
 import { toast } from 'react-toastify';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 const OrganizationList: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-  const [organizationTypes, setOrganizationTypes] = useState<OrganizationTypes[]>([]);
+  const [organizationTypes, setOrganizationTypes] = useState<organizationTypes[]>([]);
   const [filteredOrganizations, setFilteredOrganizations] = useState<Organization[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
