@@ -13,10 +13,10 @@
 // };
 
 const apiConfig = {
-  IdentityURL: import.meta.env.VITE_IDENTITY_API_URL,
-  HRserviceURL: import.meta.env.VITE_HR_API_URL,
-  AttendanceserviceURL: import.meta.env.VITE_ATTENDANCE_API_URL,
-  RecruitmentserviceURL: import.meta.env.VITE_RECRUITMENT_API_URL,
+  IdentityURL: process.env.REACT_APP_IDENTITY_API_URL,
+  HRserviceURL: process.env.REACT_APP_HR_API_URL,
+  AttendanceserviceURL: process.env.REACT_APP_ATTENDANCE_API_URL,
+  RecruitmentserviceURL: process.env.REACT_APP_RECRUITMENT_API_URL,
 };
 
 // const apiConfig = {
