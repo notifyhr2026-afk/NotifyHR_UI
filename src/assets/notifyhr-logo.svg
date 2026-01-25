@@ -1,0 +1,16 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="notifyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0d6efd"/>
+      <stop offset="100%" stop-color="#2ecc71"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Circle -->
+  <circle cx="256" cy="256" r="240" fill="url(#notifyGrad)" />
+
+  <!-- Speaker Icon -->
+  <path d="M190 210h50l60-45v182l-60-45h-50z" fill="#ffffff"/>
+  <path d="M325 230c20 18 20 54 0 72" stroke="#ffffff" stroke-width="16" fill="none" stroke-linecap="round"/>
+  <path d="M350 205c35 35 35 95 0 130" stroke="#ffffff" stroke-width="14" fill="none" stroke-linecap="round"/>
+</svg>

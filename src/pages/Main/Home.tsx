@@ -1,44 +1,44 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import logo from "../../assets/notifyhr-logo.svg";
 
 const features = [
   // HR
-  { name: "Employee Management", type: "HR", desc: "Maintain employee personal, job, and employment records in one place." },
-  { name: "Organizational Management", type: "HR", desc: "Define departments, roles, designations, and reporting structures." },
-  { name: "Document Management", type: "HR", desc: "Securely store and manage employee documents and letters." },
-  { name: "Asset Management", type: "HR", desc: "Track company assets assigned to employees with return history." },
-  { name: "Background Verification (BGV)", type: "HR", desc: "Verify employee identity, education, and employment background." },
-  { name: "Performance Management", type: "HR", desc: "Manage goals, reviews, ratings, and appraisal cycles." },
-  { name: "Policy Management", type: "HR", desc: "Create and enforce HR policies like leave, attendance, and conduct." },
-  { name: "Reports & Analytics", type: "HR", desc: "Generate real-time HR dashboards and compliance reports." },
-  { name: "Helpdesk & Ticketing", type: "HR", desc: "Handle employee queries and requests with SLA tracking." },
+  { name: "Employee Management", type: "HR", desc: "Maintain employee personal and job records." },
+  { name: "Organizational Management", type: "HR", desc: "Departments, roles, designations, reporting." },
+  { name: "Document Management", type: "HR", desc: "Secure storage for employee documents." },
+  { name: "Asset Management", type: "HR", desc: "Track company assets assigned to employees." },
+  { name: "Background Verification", type: "HR", desc: "Verify employee identity and history." },
+  { name: "Performance Management", type: "HR", desc: "Goals, reviews, and appraisals." },
+  { name: "Policy Management", type: "HR", desc: "HR policies and compliance." },
+  { name: "Reports & Analytics", type: "HR", desc: "Real-time HR dashboards." },
+  { name: "Helpdesk & Ticketing", type: "HR", desc: "Employee queries with SLA tracking." },
 
   // Attendance
-  { name: "Attendance Management", type: "Attendance", desc: "Track daily attendance using manual or automated methods." },
-  { name: "Shift Management", type: "Attendance", desc: "Create and assign day, night, and rotating work shifts." },
-  { name: "Overtime Management", type: "Attendance", desc: "Automatically calculate overtime based on attendance rules." },
-  { name: "Holiday Calendar", type: "Attendance", desc: "Manage organization-wide and location-specific holidays." },
-  { name: "Leave Integration", type: "Attendance", desc: "Sync attendance with leave requests and approvals." },
+  { name: "Attendance Management", type: "Attendance", desc: "Daily attendance tracking." },
+  { name: "Shift Management", type: "Attendance", desc: "Day, night, rotating shifts." },
+  { name: "Overtime Management", type: "Attendance", desc: "Automatic OT calculation." },
+  { name: "Holiday Calendar", type: "Attendance", desc: "Location-based holidays." },
+  { name: "Leave Integration", type: "Attendance", desc: "Attendance synced with leave." },
 
   // Payroll
-  { name: "Payroll Management", type: "Payroll", desc: "Process monthly payroll with accurate salary calculations." },
-  { name: "Tax & Compliance", type: "Payroll", desc: "Ensure statutory compliance and tax deductions." },
-  { name: "Salary Structure", type: "Payroll", desc: "Define salary components including allowances and deductions." },
-  { name: "Payslip Management", type: "Payroll", desc: "Generate and distribute digital payslips to employees." },
-  { name: "Payroll Reports", type: "Payroll", desc: "Download payroll summaries and statutory reports." },
+  { name: "Payroll Management", type: "Payroll", desc: "Accurate monthly payroll." },
+  { name: "Tax & Compliance", type: "Payroll", desc: "Statutory compliance & taxes." },
+  { name: "Salary Structure", type: "Payroll", desc: "Allowances & deductions." },
+  { name: "Payslip Management", type: "Payroll", desc: "Digital payslips." },
+  { name: "Payroll Reports", type: "Payroll", desc: "Statutory & salary reports." },
 
   // Recruitment
-  { name: "Recruitment Management", type: "Recruitment", desc: "Manage hiring requests and recruitment workflows." },
-  { name: "Candidate Management", type: "Recruitment", desc: "Track candidate profiles, resumes, and application status." },
-  { name: "Interview Management", type: "Recruitment", desc: "Schedule interviews and capture interviewer feedback." },
-  { name: "Onboarding", type: "Recruitment", desc: "Manage joining formalities and induction activities." },
-  { name: "Offer Management", type: "Recruitment", desc: "Create, approve, and issue digital offer letters." }
+  { name: "Recruitment Management", type: "Recruitment", desc: "Hiring workflows." },
+  { name: "Candidate Management", type: "Recruitment", desc: "Track resumes & status." },
+  { name: "Interview Management", type: "Recruitment", desc: "Schedule & feedback." },
+  { name: "Onboarding", type: "Recruitment", desc: "Joining & induction." },
+  { name: "Offer Management", type: "Recruitment", desc: "Digital offer letters." }
 ];
 
-// Group features by type
-const groupedFeatures = features.reduce((acc: any, feature) => {
-  acc[feature.type] = acc[feature.type] || [];
-  acc[feature.type].push(feature);
+const groupedFeatures = features.reduce((acc: any, f) => {
+  acc[f.type] = acc[f.type] || [];
+  acc[f.type].push(f);
   return acc;
 }, {});
 
@@ -46,9 +46,16 @@ const Home: React.FC = () => {
   return (
     <>
       {/* NAVBAR */}
-      <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow fixed-top">
+      <nav
+        className="navbar navbar-expand-lg navbar-dark fixed-top shadow"
+        style={{ backgroundColor: "var(--brand-primary)" }}
+      >
         <div className="container">
-          <span className="navbar-brand fw-bold fs-4">Notify HR</span>
+          <Link to="/" className="navbar-brand d-flex align-items-center gap-2">
+            <img src={logo} alt="NotifyHR Logo" className="app-logo" />
+            <span className="fw-bold fs-5 text-white">NotifyHR</span>
+          </Link>
+
           <div className="d-flex gap-2">
             <Link to="/RequestDemo" className="btn btn-outline-light">
               Request Demo
@@ -60,11 +67,13 @@ const Home: React.FC = () => {
         </div>
       </nav>
 
-      <div style={{ paddingTop: "70px" }}>
+      <div style={{ paddingTop: 72 }}>
         {/* HERO */}
         <section
           className="text-white text-center"
-          style={{ background: "linear-gradient(135deg, #0d6efd, #dc3545)" }}
+          style={{
+            background: "linear-gradient(135deg, var(--brand-primary), var(--brand-secondary))"
+          }}
         >
           <div className="container py-5">
             <h1 className="fw-bold display-5 mb-3">
@@ -92,28 +101,19 @@ const Home: React.FC = () => {
         {/* FEATURES */}
         <section id="features" className="py-5 bg-light">
           <div className="container">
-            <h2 className="text-center fw-bold mb-2">
-              <i className="bi bi-grid-fill me-2 text-primary"></i>
+            <h2 className="text-center fw-bold mb-5">
               Complete Feature Suite
             </h2>
-            <p className="text-center text-muted mb-5">
-              Designed to scale with organizations of any size
-            </p>
 
             {Object.entries(groupedFeatures).map(([type, items]: any) => (
               <div key={type} className="mb-5">
                 <h5 className="fw-bold text-primary mb-3">{type}</h5>
                 <div className="row g-3">
-                  {items.map((feature: any, index: number) => (
-                    <div className="col-md-6 col-lg-4" key={index}>
-                      <div className="p-3 border rounded h-100 feature-card bg-white">
-                        <div className="d-flex">
-                          <i className="bi bi-check-circle-fill text-primary fs-4 me-3"></i>
-                          <div>
-                            <h6 className="fw-semibold mb-1">{feature.name}</h6>
-                            <p className="small text-muted mb-0">{feature.desc}</p>
-                          </div>
-                        </div>
+                  {items.map((f: any, i: number) => (
+                    <div className="col-md-6 col-lg-4" key={i}>
+                      <div className="p-3 bg-white border rounded h-100 feature-card">
+                        <h6 className="fw-semibold">{f.name}</h6>
+                        <p className="small text-muted mb-0">{f.desc}</p>
                       </div>
                     </div>
                   ))}
@@ -126,28 +126,22 @@ const Home: React.FC = () => {
         {/* PRICING */}
         <section className="py-5">
           <div className="container">
-            <h2 className="text-center fw-bold mb-4">
-              <i className="bi bi-currency-dollar me-2 text-primary"></i>
-              Pricing Plans
-            </h2>
-
+            <h2 className="text-center fw-bold mb-4">Pricing Plans</h2>
             <div className="row g-4">
               {[
                 { name: "Basic", price: "Free", users: "25 Employees" },
                 { name: "Standard", price: "$99", users: "100 Employees", popular: true },
                 { name: "Pro", price: "$199", users: "500 Employees" },
                 { name: "Enterprise", price: "$499", users: "1000+ Employees" }
-              ].map((plan, index) => (
-                <div className="col-md-3" key={index}>
-                  <div className={`card text-center h-100 shadow-sm ${plan.popular ? "border-primary" : ""}`}>
+              ].map((p, i) => (
+                <div className="col-md-3" key={i}>
+                  <div className={`card text-center h-100 shadow-sm ${p.popular ? "border-primary" : ""}`}>
                     <div className="card-body">
-                      {plan.popular && (
-                        <span className="badge bg-success mb-2">Most Popular</span>
-                      )}
-                      <h5 className="fw-bold">{plan.name}</h5>
-                      <h2 className="text-primary my-3">{plan.price}</h2>
-                      <p className="text-muted">{plan.users}</p>
-                      <Link to="/login" className="btn btn-primary w-100">
+                      {p.popular && <span className="badge bg-success mb-2">Most Popular</span>}
+                      <h5 className="fw-bold">{p.name}</h5>
+                      <h2 className="text-primary my-3">{p.price}</h2>
+                      <p className="text-muted">{p.users}</p>
+                      <Link to="/login" className="btn btn-brand w-100">
                         Choose Plan
                       </Link>
                     </div>
@@ -159,32 +153,13 @@ const Home: React.FC = () => {
         </section>
 
         {/* FOOTER */}
-        <footer className="bg-dark text-white py-4">
-          <div className="container text-center">
-            <p className="fw-semibold mb-1">Notify HR</p>
-            <small className="text-muted">
-              HR • Payroll • Attendance • Recruitment
-            </small>
-          </div>
+        <footer className="bg-dark text-white py-4 text-center">
+          <p className="fw-semibold mb-1">NotifyHR</p>
+          <small className="text-muted">
+            HR • Payroll • Attendance • Recruitment
+          </small>
         </footer>
       </div>
-
-      {/* HOVER STYLES */}
-      <style>
-        {`
-          .feature-card {
-            transition: all 0.2s ease;
-          }
-          .feature-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.08);
-          }
-          .card:hover {
-            transform: scale(1.03);
-            transition: 0.2s ease;
-          }
-        `}
-      </style>
     </>
   );
 };

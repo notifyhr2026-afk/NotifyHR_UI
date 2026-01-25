@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
-import ToggleSection from '../ToggleSection';
-
 interface EmployeeAddress {
   id: number;
   addressType: string;

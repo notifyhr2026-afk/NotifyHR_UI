@@ -125,7 +125,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="ManageJobRequisitionRecruiters" element={<ManageJobRequisitionRecruiters />} />
         <Route path="JobRequisitionApprovals" element={<ManageJobRequisitionApprovals />} />
 
-         <Route path="/HelpdeskDashboard" element={<HelpdeskDashboard />} />
+        <Route path="/HelpdeskDashboard" element={<HelpdeskDashboard />} />
         <Route path="/create" element={<CreateTicket />} />
         <Route path="/ticket/:id" element={<TicketDetails />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}

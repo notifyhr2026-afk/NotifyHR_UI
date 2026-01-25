@@ -29,3 +29,29 @@ code {
   display: inline-block;
   margin-left: 2px;
 }
+
+:root {
+  --brand-primary: #0d6efd;   /* Blue */
+  --brand-secondary: #198754; /* Green */
+  --brand-dark: #0b2e4a;
+}
+
+/* LOGO */
+.app-logo {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* Buttons */
+.btn-brand {
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #fff;
+}
+
+.btn-brand:hover {
+  background-color: #0b5ed7;
+  border-color: #0b5ed7;
+}
+
