@@ -1,27 +1,42 @@
 import React, { useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
 
+interface Role {
+  id: number;
+  name: string;
+}
+
 interface Position {
   id: number;
   positionName: string;
+  roleId: number;
   isActive: boolean;
 }
 
 const ManagePositions: React.FC = () => {
+  // Mock Roles (can later come from API)
+  const roles: Role[] = [
+    { id: 1, name: 'Admin' },
+    { id: 2, name: 'Manager' },
+    { id: 3, name: 'Employee' },
+  ];
+
   const [positions, setPositions] = useState<Position[]>([]);
+  const [editPosition, setEditPosition] = useState<Position | null>(null);
+
   const [positionFormData, setPositionFormData] = useState<Position>({
     id: 0,
     positionName: '',
+    roleId: 0,
     isActive: true,
   });
 
-  const [editPosition, setEditPosition] = useState<Position | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [positionToDelete, setPositionToDelete] = useState<number | null>(null);
 
   const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<any>
   ) => {
     const { id, value, type } = e.target;
 
@@ -34,7 +49,7 @@ const ManagePositions: React.FC = () => {
     } else {
       setPositionFormData((prev) => ({
         ...prev,
-        [id]: value,
+        [id]: id === 'roleId' ? Number(value) : value,
       }));
     }
   };
@@ -44,6 +59,7 @@ const ManagePositions: React.FC = () => {
     setPositionFormData({
       id: 0,
       positionName: '',
+      roleId: 0,
       isActive: true,
     });
     setShowModal(true);
@@ -77,14 +93,18 @@ const ManagePositions: React.FC = () => {
   const handleDelete = () => {
     if (positionToDelete !== null) {
       setPositions((prev) => prev.filter((p) => p.id !== positionToDelete));
-      setPositionToDelete(null);
       setConfirmDelete(false);
+      setPositionToDelete(null);
     }
   };
+
+  const getRoleName = (roleId: number) =>
+    roles.find((r) => r.id === roleId)?.name || '-';
 
   return (
     <div className="mt-5">
       <h3>Manage Positions</h3>
+
       <div className="text-end mb-3">
         <Button variant="success" onClick={openAddModal}>
           + Add Position
@@ -96,6 +116,7 @@ const ManagePositions: React.FC = () => {
           <thead>
             <tr>
               <th>Position Name</th>
+              <th>Role</th>
               <th>Is Active</th>
               <th>Actions</th>
             </tr>
@@ -104,13 +125,14 @@ const ManagePositions: React.FC = () => {
             {positions.map((p) => (
               <tr key={p.id}>
                 <td>{p.positionName}</td>
+                <td>{getRoleName(p.roleId)}</td>
                 <td>{p.isActive ? 'Yes' : 'No'}</td>
                 <td>
                   <Button
                     variant="outline-primary"
                     size="sm"
-                    onClick={() => openEditModal(p)}
                     className="me-2"
+                    onClick={() => openEditModal(p)}
                   >
                     Edit
                   </Button>
@@ -133,8 +155,11 @@ const ManagePositions: React.FC = () => {
       {/* Add/Edit Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editPosition ? 'Edit Position' : 'Add Position'}</Modal.Title>
+          <Modal.Title>
+            {editPosition ? 'Edit Position' : 'Add Position'}
+          </Modal.Title>
         </Modal.Header>
+
         <Modal.Body>
           <Form>
             <Row>
@@ -146,6 +171,23 @@ const ManagePositions: React.FC = () => {
                     value={positionFormData.positionName}
                     onChange={handleInputChange}
                   />
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group className="mb-3" controlId="roleId">
+                  <Form.Label>Role</Form.Label>
+                  <Form.Select
+                    value={positionFormData.roleId}
+                    onChange={handleInputChange}
+                  >
+                    <option value={0}>Select Role</option>
+                    {roles.map((role) => (
+                      <option key={role.id} value={role.id}>
+                        {role.name}
+                      </option>
+                    ))}
+                  </Form.Select>
                 </Form.Group>
               </Col>
             </Row>
@@ -164,6 +206,7 @@ const ManagePositions: React.FC = () => {
             </Row>
           </Form>
         </Modal.Body>
+
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setShowModal(false)}>
             Cancel
@@ -179,7 +222,9 @@ const ManagePositions: React.FC = () => {
         <Modal.Header closeButton>
           <Modal.Title>Confirm Delete</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Are you sure you want to delete this position?</Modal.Body>
+        <Modal.Body>
+          Are you sure you want to delete this position?
+        </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
             Cancel

@@ -172,10 +172,7 @@ const ManageRoles: React.FC = () => {
                   <td className="d-flex gap-2 flex-wrap">
                     <Button size="sm" variant="primary" onClick={() => handleOpenRoleModal(role)}>
                       Edit
-                    </Button>
-                    <Button size="sm" variant="info" onClick={() => handleOpenMenuModal(role)}>
-                      Assign Menu
-                    </Button>
+                    </Button>                 
                   </td>
                 </tr>
               ))
@@ -255,53 +252,6 @@ const ManageRoles: React.FC = () => {
           </Form>
         </Modal.Body>
       </Modal>
-
-      {/* Assign Menu Modal */}
-      <Modal show={showMenuModal} onHide={() => setShowMenuModal(false)} size="lg">
-        <Modal.Header closeButton>
-          <Modal.Title>Assign Menus to {selectedRole?.RoleName}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Accordion defaultActiveKey="0">
-            {parentMenus.map((parent, idx) => (
-              <Card key={parent.MenuID}>
-                <Accordion.Item eventKey={idx.toString()}>
-                  <Accordion.Header>
-                    <Form.Check
-                      type="checkbox"
-                      checked={selectedMenus.includes(parent.MenuID)}
-                      onChange={() => handleToggleMenu(parent.MenuID)}
-                      label={parent.MenuName}
-                      className="me-2"
-                    />
-                  </Accordion.Header>
-                  <Accordion.Body>
-                    {getChildMenus(parent.MenuID).map((child) => (
-                      <Form.Check
-                        key={child.MenuID}
-                        type="checkbox"
-                        checked={selectedMenus.includes(child.MenuID)}
-                        onChange={() => handleToggleMenu(child.MenuID)}
-                        label={child.MenuName}
-                        className="ms-4"
-                      />
-                    ))}
-                  </Accordion.Body>
-                </Accordion.Item>
-              </Card>
-            ))}
-          </Accordion>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowMenuModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSaveAssignedMenus}>
-            Save
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
       <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );

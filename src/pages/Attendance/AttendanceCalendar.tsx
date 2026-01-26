@@ -10,13 +10,24 @@ interface AttendanceLog {
   status: "Present" | "Absent" | "Leave";
 }
 
+interface Holiday {
+  date: string; // YYYY-MM-DD
+  name: string;
+}
+
+// Static data
 const attendanceLogs: AttendanceLog[] = [
-  { date: "2025-11-05", employee: "John Doe", status: "Present" },
-  { date: "2025-11-05", employee: "Samantha Red", status: "Absent" },
-  { date: "2025-11-06", employee: "Michael Adams", status: "Present" },
-  { date: "2025-11-08", employee: "John Doe", status: "Leave" },
-  { date: "2025-11-08", employee: "Alice Smith", status: "Present" },
-  { date: "2025-11-08", employee: "Bob Brown", status: "Absent" },
+  { date: "2026-01-01", employee: "jagadish k", status: "Present" },
+  { date: "2026-01-14", employee: "jagadish k", status: "Absent" },
+  { date: "2026-01-05", employee: "jagadish k", status: "Present" },
+  { date: "2026-01-06", employee: "jagadish k", status: "Leave" },
+  { date: "2026-01-07", employee: "jagadish k", status: "Present" },
+  { date: "2026-01-08", employee: "jagadish k", status: "Absent" },
+];
+
+const holidays: Holiday[] = [
+  { date: "2026-01-01", name: "All Saints' Day" },
+  { date: "2026-01-11", name: "Veterans Day" },
 ];
 
 const AttendanceCalendar: React.FC = () => {
@@ -25,6 +36,11 @@ const AttendanceCalendar: React.FC = () => {
   const getLogsForDay = (day: Date) => {
     const dayStr = day.toISOString().split("T")[0];
     return attendanceLogs.filter((log) => log.date === dayStr);
+  };
+
+  const getHolidayForDay = (day: Date) => {
+    const dayStr = day.toISOString().split("T")[0];
+    return holidays.find((h) => h.date === dayStr);
   };
 
   const handleDateChange = (value: any) => {
@@ -47,10 +63,15 @@ const AttendanceCalendar: React.FC = () => {
           calendarType="iso8601"
           tileContent={({ date: tileDate, view }) => {
             const logs = getLogsForDay(tileDate);
-            if (!logs.length) return null;
+            const holiday = getHolidayForDay(tileDate);
 
             return (
               <div className="attendance-logs-container">
+                {holiday && (
+                  <div className="holiday-log">
+                    🎉 {holiday.name}
+                  </div>
+                )}
                 {logs.map((log, idx) => (
                   <OverlayTrigger
                     key={idx}
@@ -92,6 +113,10 @@ const AttendanceCalendar: React.FC = () => {
               if (dayOfWeek === 0 || dayOfWeek === 6) {
                 classes.push("weekend-day");
               }
+
+              if (getHolidayForDay(tileDate)) {
+                classes.push("holiday-day");
+              }
             }
 
             return classes.join(" ");
@@ -108,7 +133,6 @@ const AttendanceCalendar: React.FC = () => {
           border-radius: 12px;
         }
 
-        /* Day tiles */
         .calendar-tile {
           border: 1px solid #dee2e6 !important;
           border-radius: 8px;
@@ -128,7 +152,6 @@ const AttendanceCalendar: React.FC = () => {
           transform: translateY(-2px);
         }
 
-        /* Previous/Next month days */
         .other-month-day {
           background-color: #f1f3f5;
           color: #868e96;
@@ -137,26 +160,21 @@ const AttendanceCalendar: React.FC = () => {
           background-color: #e9ecef;
         }
 
-        /* Weekends */
         .weekend-day {
-          background-color: #3226d637;
+          background-color: #f0f0ff;
         }
 
-        /* Today highlight */
+        .holiday-day {
+          background-color: #ffe6e6 !important;
+          border-color: #ff4d4d !important;
+        }
+
         .react-calendar__tile--now {
           background-color: #d7d15396 !important;
           border-color: #339af0 !important;
           font-weight: bold;
         }
 
-        /* Weekdays header */
-        .react-calendar__month-view__weekdays {
-          border-bottom: 1px solid #adb5bd;
-          font-weight: 600;
-          color: #495057;
-        }
-
-        /* Attendance log container */
         .attendance-logs-container {
           display: flex;
           flex-direction: column;
@@ -196,7 +214,18 @@ const AttendanceCalendar: React.FC = () => {
           color: #856404;
         }
 
-        /* Responsive */
+        .holiday-log {
+          background-color: #ffd6d6;
+          color: #b71c1c;
+          font-size: 0.75rem;
+          border-radius: 6px;
+          padding: 2px 4px;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          text-align: center;
+        }
+
         @media (max-width: 768px) {
           .calendar-tile {
             height: 100px !important;

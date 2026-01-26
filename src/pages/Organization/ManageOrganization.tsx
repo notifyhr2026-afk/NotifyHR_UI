@@ -17,7 +17,7 @@ const ManageOrganization: React.FC = () => {
   // Reusable config for all sections
   const sections = [
     { key: "0", title: "Organization Details", component: <OrganizationDetails /> },
-    { key: "1", title: "Users", component: <UsersSection /> },
+    { key: "1", title: "Users & Login Activation", component: <UsersSection /> },
     //{ key: "2", title: "Features", component: <FeaturesSection /> },
     // { key: "3", title: "Assign Roles", component: <AssignRolesSection /> },
     // { key: "4", title: "Manage Role Permissions", component: <ManageRolePermissionsSection /> },

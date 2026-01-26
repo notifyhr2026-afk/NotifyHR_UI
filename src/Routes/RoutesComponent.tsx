@@ -36,6 +36,7 @@ import HolidayList from '../pages/Holiday/HolidayList';
 import ShiftManagement from '../pages/Shift/ShiftManagement';
 import PlanList from '../pages/Organization/PlanManagement';
 import { EmployeeProvider } from '../context/EmployeeContext';
+import FeatureManagement from  '../pages/Features/FeatureManagement';
 import RoleMenuPermissions from '../pages/Features/RoleMenuPermissions';
 import AssignedRoles from '../pages/Organization/AssignedRoles';
 import AssignedPositions from '../pages/Organization/AssignedPositions';
@@ -49,6 +50,7 @@ import OrgSalaryStructurePage from '../pages/Payroll/OrgSalaryStructurePage';
 import OrgSalaryStructureAccordion from '../pages/Payroll/OrgSalaryStructureAccordion';
 import EmployeeSalaryAssignment from '../pages/Payroll/EmployeeSalaryAssignment';
 import EmployeeSalaryBackupView from '../pages/Payroll/EmployeeSalaryBackupView';
+import EmployeePayslip from '../pages/Payroll/EmployeePayslip'
 import TaxSectionMaster from '../pages/Payroll/TaxSectionMaster';
 import EmployeeTaxDeclaration from '../pages/Payroll/EmployeeTaxDeclaration';
 import RecruiterApprovalPage from '../pages/Recruitment/RecruiterApprovalPage';
@@ -62,12 +64,15 @@ import HelpdeskDashboard from '../pages/helpdesk/Dashboard';
 import CreateTicket from '../pages/helpdesk/CreateTicket';
 import TicketDetails from '../pages/helpdesk/TicketDetails';
 
+import ResetPassword from '../pages/Main/ResetPassword';
+
 const RoutesComponent: React.FC = () => {
   return (
     <Routes>
       {/* Public routes */}
       <Route path="/" element={<Home />} />
       <Route path="login" element={<LoginPage />} />
+       <Route path="ResetPassword" element={<ResetPassword />} />
       <Route path="RequestDemo" element={<RequestDemo />} />
       <Route path="/" element={<Home />} />
       {/* Dashboard layout routes */}
@@ -83,6 +88,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="Divisions" element={<ManageDivisions />} />
         <Route path="Users" element={<ManageUsers />} />
         <Route path="Departments" element={<ManageDepartments />} />
+        <Route path="FeatureManagement" element={<FeatureManagement />} />
         <Route path="AssignRoles" element={<AssignRoles />} />
         <Route path="AssignPositions" element={<AssignPositions />} />
         <Route path="Holidays" element={<ManageHolidays />} />
@@ -115,7 +121,9 @@ const RoutesComponent: React.FC = () => {
         <Route path="/OrgSalaryStructureAccordion" element={<OrgSalaryStructureAccordion />} />
         <Route path="/org-salary-structure/manage/:structureID" element={<OrgSalaryStructurePage />} />
         <Route path="/EmployeeSalaryAssignment" element={<EmployeeSalaryAssignment />} />
-        <Route path="/EmployeeSalaryBackupView/:employeeId" element={<EmployeeSalaryBackupView />} />
+        <Route path="/EmployeeSalaryBackupView/:employeeId" element={<EmployeeSalaryBackupView />} />        
+        <Route path="/EmployeeSalaryBackupView" element={<EmployeeSalaryBackupView />} />
+        <Route path="/EmployeePayslip" element={<EmployeePayslip />} />
         <Route path="/TaxSectionMaster" element={<TaxSectionMaster />} />
         <Route path="/EmployeeTaxDeclaration" element={<EmployeeTaxDeclaration />} />
         <Route path="/RecruiterApprovalPage" element={<RecruiterApprovalPage />} />

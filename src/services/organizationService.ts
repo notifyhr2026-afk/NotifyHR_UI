@@ -36,6 +36,18 @@ export const createOrganization = async (newOrg: Omit<Organization, 'Organizatio
     }
 };
 
+// Service to update a new organization
+export const updateOrganization = async (newOrg: Omit<Organization, 'OrganizationID'>): Promise<number> => {
+    try {
+        const response = await axiosInstance.put<Organization>('/Organizations', newOrg);
+        // Assuming the response contains the created organization with its ID
+        return response.data.OrganizationID; // Return the new OrganizationID
+    } catch (error) {
+        console.error('Failed to Update organization:', error);
+        throw error;
+    }
+};
+
   // ✅ Create or update a division
   export const CreateOrgRolesAsync =  async (OrgRole : any) => {
     try {
@@ -75,6 +87,7 @@ export default {
     getOrganizationTypes,
     createOrganization,
     CreateOrgRolesAsync,
+    updateOrganization,
     getOrgRolesAsync,
     getOrgDetailsAsync // Exporting createOrganization for use
 };

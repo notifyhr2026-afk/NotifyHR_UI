@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Modal, Form, Row, Col } from 'react-bootstrap';
+import { Button, Modal, Form, Row, Col, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import organizationService from '../../services/organizationService';
 import { Organization } from '../../types/organization';
-import { organizationTypes } from '../../types/organizationTypes'
-import 'react-toastify/dist/ReactToastify.css';
-import { toast } from 'react-toastify';
-import { OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { organizationTypes } from '../../types/organizationTypes';
 
 const OrganizationList: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -17,7 +16,7 @@ const OrganizationList: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [openInNewTab, setOpenInNewTab] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
-  const [validated, setValidated] = useState<boolean>(false);  // Validation state
+  const [validated, setValidated] = useState<boolean>(false); 
   const [newOrg, setNewOrg] = useState<Organization>({
     OrganizationID: 0,
     OrganizationName: '',
@@ -42,6 +41,7 @@ const OrganizationList: React.FC = () => {
         setFilteredOrganizations(data);
       } catch (err) {
         setError('Error loading organizations');
+        toast.error('Error loading organizations');
       } finally {
         setLoading(false);
       }
@@ -57,11 +57,13 @@ const OrganizationList: React.FC = () => {
         setOrganizationTypes(types);
       } catch (err) {
         setError('Error loading organization types');
+        toast.error('Error loading organization types');
       }
     };
     fetchOrganizationTypes();
   }, []);
 
+  // Filter organizations on search
   useEffect(() => {
     const filtered = organizations.filter((org) =>
       org.OrganizationName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -91,10 +93,7 @@ const OrganizationList: React.FC = () => {
     setNewOrg((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleOpenModal = () => {
-    setShowModal(true);
-  };
-
+  const handleOpenModal = () => setShowModal(true);
   const handleCloseModal = () => {
     setShowModal(false);
     handleClear();
@@ -108,7 +107,8 @@ const OrganizationList: React.FC = () => {
     setValidated(true);
 
     if (!form.checkValidity()) {
-      return; // Stop here if form is invalid
+      toast.error('Please fix validation errors before saving.');
+      return;
     }
 
     const newOrgData = {
@@ -126,16 +126,17 @@ const OrganizationList: React.FC = () => {
     };
 
     try {
+      toast.info('Saving organization...');
       const newOrgID = await organizationService.createOrganization(newOrgData);
 
       const createdOrg = { ...newOrgData, OrganizationID: newOrgID };
       setOrganizations((prev) => [...prev, createdOrg]);
       setFilteredOrganizations((prev) => [...prev, createdOrg]);
 
-      toast.success('Organization added successfully');
+      toast.success('Organization added successfully!');
       handleCloseModal();
     } catch (err) {
-      toast.error('Failed to add organization');
+      toast.error('Failed to add organization.');
       console.error('Error creating organization:', err);
     }
   };
@@ -145,39 +146,39 @@ const OrganizationList: React.FC = () => {
 
   return (
     <div className="mt-5">
+      <ToastContainer position="top-right" autoClose={3000} />
       <h2 className="mb-4">Organization List</h2>
-     <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-  {/* Search Box */}
-  <div className="d-flex align-items-center flex-grow-1" style={{ maxWidth: '450px' }}>
-    <Form.Control
-      type="text"
-      placeholder="Search by organization name..."
-      value={searchTerm}
-      onChange={(e) => setSearchTerm(e.target.value)}
-    />
-  </div>
 
-  {/* Toggle with Tooltip */}
-  <OverlayTrigger
-    placement="top"
-    overlay={<Tooltip id="toggle-tooltip">Open Manage Page in New Tab</Tooltip>}
-  >
-    <Form.Check
-      type="switch"
-      id="openInNewTabSwitch"
-      checked={openInNewTab}
-      onChange={(e) => setOpenInNewTab(e.target.checked)}
-      className="ms-3 mt-2 mt-md-0"
-    />
-  </OverlayTrigger>
+      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        {/* Search Box */}
+        <div className="d-flex align-items-center flex-grow-1" style={{ maxWidth: '450px' }}>
+          <Form.Control
+            type="text"
+            placeholder="Search by organization name..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
 
-  {/* Add New Button */}
-  <Button variant="success" className="mt-2 mt-md-0" onClick={handleOpenModal}>
-    + Add New Organization
-  </Button>
-</div>
+        {/* Toggle with Tooltip */}
+        <OverlayTrigger
+          placement="top"
+          overlay={<Tooltip id="toggle-tooltip">Open Manage Page in New Tab</Tooltip>}
+        >
+          <Form.Check
+            type="switch"
+            id="openInNewTabSwitch"
+            checked={openInNewTab}
+            onChange={(e) => setOpenInNewTab(e.target.checked)}
+            className="ms-3 mt-2 mt-md-0"
+          />
+        </OverlayTrigger>
 
-
+        {/* Add New Button */}
+        <Button variant="success" className="mt-2 mt-md-0" onClick={handleOpenModal}>
+          + Add New Organization
+        </Button>
+      </div>
 
       <div className="table-responsive">
         <table className="table table-bordered table-hover table-striped">
@@ -199,7 +200,7 @@ const OrganizationList: React.FC = () => {
                   <td>{org.Email || '-'}</td>
                   <td>{org.Phone || '-'}</td>
                   <td>{org.Website || '-'}</td>
-                  <td>{org.Industry}</td>
+                  <td>{org.Industry || '-'}</td>
                   <td>
                     <button
                       className="btn btn-primary btn-sm"
@@ -261,7 +262,6 @@ const OrganizationList: React.FC = () => {
                     name="Email"
                     value={newOrg.Email}
                     onChange={handleChange}
-                    // Optional: can add pattern or type validation here
                   />
                 </Form.Group>
               </Col>
