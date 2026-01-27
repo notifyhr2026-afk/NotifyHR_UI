@@ -14,9 +14,6 @@ const UsersSection: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
 
-  /* NEW STATE */
-  const [isLoginActivate, setIsLoginActivate] = useState<boolean>(false);
-  const [loginRemarks, setLoginRemarks] = useState<string>("");
 
   useEffect(() => {
     if (organizationID) {
@@ -63,63 +60,10 @@ const UsersSection: React.FC = () => {
       )
     );
   };
-
-  /* NEW HANDLER */
-  const handleActivateLogin = () => {
-    console.log("Activate Login Payload:", {
-      organizationID,
-      isLoginActivate,
-      loginRemarks,
-    });
-
-    // API integration later
-    alert("Login activation updated successfully!");
-  };
-
   if (loading) return <div className="mt-3">Loading users...</div>;
-
   return (
     <>
-      {/* ================= LOGIN ACTIVATION SECTION ================= */}
-
-      <Card className="mb-3">
-        <Card.Body>
-          <h6 className="mb-3">Login Activation</h6>
-
-          <Row className="align-items-center">
-            <Col md={3}>
-              <Form.Check
-                type="checkbox"
-                label="Is Login Activated"
-                checked={isLoginActivate}
-                onChange={(e) => setIsLoginActivate(e.target.checked)}
-              />
-            </Col>
-
-            <Col md={6}>
-              <Form.Control
-                type="text"
-                placeholder="Login remarks"
-                value={loginRemarks}
-                onChange={(e) => setLoginRemarks(e.target.value)}
-              />
-            </Col>
-
-            <Col md={3} className="text-end">
-              <Button
-                variant="success"
-                onClick={handleActivateLogin}
-                disabled={!loginRemarks.trim()}
-              >
-                Activate Login
-              </Button>
-            </Col>
-          </Row>
-        </Card.Body>
-      </Card>
-
-      {/* ================= USERS GRID ================= */}
-
+     
       <Table bordered hover size="sm" responsive>
         <thead className="table-light">
           <tr>

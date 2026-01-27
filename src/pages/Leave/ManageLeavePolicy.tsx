@@ -1,0 +1,339 @@
+import React, { useState } from "react";
+import ToastMessage, { ToastProvider } from "../../components/ToastMessage";
+import { ValidationMessage } from "../../components/ValidationMessage";
+import "bootstrap/dist/css/bootstrap.min.css";
+
+export interface LeavePolicy {
+  id: number;
+  policyName: string;
+  leaveTypeId: number;
+  totalAnnualLeaves: number;
+  maxCarryForward: number;
+  encashable: boolean;
+  allowNegativeBalance: boolean;
+  effectiveFrom: string;
+  effectiveTo: string;
+}
+
+const leavePolicyMock: LeavePolicy[] = [
+  {
+    id: 3,
+    policyName: "Standard Annual Leave Policy",
+    leaveTypeId: 1,
+    totalAnnualLeaves: 20,
+    maxCarryForward: 5,
+    encashable: true,
+    allowNegativeBalance: false,
+    effectiveFrom: "2024-01-01",
+    effectiveTo: "2024-12-31",
+  },
+];
+
+const ManageLeavePolicy: React.FC = () => {
+  // ------------------------
+  // STATE
+  // ------------------------
+  const [policies, setPolicies] = useState<LeavePolicy[]>(leavePolicyMock);
+  const [showModal, setShowModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+
+  const [policyData, setPolicyData] = useState<LeavePolicy>({
+    id: 0,
+    policyName: "",
+    leaveTypeId: 1,
+    totalAnnualLeaves: 0,
+    maxCarryForward: 0,
+    encashable: false,
+    allowNegativeBalance: false,
+    effectiveFrom: "",
+    effectiveTo: "",
+  });
+
+  const [valid, setValid] = useState({
+    policyName: null as boolean | null,
+    totalAnnualLeaves: null as boolean | null,
+  });
+
+  // ------------------------
+  // FUNCTIONS
+  // ------------------------
+  const openCreateModal = () => {
+    setEditingId(null);
+    setPolicyData({
+      id: 0,
+      policyName: "",
+      leaveTypeId: 1,
+      totalAnnualLeaves: 0,
+      maxCarryForward: 0,
+      encashable: false,
+      allowNegativeBalance: false,
+      effectiveFrom: "",
+      effectiveTo: "",
+    });
+    setValid({ policyName: null, totalAnnualLeaves: null });
+    setShowModal(true);
+  };
+
+  const openEditModal = (policy: LeavePolicy) => {
+    setEditingId(policy.id);
+    setPolicyData(policy);
+    setValid({ policyName: true, totalAnnualLeaves: true });
+    setShowModal(true);
+  };
+
+  const validate = () => {
+    const newValid = {
+      policyName: policyData.policyName.trim().length > 0,
+      totalAnnualLeaves: policyData.totalAnnualLeaves > 0,
+    };
+    setValid(newValid);
+    return Object.values(newValid).every(v => v === true);
+  };
+
+  const savePolicy = () => {
+    if (!validate()) {
+      ToastMessage.show("Please fix validation errors.", "error");
+      return;
+    }
+
+    if (editingId) {
+      setPolicies(policies.map(p => (p.id === editingId ? policyData : p)));
+      ToastMessage.show("Leave policy updated successfully!", "success");
+    } else {
+      setPolicies([...policies, { ...policyData, id: Date.now() }]);
+      ToastMessage.show("Leave policy created successfully!", "success");
+    }
+
+    setShowModal(false);
+  };
+
+  const deletePolicy = () => {
+    if (deleteId) {
+      setPolicies(policies.filter(p => p.id !== deleteId));
+      ToastMessage.show("Leave policy deleted successfully!", "success");
+    }
+    setShowDeleteModal(false);
+  };
+
+  // ------------------------
+  // UI
+  // ------------------------
+  return (
+    <>
+      <ToastProvider />
+
+      <div className="container mt-5">
+        <h3 className="mb-3">Manage Leave Policies</h3>
+
+        <button className="btn btn-primary mb-3" onClick={openCreateModal}>
+          + Create Leave Policy
+        </button>
+
+        <table className="table table-bordered">
+          <thead className="table-dark">
+            <tr>
+              <th>Policy Name</th>
+              <th>Total Leaves</th>
+              <th>Carry Forward</th>
+              <th>Encashable</th>
+              <th>Negative Balance</th>
+              <th>Effective Period</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {policies.map(p => (
+              <tr key={p.id}>
+                <td>{p.policyName}</td>
+                <td>{p.totalAnnualLeaves}</td>
+                <td>{p.maxCarryForward}</td>
+                <td>{p.encashable ? "Yes" : "No"}</td>
+                <td>{p.allowNegativeBalance ? "Yes" : "No"}</td>
+                <td>
+                  {p.effectiveFrom} → {p.effectiveTo}
+                </td>
+                <td>
+                  <button
+                    className="btn btn-warning btn-sm me-2"
+                    onClick={() => openEditModal(p)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => {
+                      setDeleteId(p.id);
+                      setShowDeleteModal(true);
+                    }}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* CREATE / EDIT MODAL */}
+      {showModal && (
+        <div className="modal show fade d-block" tabIndex={-1}>
+          <div className="modal-dialog modal-lg">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5>{editingId ? "Edit Leave Policy" : "Create Leave Policy"}</h5>
+                <button className="btn-close" onClick={() => setShowModal(false)} />
+              </div>
+
+              <div className="modal-body">
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Policy Name</label>
+                  <input
+                    className={`form-control ${
+                      valid.policyName === false ? "is-invalid" : ""
+                    }`}
+                    value={policyData.policyName}
+                    onChange={e =>
+                      setPolicyData({ ...policyData, policyName: e.target.value })
+                    }
+                  />
+                  <ValidationMessage
+                    message="Policy name is required"
+                    isValid={valid.policyName}
+                  />
+                </div>
+
+                <div className="row mb-3">
+                  <div className="col-md-6">
+                    <label>Total Annual Leaves</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={policyData.totalAnnualLeaves}
+                      onChange={e =>
+                        setPolicyData({
+                          ...policyData,
+                          totalAnnualLeaves: Number(e.target.value),
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="col-md-6">
+                    <label>Max Carry Forward</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={policyData.maxCarryForward}
+                      onChange={e =>
+                        setPolicyData({
+                          ...policyData,
+                          maxCarryForward: Number(e.target.value),
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="row mb-3">
+                  <div className="col-md-6">
+                    <label>Effective From</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={policyData.effectiveFrom}
+                      onChange={e =>
+                        setPolicyData({ ...policyData, effectiveFrom: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="col-md-6">
+                    <label>Effective To</label>
+                    <input
+                      type="date"
+                      className="form-control"
+                      value={policyData.effectiveTo}
+                      onChange={e =>
+                        setPolicyData({ ...policyData, effectiveTo: e.target.value })
+                      }
+                    />
+                  </div>
+                </div>
+
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={policyData.encashable}
+                    onChange={e =>
+                      setPolicyData({ ...policyData, encashable: e.target.checked })
+                    }
+                  />
+                  <label className="form-check-label">Encashable</label>
+                </div>
+
+                <div className="form-check">
+                  <input
+                    className="form-check-input"
+                    type="checkbox"
+                    checked={policyData.allowNegativeBalance}
+                    onChange={e =>
+                      setPolicyData({
+                        ...policyData,
+                        allowNegativeBalance: e.target.checked,
+                      })
+                    }
+                  />
+                  <label className="form-check-label">
+                    Allow Negative Balance
+                  </label>
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                  Cancel
+                </button>
+                <button className="btn btn-success" onClick={savePolicy}>
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* DELETE MODAL */}
+      {showDeleteModal && (
+        <div className="modal show fade d-block" tabIndex={-1}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5>Delete Leave Policy</h5>
+                <button className="btn-close" onClick={() => setShowDeleteModal(false)} />
+              </div>
+              <div className="modal-body">
+                Are you sure you want to delete this policy?
+              </div>
+              <div className="modal-footer">
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowDeleteModal(false)}
+                >
+                  Cancel
+                </button>
+                <button className="btn btn-danger" onClick={deletePolicy}>
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default ManageLeavePolicy;

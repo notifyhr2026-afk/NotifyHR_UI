@@ -22,6 +22,7 @@ import OrganizationLeavePolicies from '../pages/Leave/OrganizationLeavePolicies'
 import ChangePassword from '../pages/Main/ChangePassword';
 import EmployeeList from '../pages/Employee/EmployeeList';
 import ApplyLeave from '../pages/Leave/ApplyLeave';
+import ManageLeavePolicy from '../pages/Leave/ManageLeavePolicy'
 import VendorDetails from '../pages/Asset/VendorDetails';
 import AssetList from '../pages/Asset/AssetList';
 import AssetTracking from '../pages/Asset/AssetTracking';
@@ -66,6 +67,7 @@ import TicketDetails from '../pages/helpdesk/TicketDetails';
 
 import ResetPassword from '../pages/Main/ResetPassword';
 
+
 const RoutesComponent: React.FC = () => {
   return (
     <Routes>
@@ -91,7 +93,8 @@ const RoutesComponent: React.FC = () => {
         <Route path="FeatureManagement" element={<FeatureManagement />} />
         <Route path="AssignRoles" element={<AssignRoles />} />
         <Route path="AssignPositions" element={<AssignPositions />} />
-        <Route path="Holidays" element={<ManageHolidays />} />
+        <Route path="Holidays" element={<ManageHolidays />} /> 
+        <Route path="ManageLeavePolicy" element={<ManageLeavePolicy />} />
         <Route path="LeavePolicies" element={<OrganizationLeavePolicies />} />
         <Route path="MyProfile" element={<MyProfile />} />
         <Route path="ChangePassword" element={<ChangePassword />} />

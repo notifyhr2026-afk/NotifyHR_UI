@@ -11,19 +11,21 @@ import SubscriptionInfoSection from "../../components/Organization/SubscriptionI
 import InvoiceInfoSection from "../../components/Organization/InvoiceInfoSection";
 import PaymentInfoSection from "../../components/Organization/PaymentInfoSection";
 import AssignMenu from "../../components/Organization/AssignMenu";
+import LoginActivationSection from "../../components/Organization/LoginActivationSection";
 
 const ManageOrganization: React.FC = () => {
   
   // Reusable config for all sections
   const sections = [
     { key: "0", title: "Organization Details", component: <OrganizationDetails /> },
-    { key: "1", title: "Users & Login Activation", component: <UsersSection /> },
+    { key: "1", title: "Admin Users", component: <UsersSection /> },
     //{ key: "2", title: "Features", component: <FeaturesSection /> },
     // { key: "3", title: "Assign Roles", component: <AssignRolesSection /> },
     // { key: "4", title: "Manage Role Permissions", component: <ManageRolePermissionsSection /> },
     { key: "5", title: "Plan Info", component: <SubscriptionInfoSection /> },
     { key: "6", title: "Invoice Info", component: <InvoiceInfoSection /> },
     { key: "7", title: "Payment Info", component: <PaymentInfoSection /> },
+    { key: "8", title: "Onboarding & Login Activation", component: <LoginActivationSection /> },
     // { key: "8", title: "Assign Menu", component: <AssignMenu /> },
   ];
 

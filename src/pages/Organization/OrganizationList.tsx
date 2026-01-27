@@ -32,22 +32,24 @@ const OrganizationList: React.FC = () => {
   });
   const navigate = useNavigate();
 
+  const fetchOrganizations = async () => {
+    try {
+      setLoading(true);
+      const data = await organizationService.getOrganizations();
+      setOrganizations(data);
+      setFilteredOrganizations(data);
+    } catch (err) {
+      setError('Error loading organizations');
+      toast.error('Error loading organizations');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Fetch organizations
   useEffect(() => {
-    const fetchOrganizations = async () => {
-      try {
-        const data = await organizationService.getOrganizations();
-        setOrganizations(data);
-        setFilteredOrganizations(data);
-      } catch (err) {
-        setError('Error loading organizations');
-        toast.error('Error loading organizations');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchOrganizations();
-  }, []);
+  fetchOrganizations();
+}, []);
 
   // Fetch organization types
   useEffect(() => {
@@ -130,10 +132,10 @@ const OrganizationList: React.FC = () => {
       const newOrgID = await organizationService.createOrganization(newOrgData);
 
       const createdOrg = { ...newOrgData, OrganizationID: newOrgID };
-      setOrganizations((prev) => [...prev, createdOrg]);
-      setFilteredOrganizations((prev) => [...prev, createdOrg]);
+      await fetchOrganizations();
 
       toast.success('Organization added successfully!');
+      await fetchOrganizations();
       handleCloseModal();
     } catch (err) {
       toast.error('Failed to add organization.');
