@@ -67,6 +67,12 @@ import TicketDetails from '../pages/helpdesk/TicketDetails';
 
 import ResetPassword from '../pages/Main/ResetPassword';
 
+import TimesheetEntry from '../pages/Timesheet/TimesheetEntry';
+import TimesheetApproval from '../pages/Timesheet/TimesheetApproval';
+import TimesheetPayrollReport from '../pages/Timesheet/TimesheetPayrollReport';
+
+import EmployeeDailyTasks from '../components/Employee/EmployeeDailyTasks';
+
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -78,7 +84,7 @@ const RoutesComponent: React.FC = () => {
       <Route path="RequestDemo" element={<RequestDemo />} />
       <Route path="/" element={<Home />} />
       {/* Dashboard layout routes */}
-      <Route path="/" element={<DashboardLayout />}>
+        <Route path="/" element={<DashboardLayout />}>
         <Route path="menus" element={<Menus />} />
         <Route path="Organizations" element={<Organizations />} />
         <Route path="organizations/ManageOrganization/:id" element={<ManageOrganization />} />
@@ -135,10 +141,14 @@ const RoutesComponent: React.FC = () => {
         <Route path="JobRequisition" element={<ManageJobRequisitions />} />
         <Route path="ManageJobRequisitionRecruiters" element={<ManageJobRequisitionRecruiters />} />
         <Route path="JobRequisitionApprovals" element={<ManageJobRequisitionApprovals />} />
-
+        <Route path="TimesheetEntry" element={<TimesheetEntry />} />
+        <Route path="TimesheetApproval" element={<TimesheetApproval />} />
+        <Route path="TimesheetPayrollReport" element={<TimesheetPayrollReport />} />
         <Route path="/HelpdeskDashboard" element={<HelpdeskDashboard />} />
         <Route path="/create" element={<CreateTicket />} />
         <Route path="/ticket/:id" element={<TicketDetails />} />
+        <Route path="/EmployeeDailyTasks" element={<EmployeeDailyTasks />} />
+        
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
           path="Employees/manageEmployee/:employeeID"
@@ -149,6 +159,9 @@ const RoutesComponent: React.FC = () => {
           }
         />
       </Route>
+
+      
+      
       
     </Routes>
   );

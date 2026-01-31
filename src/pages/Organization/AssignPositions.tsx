@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Container,
   Card,
@@ -10,10 +10,13 @@ import {
   Badge,
   Row,
   Col,
+  Spinner,
 } from 'react-bootstrap';
 import Select from 'react-select';
+import { toast } from 'react-toastify';
+import { getOrganizations } from '../../services/organizationService';
 
-/* ================= STATIC DATA ================= */
+/* ================= STATIC POSITIONS ================= */
 
 const positions = [
   { PositionID: 1, PositionName: 'CEO', Description: 'Chief Executive Officer', Role: 'Leadership' },
@@ -26,15 +29,12 @@ const positions = [
   { PositionID: 8, PositionName: 'Intern', Description: 'Internship role', Role: 'General' },
 ];
 
-const organizations = [
-  { OrganizationID: 1, OrganizationName: 'Organization A' },
-  { OrganizationID: 2, OrganizationName: 'Organization B' },
-  { OrganizationID: 3, OrganizationName: 'Organization C' },
-  { OrganizationID: 4, OrganizationName: 'Organization D' },
-  { OrganizationID: 5, OrganizationName: 'Organization E' },
-];
-
 /* ================= TYPES ================= */
+
+interface Organization {
+  OrganizationID: number;
+  OrganizationName: string;
+}
 
 interface OrganizationPosition {
   OrganizationID: number;
@@ -49,23 +49,47 @@ interface SelectOption {
 /* ================= COMPONENT ================= */
 
 const AssignPositions: React.FC = () => {
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const [organizationPositions, setOrganizationPositions] = useState<OrganizationPosition[]>([]);
   const [selectedOrgID, setSelectedOrgID] = useState<number | null>(null);
-  const [organizationPositions, setOrganizationPositions] = useState<OrganizationPosition[]>(
-    organizations.map(org => ({
-      OrganizationID: org.OrganizationID,
-      assignedPositions: [],
-    }))
-  );
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isDirty, setIsDirty] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  /* ================= DATA ================= */
+  /* ================= LOAD ORGANIZATIONS ================= */
+
+  useEffect(() => {
+    fetchOrganizations();
+  }, []);
+
+  const fetchOrganizations = async () => {
+    try {
+      const response = await getOrganizations();
+      setOrganizations(response);
+
+      // Initialize assignment structure
+      setOrganizationPositions(
+        response.map((org: Organization) => ({
+          OrganizationID: org.OrganizationID,
+          assignedPositions: [],
+        }))
+      );
+    } catch (error) {
+      toast.error('Failed to load organizations');
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /* ================= DERIVED DATA ================= */
 
   const selectedOrg = organizations.find(o => o.OrganizationID === selectedOrgID);
 
   const assignedPositions =
     selectedOrgID !== null
-      ? organizationPositions.find(o => o.OrganizationID === selectedOrgID)?.assignedPositions || []
+      ? organizationPositions.find(o => o.OrganizationID === selectedOrgID)
+          ?.assignedPositions || []
       : [];
 
   const orgOptions: SelectOption[] = organizations.map(org => ({
@@ -73,7 +97,7 @@ const AssignPositions: React.FC = () => {
     label: org.OrganizationName,
   }));
 
-  /* ================= GROUP BY ROLE ================= */
+  /* ================= GROUP POSITIONS BY ROLE ================= */
 
   const groupedPositions = useMemo(() => {
     return positions.reduce<Record<string, typeof positions>>((acc, pos) => {
@@ -106,7 +130,7 @@ const AssignPositions: React.FC = () => {
   const handleSelectAllByRole = (role: string) => {
     if (selectedOrgID === null) return;
 
-    const rolePositionIDs = groupedPositions[role].map(p => p.PositionID);
+    const roleIDs = groupedPositions[role].map(p => p.PositionID);
 
     setOrganizationPositions(prev =>
       prev.map(org =>
@@ -114,7 +138,7 @@ const AssignPositions: React.FC = () => {
           ? {
               ...org,
               assignedPositions: Array.from(
-                new Set([...org.assignedPositions, ...rolePositionIDs])
+                new Set([...org.assignedPositions, ...roleIDs])
               ),
             }
           : org
@@ -126,7 +150,7 @@ const AssignPositions: React.FC = () => {
   const handleUnselectAllByRole = (role: string) => {
     if (selectedOrgID === null) return;
 
-    const rolePositionIDs = groupedPositions[role].map(p => p.PositionID);
+    const roleIDs = groupedPositions[role].map(p => p.PositionID);
 
     setOrganizationPositions(prev =>
       prev.map(org =>
@@ -134,7 +158,7 @@ const AssignPositions: React.FC = () => {
           ? {
               ...org,
               assignedPositions: org.assignedPositions.filter(
-                p => !rolePositionIDs.includes(p)
+                p => !roleIDs.includes(p)
               ),
             }
           : org
@@ -144,13 +168,17 @@ const AssignPositions: React.FC = () => {
   };
 
   const handleSave = () => {
-    console.log('Assigned Positions:', organizationPositions);
+    console.log('Assigned Positions Payload:', {
+      OrganizationID: selectedOrgID,
+      Positions: assignedPositions,
+    });
+
     setSuccessMessage('Positions assigned successfully!');
     setIsDirty(false);
     setTimeout(() => setSuccessMessage(null), 3000);
   };
 
-  /* ================= RENDER ================= */
+  /* ================= UI ================= */
 
   return (
     <Container className="mt-5">
@@ -161,16 +189,22 @@ const AssignPositions: React.FC = () => {
       <Card className="p-3 mb-4">
         <Form.Group>
           <Form.Label>Select Organization</Form.Label>
-          <Select
-            options={orgOptions}
-            onChange={option => setSelectedOrgID(option ? option.value : null)}
-            placeholder="Search and select organization..."
-            isClearable
-          />
+          {loading ? (
+            <div className="text-center">
+              <Spinner animation="border" size="sm" />
+            </div>
+          ) : (
+            <Select
+              options={orgOptions}
+              onChange={option => setSelectedOrgID(option ? option.value : null)}
+              placeholder="Search and select organization..."
+              isClearable
+            />
+          )}
         </Form.Group>
       </Card>
 
-      {!selectedOrgID && (
+      {!selectedOrgID && !loading && (
         <Alert variant="info">Please select an organization to manage positions.</Alert>
       )}
 
@@ -189,7 +223,7 @@ const AssignPositions: React.FC = () => {
               return (
                 <Accordion.Item eventKey={index.toString()} key={role}>
                   <Accordion.Header>
-                    <span className="fw-semibold">{role}</span>
+                    {role}
                     <Badge bg="secondary" className="ms-2">
                       {assignedCount} / {rolePositions.length}
                     </Badge>
@@ -249,11 +283,7 @@ const AssignPositions: React.FC = () => {
           </Accordion>
 
           <div className="text-end mt-3">
-            <Button
-              variant="success"
-              onClick={handleSave}
-              disabled={!isDirty}
-            >
+            <Button variant="success" onClick={handleSave} disabled={!isDirty}>
               Save Changes
             </Button>
           </div>

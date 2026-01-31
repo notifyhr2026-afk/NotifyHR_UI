@@ -142,6 +142,7 @@ const CandidateOffers: React.FC = () => {
             <Form.Label>Offer Status</Form.Label>
             <Form.Select name="OfferStatusID" value={formData.OfferStatusID} onChange={handleChange}>
               <option value="Pending">Pending</option>
+              <option value="Pending">Release</option>
               <option value="Accepted">Accepted</option>
               <option value="Rejected">Rejected</option>
             </Form.Select>
@@ -217,8 +218,11 @@ const CandidateOffers: React.FC = () => {
 
       {/* Buttons: Submit + Clear */}
       <div className="d-flex justify-content-end">
+         <Button type="submit" size="sm" variant="outline-primary" className="me-2">
+          Pending / Hold
+        </Button>
         <Button type="submit" size="sm" variant="outline-primary" className="me-2">
-          Save
+          Release
         </Button>
         <Button type="button" size="sm" variant="outline-secondary" onClick={handleClearForm}>
           Clear

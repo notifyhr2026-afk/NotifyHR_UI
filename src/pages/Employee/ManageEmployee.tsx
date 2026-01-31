@@ -12,6 +12,7 @@ import ProbationDetails from '../../components/Employee/ProbationDetails';
 import EmployeeAsset from '../../components/Employee/EmployeeAsset';
 import Accordion from 'react-bootstrap/Accordion';
 import EmployeeRoles from '../../components/Employee/EmployeeRoles';
+import EmployeeProjects from '../../components/Employee/EmployeeProjects';
 
 const ManageEmployee: React.FC = () => {
   return (
@@ -80,8 +81,15 @@ const ManageEmployee: React.FC = () => {
             <EmployeeRoles />
           </Accordion.Body>
         </Accordion.Item>
+        
+         <Accordion.Item eventKey="9">
+          <Accordion.Header>Employee Projects</Accordion.Header>
+          <Accordion.Body>
+            <EmployeeProjects />
+          </Accordion.Body>
+        </Accordion.Item>
 
-        <Accordion.Item eventKey="9">
+        <Accordion.Item eventKey="10">
           <Accordion.Header>Exit Details</Accordion.Header>
           <Accordion.Body>
             <EmployeeExitDetails />

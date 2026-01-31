@@ -12,7 +12,7 @@
 
 [[redirects]]
   from = "/api/port24/*"
-  to = "http://115.98.2.37:36524/api/:splat"
+  to = "http://115.98.2.37:8082/api/:splat"
   status = 200
   force = true
 

@@ -1,50 +1,50 @@
 import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Row, Col, Accordion, Card } from 'react-bootstrap';
+import { Button, Modal, Form, Table, Row, Col } from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { GetRolesAsync } from '../../services/roleService';
 
 interface Role {
   RoleID: number;
+  RoleCode?: string | null;
   RoleName: string;
   Description: string;
   IsActive: boolean;
-  AssignedMenus?: number[];
+  CreatedBy?: string;
 }
-
-interface Menu {
-  MenuID: number;
-  ParentMenuID: number | null;
-  MenuName: string;
-  MenuOrder: number;
-  IsActive: boolean;
-}
-
-// Sample menu data (replace with API call)
-const sampleMenus: Menu[] = [
-  { MenuID: 18, ParentMenuID: null, MenuName: 'Leave', MenuOrder: 0, IsActive: true },
-  { MenuID: 19, ParentMenuID: 18, MenuName: 'Test Leave', MenuOrder: 1, IsActive: true },
-  { MenuID: 1, ParentMenuID: null, MenuName: 'System Admin', MenuOrder: 1, IsActive: true },
-  { MenuID: 28, ParentMenuID: 1, MenuName: 'Assign Features', MenuOrder: 3, IsActive: true },
-];
 
 const ManageRoles: React.FC = () => {
-  const [roles, setRoles] = useState<Role[]>([
-    { RoleID: 1, RoleName: 'Admin', Description: 'Full access to system', IsActive: true, AssignedMenus: [18,19] },
-    { RoleID: 2, RoleName: 'User', Description: 'Regular user', IsActive: true, AssignedMenus: [] },
-    { RoleID: 3, RoleName: 'Manager', Description: 'Manage team tasks', IsActive: false, AssignedMenus: [] },
-  ]);
-
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [filteredRoles, setFilteredRoles] = useState<Role[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filteredRoles, setFilteredRoles] = useState<Role[]>(roles);
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [editRole, setEditRole] = useState<Role | null>(null);
-  const [newRole, setNewRole] = useState<Role>({ RoleID: 0, RoleName: '', Description: '', IsActive: true });
+  const [newRole, setNewRole] = useState<Role>({
+    RoleID: 0,
+    RoleName: '',
+    Description: '',
+    IsActive: true,
+  });
   const [validated, setValidated] = useState(false);
 
-  // Assign Menu state
-  const [showMenuModal, setShowMenuModal] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
-  const [selectedMenus, setSelectedMenus] = useState<number[]>([]);
+  /* ================= API ================= */
+
+  useEffect(() => {
+    fetchRoles();
+  }, []);
+
+  const fetchRoles = async () => {
+    try {
+      const response = await GetRolesAsync();
+      setRoles(response);
+      setFilteredRoles(response);
+    } catch (error) {
+      toast.error('Failed to load roles');
+      console.error(error);
+    }
+  };
+
+  /* ================= SEARCH ================= */
 
   useEffect(() => {
     const filtered = roles.filter((role) =>
@@ -53,14 +53,20 @@ const ManageRoles: React.FC = () => {
     setFilteredRoles(filtered);
   }, [searchTerm, roles]);
 
-  // --- Role Add/Edit ---
+  /* ================= MODAL ================= */
+
   const handleOpenRoleModal = (role?: Role) => {
     if (role) {
       setEditRole(role);
       setNewRole(role);
     } else {
       setEditRole(null);
-      setNewRole({ RoleID: 0, RoleName: '', Description: '', IsActive: true });
+      setNewRole({
+        RoleID: 0,
+        RoleName: '',
+        Description: '',
+        IsActive: true,
+      });
     }
     setValidated(false);
     setShowRoleModal(true);
@@ -68,66 +74,55 @@ const ManageRoles: React.FC = () => {
 
   const handleCloseRoleModal = () => {
     setShowRoleModal(false);
-    setNewRole({ RoleID: 0, RoleName: '', Description: '', IsActive: true });
     setEditRole(null);
     setValidated(false);
   };
 
+  /* ================= FORM ================= */
+
   const handleChange = (e: React.ChangeEvent<any>) => {
     const { name, value, type, checked } = e.target;
-    setNewRole((prev) => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    setNewRole((prev) => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value,
+    }));
   };
 
   const handleSaveRole = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setValidated(true);
-    const form = e.currentTarget;
-    if (!form.checkValidity()) return;
+
+    if (!e.currentTarget.checkValidity()) return;
 
     if (editRole) {
-      setRoles((prev) => prev.map((r) => (r.RoleID === newRole.RoleID ? newRole : r)));
+      setRoles((prev) =>
+        prev.map((r) => (r.RoleID === newRole.RoleID ? newRole : r))
+      );
       toast.success('Role updated successfully!');
     } else {
-      const newID = roles.length ? Math.max(...roles.map((r) => r.RoleID)) + 1 : 1;
+      const newID = roles.length
+        ? Math.max(...roles.map((r) => r.RoleID)) + 1
+        : 1;
+
       setRoles((prev) => [...prev, { ...newRole, RoleID: newID }]);
       toast.success('Role added successfully!');
     }
+
     handleCloseRoleModal();
   };
 
+  /* ================= STATUS TOGGLE ================= */
+
   const handleToggleActive = (roleID: number) => {
     setRoles((prev) =>
-      prev.map((r) => (r.RoleID === roleID ? { ...r, IsActive: !r.IsActive } : r))
+      prev.map((r) =>
+        r.RoleID === roleID ? { ...r, IsActive: !r.IsActive } : r
+      )
     );
     toast.info('Role status updated!');
   };
 
-  // --- Assign Menu ---
-  const handleOpenMenuModal = (role: Role) => {
-    setSelectedRole(role);
-    setSelectedMenus(role.AssignedMenus || []);
-    setShowMenuModal(true);
-  };
-
-  const handleToggleMenu = (menuID: number) => {
-    setSelectedMenus((prev) =>
-      prev.includes(menuID) ? prev.filter((id) => id !== menuID) : [...prev, menuID]
-    );
-  };
-
-  const handleSaveAssignedMenus = () => {
-    if (!selectedRole) return;
-
-    const updatedRoles = roles.map((r) =>
-      r.RoleID === selectedRole.RoleID ? { ...r, AssignedMenus: selectedMenus } : r
-    );
-    setRoles(updatedRoles);
-    toast.success(`Menus assigned to role "${selectedRole.RoleName}" successfully!`);
-    setShowMenuModal(false);
-  };
-
-  const parentMenus = sampleMenus.filter((m) => m.ParentMenuID === null).sort((a, b) => a.MenuOrder - b.MenuOrder);
-  const getChildMenus = (parentID: number) => sampleMenus.filter((m) => m.ParentMenuID === parentID).sort((a, b) => a.MenuOrder - b.MenuOrder);
+  /* ================= UI ================= */
 
   return (
     <div className="mt-5">
@@ -169,10 +164,14 @@ const ManageRoles: React.FC = () => {
                       onChange={() => handleToggleActive(role.RoleID)}
                     />
                   </td>
-                  <td className="d-flex gap-2 flex-wrap">
-                    <Button size="sm" variant="primary" onClick={() => handleOpenRoleModal(role)}>
+                  <td>
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() => handleOpenRoleModal(role)}
+                    >
                       Edit
-                    </Button>                 
+                    </Button>
                   </td>
                 </tr>
               ))
@@ -187,7 +186,7 @@ const ManageRoles: React.FC = () => {
         </Table>
       </div>
 
-      {/* Add/Edit Role Modal */}
+      {/* ===== MODAL ===== */}
       <Modal show={showRoleModal} onHide={handleCloseRoleModal}>
         <Modal.Header closeButton>
           <Modal.Title>{editRole ? 'Edit Role' : 'Add New Role'}</Modal.Title>
@@ -196,18 +195,17 @@ const ManageRoles: React.FC = () => {
           <Form noValidate validated={validated} onSubmit={handleSaveRole}>
             <Row className="mb-3">
               <Col>
-                <Form.Group controlId="roleName">
+                <Form.Group>
                   <Form.Label>Role Name</Form.Label>
                   <Form.Control
                     type="text"
-                    placeholder="Enter role name"
                     name="RoleName"
                     value={newRole.RoleName}
                     onChange={handleChange}
                     required
                   />
                   <Form.Control.Feedback type="invalid">
-                    Role Name is required.
+                    Role Name is required
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
@@ -215,15 +213,14 @@ const ManageRoles: React.FC = () => {
 
             <Row className="mb-3">
               <Col>
-                <Form.Group controlId="description">
+                <Form.Group>
                   <Form.Label>Description</Form.Label>
                   <Form.Control
                     as="textarea"
-                    placeholder="Enter role description"
                     name="Description"
+                    rows={3}
                     value={newRole.Description}
                     onChange={handleChange}
-                    rows={3}
                   />
                 </Form.Group>
               </Col>
@@ -252,6 +249,7 @@ const ManageRoles: React.FC = () => {
           </Form>
         </Modal.Body>
       </Modal>
+
       <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
