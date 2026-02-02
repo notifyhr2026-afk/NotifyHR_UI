@@ -78,6 +78,8 @@ const OrganizationLeavePolicies: React.FC = () => {
     LeavePolicyID: "",
     TotalAnnualLeaves: "",
     MaxCarryForward: "",
+    EffectiveFrom: "",
+    EffectiveTo: "",
     Encashable: false,
     AllowNegativeBalance: false,
     IsActive: true,
@@ -90,6 +92,8 @@ const OrganizationLeavePolicies: React.FC = () => {
       LeavePolicyID: "",
       TotalAnnualLeaves: "",
       MaxCarryForward: "",
+      EffectiveFrom: "",
+      EffectiveTo: "",
       Encashable: false,
       AllowNegativeBalance: false,
       IsActive: true,
@@ -105,6 +109,8 @@ const OrganizationLeavePolicies: React.FC = () => {
       LeavePolicyID: String(row.LeavePolicyID),
       TotalAnnualLeaves: String(row.TotalAnnualLeaves),
       MaxCarryForward: String(row.MaxCarryForward),
+      EffectiveFrom: row.EffectiveFrom || "",
+      EffectiveTo: row.EffectiveTo || "",
       Encashable: row.Encashable,
       AllowNegativeBalance: row.AllowNegativeBalance,
       IsActive: row.IsActive,
@@ -120,7 +126,10 @@ const OrganizationLeavePolicies: React.FC = () => {
 
     setPolicyForm((prev) => ({
       ...prev,
-      [name]: type === "checkbox" ? (e.target as HTMLInputElement).checked : value,
+      [name]:
+        type === "checkbox"
+          ? (e.target as HTMLInputElement).checked
+          : value,
     }));
   };
 
@@ -138,6 +147,8 @@ const OrganizationLeavePolicies: React.FC = () => {
       LeavePolicyID: Number(policyForm.LeavePolicyID),
       TotalAnnualLeaves: policyForm.TotalAnnualLeaves,
       MaxCarryForward: policyForm.MaxCarryForward,
+      EffectiveFrom: policyForm.EffectiveFrom || null,
+      EffectiveTo: policyForm.EffectiveTo || null,
       Encashable: policyForm.Encashable,
       AllowNegativeBalance: policyForm.AllowNegativeBalance,
       IsActive: policyForm.IsActive,
@@ -162,10 +173,6 @@ const OrganizationLeavePolicies: React.FC = () => {
 
   // ---------- Filter for All Policies Tab ----------
   const [filterLeaveType, setFilterLeaveType] = useState("");
-
-  const filteredPolicies = filterLeaveType
-    ? orgPolicies.filter((p) => p.LeaveTypeID === Number(filterLeaveType))
-    : orgPolicies;
 
   return (
     <Container className="mt-5">
@@ -233,19 +240,17 @@ const OrganizationLeavePolicies: React.FC = () => {
         <Accordion.Item eventKey="1">
           <Accordion.Header>Organization Leave Policies</Accordion.Header>
           <Accordion.Body>
-            {/* <Button variant="primary" onClick={openAddModal}>
-              ➕ Add Policy
-            </Button> */}
-
             <Table bordered hover size="sm" className="mt-3">
               <thead>
                 <tr>
                   <th>Policy</th>
                   <th>Leave Type</th>
-                  <th>Total Leaves</th>
-                  <th>Carry Forward</th>
-                  <th>Encashable</th>
-                  <th>Allow -Ve</th>
+                  <th>Total</th>
+                  <th>Carry</th>
+                  <th>Effective From</th>
+                  <th>Effective To</th>
+                  <th>Encash</th>
+                  <th>-Ve</th>
                   <th>Active</th>
                   <th>Actions</th>
                 </tr>
@@ -263,10 +268,11 @@ const OrganizationLeavePolicies: React.FC = () => {
                       <td>{type?.LeaveTypeName}</td>
                       <td>{p.TotalAnnualLeaves}</td>
                       <td>{p.MaxCarryForward}</td>
+                      <td>{p.EffectiveFrom || "-"}</td>
+                      <td>{p.EffectiveTo || "-"}</td>
                       <td>{p.Encashable ? "✔️" : "❌"}</td>
                       <td>{p.AllowNegativeBalance ? "✔️" : "❌"}</td>
                       <td>{p.IsActive ? "✔️" : "❌"}</td>
-
                       <td>
                         <Button
                           size="sm"
@@ -276,7 +282,6 @@ const OrganizationLeavePolicies: React.FC = () => {
                         >
                           Edit
                         </Button>
-
                         <Button
                           size="sm"
                           variant="danger"
@@ -293,7 +298,7 @@ const OrganizationLeavePolicies: React.FC = () => {
           </Accordion.Body>
         </Accordion.Item>
 
-        {/* ---------- 3. All Leave Policies with Filter + Action ---------- */}
+        {/* ---------- 3. All Leave Policies ---------- */}
         <Accordion.Item eventKey="2">
           <Accordion.Header>All Leave Policies</Accordion.Header>
           <Accordion.Body>
@@ -319,10 +324,10 @@ const OrganizationLeavePolicies: React.FC = () => {
                 <tr>
                   <th>Policy</th>
                   <th>Leave Type</th>
-                  <th>Total Leaves</th>
-                  <th>Carry Forward</th>
-                  <th>Encashable</th>
-                  <th>Allow -Ve</th>
+                  <th>Total</th>
+                  <th>Carry</th>
+                  <th>Encash</th>
+                  <th>-Ve</th>
                   <th>Active</th>
                   <th>Action</th>
                 </tr>
@@ -331,7 +336,9 @@ const OrganizationLeavePolicies: React.FC = () => {
               <tbody>
                 {systemLeavePolicies
                   .filter((p) =>
-                    filterLeaveType ? p.LeaveTypeID === Number(filterLeaveType) : true
+                    filterLeaveType
+                      ? p.LeaveTypeID === Number(filterLeaveType)
+                      : true
                   )
                   .map((p) => {
                     const type = leaveTypes.find(
@@ -358,6 +365,8 @@ const OrganizationLeavePolicies: React.FC = () => {
                                 LeavePolicyID: p.LeavePolicyID,
                                 TotalAnnualLeaves: p.TotalAnnualLeaves,
                                 MaxCarryForward: p.MaxCarryForward,
+                                EffectiveFrom: "",
+                                EffectiveTo: "",
                                 Encashable: p.Encashable,
                                 AllowNegativeBalance: p.AllowNegativeBalance,
                                 IsActive: p.IsActive,
@@ -374,106 +383,132 @@ const OrganizationLeavePolicies: React.FC = () => {
             </Table>
           </Accordion.Body>
         </Accordion.Item>
-
       </Accordion>
 
-      {/* ---------- POLICY MODAL (ADD/EDIT) ---------- */}
+      {/* ---------- POLICY MODAL ---------- */}
       <Modal show={showModal} onHide={closeModal} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>{editID ? "Edit Policy" : "Add Policy"}</Modal.Title>
         </Modal.Header>
 
-        <Modal.Body>
-          <Form>
-            <Row className="mb-3">
-              <Col md={6}>
-                <Form.Label>Leave Type</Form.Label>
-                <Form.Select
-                  name="LeaveTypeID"
-                  value={policyForm.LeaveTypeID}
-                  onChange={handleFormChange}
-                >
-                  <option value="">Select Leave Type</option>
-                  {leaveTypes.map((lt) => (
-                    <option key={lt.LeaveTypeID} value={lt.LeaveTypeID}>
-                      {lt.LeaveTypeName}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Col>
+      <Modal.Body>
+  <Form>
+    {/* Leave Type + System Policy */}
+    <Row className="mb-3">
+      <Col md={6}>
+        <Form.Label>Leave Type</Form.Label>
+        <Form.Select
+          name="LeaveTypeID"
+          value={policyForm.LeaveTypeID}
+          onChange={handleFormChange}
+        >
+          <option value="">Select Leave Type</option>
+          {leaveTypes.map((lt) => (
+            <option key={lt.LeaveTypeID} value={lt.LeaveTypeID}>
+              {lt.LeaveTypeName}
+            </option>
+          ))}
+        </Form.Select>
+      </Col>
 
-              <Col md={6}>
-                <Form.Label>System Leave Policy</Form.Label>
-                <Form.Select
-                  name="LeavePolicyID"
-                  value={policyForm.LeavePolicyID}
-                  onChange={handleFormChange}
-                >
-                  <option value="">Select System Policy</option>
-                  {systemLeavePolicies.map((p) => (
-                    <option key={p.LeavePolicyID} value={p.LeavePolicyID}>
-                      {p.PolicyName}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Col>
-            </Row>
+      <Col md={6}>
+        <Form.Label>System Leave Policy</Form.Label>
+        <Form.Select
+          name="LeavePolicyID"
+          value={policyForm.LeavePolicyID}
+          onChange={handleFormChange}
+        >
+          <option value="">Select System Policy</option>
+          {systemLeavePolicies.map((p) => (
+            <option key={p.LeavePolicyID} value={p.LeavePolicyID}>
+              {p.PolicyName}
+            </option>
+          ))}
+        </Form.Select>
+      </Col>
+    </Row>
 
-            <Row className="mb-3">
-              <Col md={6}>
-                <Form.Label>Total Annual Leaves</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="TotalAnnualLeaves"
-                  value={policyForm.TotalAnnualLeaves}
-                  onChange={handleFormChange}
-                />
-              </Col>
+    {/* Total Leaves + Carry Forward */}
+    <Row className="mb-3">
+      <Col md={6}>
+        <Form.Label>Total Annual Leaves</Form.Label>
+        <Form.Control
+          type="number"
+          name="TotalAnnualLeaves"
+          value={policyForm.TotalAnnualLeaves}
+          onChange={handleFormChange}
+        />
+      </Col>
 
-              <Col md={6}>
-                <Form.Label>Max Carry Forward</Form.Label>
-                <Form.Control
-                  type="number"
-                  name="MaxCarryForward"
-                  value={policyForm.MaxCarryForward}
-                  onChange={handleFormChange}
-                />
-              </Col>
-            </Row>
+      <Col md={6}>
+        <Form.Label>Max Carry Forward</Form.Label>
+        <Form.Control
+          type="number"
+          name="MaxCarryForward"
+          value={policyForm.MaxCarryForward}
+          onChange={handleFormChange}
+        />
+      </Col>
+    </Row>
 
-            <Row className="mb-3">
-              <Col md={4}>
-                <Form.Check
-                  type="checkbox"
-                  label="Encashable"
-                  name="Encashable"
-                  checked={policyForm.Encashable}
-                  onChange={handleFormChange}
-                />
-              </Col>
+    {/* ✅ NEW: Effective Dates */}
+    <Row className="mb-3">
+      <Col md={6}>
+        <Form.Label>Effective From</Form.Label>
+        <Form.Control
+          type="date"
+          name="EffectiveFrom"
+          value={policyForm.EffectiveFrom}
+          onChange={handleFormChange}
+        />
+      </Col>
 
-              <Col md={4}>
-                <Form.Check
-                  type="checkbox"
-                  label="Allow Negative Balance"
-                  name="AllowNegativeBalance"
-                  checked={policyForm.AllowNegativeBalance}
-                  onChange={handleFormChange}
-                />
-              </Col>
+      <Col md={6}>
+        <Form.Label>Effective To</Form.Label>
+        <Form.Control
+          type="date"
+          name="EffectiveTo"
+          value={policyForm.EffectiveTo}
+          onChange={handleFormChange}
+        />
+      </Col>
+    </Row>
 
-              <Col md={4}>
-                <Form.Check
-                  type="checkbox"
-                  label="Active"
-                  name="IsActive"
-                  checked={policyForm.IsActive}
-                  onChange={handleFormChange}
-                />
-              </Col>
-            </Row>
-          </Form>
-        </Modal.Body>
+    {/* Checkboxes */}
+    <Row className="mb-3">
+      <Col md={4}>
+        <Form.Check
+          type="checkbox"
+          label="Encashable"
+          name="Encashable"
+          checked={policyForm.Encashable}
+          onChange={handleFormChange}
+        />
+      </Col>
+
+      <Col md={4}>
+        <Form.Check
+          type="checkbox"
+          label="Allow Negative Balance"
+          name="AllowNegativeBalance"
+          checked={policyForm.AllowNegativeBalance}
+          onChange={handleFormChange}
+        />
+      </Col>
+
+      <Col md={4}>
+        <Form.Check
+          type="checkbox"
+          label="Active"
+          name="IsActive"
+          checked={policyForm.IsActive}
+          onChange={handleFormChange}
+        />
+      </Col>
+    </Row>
+  </Form>
+</Modal.Body>
+
 
         <Modal.Footer>
           <Button variant="secondary" onClick={closeModal}>

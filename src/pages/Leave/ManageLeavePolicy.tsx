@@ -3,6 +3,9 @@ import ToastMessage, { ToastProvider } from "../../components/ToastMessage";
 import { ValidationMessage } from "../../components/ValidationMessage";
 import "bootstrap/dist/css/bootstrap.min.css";
 
+/* =========================
+   INTERFACES
+========================= */
 export interface LeavePolicy {
   id: number;
   policyName: string;
@@ -14,6 +17,20 @@ export interface LeavePolicy {
   effectiveFrom: string;
   effectiveTo: string;
 }
+
+interface LeaveType {
+  id: number;
+  name: string;
+}
+
+/* =========================
+   MOCK DATA
+========================= */
+const leaveTypes: LeaveType[] = [
+  { id: 1, name: "Annual Leave" },
+  { id: 2, name: "Sick Leave" },
+  { id: 3, name: "Casual Leave" },
+];
 
 const leavePolicyMock: LeavePolicy[] = [
   {
@@ -29,10 +46,10 @@ const leavePolicyMock: LeavePolicy[] = [
   },
 ];
 
+/* =========================
+   COMPONENT
+========================= */
 const ManageLeavePolicy: React.FC = () => {
-  // ------------------------
-  // STATE
-  // ------------------------
   const [policies, setPolicies] = useState<LeavePolicy[]>(leavePolicyMock);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -56,9 +73,9 @@ const ManageLeavePolicy: React.FC = () => {
     totalAnnualLeaves: null as boolean | null,
   });
 
-  // ------------------------
-  // FUNCTIONS
-  // ------------------------
+  /* =========================
+     FUNCTIONS
+  ========================= */
   const openCreateModal = () => {
     setEditingId(null);
     setPolicyData({
@@ -117,9 +134,12 @@ const ManageLeavePolicy: React.FC = () => {
     setShowDeleteModal(false);
   };
 
-  // ------------------------
-  // UI
-  // ------------------------
+  const getLeaveTypeName = (id: number) =>
+    leaveTypes.find(t => t.id === id)?.name || "-";
+
+  /* =========================
+     UI
+  ========================= */
   return (
     <>
       <ToastProvider />
@@ -135,6 +155,7 @@ const ManageLeavePolicy: React.FC = () => {
           <thead className="table-dark">
             <tr>
               <th>Policy Name</th>
+              <th>Leave Type</th>
               <th>Total Leaves</th>
               <th>Carry Forward</th>
               <th>Encashable</th>
@@ -147,6 +168,7 @@ const ManageLeavePolicy: React.FC = () => {
             {policies.map(p => (
               <tr key={p.id}>
                 <td>{p.policyName}</td>
+                <td>{getLeaveTypeName(p.leaveTypeId)}</td>
                 <td>{p.totalAnnualLeaves}</td>
                 <td>{p.maxCarryForward}</td>
                 <td>{p.encashable ? "Yes" : "No"}</td>
@@ -205,6 +227,26 @@ const ManageLeavePolicy: React.FC = () => {
                   />
                 </div>
 
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Leave Type</label>
+                  <select
+                    className="form-select"
+                    value={policyData.leaveTypeId}
+                    onChange={e =>
+                      setPolicyData({
+                        ...policyData,
+                        leaveTypeId: Number(e.target.value),
+                      })
+                    }
+                  >
+                    {leaveTypes.map(type => (
+                      <option key={type.id} value={type.id}>
+                        {type.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
                 <div className="row mb-3">
                   <div className="col-md-6">
                     <label>Total Annual Leaves</label>
@@ -245,7 +287,10 @@ const ManageLeavePolicy: React.FC = () => {
                       className="form-control"
                       value={policyData.effectiveFrom}
                       onChange={e =>
-                        setPolicyData({ ...policyData, effectiveFrom: e.target.value })
+                        setPolicyData({
+                          ...policyData,
+                          effectiveFrom: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -256,7 +301,10 @@ const ManageLeavePolicy: React.FC = () => {
                       className="form-control"
                       value={policyData.effectiveTo}
                       onChange={e =>
-                        setPolicyData({ ...policyData, effectiveTo: e.target.value })
+                        setPolicyData({
+                          ...policyData,
+                          effectiveTo: e.target.value,
+                        })
                       }
                     />
                   </div>
@@ -268,7 +316,10 @@ const ManageLeavePolicy: React.FC = () => {
                     type="checkbox"
                     checked={policyData.encashable}
                     onChange={e =>
-                      setPolicyData({ ...policyData, encashable: e.target.checked })
+                      setPolicyData({
+                        ...policyData,
+                        encashable: e.target.checked,
+                      })
                     }
                   />
                   <label className="form-check-label">Encashable</label>
@@ -293,7 +344,10 @@ const ManageLeavePolicy: React.FC = () => {
               </div>
 
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowModal(false)}
+                >
                   Cancel
                 </button>
                 <button className="btn btn-success" onClick={savePolicy}>
@@ -312,7 +366,10 @@ const ManageLeavePolicy: React.FC = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5>Delete Leave Policy</h5>
-                <button className="btn-close" onClick={() => setShowDeleteModal(false)} />
+                <button
+                  className="btn-close"
+                  onClick={() => setShowDeleteModal(false)}
+                />
               </div>
               <div className="modal-body">
                 Are you sure you want to delete this policy?

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Button, Form, Row, Col, Card } from "react-bootstrap";
 
+
 const LoginActivationSection: React.FC = () => {
   const [isLoginActivate, setIsLoginActivate] = useState<boolean>(false);
   const [loginRemarks, setLoginRemarks] = useState<string>("");

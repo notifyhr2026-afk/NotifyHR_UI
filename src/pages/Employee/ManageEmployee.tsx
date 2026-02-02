@@ -34,60 +34,67 @@ const ManageEmployee: React.FC = () => {
             <ProbationDetails />
           </Accordion.Body>
         </Accordion.Item>
-         <Accordion.Item eventKey="2">
-            <Accordion.Header>Assigned Assets</Accordion.Header>
-            <Accordion.Body>
-              <EmployeeAsset />
-            </Accordion.Body>
-          </Accordion.Item>
-        <Accordion.Item eventKey="3">
+
+        <Accordion.Item eventKey="2">
           <Accordion.Header>Position History</Accordion.Header>
           <Accordion.Body>
             <EmployeePositionHistory />
           </Accordion.Body>
         </Accordion.Item>
 
+           <Accordion.Item eventKey="3">
+          <Accordion.Header>Assigned Roles</Accordion.Header>
+          <Accordion.Body>
+            <EmployeeRoles />
+          </Accordion.Body>
+        </Accordion.Item>
+
         <Accordion.Item eventKey="4">
+          <Accordion.Header>Assigned Projects</Accordion.Header>
+          <Accordion.Body>
+            <EmployeeProjects />
+          </Accordion.Body>
+        </Accordion.Item>
+
+         <Accordion.Item eventKey="5">
+            <Accordion.Header>Assigned Assets</Accordion.Header>
+            <Accordion.Body>
+              <EmployeeAsset />
+            </Accordion.Body>
+          </Accordion.Item>
+
+
+        <Accordion.Item eventKey="6">
           <Accordion.Header>Experience</Accordion.Header>
           <Accordion.Body>
             <EmployeeExperience />
           </Accordion.Body>
         </Accordion.Item>
 
-        <Accordion.Item eventKey="5">
+        <Accordion.Item eventKey="7">
           <Accordion.Header>Education</Accordion.Header>
           <Accordion.Body>
             <EmployeeEducation />
           </Accordion.Body>
         </Accordion.Item>
 
-        <Accordion.Item eventKey="6">
+        <Accordion.Item eventKey="8">
           <Accordion.Header>Family Details</Accordion.Header>
           <Accordion.Body>
             <EmployeeFamilyDetails />
           </Accordion.Body>
         </Accordion.Item>
 
-        <Accordion.Item eventKey="7">
+        <Accordion.Item eventKey="9">
           <Accordion.Header>Address</Accordion.Header>
           <Accordion.Body>
             <EmployeeAddress />
           </Accordion.Body>
         </Accordion.Item>
 
-         <Accordion.Item eventKey="8">
-          <Accordion.Header>Employee Roles</Accordion.Header>
-          <Accordion.Body>
-            <EmployeeRoles />
-          </Accordion.Body>
-        </Accordion.Item>
+      
         
-         <Accordion.Item eventKey="9">
-          <Accordion.Header>Employee Projects</Accordion.Header>
-          <Accordion.Body>
-            <EmployeeProjects />
-          </Accordion.Body>
-        </Accordion.Item>
+         
 
         <Accordion.Item eventKey="10">
           <Accordion.Header>Exit Details</Accordion.Header>

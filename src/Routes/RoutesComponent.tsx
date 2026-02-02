@@ -72,6 +72,7 @@ import TimesheetApproval from '../pages/Timesheet/TimesheetApproval';
 import TimesheetPayrollReport from '../pages/Timesheet/TimesheetPayrollReport';
 
 import EmployeeDailyTasks from '../components/Employee/EmployeeDailyTasks';
+import ManageLeaveTypes from '../pages/Leave/ManageLeaveTypes';
 
 
 const RoutesComponent: React.FC = () => {
@@ -148,6 +149,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="/create" element={<CreateTicket />} />
         <Route path="/ticket/:id" element={<TicketDetails />} />
         <Route path="/EmployeeDailyTasks" element={<EmployeeDailyTasks />} />
+        <Route path="/ManageLeaveTypes" element={<ManageLeaveTypes />} />
         
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
