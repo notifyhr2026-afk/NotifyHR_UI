@@ -15,3 +15,8 @@ export const UpdateOrgFeatureAsync = async (payload: any) => {
   const res = await axiosInstance.post("/Menus/AssignFeature", payload);
   return res.data;
 };
+
+export const IsDisplayOrgFeatureAsync = async (payload: any) => {
+  const res = await axiosInstance.post("/Menus/IsDisplayToEmployeeFeature", payload);
+  return res.data;
+};

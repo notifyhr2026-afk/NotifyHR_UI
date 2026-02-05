@@ -1,67 +1,83 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Card, Table } from 'react-bootstrap';
+import React, { useEffect, useState } from "react";
+import { Container, Card, Table } from "react-bootstrap";
+import { GetOrgPositionsAsync } from "../../services/organizationService";
 
-// Mock data for positions and organization positions
-const positions = [
-  { PositionID: 1, PositionName: 'CEO', Description: 'Chief Executive Officer' },
-  { PositionID: 2, PositionName: 'CTO', Description: 'Chief Technology Officer' },
-  { PositionID: 3, PositionName: 'Project Manager', Description: 'Manages project timelines and teams' },
-  { PositionID: 4, PositionName: 'Software Engineer', Description: 'Develops and builds software applications' },
-];
-
-const organizationPositions = [
-  { OrganizationID: 1, assignedPositions: [1, 2] },
-  { OrganizationID: 2, assignedPositions: [3, 4] },
-  { OrganizationID: 9, assignedPositions: [1, 3, 4] },
-];
+interface OrgPosition {
+  OrgPositionID: number;
+  PositionTitle: string;
+  Description: string;
+  RoleName: string;
+}
 
 const AssignedPositions: React.FC = () => {
-  const [assignedPositions, setAssignedPositions] = useState<number[]>([]);
-  const [organizationID, setOrganizationID] = useState<number | undefined>(undefined);
+  const [positions, setPositions] = useState<OrgPosition[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  // Fetch organizationID from localStorage
+  // Get organizationID from localStorage
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID: number | undefined = user?.organizationID;
+  debugger;
   useEffect(() => {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    const orgID: number | undefined = user?.organizationID;
-    setOrganizationID(orgID);
-  }, []);
-
-  useEffect(() => {
-    if (organizationID !== undefined) {
-      const orgPositions = organizationPositions.find((org) => org.OrganizationID === organizationID);
-      if (orgPositions) {
-        setAssignedPositions(orgPositions.assignedPositions);
-      }
+    if (organizationID) {
+      fetchOrganizationPositions(organizationID);
+    } else {
+      setLoading(false);
     }
   }, [organizationID]);
 
-  // Display loading state until organizationID is fetched
-  if (organizationID === undefined) {
+  const fetchOrganizationPositions = async (orgID: number) => {
+    try {
+      setLoading(true);
+      const response = await GetOrgPositionsAsync(orgID);
+
+      // Handle JSON string or object response
+      const data = typeof response === "string" ? JSON.parse(response) : response;
+
+      setPositions(data);
+    } catch (error) {
+      console.error("Failed to fetch organization positions", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
     return <div>Loading...</div>;
+  }
+
+  if (!organizationID) {
+    return <div>Organization not found.</div>;
   }
 
   return (
     <Container className="mt-5">
-      <h3 className="mb-4">Assigned Positions for Organization {organizationID}</h3>
+      <h3 className="mb-4">Assigned Positions</h3>
 
-      <Card className="p-3 mb-4">
-        <h5>Assigned Positions</h5>
+      <Card className="p-3">
         <Table striped bordered hover responsive className="mt-3 align-middle">
           <thead className="table-primary">
             <tr>
-              <th>Position Name</th>
+              <th>Position Title</th>
               <th>Description</th>
+              <th>Role</th>
             </tr>
           </thead>
           <tbody>
-            {positions
-              .filter((position) => assignedPositions.includes(position.PositionID))
-              .map((position) => (
-                <tr key={position.PositionID}>
-                  <td>{position.PositionName}</td>
-                  <td>{position.Description}</td>
+            {positions.length > 0 ? (
+              positions.map((pos) => (
+                <tr key={pos.OrgPositionID}>
+                  <td>{pos.PositionTitle}</td>
+                  <td>{pos.Description}</td>
+                  <td>{pos.RoleName}</td>
                 </tr>
-              ))}
+              ))
+            ) : (
+              <tr>
+                <td colSpan={3} className="text-center">
+                  No positions assigned
+                </td>
+              </tr>
+            )}
           </tbody>
         </Table>
       </Card>

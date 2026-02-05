@@ -12,6 +12,7 @@ interface Feature {
   FeatureType: string;
   IsActive: boolean;
   Icon: string;
+  OrderBy: number; // ✅ NEW
 }
 
 /* ================= STATIC DATA ================= */
@@ -32,6 +33,7 @@ const featuresMock: Feature[] = [
     FeatureType: "Core",
     IsActive: true,
     Icon: "bi-people",
+    OrderBy: 1,
   },
   {
     FeatureID: 2,
@@ -40,6 +42,7 @@ const featuresMock: Feature[] = [
     FeatureType: "Security",
     IsActive: true,
     Icon: "bi-shield-lock",
+    OrderBy: 2,
   },
 ];
 
@@ -59,6 +62,7 @@ const FeatureManagement: React.FC = () => {
     FeatureType: "",
     IsActive: true,
     Icon: "",
+    OrderBy: 0,
   });
 
   const [valid, setValid] = useState({
@@ -77,6 +81,7 @@ const FeatureManagement: React.FC = () => {
       FeatureType: "",
       IsActive: true,
       Icon: "",
+      OrderBy: 0,
     });
     setValid({ FeatureName: null, FeatureType: null });
     setShowModal(true);
@@ -149,6 +154,7 @@ const FeatureManagement: React.FC = () => {
         <table className="table table-bordered table-hover">
           <thead className="table-dark">
             <tr>
+              <th>Order</th>
               <th>Feature Name</th>
               <th>Description</th>
               <th>Feature Type</th>
@@ -158,39 +164,45 @@ const FeatureManagement: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {features.map(feature => (
-              <tr key={feature.FeatureID}>
-                <td>{feature.FeatureName}</td>
-                <td>{feature.Description}</td>
-                <td>{feature.FeatureType}</td>
-                <td>
-                  <span
-                    className={`badge ${
-                      feature.IsActive ? "bg-success" : "bg-secondary"
-                    }`}
-                  >
-                    {feature.IsActive ? "Active" : "Inactive"}
-                  </span>
-                </td>
-                <td>
-                  <i className={`bi ${feature.Icon}`} />
-                </td>
-                <td>
-                  <button
-                    className="btn btn-warning btn-sm me-2"
-                    onClick={() => openEditModal(feature)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => openDeleteModal(feature.FeatureID)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
+            {features
+              .slice()
+              .sort((a, b) => a.OrderBy - b.OrderBy)
+              .map(feature => (
+                <tr key={feature.FeatureID}>
+                  <td>{feature.OrderBy}</td>
+                  <td>{feature.FeatureName}</td>
+                  <td>{feature.Description}</td>
+                  <td>{feature.FeatureType}</td>
+                  <td>
+                    <span
+                      className={`badge ${
+                        feature.IsActive ? "bg-success" : "bg-secondary"
+                      }`}
+                    >
+                      {feature.IsActive ? "Active" : "Inactive"}
+                    </span>
+                  </td>
+                  <td>
+                    <i className={`bi ${feature.Icon}`} />
+                  </td>
+                  <td>
+                    <button
+                      className="btn btn-warning btn-sm me-2"
+                      onClick={() => openEditModal(feature)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() =>
+                        openDeleteModal(feature.FeatureID)
+                      }
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
           </tbody>
         </table>
       </div>
@@ -205,13 +217,18 @@ const FeatureManagement: React.FC = () => {
                 <h5 className="modal-title">
                   {editingId ? "Edit Feature" : "Create Feature"}
                 </h5>
-                <button className="btn-close" onClick={() => setShowModal(false)} />
+                <button
+                  className="btn-close"
+                  onClick={() => setShowModal(false)}
+                />
               </div>
 
               <div className="modal-body">
                 {/* FEATURE NAME */}
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Feature Name</label>
+                  <label className="form-label fw-bold">
+                    Feature Name
+                  </label>
                   <input
                     className={`form-control ${
                       valid.FeatureName === false
@@ -222,7 +239,10 @@ const FeatureManagement: React.FC = () => {
                     }`}
                     value={featureData.FeatureName}
                     onChange={e =>
-                      setFeatureData({ ...featureData, FeatureName: e.target.value })
+                      setFeatureData({
+                        ...featureData,
+                        FeatureName: e.target.value,
+                      })
                     }
                   />
                   <ValidationMessage
@@ -237,20 +257,27 @@ const FeatureManagement: React.FC = () => {
 
                 {/* DESCRIPTION */}
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Description</label>
+                  <label className="form-label fw-bold">
+                    Description
+                  </label>
                   <textarea
                     className="form-control"
                     rows={3}
                     value={featureData.Description}
                     onChange={e =>
-                      setFeatureData({ ...featureData, Description: e.target.value })
+                      setFeatureData({
+                        ...featureData,
+                        Description: e.target.value,
+                      })
                     }
                   />
                 </div>
 
                 {/* FEATURE TYPE */}
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Feature Type</label>
+                  <label className="form-label fw-bold">
+                    Feature Type
+                  </label>
                   <select
                     className={`form-select ${
                       valid.FeatureType === false
@@ -261,12 +288,18 @@ const FeatureManagement: React.FC = () => {
                     }`}
                     value={featureData.FeatureType}
                     onChange={e =>
-                      setFeatureData({ ...featureData, FeatureType: e.target.value })
+                      setFeatureData({
+                        ...featureData,
+                        FeatureType: e.target.value,
+                      })
                     }
                   >
                     <option value="">Select Feature Type</option>
                     {featureTypes.map(type => (
-                      <option key={type.value} value={type.value}>
+                      <option
+                        key={type.value}
+                        value={type.value}
+                      >
                         {type.label}
                       </option>
                     ))}
@@ -281,15 +314,39 @@ const FeatureManagement: React.FC = () => {
                   />
                 </div>
 
+                {/* ORDER BY */}
+                <div className="mb-3">
+                  <label className="form-label fw-bold">
+                    Order By
+                  </label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={featureData.OrderBy}
+                    min={0}
+                    onChange={e =>
+                      setFeatureData({
+                        ...featureData,
+                        OrderBy: Number(e.target.value),
+                      })
+                    }
+                  />
+                </div>
+
                 {/* ICON */}
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Icon (Bootstrap Icon)</label>
+                  <label className="form-label fw-bold">
+                    Icon (Bootstrap Icon)
+                  </label>
                   <input
                     className="form-control"
                     placeholder="e.g. bi-shield-lock"
                     value={featureData.Icon}
                     onChange={e =>
-                      setFeatureData({ ...featureData, Icon: e.target.value })
+                      setFeatureData({
+                        ...featureData,
+                        Icon: e.target.value,
+                      })
                     }
                   />
                 </div>
@@ -301,10 +358,15 @@ const FeatureManagement: React.FC = () => {
                     type="checkbox"
                     checked={featureData.IsActive}
                     onChange={e =>
-                      setFeatureData({ ...featureData, IsActive: e.target.checked })
+                      setFeatureData({
+                        ...featureData,
+                        IsActive: e.target.checked,
+                      })
                     }
                   />
-                  <label className="form-check-label">Is Active</label>
+                  <label className="form-check-label">
+                    Is Active
+                  </label>
                 </div>
               </div>
 
@@ -315,7 +377,10 @@ const FeatureManagement: React.FC = () => {
                 >
                   Cancel
                 </button>
-                <button className="btn btn-success" onClick={saveFeature}>
+                <button
+                  className="btn btn-success"
+                  onClick={saveFeature}
+                >
                   Save
                 </button>
               </div>
@@ -334,20 +399,30 @@ const FeatureManagement: React.FC = () => {
                 <h5>Delete Feature</h5>
                 <button
                   className="btn-close"
-                  onClick={() => setShowDeleteModal(false)}
+                  onClick={() =>
+                    setShowDeleteModal(false)
+                  }
                 />
               </div>
               <div className="modal-body">
-                <p>Are you sure you want to delete this feature?</p>
+                <p>
+                  Are you sure you want to delete this
+                  feature?
+                </p>
               </div>
               <div className="modal-footer">
                 <button
                   className="btn btn-secondary"
-                  onClick={() => setShowDeleteModal(false)}
+                  onClick={() =>
+                    setShowDeleteModal(false)
+                  }
                 >
                   Cancel
                 </button>
-                <button className="btn btn-danger" onClick={deleteFeature}>
+                <button
+                  className="btn btn-danger"
+                  onClick={deleteFeature}
+                >
                   Delete
                 </button>
               </div>

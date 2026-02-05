@@ -20,7 +20,7 @@ const employeeService = {
     debugger;
     console.log('Request body:', employee);
     const { data } = await api.post('Employee/CreateEmployee', employee);
-    return data[0]?.EmployeeID || null;
+    return Array.isArray(data?.Table) ? data.Table : [];
   },
   getDepartments: async () => {
     const { data } = await api.get('Master/departments');

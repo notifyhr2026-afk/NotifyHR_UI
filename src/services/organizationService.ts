@@ -63,7 +63,17 @@ export const updateOrganization = async (newOrg: Omit<Organization, 'Organizatio
 
 export const  getOrgRolesAsync = async (OrganizationID : number) => {
     try {
-      const { data } = await axiosInstance.get(`Organizations/GetBranchesAsync?OrganizationID=${OrganizationID}`);
+      const { data } = await axiosInstance.get(`Organizations/GetOrgRolesAsync?id=${OrganizationID}`);
+      return data;
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+      throw error;
+    }
+  };
+
+export const  GetOrgPositionsAsync = async (OrganizationID : number) => {
+    try {
+      const { data } = await axiosInstance.get(`Organizations/GetOrgPositionsAsync?id=${OrganizationID}`);
       return data;
     } catch (error) {
       console.error('Error fetching branches:', error);
@@ -89,5 +99,6 @@ export default {
     CreateOrgRolesAsync,
     updateOrganization,
     getOrgRolesAsync,
-    getOrgDetailsAsync // Exporting createOrganization for use
+    getOrgDetailsAsync,
+    GetOrgPositionsAsync
 };
