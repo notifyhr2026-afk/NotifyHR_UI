@@ -42,10 +42,11 @@ const DashboardLayout: React.FC = () => {
         {/* Fixed Top Bar */}
         {!hideTopBar && (
           <div
-            className="d-flex justify-content-between align-items-center px-4 border-bottom bg-white shadow-sm"
+            className="d-flex justify-content-between align-items-center px-4 border-bottom shadow-sm"
             style={{
               height: '56px',
               position: 'fixed',
+              backgroundColor: '#f0f4f8',
               top: 0,
               left: isSidebarOpen ? 250 : 60, // match sidebar width
               right: 0,

@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import logo from "../../assets/notifyhr-logo.svg";
+import notifyhr_logo1 from "../../img/NotifyHR_Logo1.png";
 
 const features = [
   // HR
@@ -48,16 +49,16 @@ const Home: React.FC = () => {
       {/* NAVBAR */}
       <nav
         className="navbar navbar-expand-lg navbar-dark fixed-top shadow"
-        style={{ backgroundColor: "var(--brand-primary)" }}
+        style={{ backgroundColor: "#f8f9fa" }}
       >
         <div className="container">
           <Link to="/" className="navbar-brand d-flex align-items-center gap-2">
-            <img src={logo} alt="NotifyHR Logo" className="app-logo" />
-            <span className="fw-bold fs-5 text-white">NotifyHR</span>
+            <img src={notifyhr_logo1} alt="NotifyHR Logo" className="app-logo" />
+            {/* <span className="fw-bold fs-5 text-white">NotifyHR</span> */}
           </Link>
 
           <div className="d-flex gap-2">
-            <Link to="/RequestDemo" className="btn btn-outline-light">
+            <Link to="/RequestDemo" className="btn btn-light text-primary fw-semibold">
               Request Demo
             </Link>
             <Link to="/login" className="btn btn-light text-primary fw-semibold">

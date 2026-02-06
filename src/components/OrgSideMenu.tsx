@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { GetByUserIDAsync } from '../services/menuService';
-import mainlogo from '../img/MainLogo.jpg';
-import logo from '../img/Logo.jpg';
+// import mainlogo from '../img/MainLogo.jpg';
+// import logo from '../img/Logo.jpg';
+import mainlogo from "../img/NotifyHR_Logo1.png";
+import logo from "../img/Favicon.png";
 
 interface MenuItem {
   menuID: number;
@@ -28,7 +30,7 @@ interface SideMenuProps {
 }
 
 const colors = {
-  sidebarBg: '#ffffff',
+  sidebarBg: '#f0f4f8',
   headerBg: '#f0f4f8',
   menuActiveBg: '#e0f2ff',
   submenuBg: '#f8f9fa',
@@ -116,7 +118,7 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
       {/* Logo / Header */}
       <div
         style={{
-          height: '60px',
+          height: '57px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: isOpen ? 'flex-start' : 'center',

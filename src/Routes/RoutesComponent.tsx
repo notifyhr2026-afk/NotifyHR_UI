@@ -64,6 +64,7 @@ import ManageJobRequisitionApprovals from '../pages/Recruitment/ManageJobRequisi
 import HelpdeskDashboard from '../pages/helpdesk/Dashboard';
 import CreateTicket from '../pages/helpdesk/CreateTicket';
 import TicketDetails from '../pages/helpdesk/TicketDetails';
+import ManagerTicketVerification from '../pages/helpdesk/ManagerTicketVerification';
 
 import ResetPassword from '../pages/Main/ResetPassword';
 
@@ -74,6 +75,14 @@ import TimesheetPayrollReport from '../pages/Timesheet/TimesheetPayrollReport';
 import EmployeeDailyTasks from '../components/Employee/EmployeeDailyTasks';
 import ManageLeaveTypes from '../pages/Leave/ManageLeaveTypes';
 import FeatureDisplaySettings from '../pages/Features/FeatureDisplaySettings';
+
+import PerformanceTemplateManagement from '../pages/Performance/PerformanceTemplateManagement';
+import PerformanceCriteriaManagement from '../pages/Performance/PerformanceCriteriaManagement';
+import ReviewCycleManagement from '../pages/Performance/ReviewCycleManagement';
+import EmployeePerformanceReview from '../pages/Performance/EmployeePerformanceReview';
+import EmployeeSelfReview from '../pages/Performance/EmployeeSelfReview';
+import Feedback360Page from '../pages/Performance/Feedback360Page';
+
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -145,12 +154,22 @@ const RoutesComponent: React.FC = () => {
         <Route path="TimesheetEntry" element={<TimesheetEntry />} />
         <Route path="TimesheetApproval" element={<TimesheetApproval />} />
         <Route path="TimesheetPayrollReport" element={<TimesheetPayrollReport />} />
-        <Route path="/HelpdeskDashboard" element={<HelpdeskDashboard />} />
-        <Route path="/create" element={<CreateTicket />} />
-        <Route path="/ticket/:id" element={<TicketDetails />} />
+  
         <Route path="/EmployeeDailyTasks" element={<EmployeeDailyTasks />} />
         <Route path="/ManageLeaveTypes" element={<ManageLeaveTypes />} />
         <Route path="/FeatureDisplaySettings" element={<FeatureDisplaySettings />} />
+
+        <Route path="/PerformanceTemplateManagement" element={<PerformanceTemplateManagement />} />
+        <Route path="/PerformanceCriteriaManagement" element={<PerformanceCriteriaManagement />} />
+        <Route path="/ReviewCycleManagement" element={<ReviewCycleManagement />} />
+        <Route path="/EmployeePerformanceReview" element={<EmployeePerformanceReview />} />
+        <Route path="/EmployeeSelfReview" element={<EmployeeSelfReview />} />
+        <Route path="/Feedback360Page" element={<Feedback360Page />} />
+
+        <Route path="/HelpdeskDashboard" element={<HelpdeskDashboard />} />
+        <Route path="/CreateTicket" element={<CreateTicket />} />
+        <Route path="/ticket/:id" element={<TicketDetails />} />
+        <Route path="/ManagerTicketVerification" element={<ManagerTicketVerification />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
           path="Employees/manageEmployee/:employeeID"

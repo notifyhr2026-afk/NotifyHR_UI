@@ -8,5 +8,6 @@ export interface Ticket {
   priority: 'Low' | 'Medium' | 'High' | 'Critical';
   category: string;
   assignedTo?: string;
-  createdAt: string;
+  createdAt: string;  
+  remarks?: string;
 }

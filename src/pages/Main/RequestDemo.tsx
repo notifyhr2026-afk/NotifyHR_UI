@@ -1,18 +1,26 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import notifyhr_logo1 from "../../img/NotifyHR_Logo1.png";
 
 const RequestDemo: React.FC = () => {
   return (
     <>
       {/* NAVBAR */}
-      <nav className="navbar navbar-expand-lg navbar-dark bg-primary shadow fixed-top">
+     <nav
+        className="navbar navbar-expand-lg navbar-dark fixed-top shadow"
+        style={{ backgroundColor: "#f8f9fa" }}
+      >
         <div className="container">
-          <Link to="/" className="navbar-brand fw-bold fs-4">
-            Notify HR
+          <Link to="/" className="navbar-brand d-flex align-items-center gap-2">
+            <img src={notifyhr_logo1} alt="NotifyHR Logo" className="app-logo" />
+            {/* <span className="fw-bold fs-5 text-white">NotifyHR</span> */}
           </Link>
-          <Link to="/login" className="btn btn-light text-primary fw-semibold">
-            Login
-          </Link>
+
+          <div className="d-flex gap-2">           
+            <Link to="/login" className="btn btn-light text-primary fw-semibold">
+              Login
+            </Link>
+          </div>
         </div>
       </nav>
 
