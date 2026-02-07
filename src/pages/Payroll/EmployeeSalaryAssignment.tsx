@@ -122,7 +122,7 @@ const EmployeeSalaryAssignment: React.FC = () => {
       <h3>Manage Employee Salary Assignments</h3>
 
       {/* Searchable Dropdown for Branch and Employee with improved design */}
-      <Row className="mb-4">
+      <Row className="mb-5">
         <Col md={4}>
           <Card>
             <Card.Body>

@@ -31,7 +31,7 @@ const OrgPayrollCyclePage: React.FC = () => {
   };
 
   return (
-    <Card className="p-4 shadow-sm">
+    <Card className="p-5 shadow-sm">
       <h4 className="mb-4">Organization Payroll Cycles</h4>
 
       {/* Branch Selection */}

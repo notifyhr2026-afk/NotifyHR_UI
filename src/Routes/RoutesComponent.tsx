@@ -51,6 +51,7 @@ import OrgSalaryStructurePage from '../pages/Payroll/OrgSalaryStructurePage';
 import OrgSalaryStructureAccordion from '../pages/Payroll/OrgSalaryStructureAccordion';
 import EmployeeSalaryAssignment from '../pages/Payroll/EmployeeSalaryAssignment';
 import EmployeeSalaryBackupView from '../pages/Payroll/EmployeeSalaryBackupView';
+import OrgSalaryStructureMaster from '../pages/Payroll/OrgSalaryStructureMaster';
 import EmployeePayslip from '../pages/Payroll/EmployeePayslip'
 import TaxSectionMaster from '../pages/Payroll/TaxSectionMaster';
 import EmployeeTaxDeclaration from '../pages/Payroll/EmployeeTaxDeclaration';
@@ -60,6 +61,7 @@ import CandidateList from '../pages/Recruitment/CandidateList';
 import ManageJobRequisitions from '../pages/Recruitment/ManageJobRequisitions';
 import ManageJobRequisitionRecruiters from '../pages/Recruitment/ManageJobRequisitionRecruiters';
 import ManageJobRequisitionApprovals from '../pages/Recruitment/ManageJobRequisitionApprovals';
+import EmployeeTaskMaster from '../pages/Employee/EmployeeTaskMaster'
 
 import HelpdeskDashboard from '../pages/helpdesk/Dashboard';
 import CreateTicket from '../pages/helpdesk/CreateTicket';
@@ -138,10 +140,11 @@ const RoutesComponent: React.FC = () => {
         <Route path="/SalaryStructureMaster" element={<SalaryStructureMaster />} />
         <Route path="/SalaryStructureComponentMaster" element={<SalaryStructureComponentMaster />} />
         <Route path="/OrgSalaryStructureAccordion" element={<OrgSalaryStructureAccordion />} />
-        <Route path="/org-salary-structure/manage/:structureID" element={<OrgSalaryStructurePage />} />
+        <Route path="/org-salary-structure" element={<OrgSalaryStructurePage />} />
         <Route path="/EmployeeSalaryAssignment" element={<EmployeeSalaryAssignment />} />
         <Route path="/EmployeeSalaryBackupView/:employeeId" element={<EmployeeSalaryBackupView />} />        
         <Route path="/EmployeeSalaryBackupView" element={<EmployeeSalaryBackupView />} />
+        <Route path="/OrgSalaryStructureMaster" element={<OrgSalaryStructureMaster />} />        
         <Route path="/EmployeePayslip" element={<EmployeePayslip />} />
         <Route path="/TaxSectionMaster" element={<TaxSectionMaster />} />
         <Route path="/EmployeeTaxDeclaration" element={<EmployeeTaxDeclaration />} />
@@ -154,6 +157,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="TimesheetEntry" element={<TimesheetEntry />} />
         <Route path="TimesheetApproval" element={<TimesheetApproval />} />
         <Route path="TimesheetPayrollReport" element={<TimesheetPayrollReport />} />
+        <Route path="EmployeeTaskMaster" element={<EmployeeTaskMaster />} />
   
         <Route path="/EmployeeDailyTasks" element={<EmployeeDailyTasks />} />
         <Route path="/ManageLeaveTypes" element={<ManageLeaveTypes />} />
@@ -168,7 +172,7 @@ const RoutesComponent: React.FC = () => {
 
         <Route path="/HelpdeskDashboard" element={<HelpdeskDashboard />} />
         <Route path="/CreateTicket" element={<CreateTicket />} />
-        <Route path="/ticket/:id" element={<TicketDetails />} />
+        {/* <Route path="/ticket/:id" element={<TicketDetails />} /> */}
         <Route path="/ManagerTicketVerification" element={<ManagerTicketVerification />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 

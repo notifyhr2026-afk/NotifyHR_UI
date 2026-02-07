@@ -154,9 +154,9 @@ const Home: React.FC = () => {
         </section>
 
         {/* FOOTER */}
-        <footer className="bg-dark text-white py-4 text-center">
-          <p className="fw-semibold mb-1">NotifyHR</p>
-          <small className="text-muted">
+        <footer className="text-white py-4 text-center" style={{ backgroundColor: "#0647a7" }}>
+          <p className="fw-semibold mb-1">NotifyHR © 2026 All Rights Reserved</p>
+          <small className="text-white">
             HR • Payroll • Attendance • Recruitment
           </small>
         </footer>

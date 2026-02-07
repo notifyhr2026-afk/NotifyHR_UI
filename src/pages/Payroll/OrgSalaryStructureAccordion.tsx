@@ -1,5 +1,5 @@
 import React from 'react';
-import { Accordion, Table, Button, Container } from 'react-bootstrap';
+import { Accordion, Table, Button, Container, Row, Col } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 
 /* ===================== TYPES ===================== */
@@ -35,13 +35,23 @@ const structureComponents: SalaryStructureComponent[] = [
 const OrgSalaryStructureViewAccordion: React.FC = () => {
   const navigate = useNavigate();
 
-  const handleManage = (structureID: number) => {
-    navigate(`/org-salary-structure/manage/${structureID}`);
+  const handleManage = () => {
+    navigate('/org-salary-structure');
   };
 
   return (
     <Container className="mt-5">
-      <h3 className="mb-3">Organization Salary Structures</h3>
+      {/* HEADER + MANAGE BUTTON */}
+      <Row className="mb-3 align-items-center">
+        <Col>
+          <h3 className="mb-0">Organization Salary Structures</h3>
+        </Col>
+        <Col className="text-end">
+          <Button variant="primary" size="sm" onClick={handleManage}>
+            Manage Components
+          </Button>
+        </Col>
+      </Row>
 
       <Accordion alwaysOpen>
         {structures.map(structure => {
@@ -76,19 +86,6 @@ const OrgSalaryStructureViewAccordion: React.FC = () => {
                         <td>{c.Value}</td>
                       </tr>
                     ))}
-
-                    {/* MANAGE BUTTON ROW */}
-                    <tr>
-                      <td colSpan={3} className="text-end">
-                        <Button
-                          size="sm"
-                          variant="primary"
-                          onClick={() => handleManage(structure.StructureID)}
-                        >
-                          Manage
-                        </Button>
-                      </td>
-                    </tr>
                   </tbody>
                 </Table>
               </Accordion.Body>
