@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import {
+  Button,
+  Table,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Spinner,
+  Alert,
+} from 'react-bootstrap';
+import salaryService from '../../services/salaryService'; // adjust path
 
 interface SalaryStructure {
   StructureID: number;
@@ -10,26 +20,9 @@ interface SalaryStructure {
 
 const SalaryStructureMaster: React.FC = () => {
   // Sample static data
-  const [structures, setStructures] = useState<SalaryStructure[]>([
-    {
-      StructureID: 1,
-      StructureName: 'Standard Salary Structure',
-      Description: 'Default structure for all employees',
-      IsActive: true,
-    },
-    {
-      StructureID: 2,
-      StructureName: 'Contract Employee Structure',
-      Description: 'Structure for contract-based employees',
-      IsActive: false,
-    },
-    {
-      StructureID: 3,
-      StructureName: 'Intern Salary Structure',
-      Description: 'Structure for interns',
-      IsActive: true,
-    },
-  ]);
+  const [structures, setStructures] = useState<SalaryStructure[]>([]);
+const [loading, setLoading] = useState<boolean>(false);
+const [error, setError] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
   const [editStructure, setEditStructure] = useState<SalaryStructure | null>(null);
@@ -41,6 +34,23 @@ const SalaryStructureMaster: React.FC = () => {
     Description: '',
     IsActive: true,
   });
+
+  useEffect(() => {
+  const fetchStructures = async () => {
+    try {
+      setLoading(true);
+      const data = await salaryService.getSalaryStructuresAsync(); // orgId if needed
+      setStructures(data);
+    } catch (err) {
+      setError('Failed to load salary structures.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchStructures();
+}, []);
+
 
   // Input change handler
   const handleInputChange = (e: React.ChangeEvent<any>) => {
@@ -104,45 +114,61 @@ const SalaryStructureMaster: React.FC = () => {
         </Button>
       </div>
 
-      {structures.length ? (
-        <Table striped bordered hover>
-          <thead>
-            <tr>
-              <th>Structure Name</th>
-              <th>Description</th>
-              <th>Is Active?</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {structures.map((s) => (
-              <tr key={s.StructureID}>
-                <td>{s.StructureName}</td>
-                <td>{s.Description}</td>
-                <td>{s.IsActive ? 'Yes' : 'No'}</td>
-                <td>
-                  <Button
-                    size="sm"
-                    variant="outline-primary"
-                    onClick={() => handleEdit(s)}
-                  >
-                    Edit
-                  </Button>{' '}
-                  <Button
-                    size="sm"
-                    variant="outline-danger"
-                    onClick={() => handleDelete(s.StructureID)}
-                  >
-                    Delete
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      ) : (
-        <p>No salary structures added yet.</p>
-      )}
+
+
+{loading && (
+  <div className="text-center my-4">
+    <Spinner animation="border" />
+  </div>
+)}
+
+{error && (
+  <Alert variant="danger" className="my-3">
+    {error}
+  </Alert>
+)}
+
+{!loading && !error && structures.length ? (
+  <Table striped bordered hover>
+    <thead>
+      <tr>
+        <th>Structure Name</th>
+        <th>Description</th>
+        <th>Is Active?</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      {structures.map((s) => (
+        <tr key={s.StructureID}>
+          <td>{s.StructureName}</td>
+          <td>{s.Description}</td>
+          <td>{s.IsActive ? 'Yes' : 'No'}</td>
+          <td>
+            <Button
+              size="sm"
+              variant="outline-primary"
+              onClick={() => handleEdit(s)}
+            >
+              Edit
+            </Button>{' '}
+            <Button
+              size="sm"
+              variant="outline-danger"
+              onClick={() => handleDelete(s.StructureID)}
+            >
+              Delete
+            </Button>
+          </td>
+        </tr>
+      ))}
+    </tbody>
+  </Table>
+) : (
+  !loading && <p>No salary structures added yet.</p>
+)}
+
+
 
       {/* Add/Edit Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>

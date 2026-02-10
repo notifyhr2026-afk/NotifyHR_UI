@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import {
+  Button,
+  Table,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Spinner,
+  Alert,
+} from 'react-bootstrap';
+import salaryService from '../../services/salaryService'; // adjust path
 
 interface SalaryComponent {
   id: number;
@@ -11,33 +21,9 @@ interface SalaryComponent {
 }
 
 const SalaryComponentMaster: React.FC = () => {
-  // Sample data
-  const [components, setComponents] = useState<SalaryComponent[]>([
-    {
-      id: 1,
-      componentName: 'Basic Pay',
-      componentCode: 'BASIC',
-      componentType: 'Earning',
-      isStatutory: false,
-      defaultTaxable: true,
-    },
-    {
-      id: 2,
-      componentName: 'House Rent Allowance',
-      componentCode: 'HRA',
-      componentType: 'Earning',
-      isStatutory: false,
-      defaultTaxable: true,
-    },
-    {
-      id: 3,
-      componentName: 'Provident Fund',
-      componentCode: 'PF',
-      componentType: 'Deduction',
-      isStatutory: true,
-      defaultTaxable: false,
-    },
-  ]);
+  const [components, setComponents] = useState<SalaryComponent[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
   const [editComponent, setEditComponent] = useState<SalaryComponent | null>(null);
@@ -51,6 +37,33 @@ const SalaryComponentMaster: React.FC = () => {
     isStatutory: false,
     defaultTaxable: false,
   });
+
+  useEffect(() => {
+  const fetchSalaryComponents = async () => {
+    try {
+      setLoading(true);
+      const data = await salaryService.GeSalaryComponentMasterAsync();
+
+      const mappedData: SalaryComponent[] = data.map((item: any) => ({
+        id: item.ComponentID,
+        componentName: item.ComponentName,
+        componentCode: item.ComponentCode,
+        componentType: item.ComponentTypeID === 1 ? 'Earning' : 'Deduction',
+        isStatutory: item.IsStatutory,
+        defaultTaxable: item.DefaultTaxable,
+      }));
+
+      setComponents(mappedData);
+    } catch (err) {
+      setError('Failed to load salary components.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  fetchSalaryComponents();
+}, []);
+
 
   // Input change handler
   const handleInputChange = (e: React.ChangeEvent<any>) => {
@@ -115,8 +128,19 @@ const SalaryComponentMaster: React.FC = () => {
           + Add Component
         </Button>
       </div>
+{loading && (
+  <div className="text-center my-4">
+    <Spinner animation="border" />
+  </div>
+)}
 
+{error && (
+  <Alert variant="danger" className="my-3">
+    {error}
+  </Alert>
+)}
       {components.length ? (
+        
         <Table striped bordered hover>
           <thead>
             <tr>
@@ -131,11 +155,11 @@ const SalaryComponentMaster: React.FC = () => {
           <tbody>
             {components.map((comp) => (
               <tr key={comp.id}>
-                <td>{comp.componentName}</td>
-                <td>{comp.componentCode}</td>
-                <td>{comp.componentType}</td>
-                <td>{comp.isStatutory ? 'Yes' : 'No'}</td>
-                <td>{comp.defaultTaxable ? 'Yes' : 'No'}</td>
+              <td>{comp.componentName}</td>
+              <td>{comp.componentCode}</td>
+              <td>{comp.componentType}</td>
+              <td>{comp.isStatutory ? 'Yes' : 'No'}</td>
+              <td>{comp.defaultTaxable ? 'Yes' : 'No'}</td>
                 <td>
                   <Button
                     size="sm"

@@ -21,3 +21,10 @@
   to = "http://115.98.2.37:36525/api/:splat"
   status = 200
   force = true
+
+[[redirects]]
+  from = "/api/port26/*"
+  to = "http://115.98.2.37:36526/api/:splat"
+  status = 200
+  force = true
+

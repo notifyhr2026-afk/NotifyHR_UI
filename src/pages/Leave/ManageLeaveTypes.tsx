@@ -1,6 +1,17 @@
-import React, { useState } from "react";
-import { Button, Table, Modal, Form, Row, Col, Badge } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import {
+  Button,
+  Table,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Badge,
+  Spinner,
+  Alert,
+} from "react-bootstrap";
 import { BsPencilSquare, BsTrash, BsPlus } from "react-icons/bs";
+import leaveTypesService from "../../services/leaveTypesService";
 
 // Helper for react-icons
 const Icon = (Component: any, props: any = {}) => <Component {...props} />;
@@ -14,6 +25,9 @@ interface LeaveType {
 
 const ManageLeaveTypes: React.FC = () => {
   const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+
   const [leaveFormData, setLeaveFormData] = useState<LeaveType>({
     LeaveTypeID: 0,
     LeaveTypeName: "",
@@ -26,6 +40,39 @@ const ManageLeaveTypes: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [leaveToDelete, setLeaveToDelete] = useState<number | null>(null);
 
+  // ============================
+  // Fetch Leave Types
+  // ============================
+  useEffect(() => {
+    fetchLeaveTypes();
+  }, []);
+
+  const fetchLeaveTypes = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await leaveTypesService.getLeaveLeaveTypes();
+
+      // Map backend response → frontend model
+      const mappedData: LeaveType[] = data.map((item: any) => ({
+        LeaveTypeID: item.LeaveTypeID,
+        LeaveTypeName: item.LeaveTypeName,
+        Description: item.Description,
+        isActive: item.isActive ?? true, // default if backend doesn't send it
+      }));
+
+      setLeaveTypes(mappedData);
+    } catch (err) {
+      setError("Failed to load leave types.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ============================
+  // Handlers
+  // ============================
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -68,17 +115,20 @@ const ManageLeaveTypes: React.FC = () => {
     }
 
     if (editLeave) {
+      // Local update (replace with PUT API later)
       setLeaveTypes((prev) =>
         prev.map((l) =>
           l.LeaveTypeID === leaveFormData.LeaveTypeID ? leaveFormData : l
         )
       );
     } else {
+      // Local add (replace with POST API later)
       setLeaveTypes((prev) => [
         ...prev,
         { ...leaveFormData, LeaveTypeID: Date.now() },
       ]);
     }
+
     setShowModal(false);
   };
 
@@ -89,6 +139,7 @@ const ManageLeaveTypes: React.FC = () => {
 
   const handleDelete = () => {
     if (leaveToDelete !== null) {
+      // Local delete (replace with DELETE API later)
       setLeaveTypes((prev) =>
         prev.filter((l) => l.LeaveTypeID !== leaveToDelete)
       );
@@ -97,6 +148,9 @@ const ManageLeaveTypes: React.FC = () => {
     }
   };
 
+  // ============================
+  // Render
+  // ============================
   return (
     <div className="mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -106,7 +160,15 @@ const ManageLeaveTypes: React.FC = () => {
         </Button>
       </div>
 
-      {leaveTypes.length > 0 ? (
+      {loading && (
+        <div className="text-center my-4">
+          <Spinner animation="border" />
+        </div>
+      )}
+
+      {error && <Alert variant="danger">{error}</Alert>}
+
+      {!loading && leaveTypes.length > 0 ? (
         <Table bordered hover responsive className="shadow-sm">
           <thead className="table-light">
             <tr>
@@ -132,8 +194,8 @@ const ManageLeaveTypes: React.FC = () => {
                   <Button
                     variant="outline-primary"
                     size="sm"
-                    onClick={() => openEditModal(l)}
                     className="me-2"
+                    onClick={() => openEditModal(l)}
                   >
                     {Icon(BsPencilSquare, { size: 16 })}
                   </Button>
@@ -150,10 +212,10 @@ const ManageLeaveTypes: React.FC = () => {
           </tbody>
         </Table>
       ) : (
-        <p className="text-muted">No leave types added yet.</p>
+        !loading && <p className="text-muted">No leave types added yet.</p>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* Add / Edit Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -170,7 +232,6 @@ const ManageLeaveTypes: React.FC = () => {
                 <Form.Control
                   id="LeaveTypeName"
                   type="text"
-                  placeholder="Ex: Sick Leave"
                   value={leaveFormData.LeaveTypeName}
                   onChange={handleInputChange}
                 />
@@ -186,7 +247,6 @@ const ManageLeaveTypes: React.FC = () => {
                   as="textarea"
                   rows={3}
                   id="Description"
-                  placeholder="Ex: Leaves granted for sickness"
                   value={leaveFormData.Description}
                   onChange={handleInputChange}
                 />

@@ -9,6 +9,9 @@ import {
   Container,
   Modal,
 } from "react-bootstrap";
+import { useEffect } from "react";
+import leaveTypesService from "../../services/leaveTypesService";
+import leaveType from "../../types/LeaveType";
 
 // ---------- STATIC DATA ----------
 const leaveTypes = [
@@ -42,9 +45,23 @@ const systemLeavePolicies = [
 // ------------------------------------------------------
 
 const OrganizationLeavePolicies: React.FC = () => {
+  const [dropdownLeaveTypes, setDropdownLeaveTypes] = useState<leaveType[]>([]);
   // Leave Types Tab State
   const [leaveTypeList, setLeaveTypeList] = useState(leaveTypes);
   const [selectedLeaveType, setSelectedLeaveType] = useState("");
+
+  useEffect(() => {
+    const fetchLeaveTypes = async () => {
+      try {
+        const data = await leaveTypesService.getLeaveLeaveTypes();
+        setDropdownLeaveTypes(data);
+      } catch (error) {
+        console.error("Failed to load leave types for dropdowns", error);
+      }
+    };
+
+    fetchLeaveTypes();
+  }, []);
 
   const handleAddLeaveType = () => {
     if (!selectedLeaveType) return alert("Select Leave Type");
@@ -191,7 +208,7 @@ const OrganizationLeavePolicies: React.FC = () => {
                   onChange={(e) => setSelectedLeaveType(e.target.value)}
                 >
                   <option value="">Select Leave Type</option>
-                  {leaveTypes.map((lt) => (
+                  {dropdownLeaveTypes.map((lt) => (
                     <option key={lt.LeaveTypeID} value={lt.LeaveTypeID}>
                       {lt.LeaveTypeName}
                     </option>
@@ -310,7 +327,7 @@ const OrganizationLeavePolicies: React.FC = () => {
                   onChange={(e) => setFilterLeaveType(e.target.value)}
                 >
                   <option value="">All Leave Types</option>
-                  {leaveTypes.map((lt) => (
+                  {dropdownLeaveTypes.map((lt) => (
                     <option key={lt.LeaveTypeID} value={lt.LeaveTypeID}>
                       {lt.LeaveTypeName}
                     </option>

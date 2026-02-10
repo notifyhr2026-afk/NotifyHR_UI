@@ -1,17 +1,28 @@
 import { useEffect, useState } from 'react';
-import { Modal, Button, Form } from 'react-bootstrap';
-import Select from 'react-select';
-import { Leave, LeaveTypeOption }  from '../../types/Leaves';
+import { Modal, Button, Form, Row, Col } from 'react-bootstrap';
+import Select, { SingleValue } from 'react-select';
+import { Leave } from '../../types/Leaves';
+import leaveTypesService from '../../services/leaveTypesService';
+import LeaveType from '../../types/LeaveType';
 
 interface Props {
   show: boolean;
   onHide: () => void;
   editLeave: Leave | null;
-  leaveTypes: LeaveTypeOption[];
   onSave: (leave: Leave) => void;
 }
 
-const ApplyLeaveModal: React.FC<Props> = ({ show, onHide, editLeave, leaveTypes, onSave }) => {
+interface SelectOption {
+  value: string;
+  label: string;
+}
+
+const ApplyLeaveModal: React.FC<Props> = ({
+  show,
+  onHide,
+  editLeave,
+  onSave,
+}) => {
   const [data, setData] = useState<Leave>({
     id: 0,
     employeeID: 'emp1',
@@ -23,49 +34,153 @@ const ApplyLeaveModal: React.FC<Props> = ({ show, onHide, editLeave, leaveTypes,
     reason: '',
   });
 
+  const [dropdownLeaveTypes, setDropdownLeaveTypes] = useState<LeaveType[]>([]);
+
+  useEffect(() => {
+    const fetchLeaveTypes = async () => {
+      try {
+        const res = await leaveTypesService.getLeaveLeaveTypes();
+        setDropdownLeaveTypes(res);
+      } catch (err) {
+        console.error('Failed to load leave types', err);
+      }
+    };
+    fetchLeaveTypes();
+  }, []);
+
   useEffect(() => {
     if (editLeave) setData(editLeave);
   }, [editLeave]);
 
   useEffect(() => {
     if (data.startDate && data.endDate) {
-      const d =
-        (new Date(data.endDate).getTime() - new Date(data.startDate).getTime()) /
+      const days =
+        (new Date(data.endDate).getTime() -
+          new Date(data.startDate).getTime()) /
           (1000 * 60 * 60 * 24) +
         1;
-      setData(prev => ({ ...prev, numberOfDays: d > 0 ? d : 0 }));
+
+      setData(prev => ({
+        ...prev,
+        numberOfDays: days > 0 ? days : 0,
+      }));
     }
   }, [data.startDate, data.endDate]);
 
-  const submit = () => {
-    onSave(data);
-  };
+  const leaveTypeOptions: SelectOption[] = dropdownLeaveTypes.map(lt => ({
+    value: lt.LeaveTypeID.toString(),
+    label: lt.LeaveTypeName,
+  }));
+
+  const submit = () => onSave(data);
 
   return (
-    <Modal show={show} onHide={onHide}>
-      <Modal.Header closeButton>
-        <Modal.Title>{editLeave ? 'Edit Leave' : 'Apply Leave'}</Modal.Title>
+    <Modal
+      show={show}
+      onHide={onHide}
+      centered
+      backdrop="static"
+      contentClassName="rounded-4 shadow-lg"
+    >
+      <Modal.Header closeButton className="border-0 pb-0">
+        <Modal.Title className="fw-bold">
+          {editLeave ? 'Edit Leave Request' : 'Apply for Leave'}
+        </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        <Select
-          options={leaveTypes}
-          value={leaveTypes.find(l => l.value === data.leaveTypeID)}
-          onChange={(v) => setData(p => ({ ...p, leaveTypeID: v?.value || '' }))}
-          placeholder="Leave Type"
-        />
-        <Form.Control type="date" className="mt-2"
-          value={data.startDate}
-          onChange={e => setData(p => ({ ...p, startDate: e.target.value }))} />
-        <Form.Control type="date" className="mt-2"
-          value={data.endDate}
-          onChange={e => setData(p => ({ ...p, endDate: e.target.value }))} />
-        <Form.Control as="textarea" className="mt-2"
-          placeholder="Reason"
-          value={data.reason}
-          onChange={e => setData(p => ({ ...p, reason: e.target.value }))} />
+
+      <Modal.Body className="pt-3">
+        {/* Leave Type */}
+        <Form.Group className="mb-3">
+          <Form.Label className="fw-semibold">Leave Type</Form.Label>
+          <Select
+            options={leaveTypeOptions}
+            value={
+              leaveTypeOptions.find(
+                option => option.value === data.leaveTypeID
+              ) || null
+            }
+            onChange={(selected: SingleValue<SelectOption>) =>
+              setData(prev => ({
+                ...prev,
+                leaveTypeID: selected?.value || '',
+              }))
+            }
+            placeholder="Select leave type"
+            classNamePrefix="react-select"
+          />
+        </Form.Group>
+
+        {/* Dates */}
+        <Row className="g-3">
+          <Col md={6}>
+            <Form.Group>
+              <Form.Label className="fw-semibold">Start Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={data.startDate}
+                onChange={e =>
+                  setData(prev => ({
+                    ...prev,
+                    startDate: e.target.value,
+                  }))
+                }
+              />
+            </Form.Group>
+          </Col>
+
+          <Col md={6}>
+            <Form.Group>
+              <Form.Label className="fw-semibold">End Date</Form.Label>
+              <Form.Control
+                type="date"
+                value={data.endDate}
+                onChange={e =>
+                  setData(prev => ({
+                    ...prev,
+                    endDate: e.target.value,
+                  }))
+                }
+              />
+            </Form.Group>
+          </Col>
+        </Row>
+
+        {/* Days info */}
+        {data.numberOfDays > 0 && (
+          <div className="mt-3 text-muted small">
+            🗓 Total Days: <strong>{data.numberOfDays}</strong>
+          </div>
+        )}
+
+        {/* Reason */}
+        <Form.Group className="mt-3">
+          <Form.Label className="fw-semibold">Reason</Form.Label>
+          <Form.Control
+            as="textarea"
+            rows={3}
+            placeholder="Brief reason for leave"
+            value={data.reason}
+            onChange={e =>
+              setData(prev => ({
+                ...prev,
+                reason: e.target.value,
+              }))
+            }
+          />
+        </Form.Group>
       </Modal.Body>
-      <Modal.Footer>
-        <Button onClick={submit}>Save</Button>
+
+      <Modal.Footer className="border-0 pt-0">
+        <Button variant="light" onClick={onHide}>
+          Cancel
+        </Button>
+        <Button
+          variant="primary"
+          className="px-4"
+          onClick={submit}
+        >
+          {editLeave ? 'Update' : 'Apply'}
+        </Button>
       </Modal.Footer>
     </Modal>
   );

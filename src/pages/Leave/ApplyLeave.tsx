@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Container, Button, Tabs, Tab } from 'react-bootstrap';
 import { Leave, LeaveTypeOption, EmployeeOption } from  '../../types/Leaves';
 
+
 import LeaveHistoryTab   from  './LeaveHistoryTab'
 import LeaveBalanceTab from './LeaveBalanceTab';
 import ApproveLeavesTab from './ApproveLeavesTab';
@@ -99,12 +100,11 @@ const ApplyLeave: React.FC = () => {
       </Tabs>
 
       <ApplyLeaveModal
-        show={showModal}
-        onHide={() => { setShowModal(false); setEditLeave(null); }}
-        editLeave={editLeave}
-        leaveTypes={leaveTypeOptions}
-        onSave={handleSaveLeave}
-      />
+  show={showModal}
+  onHide={() => { setShowModal(false); setEditLeave(null); }}
+  editLeave={editLeave}
+  onSave={handleSaveLeave}
+/>
 
       <DeleteConfirmModal
         show={confirmDelete}

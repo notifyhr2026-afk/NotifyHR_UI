@@ -28,7 +28,7 @@ const RequestDemo: React.FC = () => {
         {/* HERO */}
         <section
           className="text-white"
-          style={{ background: "linear-gradient(135deg, rgb(13, 110, 253), rgb(242 16 16))" }}
+          style={{ background: "linear-gradient(135deg, rgb(13, 110, 253), rgb(40 197 137))" }}
         >
           <div className="container py-5">
             <div className="row align-items-center">

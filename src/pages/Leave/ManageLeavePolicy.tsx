@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ToastMessage, { ToastProvider } from "../../components/ToastMessage";
 import { ValidationMessage } from "../../components/ValidationMessage";
 import "bootstrap/dist/css/bootstrap.min.css";
+import leavePolicyService from "../../services/leavePolicyService";
 
 /* =========================
    INTERFACES
@@ -24,7 +25,7 @@ interface LeaveType {
 }
 
 /* =========================
-   MOCK DATA
+   STATIC LEAVE TYPES
 ========================= */
 const leaveTypes: LeaveType[] = [
   { id: 1, name: "Annual Leave" },
@@ -32,25 +33,13 @@ const leaveTypes: LeaveType[] = [
   { id: 3, name: "Casual Leave" },
 ];
 
-const leavePolicyMock: LeavePolicy[] = [
-  {
-    id: 3,
-    policyName: "Standard Annual Leave Policy",
-    leaveTypeId: 1,
-    totalAnnualLeaves: 20,
-    maxCarryForward: 5,
-    encashable: true,
-    allowNegativeBalance: false,
-    effectiveFrom: "2024-01-01",
-    effectiveTo: "2024-12-31",
-  },
-];
-
 /* =========================
    COMPONENT
 ========================= */
 const ManageLeavePolicy: React.FC = () => {
-  const [policies, setPolicies] = useState<LeavePolicy[]>(leavePolicyMock);
+  const [policies, setPolicies] = useState<LeavePolicy[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -72,6 +61,40 @@ const ManageLeavePolicy: React.FC = () => {
     policyName: null as boolean | null,
     totalAnnualLeaves: null as boolean | null,
   });
+
+  /* =========================
+     API MAPPER
+  ========================= */
+  const mapApiToLeavePolicy = (item: any): LeavePolicy => ({
+    id: item.LeavePolicyID,
+    policyName: item.PolicyName,
+    leaveTypeId: item.LeaveTypeID,
+    totalAnnualLeaves: Number(item.TotalAnnualLeaves),
+    maxCarryForward: Number(item.MaxCarryForward),
+    encashable: item.Encashable,
+    allowNegativeBalance: item.AllowNegativeBalance,
+    effectiveFrom: "",
+    effectiveTo: "",
+  });
+
+  /* =========================
+     FETCH DATA
+  ========================= */
+  const fetchLeavePolicies = async () => {
+    try {
+      setLoading(true);
+      const data = await leavePolicyService.getLeavePolicy();
+      setPolicies(data.map(mapApiToLeavePolicy));
+    } catch (error) {
+      ToastMessage.show("Failed to load leave policies", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchLeavePolicies();
+  }, []);
 
   /* =========================
      FUNCTIONS
@@ -151,52 +174,56 @@ const ManageLeavePolicy: React.FC = () => {
           + Create Leave Policy
         </button>
 
-        <table className="table table-bordered">
-          <thead className="table-dark">
-            <tr>
-              <th>Policy Name</th>
-              <th>Leave Type</th>
-              <th>Total Leaves</th>
-              <th>Carry Forward</th>
-              <th>Encashable</th>
-              <th>Negative Balance</th>
-              <th>Effective Period</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody>
-            {policies.map(p => (
-              <tr key={p.id}>
-                <td>{p.policyName}</td>
-                <td>{getLeaveTypeName(p.leaveTypeId)}</td>
-                <td>{p.totalAnnualLeaves}</td>
-                <td>{p.maxCarryForward}</td>
-                <td>{p.encashable ? "Yes" : "No"}</td>
-                <td>{p.allowNegativeBalance ? "Yes" : "No"}</td>
-                <td>
-                  {p.effectiveFrom} → {p.effectiveTo}
-                </td>
-                <td>
-                  <button
-                    className="btn btn-warning btn-sm me-2"
-                    onClick={() => openEditModal(p)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => {
-                      setDeleteId(p.id);
-                      setShowDeleteModal(true);
-                    }}
-                  >
-                    Delete
-                  </button>
-                </td>
+        {loading ? (
+          <p>Loading leave policies...</p>
+        ) : (
+          <table className="table table-bordered">
+            <thead className="table-dark">
+              <tr>
+                <th>Policy Name</th>
+                <th>Leave Type</th>
+                <th>Total Leaves</th>
+                <th>Carry Forward</th>
+                <th>Encashable</th>
+                <th>Negative Balance</th>
+                <th>Effective Period</th>
+                <th>Action</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {policies.map(p => (
+                <tr key={p.id}>
+                  <td>{p.policyName}</td>
+                  <td>{getLeaveTypeName(p.leaveTypeId)}</td>
+                  <td>{p.totalAnnualLeaves}</td>
+                  <td>{p.maxCarryForward}</td>
+                  <td>{p.encashable ? "Yes" : "No"}</td>
+                  <td>{p.allowNegativeBalance ? "Yes" : "No"}</td>
+                  <td>
+                    {p.effectiveFrom || "-"} → {p.effectiveTo || "-"}
+                  </td>
+                  <td>
+                    <button
+                      className="btn btn-warning btn-sm me-2"
+                      onClick={() => openEditModal(p)}
+                    >
+                      Edit
+                    </button>
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() => {
+                        setDeleteId(p.id);
+                        setShowDeleteModal(true);
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
       </div>
 
       {/* CREATE / EDIT MODAL */}
@@ -273,37 +300,6 @@ const ManageLeavePolicy: React.FC = () => {
                         setPolicyData({
                           ...policyData,
                           maxCarryForward: Number(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="row mb-3">
-                  <div className="col-md-6">
-                    <label>Effective From</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={policyData.effectiveFrom}
-                      onChange={e =>
-                        setPolicyData({
-                          ...policyData,
-                          effectiveFrom: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="col-md-6">
-                    <label>Effective To</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={policyData.effectiveTo}
-                      onChange={e =>
-                        setPolicyData({
-                          ...policyData,
-                          effectiveTo: e.target.value,
                         })
                       }
                     />
