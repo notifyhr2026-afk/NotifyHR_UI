@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
-
+import LoggedInUser from '../../types/LoggedInUser'
 import AssetService from '../../services/AssetService';
 import branchService from '../../services/branchService';
 import departmentService from '../../services/departmentService';
@@ -44,9 +44,6 @@ interface Department {
   DepartmentName: string;
 }
 
-interface LoggedInUser {
-  organizationID: number;
-}
 
 const statuses = [
   { id: 1, name: 'Active' },

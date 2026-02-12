@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { Button, Modal, Form, Table, Row, Col } from 'react-bootstrap';
+import React, { useEffect, useState, useMemo } from 'react';
+import { Button, Modal, Form, Table, Row, Col, Pagination } from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { GetRolesAsync } from '../../services/roleService';
@@ -19,13 +19,18 @@ const ManageRoles: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [showRoleModal, setShowRoleModal] = useState(false);
   const [editRole, setEditRole] = useState<Role | null>(null);
+  const [validated, setValidated] = useState(false);
+
+  // ✅ Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+
   const [newRole, setNewRole] = useState<Role>({
     RoleID: 0,
     RoleName: '',
     Description: '',
     IsActive: true,
   });
-  const [validated, setValidated] = useState(false);
 
   /* ================= API ================= */
 
@@ -51,7 +56,17 @@ const ManageRoles: React.FC = () => {
       role.RoleName.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredRoles(filtered);
+    setCurrentPage(1); // Reset page when searching
   }, [searchTerm, roles]);
+
+  /* ================= PAGINATION LOGIC ================= */
+
+  const totalPages = Math.ceil(filteredRoles.length / itemsPerPage);
+
+  const paginatedRoles = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredRoles.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredRoles, currentPage]);
 
   /* ================= MODAL ================= */
 
@@ -152,8 +167,8 @@ const ManageRoles: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {filteredRoles.length ? (
-              filteredRoles.map((role) => (
+            {paginatedRoles.length ? (
+              paginatedRoles.map((role) => (
                 <tr key={role.RoleID}>
                   <td>{role.RoleName}</td>
                   <td>{role.Description}</td>
@@ -185,6 +200,31 @@ const ManageRoles: React.FC = () => {
           </tbody>
         </Table>
       </div>
+
+      {/* ✅ Pagination UI */}
+      {totalPages > 1 && (
+        <Pagination className="justify-content-center mt-3">
+          <Pagination.Prev
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage(currentPage - 1)}
+          />
+
+          {[...Array(totalPages)].map((_, index) => (
+            <Pagination.Item
+              key={index + 1}
+              active={index + 1 === currentPage}
+              onClick={() => setCurrentPage(index + 1)}
+            >
+              {index + 1}
+            </Pagination.Item>
+          ))}
+
+          <Pagination.Next
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage(currentPage + 1)}
+          />
+        </Pagination>
+      )}
 
       {/* ===== MODAL ===== */}
       <Modal show={showRoleModal} onHide={handleCloseRoleModal}>

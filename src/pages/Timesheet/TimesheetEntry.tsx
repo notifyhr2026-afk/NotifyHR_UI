@@ -9,6 +9,8 @@ import {
   Row,
   Table,
 } from "react-bootstrap";
+import timesheetService from '../../services/timesheetService';
+import shiftService from '../../services/shiftService';
 
 /* ================= CONFIG ================= */
 
@@ -203,11 +205,47 @@ const TimesheetEntry: React.FC = () => {
   };
 
   /* ===== SAVE PROJECT ===== */
-  const saveProject = (projectId: number) => {
-    const payload = timesheets.find((p) => p.projectId === projectId);
-    console.log("Save Payload:", payload);
-    alert("Timesheet saved successfully!");
-  };
+const saveProject = async (projectId: number) => {
+  try {
+    const projectSheet = timesheets.find(
+      (p) => p.projectId === projectId
+    );
+
+    if (!projectSheet) return;
+
+    // 🔹 Convert UI entries → API format
+    const timesheetPayload = projectSheet.entries.map((entry, index) => ({
+      TimesheetID: 0, // 0 for new entry
+      EmployeeID: 1,  // Replace with logged-in employee ID
+      ProjectID: projectId,
+      EntryDate: entry.date,
+      Shift: entry.shift,
+      Activity: entry.activity,
+      Hours: entry.hours,
+    }));
+
+    const requestBody = {
+      createdBy: "Admin", // Replace with logged-in username
+      timesheetEntryJson: JSON.stringify(timesheetPayload),
+    };
+
+    console.log("Final Request:", requestBody);
+
+    const response = await timesheetService.createTimesheetEntries(
+      requestBody
+    );
+
+    if (response.length > 0) {
+      alert(response[0].msg);
+    } else {
+      alert("Timesheet saved successfully.");
+    }
+  } catch (error) {
+    console.error("Save Error:", error);
+    alert("Error saving timesheet.");
+  }
+};
+
 
   return (
     <Card className="p-5">

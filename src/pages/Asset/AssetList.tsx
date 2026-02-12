@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col, InputGroup } from 'react-bootstrap';
 import AssetService from '../../services/AssetService';
-
+import LoggedInUser from '../../types/LoggedInUser'
 /* ===========================
    Interfaces
    =========================== */
@@ -21,9 +21,6 @@ interface AssetCategory {
   IsActive: boolean;
 }
 
-interface LoggedInUser {
-  organizationID: number;
-}
 
 const ManageAssets: React.FC = () => {
   /* ===========================

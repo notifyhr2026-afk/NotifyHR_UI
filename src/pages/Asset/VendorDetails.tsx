@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
 import AssetService from '../../services/AssetService';
-
+import LoggedInUser from '../../types/LoggedInUser'
 /* ===========================
    Interfaces
    =========================== */
@@ -15,9 +15,7 @@ interface Vendor {
   Address: string;
 }
 
-interface LoggedInUser {
-  organizationID: number;
-}
+
 
 /* ===========================
    Component

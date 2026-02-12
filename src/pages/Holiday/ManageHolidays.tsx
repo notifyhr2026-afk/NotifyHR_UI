@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Table,
@@ -7,26 +7,45 @@ import {
   Row,
   Col,
   Badge,
+  Toast,
+  ToastContainer,
 } from "react-bootstrap";
 import { BsPencilSquare, BsTrash, BsPlus } from "react-icons/bs";
-
-// Helper to safely render react-icons in strict TS projects
+import branchService from "../../services/branchService";
+import holidayService from "../../services/holidayService";
+import LoggedInUser from '../../types/LoggedInUser'
 const Icon = (Component: any, props: any = {}) => <Component {...props} />;
 
 interface Holiday {
   id: number;
-  branchID: string;
+  branchID: number;
   holidayName: string;
   holidayDate: string;
   isOptional: boolean;
   isActive: boolean;
 }
 
+interface Branch {
+  BranchID: number;
+  BranchName: string;
+}
+
+
+
 const ManageHolidays: React.FC = () => {
+  const userString = localStorage.getItem("user");
+  const user: LoggedInUser | null = userString
+    ? JSON.parse(userString)
+    : null;
+  const organizationID = user?.organizationID ?? 0;
+
   const [holidays, setHolidays] = useState<Holiday[]>([]);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [validated, setValidated] = useState(false);
+
   const [holidayFormData, setHolidayFormData] = useState<Holiday>({
     id: 0,
-    branchID: "",
+    branchID: 0,
     holidayName: "",
     holidayDate: "",
     isOptional: false,
@@ -35,20 +54,53 @@ const ManageHolidays: React.FC = () => {
 
   const [editHoliday, setEditHoliday] = useState<Holiday | null>(null);
   const [showModal, setShowModal] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
-  const [holidayToDelete, setHolidayToDelete] = useState<number | null>(null);
 
-  // Mock branches for dropdown
-  const branches = [
-    { id: "1", name: "Head Office" },
-    { id: "2", name: "Branch A" },
-    { id: "3", name: "Branch B" },
-  ];
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    variant: "success",
+  });
+
+  /* ================= LOAD DATA ================= */
+
+  useEffect(() => {
+    loadBranches();
+    loadHolidays();
+  }, []);
+
+  const loadBranches = async () => {
+    try {
+      const res = await branchService.getBranchesAsync(organizationID);
+      setBranches(res?.Table ?? []);
+    } catch (error) {
+      console.error("Failed to load branches", error);
+    }
+  };
+
+  const loadHolidays = async () => {
+    try {
+      const res = await holidayService.GetHolidaysAsync(organizationID);
+      const data = res?.Table ?? [];
+
+      const mapped: Holiday[] = data.map((h: any) => ({
+        id: h.HolidayID,
+        branchID: h.BranchID,
+        holidayName: h.HolidayName,
+        holidayDate: h.HolidayDate?.split("T")[0],
+        isOptional: h.IsOptional,
+        isActive: h.IsActive,
+      }));
+
+      setHolidays(mapped);
+    } catch (error) {
+      console.error("Failed to load holidays", error);
+    }
+  };
+
+  /* ================= FORM HANDLING ================= */
 
   const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    e: React.ChangeEvent<any>
   ) => {
     const { id, value, type } = e.target;
 
@@ -67,9 +119,10 @@ const ManageHolidays: React.FC = () => {
 
   const openAddModal = () => {
     setEditHoliday(null);
+    setValidated(false);
     setHolidayFormData({
       id: 0,
-      branchID: "",
+      branchID: 0,
       holidayName: "",
       holidayDate: "",
       isOptional: false,
@@ -80,207 +133,227 @@ const ManageHolidays: React.FC = () => {
 
   const openEditModal = (holiday: Holiday) => {
     setEditHoliday(holiday);
+    setValidated(false);
     setHolidayFormData(holiday);
     setShowModal(true);
   };
 
-  const handleSave = () => {
-    if (!holidayFormData.branchID || !holidayFormData.holidayName || !holidayFormData.holidayDate) {
-      alert("Please fill all required fields.");
+  /* ================= SAVE ================= */
+
+  const handleSave = async (event: any) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+
+    if (form.checkValidity() === false) {
+      event.stopPropagation();
+      setValidated(true);
       return;
     }
 
-    if (editHoliday) {
-      setHolidays((prev) =>
-        prev.map((h) => (h.id === holidayFormData.id ? holidayFormData : h))
-      );
-    } else {
-      setHolidays((prev) => [
-        ...prev,
-        { ...holidayFormData, id: Date.now() },
-      ]);
+    try {
+      const payload = {
+        holidayID: holidayFormData.id,
+        organizationID,
+        branchID: holidayFormData.branchID,
+        holidayName: holidayFormData.holidayName,
+        holidayDate: holidayFormData.holidayDate,
+        isOptional: holidayFormData.isOptional,
+        isActive: holidayFormData.isActive,
+        createdBy: "Admin",
+      };
+
+      const res = await holidayService.saveHolidayAsync(payload);
+
+      if (res[0]?.value === 1) {
+        setToast({
+          show: true,
+          message: res[0]?.MSG,
+          variant: "success",
+        });
+        loadHolidays();
+        setShowModal(false);
+      } else {
+        setToast({
+          show: true,
+          message: res[0]?.MSG,
+          variant: "warning",
+        });
+      }
+    } catch (error) {
+      setToast({
+        show: true,
+        message: "Something went wrong!",
+        variant: "danger",
+      });
     }
-    setShowModal(false);
   };
 
-  const confirmDeleteHoliday = (id: number) => {
-    setHolidayToDelete(id);
-    setConfirmDelete(true);
-  };
-
-  const handleDelete = () => {
-    if (holidayToDelete !== null) {
-      setHolidays((prev) => prev.filter((h) => h.id !== holidayToDelete));
-      setHolidayToDelete(null);
-      setConfirmDelete(false);
-    }
-  };
+  /* ================= UI ================= */
 
   return (
     <div className="mt-5">
-      <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3 className="fw-bold">Manage Holidays</h3>
-        <Button variant="primary" onClick={openAddModal}>
+      <div className="d-flex justify-content-between mb-4">
+        <h3>Manage Holidays</h3>
+        <Button onClick={openAddModal}>
           {Icon(BsPlus, { className: "me-1" })}
           Add Holiday
         </Button>
       </div>
 
-      {/* Holiday Table */}
-      {holidays.length > 0 ? (
-        <Table bordered hover responsive className="shadow-sm">
-          <thead className="table-light">
-            <tr>
-              <th>Branch</th>
-              <th>Holiday</th>
-              <th>Date</th>
-              <th>Optional</th>
-              <th>Active</th>
-              <th style={{ width: "140px" }}>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {holidays.map((h) => (
-              <tr key={h.id}>
-                <td>{branches.find((b) => b.id === h.branchID)?.name}</td>
-                <td>{h.holidayName}</td>
-                <td>
-                  <Badge bg="secondary">{h.holidayDate}</Badge>
-                </td>
-                <td>
-                  {h.isOptional ? <Badge bg="info">Yes</Badge> : <Badge bg="dark">No</Badge>}
-                </td>
-                <td>
-                  {h.isActive ? <Badge bg="success">Active</Badge> : <Badge bg="danger">Inactive</Badge>}
-                </td>
-                <td>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() => openEditModal(h)}
-                    className="me-2"
-                  >
-                    {Icon(BsPencilSquare, { size: 16 })}
-                  </Button>
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={() => confirmDeleteHoliday(h.id)}
-                  >
-                    {Icon(BsTrash, { size: 16 })}
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      ) : (
-        <p className="text-muted">No holidays added yet.</p>
-      )}
-
-      {/* Add/Edit Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>{editHoliday ? "Edit Holiday" : "Add New Holiday"}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
-            <Row>
-              <Col md={12} className="mb-3">
-                <Form.Label>
-                  Branch <span className="text-danger">*</span>
-                </Form.Label>
-                <Form.Select
-                  id="branchID"
-                  value={holidayFormData.branchID}
-                  onChange={handleInputChange}
+      <Table bordered hover responsive>
+        <thead>
+          <tr>
+            <th>Branch</th>
+            <th>Holiday</th>
+            <th>Date</th>
+            <th>Optional</th>
+            <th>Active</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {holidays.map((h) => (
+            <tr key={h.id}>
+              <td>
+                {
+                  branches.find((b) => b.BranchID === h.branchID)
+                    ?.BranchName
+                }
+              </td>
+              <td>{h.holidayName}</td>
+              <td>
+                <Badge bg="secondary">{h.holidayDate}</Badge>
+              </td>
+              <td>
+                <Badge bg={h.isOptional ? "info" : "dark"}>
+                  {h.isOptional ? "Yes" : "No"}
+                </Badge>
+              </td>
+              <td>
+                <Badge bg={h.isActive ? "success" : "danger"}>
+                  {h.isActive ? "Active" : "Inactive"}
+                </Badge>
+              </td>
+              <td>
+                <Button
+                  size="sm"
+                  variant="outline-primary"
+                  onClick={() => openEditModal(h)}
                 >
-                  <option value="">-- Select Branch --</option>
-                  {branches.map((b) => (
-                    <option key={b.id} value={b.id}>
-                      {b.name}
-                    </option>
-                  ))}
-                </Form.Select>
-              </Col>
-            </Row>
+                  {Icon(BsPencilSquare)}
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </Table>
 
-            <Row>
-              <Col md={12} className="mb-3">
-                <Form.Label>
-                  Holiday Name <span className="text-danger">*</span>
-                </Form.Label>
-                <Form.Control
-                  id="holidayName"
-                  type="text"
-                  placeholder="Ex: New Year's Day"
-                  value={holidayFormData.holidayName}
-                  onChange={handleInputChange}
-                />
-              </Col>
-            </Row>
+      {/* ================= MODAL ================= */}
 
-            <Row>
-              <Col md={6} className="mb-3">
-                <Form.Label>
-                  Holiday Date <span className="text-danger">*</span>
-                </Form.Label>
-                <Form.Control
-                  id="holidayDate"
-                  type="date"
-                  value={holidayFormData.holidayDate}
-                  onChange={handleInputChange}
-                />
-              </Col>
-            </Row>
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
+        <Form noValidate validated={validated} onSubmit={handleSave}>
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {editHoliday ? "Edit Holiday" : "Add Holiday"}
+            </Modal.Title>
+          </Modal.Header>
 
-            <Row className="mt-2">
-              <Col md={6}>
-                <Form.Check
-                  type="switch"
-                  id="isOptional"
-                  label="Optional Holiday"
-                  checked={holidayFormData.isOptional}
-                  onChange={handleInputChange}
-                />
-              </Col>
-              <Col md={6}>
-                <Form.Check
-                  type="switch"
-                  id="isActive"
-                  label="Active Holiday"
-                  checked={holidayFormData.isActive}
-                  onChange={handleInputChange}
-                />
-              </Col>
-            </Row>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="light" onClick={() => setShowModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
-            {editHoliday ? "Update Holiday" : "Save Holiday"}
-          </Button>
-        </Modal.Footer>
+          <Modal.Body>
+            <Form.Group className="mb-3">
+              <Form.Label>Branch *</Form.Label>
+              <Form.Select
+                id="branchID"
+                required
+                value={holidayFormData.branchID}
+                onChange={(e) =>
+                  setHolidayFormData((prev) => ({
+                    ...prev,
+                    branchID: Number(e.target.value),
+                  }))
+                }
+              >
+                <option value={0}>Select Branch</option>
+                {branches.map((b) => (
+                  <option key={b.BranchID} value={b.BranchID}>
+                    {b.BranchName}
+                  </option>
+                ))}
+              </Form.Select>
+              <Form.Control.Feedback type="invalid">
+                Please select branch.
+              </Form.Control.Feedback>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Holiday Name *</Form.Label>
+              <Form.Control
+                id="holidayName"
+                required
+                value={holidayFormData.holidayName}
+                onChange={handleInputChange}
+              />
+              <Form.Control.Feedback type="invalid">
+                Holiday name required.
+              </Form.Control.Feedback>
+            </Form.Group>
+
+            <Form.Group className="mb-3">
+              <Form.Label>Date *</Form.Label>
+              <Form.Control
+                type="date"
+                id="holidayDate"
+                required
+                value={holidayFormData.holidayDate}
+                onChange={handleInputChange}
+              />
+              <Form.Control.Feedback type="invalid">
+                Date required.
+              </Form.Control.Feedback>
+            </Form.Group>
+
+            <Form.Check
+              type="switch"
+              id="isOptional"
+              label="Optional Holiday"
+              checked={holidayFormData.isOptional}
+              onChange={handleInputChange}
+            />
+
+            <Form.Check
+              type="switch"
+              id="isActive"
+              label="Active Holiday"
+              checked={holidayFormData.isActive}
+              onChange={handleInputChange}
+            />
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button variant="secondary" onClick={() => setShowModal(false)}>
+              Cancel
+            </Button>
+            <Button type="submit">
+              {editHoliday ? "Update" : "Save"}
+            </Button>
+          </Modal.Footer>
+        </Form>
       </Modal>
 
-      {/* Delete Confirmation */}
-      <Modal show={confirmDelete} onHide={() => setConfirmDelete(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>Delete Holiday?</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>This action cannot be undone. Do you want to delete this holiday?</Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
-            Cancel
-          </Button>
-          <Button variant="danger" onClick={handleDelete}>
-            Delete
-          </Button>
-        </Modal.Footer>
-      </Modal>
+      {/* ================= TOAST ================= */}
+
+      <ToastContainer position="top-end" className="p-3">
+        <Toast
+          bg={toast.variant}
+          show={toast.show}
+          delay={3000}
+          autohide
+          onClose={() => setToast({ ...toast, show: false })}
+        >
+          <Toast.Body className="text-white">
+            {toast.message}
+          </Toast.Body>
+        </Toast>
+      </ToastContainer>
     </div>
   );
 };

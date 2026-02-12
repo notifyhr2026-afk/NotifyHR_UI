@@ -1,8 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ToastMessage, { ToastProvider } from "../../components/ToastMessage";
 import { ValidationMessage } from "../../components/ValidationMessage";
 import "bootstrap/dist/css/bootstrap.min.css";
-
+import {GetAllFeaturesAsync,PostFeaturesByAsync,DeleteFeatureAsync,GetFeatureTypesAsync} from "../../services/featureService";
+import {FeatureType} from '../../types/FeatureType';
+import { Modal, Button, Form, Badge } from "react-bootstrap";
 /* ================= TYPES ================= */
 
 interface Feature {
@@ -12,44 +14,17 @@ interface Feature {
   FeatureType: string;
   IsActive: boolean;
   Icon: string;
-  OrderBy: number; // ✅ NEW
+  OrderBy: number;
 }
-
 /* ================= STATIC DATA ================= */
 
-const featureTypes = [
-  { value: "Core", label: "Core" },
-  { value: "Security", label: "Security" },
-  { value: "Analytics", label: "Analytics" },
-  { value: "Integration", label: "Integration" },
-  { value: "Customization", label: "Customization" },
-];
 
-const featuresMock: Feature[] = [
-  {
-    FeatureID: 1,
-    FeatureName: "User Management",
-    Description: "Manage users and roles",
-    FeatureType: "Core",
-    IsActive: true,
-    Icon: "bi-people",
-    OrderBy: 1,
-  },
-  {
-    FeatureID: 2,
-    FeatureName: "Audit Logs",
-    Description: "Track system activities",
-    FeatureType: "Security",
-    IsActive: true,
-    Icon: "bi-shield-lock",
-    OrderBy: 2,
-  },
-];
 
 /* ================= COMPONENT ================= */
 
 const FeatureManagement: React.FC = () => {
-  const [features, setFeatures] = useState<Feature[]>(featuresMock);
+  const [featureTypes, setFeatureTypes] = useState<FeatureType[]>([]);
+  const [features, setFeatures] = useState<Feature[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -65,12 +40,72 @@ const FeatureManagement: React.FC = () => {
     OrderBy: 0,
   });
 
-  const [valid, setValid] = useState({
-    FeatureName: null as boolean | null,
-    FeatureType: null as boolean | null,
+  const [valid, setValid] = useState<{
+    FeatureName: boolean | null;
+    FeatureType: boolean | null;
+  }>({
+    FeatureName: null,
+    FeatureType: null,
   });
 
-  /* ================= FUNCTIONS ================= */
+  /* ================= LOAD FEATURES ================= */
+
+useEffect(() => {
+  const loadInitialData = async () => {
+    try {
+      // Load Features
+      const apiResponse: Feature[] = await GetAllFeaturesAsync();
+
+      const normalized: Feature[] = apiResponse.map(f => ({
+        FeatureID: Number(f.FeatureID),
+        FeatureName: String(f.FeatureName),
+        Description: String(f.Description ?? ""),
+        FeatureType: String(f.FeatureType),
+        IsActive: Boolean(f.IsActive),
+        Icon: String(f.Icon),
+        OrderBy: f.OrderBy === null ? 0 : Number(f.OrderBy),
+      }));
+
+      setFeatures(normalized);
+
+      // ✅ Load Feature Types
+      const typesResponse = await GetFeatureTypesAsync();
+
+      const normalizedTypes: FeatureType[] = typesResponse.map((t: any) => ({
+        FeatureTypeID: Number(t.FeatureTypeID),
+        FeatureType: String(t.FeatureType),
+      }));
+
+      setFeatureTypes(normalizedTypes);
+
+    } catch (error) {
+      console.error("Failed to load data", error);
+      ToastMessage.show("Failed to load data", "error");
+    }
+  };
+
+  loadInitialData();
+}, []);
+
+  /* ================= VALIDATION ================= */
+
+  const validateForm = () => {
+    const nameValid = featureData.FeatureName.trim() !== "";
+    const typeValid = featureData.FeatureType.trim() !== "";
+
+    setValid({
+      FeatureName: nameValid,
+      FeatureType: typeValid,
+    });
+
+    return nameValid && typeValid;
+  };
+
+  const isFormValid =
+    featureData.FeatureName.trim() !== "" &&
+    featureData.FeatureType.trim() !== "";
+
+  /* ================= MODAL HANDLERS ================= */
 
   const openCreateModal = () => {
     setEditingId(null);
@@ -88,6 +123,8 @@ const FeatureManagement: React.FC = () => {
   };
 
   const openEditModal = (feature: Feature) => {
+    console.log(feature, 'feature-open Edit modal')
+
     setEditingId(feature.FeatureID);
     setFeatureData(feature);
     setValid({ FeatureName: true, FeatureType: true });
@@ -99,42 +136,80 @@ const FeatureManagement: React.FC = () => {
     setShowDeleteModal(true);
   };
 
-  const validate = () => {
-    const newValid = {
-      FeatureName: featureData.FeatureName.trim().length > 0,
-      FeatureType: featureData.FeatureType.trim().length > 0,
-    };
-    setValid(newValid);
-    return Object.values(newValid).every(v => v === true);
-  };
 
-  const saveFeature = () => {
-    if (!validate()) {
-      ToastMessage.show("Please fix validation errors.", "error");
+
+  /* ================= SAVE / DELETE ================= */
+
+  const saveFeature = async () => {
+    if (!validateForm()) {
+      ToastMessage.show("Please fill required fields.", "error");
       return;
     }
 
-    if (editingId) {
-      setFeatures(prev =>
-        prev.map(f => (f.FeatureID === editingId ? featureData : f))
-      );
-      ToastMessage.show("Feature updated successfully!", "success");
-    } else {
-      setFeatures(prev => [
-        ...prev,
-        { ...featureData, FeatureID: Date.now() },
-      ]);
-      ToastMessage.show("Feature created successfully!", "success");
-    }
+    try {
+      if (editingId) {
 
-    setShowModal(false);
+        setFeatures(prev =>
+          prev.map(f =>
+            f.FeatureID === editingId ? { ...featureData } : f
+          )
+        );
+        ToastMessage.show("Feature updated successfully!", "success");
+      } else {
+
+        const response = await PostFeaturesByAsync(featureData);
+        //         console.log(response, 'response issss...')
+        //         {
+        //     "FeatureID": 37,
+        //     "value": 1,
+        //     "message": "Feature Created Successfully."
+        // }
+        if (response.value === 1) {
+        }
+        setFeatures(prev => [
+          ...prev,
+          {
+            ...featureData,
+            FeatureID: response?.FeatureID ?? Date.now(),
+          },
+        ]);
+        if (response.value === 1) {
+
+          ToastMessage.show("Feature created successfully!", "success");
+        }
+        else {
+          ToastMessage.show("Somewent wrong!", "error");
+
+        }
+      }
+
+      setShowModal(false);
+    } catch (error) {
+      console.error(error);
+      ToastMessage.show("Failed to save feature.", "error");
+    }
   };
+  const deleteFeature = async () => {
+    if (!deleteId) return;
 
-  const deleteFeature = () => {
-    if (deleteId) {
-      setFeatures(prev => prev.filter(f => f.FeatureID !== deleteId));
-      ToastMessage.show("Feature deleted successfully!", "success");
+    try {
+      const result = await DeleteFeatureAsync(deleteId);
+
+      if (result === 1) {
+        // Remove from UI immediately
+        setFeatures(prev =>
+          prev.filter(f => f.FeatureID !== deleteId)
+        );
+
+        ToastMessage.show("Feature deleted successfully!", "success");
+      } else {
+        ToastMessage.show("Failed to delete feature", "error");
+      }
+
+    } catch (error) {
+      ToastMessage.show("Failed to delete feature", "error");
     }
+
     setShowDeleteModal(false);
   };
 
@@ -154,282 +229,213 @@ const FeatureManagement: React.FC = () => {
         <table className="table table-bordered table-hover">
           <thead className="table-dark">
             <tr>
-              <th>Order</th>
               <th>Feature Name</th>
               <th>Description</th>
               <th>Feature Type</th>
               <th>Status</th>
-              <th>Icon</th>
               <th>Action</th>
             </tr>
           </thead>
           <tbody>
-            {features
-              .slice()
-              .sort((a, b) => a.OrderBy - b.OrderBy)
-              .map(feature => (
-                <tr key={feature.FeatureID}>
-                  <td>{feature.OrderBy}</td>
-                  <td>{feature.FeatureName}</td>
-                  <td>{feature.Description}</td>
-                  <td>{feature.FeatureType}</td>
-                  <td>
-                    <span
-                      className={`badge ${
-                        feature.IsActive ? "bg-success" : "bg-secondary"
+            {features.map(feature => (
+              <tr key={feature.FeatureID}>
+                <td>{feature.FeatureName}</td>
+                <td>{feature.Description}</td>
+                <td>{feature.FeatureType}</td>
+                <td>
+                  <span
+                    className={`badge ${feature.IsActive ? "bg-success" : "bg-secondary"
                       }`}
-                    >
-                      {feature.IsActive ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td>
-                    <i className={`bi ${feature.Icon}`} />
-                  </td>
-                  <td>
-                    <button
-                      className="btn btn-warning btn-sm me-2"
-                      onClick={() => openEditModal(feature)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() =>
-                        openDeleteModal(feature.FeatureID)
-                      }
-                    >
-                      Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                  >
+                    {feature.IsActive ? "Active" : "Inactive"}
+                  </span>
+                </td>
+                <td>
+                  <button
+                    className="btn btn-warning btn-sm me-2"
+                    onClick={() => openEditModal(feature)}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => openDeleteModal(feature.FeatureID)}
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
 
       {/* ================= CREATE / EDIT MODAL ================= */}
 
-      {showModal && (
-        <div className="modal show fade d-block" tabIndex={-1}>
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5 className="modal-title">
-                  {editingId ? "Edit Feature" : "Create Feature"}
-                </h5>
-                <button
-                  className="btn-close"
-                  onClick={() => setShowModal(false)}
-                />
-              </div>
+     <Modal
+  show={showModal}
+  onHide={() => setShowModal(false)}
+  centered
+  backdrop="static"
+  size="lg"
+>
+  <Modal.Header closeButton>
+    <Modal.Title>
+      {editingId !== null ? "Edit Feature" : "Create Feature"}
+    </Modal.Title>
+  </Modal.Header>
 
-              <div className="modal-body">
-                {/* FEATURE NAME */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold">
-                    Feature Name
-                  </label>
-                  <input
-                    className={`form-control ${
-                      valid.FeatureName === false
-                        ? "is-invalid"
-                        : valid.FeatureName
-                        ? "is-valid"
-                        : ""
-                    }`}
-                    value={featureData.FeatureName}
-                    onChange={e =>
-                      setFeatureData({
-                        ...featureData,
-                        FeatureName: e.target.value,
-                      })
-                    }
-                  />
-                  <ValidationMessage
-                    message={
-                      valid.FeatureName
-                        ? "Valid feature name"
-                        : "Feature name is required"
-                    }
-                    isValid={valid.FeatureName}
-                  />
-                </div>
+  <Modal.Body>
+    <Form>
+      {/* Feature Name */}
+      <Form.Group className="mb-3">
+        <Form.Label className="fw-bold">Feature Name</Form.Label>
+        <Form.Control
+          type="text"
+          value={featureData.FeatureName}
+          isInvalid={valid.FeatureName === false}
+          isValid={valid.FeatureName === true}
+          onChange={e =>
+            setFeatureData({
+              ...featureData,
+              FeatureName: e.target.value,
+            })
+          }
+        />
+        <Form.Control.Feedback type="invalid">
+          Feature name is required
+        </Form.Control.Feedback>
+      </Form.Group>
 
-                {/* DESCRIPTION */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold">
-                    Description
-                  </label>
-                  <textarea
-                    className="form-control"
-                    rows={3}
-                    value={featureData.Description}
-                    onChange={e =>
-                      setFeatureData({
-                        ...featureData,
-                        Description: e.target.value,
-                      })
-                    }
-                  />
-                </div>
+      {/* Description */}
+      <Form.Group className="mb-3">
+        <Form.Label className="fw-bold">Description</Form.Label>
+        <Form.Control
+          as="textarea"
+          rows={3}
+          value={featureData.Description}
+          onChange={e =>
+            setFeatureData({
+              ...featureData,
+              Description: e.target.value,
+            })
+          }
+        />
+      </Form.Group>
 
-                {/* FEATURE TYPE */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold">
-                    Feature Type
-                  </label>
-                  <select
-                    className={`form-select ${
-                      valid.FeatureType === false
-                        ? "is-invalid"
-                        : valid.FeatureType
-                        ? "is-valid"
-                        : ""
-                    }`}
-                    value={featureData.FeatureType}
-                    onChange={e =>
-                      setFeatureData({
-                        ...featureData,
-                        FeatureType: e.target.value,
-                      })
-                    }
-                  >
-                    <option value="">Select Feature Type</option>
-                    {featureTypes.map(type => (
-                      <option
-                        key={type.value}
-                        value={type.value}
-                      >
-                        {type.label}
-                      </option>
-                    ))}
-                  </select>
-                  <ValidationMessage
-                    message={
-                      valid.FeatureType
-                        ? "Valid feature type"
-                        : "Feature type is required"
-                    }
-                    isValid={valid.FeatureType}
-                  />
-                </div>
+      {/* Feature Type */}
+      <Form.Group className="mb-3">
+        <Form.Label className="fw-bold">Feature Type</Form.Label>
+        <Form.Select
+          value={featureData.FeatureType}
+          isInvalid={valid.FeatureType === false}
+          isValid={valid.FeatureType === true}
+          onChange={e =>
+            setFeatureData({
+              ...featureData,
+              FeatureType: e.target.value,
+            })
+          }
+        >
+          <option value="">Select Feature Type</option>
+          {featureTypes.map(type => (
+            <option key={type.FeatureTypeID} value={type.FeatureType}>
+              {type.FeatureType}
+            </option>
+          ))}
+        </Form.Select>
+        <Form.Control.Feedback type="invalid">
+          Feature type is required
+        </Form.Control.Feedback>
+      </Form.Group>
 
-                {/* ORDER BY */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold">
-                    Order By
-                  </label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={featureData.OrderBy}
-                    min={0}
-                    onChange={e =>
-                      setFeatureData({
-                        ...featureData,
-                        OrderBy: Number(e.target.value),
-                      })
-                    }
-                  />
-                </div>
+      {/* Order By */}
+      <Form.Group className="mb-3">
+        <Form.Label className="fw-bold">Order By</Form.Label>
+        <Form.Control
+          type="number"
+          value={featureData.OrderBy}
+          onChange={e =>
+            setFeatureData({
+              ...featureData,
+              OrderBy: Number(e.target.value),
+            })
+          }
+        />
+      </Form.Group>
 
-                {/* ICON */}
-                <div className="mb-3">
-                  <label className="form-label fw-bold">
-                    Icon (Bootstrap Icon)
-                  </label>
-                  <input
-                    className="form-control"
-                    placeholder="e.g. bi-shield-lock"
-                    value={featureData.Icon}
-                    onChange={e =>
-                      setFeatureData({
-                        ...featureData,
-                        Icon: e.target.value,
-                      })
-                    }
-                  />
-                </div>
+      {/* Icon */}
+      <Form.Group className="mb-3">
+        <Form.Label className="fw-bold">Icon</Form.Label>
+        <Form.Control
+          type="text"
+          placeholder="e.g. bi-shield-lock"
+          value={featureData.Icon}
+          onChange={e =>
+            setFeatureData({
+              ...featureData,
+              Icon: e.target.value,
+            })
+          }
+        />
+      </Form.Group>
 
-                {/* STATUS */}
-                <div className="form-check">
-                  <input
-                    className="form-check-input"
-                    type="checkbox"
-                    checked={featureData.IsActive}
-                    onChange={e =>
-                      setFeatureData({
-                        ...featureData,
-                        IsActive: e.target.checked,
-                      })
-                    }
-                  />
-                  <label className="form-check-label">
-                    Is Active
-                  </label>
-                </div>
-              </div>
+      {/* Status */}
+      <Form.Check
+        type="switch"
+        id="isActiveSwitch"
+        label="Is Active"
+        checked={featureData.IsActive}
+        onChange={e =>
+          setFeatureData({
+            ...featureData,
+            IsActive: e.target.checked,
+          })
+        }
+      />
+    </Form>
+  </Modal.Body>
 
-              <div className="modal-footer">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowModal(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  className="btn btn-success"
-                  onClick={saveFeature}
-                >
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setShowModal(false)}>
+      Cancel
+    </Button>
+    <Button
+      variant="success"
+      disabled={!isFormValid}
+      onClick={saveFeature}
+    >
+      Save Feature
+    </Button>
+  </Modal.Footer>
+</Modal>
+
 
       {/* ================= DELETE MODAL ================= */}
 
-      {showDeleteModal && (
-        <div className="modal show fade d-block" tabIndex={-1}>
-          <div className="modal-dialog">
-            <div className="modal-content">
-              <div className="modal-header">
-                <h5>Delete Feature</h5>
-                <button
-                  className="btn-close"
-                  onClick={() =>
-                    setShowDeleteModal(false)
-                  }
-                />
-              </div>
-              <div className="modal-body">
-                <p>
-                  Are you sure you want to delete this
-                  feature?
-                </p>
-              </div>
-              <div className="modal-footer">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() =>
-                    setShowDeleteModal(false)
-                  }
-                >
-                  Cancel
-                </button>
-                <button
-                  className="btn btn-danger"
-                  onClick={deleteFeature}
-                >
-                  Delete
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+   <Modal
+  show={showDeleteModal}
+  onHide={() => setShowDeleteModal(false)}
+  centered
+>
+  <Modal.Header closeButton>
+    <Modal.Title>Delete Feature</Modal.Title>
+  </Modal.Header>
+
+  <Modal.Body>
+    Are you sure you want to delete this feature?
+  </Modal.Body>
+
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+      Cancel
+    </Button>
+    <Button variant="danger" onClick={deleteFeature}>
+      Delete
+    </Button>
+  </Modal.Footer>
+</Modal>
+
     </>
   );
 };

@@ -1,39 +1,84 @@
-import React, { useState } from 'react';
-import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import {
+  Button,
+  Table,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Spinner,
+} from 'react-bootstrap';
+import departmentService from '../../services/departmentService';
+import LoggedInUser from '../../types/LoggedInUser';
+import Select from 'react-select';
 
-interface Role {
-  id: number;
-  name: string;
+interface Department {
+  DepartmentID: number;
+  DepartmentName: string;
 }
 
 interface Position {
   id: number;
+  positionCode: string;
   positionName: string;
-  roleId: number;
+  description: string;
+  departmentId: number;
   isActive: boolean;
 }
 
 const ManagePositions: React.FC = () => {
-  // Mock Roles (can later come from API)
-  const roles: Role[] = [
-    { id: 1, name: 'Admin' },
-    { id: 2, name: 'Manager' },
-    { id: 3, name: 'Employee' },
-  ];
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loadingDepartments, setLoadingDepartments] = useState<boolean>(false);
+  const [departmentsError, setDepartmentsError] = useState<string | null>(null);
+  const [validated, setValidated] = useState(false);
+
+  const userString = localStorage.getItem('user');
+  const user: LoggedInUser | null = userString
+    ? JSON.parse(userString)
+    : null;
+  const organizationID = user?.organizationID ?? 0;
+
+  const emptyForm: Position = {
+    id: 0,
+    positionCode: '',
+    positionName: '',
+    description: '',
+    departmentId: 0,
+    isActive: true,
+  };
 
   const [positions, setPositions] = useState<Position[]>([]);
   const [editPosition, setEditPosition] = useState<Position | null>(null);
-
-  const [positionFormData, setPositionFormData] = useState<Position>({
-    id: 0,
-    positionName: '',
-    roleId: 0,
-    isActive: true,
-  });
+  const [positionFormData, setPositionFormData] =
+    useState<Position>(emptyForm);
 
   const [showModal, setShowModal] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [positionToDelete, setPositionToDelete] = useState<number | null>(null);
+  const [positionToDelete, setPositionToDelete] =
+    useState<number | null>(null);
+
+  // Load Departments
+  useEffect(() => {
+    const fetchDepartments = async () => {
+      try {
+        setLoadingDepartments(true);
+        const res =
+          await departmentService.getdepartmentesAsync(
+            organizationID
+          );
+        setDepartments(res?.Table ?? []);
+      } catch (error) {
+        console.error('Error fetching departments:', error);
+        setDepartmentsError('Failed to load departments');
+      } finally {
+        setLoadingDepartments(false);
+      }
+    };
+
+    if (organizationID > 0) {
+      fetchDepartments();
+    }
+  }, [organizationID]);
 
   const handleInputChange = (
     e: React.ChangeEvent<any>
@@ -49,32 +94,50 @@ const ManagePositions: React.FC = () => {
     } else {
       setPositionFormData((prev) => ({
         ...prev,
-        [id]: id === 'roleId' ? Number(value) : value,
+        [id]:
+          id === 'departmentId'
+            ? Number(value)
+            : value,
       }));
     }
   };
 
   const openAddModal = () => {
     setEditPosition(null);
-    setPositionFormData({
-      id: 0,
-      positionName: '',
-      roleId: 0,
-      isActive: true,
-    });
+    setPositionFormData(emptyForm);
+    setValidated(false);
     setShowModal(true);
   };
 
   const openEditModal = (position: Position) => {
     setEditPosition(position);
     setPositionFormData(position);
+    setValidated(false);
     setShowModal(true);
   };
 
-  const handleSave = () => {
+  const handleSave = (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+    event.preventDefault();
+    const form = event.currentTarget;
+
+    if (
+      form.checkValidity() === false ||
+      positionFormData.departmentId === 0
+    ) {
+      event.stopPropagation();
+      setValidated(true);
+      return;
+    }
+
     if (editPosition) {
       setPositions((prev) =>
-        prev.map((p) => (p.id === positionFormData.id ? positionFormData : p))
+        prev.map((p) =>
+          p.id === positionFormData.id
+            ? positionFormData
+            : p
+        )
       );
     } else {
       setPositions((prev) => [
@@ -82,7 +145,11 @@ const ManagePositions: React.FC = () => {
         { ...positionFormData, id: Date.now() },
       ]);
     }
+
     setShowModal(false);
+    setPositionFormData(emptyForm);
+    setEditPosition(null);
+    setValidated(false);
   };
 
   const confirmDeletePosition = (id: number) => {
@@ -92,31 +159,42 @@ const ManagePositions: React.FC = () => {
 
   const handleDelete = () => {
     if (positionToDelete !== null) {
-      setPositions((prev) => prev.filter((p) => p.id !== positionToDelete));
+      setPositions((prev) =>
+        prev.filter((p) => p.id !== positionToDelete)
+      );
       setConfirmDelete(false);
       setPositionToDelete(null);
     }
   };
 
-  const getRoleName = (roleId: number) =>
-    roles.find((r) => r.id === roleId)?.name || '-';
+  const getDepartmentName = (
+    departmentId: number
+  ) =>
+    departments.find(
+      (d) => d.DepartmentID === departmentId
+    )?.DepartmentName || '-';
 
   return (
-    <div className="mt-5">
-      <h3>Manage Positions</h3>
+    <div className="container mt-5">
+      <h3 className="mb-4">Manage Positions</h3>
 
       <div className="text-end mb-3">
-        <Button variant="success" onClick={openAddModal}>
+        <Button
+          variant="success"
+          onClick={openAddModal}
+        >
           + Add Position
         </Button>
       </div>
 
       {positions.length > 0 ? (
         <Table bordered hover responsive>
-          <thead>
+          <thead className="table-light">
             <tr>
+              <th>Position Code</th>
               <th>Position Name</th>
-              <th>Role</th>
+              <th>Description</th>
+              <th>Department</th>
               <th>Is Active</th>
               <th>Actions</th>
             </tr>
@@ -124,22 +202,34 @@ const ManagePositions: React.FC = () => {
           <tbody>
             {positions.map((p) => (
               <tr key={p.id}>
+                <td>{p.positionCode}</td>
                 <td>{p.positionName}</td>
-                <td>{getRoleName(p.roleId)}</td>
-                <td>{p.isActive ? 'Yes' : 'No'}</td>
+                <td>{p.description}</td>
+                <td>
+                  {getDepartmentName(
+                    p.departmentId
+                  )}
+                </td>
+                <td>
+                  {p.isActive ? 'Yes' : 'No'}
+                </td>
                 <td>
                   <Button
                     variant="outline-primary"
                     size="sm"
                     className="me-2"
-                    onClick={() => openEditModal(p)}
+                    onClick={() =>
+                      openEditModal(p)
+                    }
                   >
                     Edit
                   </Button>
                   <Button
                     variant="outline-danger"
                     size="sm"
-                    onClick={() => confirmDeletePosition(p.id)}
+                    onClick={() =>
+                      confirmDeletePosition(p.id)
+                    }
                   >
                     Delete
                   </Button>
@@ -149,45 +239,133 @@ const ManagePositions: React.FC = () => {
           </tbody>
         </Table>
       ) : (
-        <p>No positions added yet.</p>
+        <p className="text-muted">
+          No positions added yet.
+        </p>
       )}
 
       {/* Add/Edit Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title>
-            {editPosition ? 'Edit Position' : 'Add Position'}
+            {editPosition
+              ? 'Edit Position'
+              : 'Add Position'}
           </Modal.Title>
         </Modal.Header>
 
-        <Modal.Body>
-          <Form>
+        <Form
+          noValidate
+          validated={validated}
+          onSubmit={handleSave}
+        >
+          <Modal.Body>
             <Row>
               <Col md={6}>
-                <Form.Group className="mb-3" controlId="positionName">
-                  <Form.Label>Position Name</Form.Label>
+                <Form.Group
+                  className="mb-3"
+                  controlId="positionCode"
+                >
+                  <Form.Label>
+                    Position Code *
+                  </Form.Label>
                   <Form.Control
+                    required
                     type="text"
-                    value={positionFormData.positionName}
+                    value={positionFormData.positionCode}
                     onChange={handleInputChange}
                   />
+                  <Form.Control.Feedback type="invalid">
+                    Please enter position code.
+                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
 
               <Col md={6}>
-                <Form.Group className="mb-3" controlId="roleId">
-                  <Form.Label>Role</Form.Label>
-                  <Form.Select
-                    value={positionFormData.roleId}
+                <Form.Group
+                  className="mb-3"
+                  controlId="positionName"
+                >
+                  <Form.Label>
+                    Position Name *
+                  </Form.Label>
+                  <Form.Control
+                    required
+                    type="text"
+                    value={positionFormData.positionName}
                     onChange={handleInputChange}
-                  >
-                    <option value={0}>Select Role</option>
-                    {roles.map((role) => (
-                      <option key={role.id} value={role.id}>
-                        {role.name}
-                      </option>
-                    ))}
-                  </Form.Select>
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    Please enter position name.
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row>
+              <Col md={6}>
+                <Form.Group
+                  className="mb-3"
+                  controlId="departmentId"
+                >
+                  <Form.Label>Department *</Form.Label>
+                  {loadingDepartments ? (
+                    <Spinner size="sm" />
+                  ) : departmentsError ? (
+                    <p className="text-danger">{departmentsError}</p>
+                  ) : (
+                    <Select
+                      options={departments.map((dept) => ({
+                        value: dept.DepartmentID,
+                        label: dept.DepartmentName,
+                      }))}
+                      value={
+                        positionFormData.departmentId
+                          ? {
+                              value: positionFormData.departmentId,
+                              label: getDepartmentName(positionFormData.departmentId),
+                            }
+                          : null
+                      }
+                      onChange={(selectedOption: any) => {
+                        setPositionFormData((prev) => ({
+                          ...prev,
+                          departmentId: selectedOption?.value || 0,
+                        }));
+                      }}
+                      placeholder="Select Department"
+                    />
+                  )}
+                  {validated && positionFormData.departmentId === 0 && (
+                    <div className="text-danger mt-1" style={{ fontSize: '0.875em' }}>
+                      Please select a department.
+                    </div>
+                  )}
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group
+                  className="mb-3"
+                  controlId="description"
+                >
+                  <Form.Label>
+                    Description *
+                  </Form.Label>
+                  <Form.Control
+                    required
+                    as="textarea"
+                    rows={3}
+                    value={positionFormData.description}
+                    onChange={handleInputChange}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    Please enter description.
+                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
             </Row>
@@ -204,32 +382,50 @@ const ManagePositions: React.FC = () => {
                 </Form.Group>
               </Col>
             </Row>
-          </Form>
-        </Modal.Body>
+          </Modal.Body>
 
-        <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
-            {editPosition ? 'Update' : 'Save'}
-          </Button>
-        </Modal.Footer>
+          <Modal.Footer>
+            <Button
+              variant="secondary"
+              onClick={() => setShowModal(false)}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              type="submit"
+            >
+              {editPosition ? 'Update' : 'Save'}
+            </Button>
+          </Modal.Footer>
+        </Form>
       </Modal>
 
-      {/* Delete Confirmation Modal */}
-      <Modal show={confirmDelete} onHide={() => setConfirmDelete(false)}>
+      {/* Delete Modal */}
+      <Modal
+        show={confirmDelete}
+        onHide={() => setConfirmDelete(false)}
+        centered
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
+          <Modal.Title>
+            Confirm Delete
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           Are you sure you want to delete this position?
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
+          <Button
+            variant="secondary"
+            onClick={() => setConfirmDelete(false)}
+          >
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleDelete}>
+          <Button
+            variant="danger"
+            onClick={handleDelete}
+          >
             Delete
           </Button>
         </Modal.Footer>
