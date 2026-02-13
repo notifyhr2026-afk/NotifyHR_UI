@@ -92,7 +92,10 @@ const RoutesComponent: React.FC = () => {
       {/* Public routes */}
       <Route path="/" element={<Home />} />
       <Route path="login" element={<LoginPage />} />
-       <Route path="ResetPassword" element={<ResetPassword />} />
+      <Route
+  path="/reset-password/:userId/:organizationID"
+  element={<ResetPassword />}
+/>
       <Route path="RequestDemo" element={<RequestDemo />} />
       <Route path="/" element={<Home />} />
       {/* Dashboard layout routes */}

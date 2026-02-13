@@ -9,4 +9,5 @@ export interface User {
   passwordResetDate: string;
   isActive: boolean;
   isDeleted: boolean;
+  User_ID:number;
 }

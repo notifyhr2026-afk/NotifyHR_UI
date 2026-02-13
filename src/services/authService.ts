@@ -19,12 +19,14 @@ interface LoginResponse {
 }
 
 export const loginService = async (username: string, password: string): Promise<LoginResponse> => {
+  debugger;
   try {
     const response = await api.post('Auth/login', { username, password });
     return response.data;
   } catch (error: any) {
     if(error.status === 403){
       window.location.href = '/ResetPassword';
+      //window.location.href = `/reset-password/${userId}/${organizationID}`;
       return false as any;
     }
     console.error('Login API error:', error);
