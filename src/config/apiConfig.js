@@ -4,7 +4,6 @@
 //     AttendanceserviceURL: 'http://192.168.1.10:36524/api',
 //     RecruitmentserviceURL: 'http://192.168.1.10:36525/api'
 // };
-
 // const apiConfig = {
 //     IdentityURL: 'http://115.98.2.37:36522/api',
 //     HRserviceURL: 'http://115.98.2.37:36523/api',
