@@ -152,15 +152,22 @@ const OrganizationList: React.FC = () => {
 
     try {
       toast.info('Saving organization...');
-      await organizationService.createOrganization(newOrgData);
-      await fetchOrganizations();
-      toast.success('Organization added successfully!');
+      const result = await organizationService.createOrganization(newOrgData);
+      debugger;
+       const normalizedResult = Array.isArray(result) ? result[0] : result;
+        if (result[0]?.value === 1) {
+             toast.success(result[0].message || 'Role saved successfully!');
+           await fetchOrganizations();
       handleCloseModal();
+           } else {
+             toast.warning(result[0]?.message || 'Something went wrong!');
+           }
+      
     } catch (err) {
       toast.error('Failed to add organization.');
       console.error('Error creating organization:', err);
     }
-  };
+    };
 
   const handleCloseModal = () => {
     setShowModal(false);

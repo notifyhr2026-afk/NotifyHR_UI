@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
-import Select from 'react-select'; // At the top
+import Select from 'react-select';
 
 interface User {
   id: number;
@@ -15,7 +15,8 @@ interface User {
   isPasswordReset: boolean;
   passwordResetDate: string | null;
   isActive: boolean;
-  roles: string[]; // <-- New field for roles
+  isCompanyEmail: boolean; // ✅ NEW FIELD
+  roles: string[];
 }
 
 interface DropdownOption {
@@ -25,6 +26,7 @@ interface DropdownOption {
 
 const ManageUsers: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
+
   const [userFormData, setUserFormData] = useState<User>({
     id: 0,
     branchID: null,
@@ -38,7 +40,8 @@ const ManageUsers: React.FC = () => {
     isPasswordReset: false,
     passwordResetDate: null,
     isActive: true,
-    roles: [], // <-- Initial empty roles
+    isCompanyEmail: false, // ✅ INITIAL VALUE
+    roles: [],
   });
 
   const [editUser, setEditUser] = useState<User | null>(null);
@@ -46,17 +49,31 @@ const ManageUsers: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
 
-  const branches: DropdownOption[] = [{ id: 1, name: 'Branch 1' }, { id: 2, name: 'Branch 2' }];
-  const divisions: DropdownOption[] = [{ id: 1, name: 'Division 1' }, { id: 2, name: 'Division 2' }];
-  const departments: DropdownOption[] = [{ id: 1, name: 'Department 1' }, { id: 2, name: 'Department 2' }];
+  const branches: DropdownOption[] = [
+    { id: 1, name: 'Branch 1' },
+    { id: 2, name: 'Branch 2' },
+  ];
+
+  const divisions: DropdownOption[] = [
+    { id: 1, name: 'Division 1' },
+    { id: 2, name: 'Division 2' },
+  ];
+
+  const departments: DropdownOption[] = [
+    { id: 1, name: 'Department 1' },
+    { id: 2, name: 'Department 2' },
+  ];
+
   const roleOptions = [
     { value: 'Admin', label: 'Admin' },
     { value: 'Manager', label: 'Manager' },
     { value: 'Employee', label: 'Employee' },
     { value: 'Guest', label: 'Guest' },
   ];
-  const rolesOptions: string[] = ['Admin', 'Manager', 'Employee', 'Guest']; // <-- Role options
 
+  // =============================
+  // INPUT CHANGE
+  // =============================
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
@@ -64,21 +81,15 @@ const ManageUsers: React.FC = () => {
 
     if (type === 'checkbox') {
       const target = e.target as HTMLInputElement;
-      if (id.startsWith('role_')) {
-        const role = id.replace('role_', '');
-        setUserFormData((prev) => ({
-          ...prev,
-          roles: target.checked
-            ? [...prev.roles, role]
-            : prev.roles.filter((r) => r !== role),
-        }));
-      } else {
-        setUserFormData((prev) => ({
-          ...prev,
-          [id]: target.checked,
-        }));
-      }
-    } else if (id === 'branchID' || id === 'divisionID' || id === 'departmentID') {
+      setUserFormData((prev) => ({
+        ...prev,
+        [id]: target.checked,
+      }));
+    } else if (
+      id === 'branchID' ||
+      id === 'divisionID' ||
+      id === 'departmentID'
+    ) {
       setUserFormData((prev) => ({
         ...prev,
         [id]: value === '' ? null : Number(value),
@@ -91,6 +102,9 @@ const ManageUsers: React.FC = () => {
     }
   };
 
+  // =============================
+  // OPEN MODALS
+  // =============================
   const openAddModal = () => {
     setEditUser(null);
     setUserFormData({
@@ -106,6 +120,7 @@ const ManageUsers: React.FC = () => {
       isPasswordReset: false,
       passwordResetDate: null,
       isActive: true,
+      isCompanyEmail: false, // ✅ RESET VALUE
       roles: [],
     });
     setShowModal(true);
@@ -117,10 +132,15 @@ const ManageUsers: React.FC = () => {
     setShowModal(true);
   };
 
+  // =============================
+  // SAVE / UPDATE
+  // =============================
   const handleSave = () => {
     if (editUser) {
       setUsers((prev) =>
-        prev.map((u) => (u.id === userFormData.id ? userFormData : u))
+        prev.map((u) =>
+          u.id === userFormData.id ? userFormData : u
+        )
       );
     } else {
       setUsers((prev) => [
@@ -131,6 +151,9 @@ const ManageUsers: React.FC = () => {
     setShowModal(false);
   };
 
+  // =============================
+  // DELETE
+  // =============================
   const confirmDeleteUser = (id: number) => {
     setUserToDelete(id);
     setConfirmDelete(true);
@@ -147,6 +170,7 @@ const ManageUsers: React.FC = () => {
   return (
     <div className="mt-5">
       <h3>Manage Users</h3>
+
       <div className="text-end mb-3">
         <Button variant="success" onClick={openAddModal}>
           + Add User
@@ -162,6 +186,7 @@ const ManageUsers: React.FC = () => {
               <th>Phone</th>
               <th>Username</th>
               <th>Roles</th>
+              <th>Company Email</th> {/* ✅ NEW COLUMN */}
               <th>Is Active</th>
               <th>Actions</th>
             </tr>
@@ -174,6 +199,7 @@ const ManageUsers: React.FC = () => {
                 <td>{u.phone}</td>
                 <td>{u.username}</td>
                 <td>{u.roles.join(', ')}</td>
+                <td>{u.isCompanyEmail ? 'Yes' : 'No'}</td> {/* ✅ DISPLAY */}
                 <td>{u.isActive ? 'Yes' : 'No'}</td>
                 <td>
                   <Button
@@ -200,7 +226,8 @@ const ManageUsers: React.FC = () => {
         <p>No users added yet.</p>
       )}
 
-      {/* Add/Edit Modal */}
+
+  {/* Add/Edit Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>{editUser ? 'Edit User' : 'Add User'}</Modal.Title>
@@ -338,7 +365,7 @@ const ManageUsers: React.FC = () => {
             </Row>
 
             <Row>
-              <Col md={6}>
+              <Col>
                 <Form.Group controlId="isPasswordReset">
                   <Form.Check
                     type="checkbox"
@@ -348,7 +375,7 @@ const ManageUsers: React.FC = () => {
                   />
                 </Form.Group>
               </Col>
-              <Col md={6}>
+              <Col>
                 <Form.Group controlId="isActive">
                   <Form.Check
                     type="checkbox"
@@ -358,6 +385,19 @@ const ManageUsers: React.FC = () => {
                   />
                 </Form.Group>
               </Col>
+           
+              <Col>
+                <Form.Group controlId="isCompanyEmail">
+                  <Form.Check
+                    type="checkbox"
+                    label="Company Email"
+                    checked={userFormData.isCompanyEmail}
+                    onChange={handleInputChange}
+                  />
+                </Form.Group>
+              </Col>
+
+            
             </Row>
           </Form>
         </Modal.Body>
@@ -371,13 +411,14 @@ const ManageUsers: React.FC = () => {
         </Modal.Footer>
       </Modal>
 
-
-      {/* Delete Confirmation Modal */}
+      {/* Delete Confirmation */}
       <Modal show={confirmDelete} onHide={() => setConfirmDelete(false)}>
         <Modal.Header closeButton>
           <Modal.Title>Confirm Delete</Modal.Title>
         </Modal.Header>
-        <Modal.Body>Are you sure you want to delete this user?</Modal.Body>
+        <Modal.Body>
+          Are you sure you want to delete this user?
+        </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
             Cancel

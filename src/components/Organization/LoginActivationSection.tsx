@@ -1,20 +1,54 @@
 import React, { useState } from "react";
-import { Button, Form, Row, Col, Card } from "react-bootstrap";
+import { Button, Form, Row, Col, Card, Spinner } from "react-bootstrap";
+import { useParams } from "react-router-dom";
+import { PutActivateLoginsAsync } from "../../services/organizationService";
 
+interface ApiResponse {
+  value: number;
+  MSG: string;
+}
 
 const LoginActivationSection: React.FC = () => {
+  const { id } = useParams<{ id?: string }>();
+
   const [isLoginActivate, setIsLoginActivate] = useState<boolean>(false);
   const [loginRemarks, setLoginRemarks] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
-  const handleActivateLogin = () => {
-    console.log("Activate Login Payload:", {
-      isLoginActivate,
-      loginRemarks,
-    });
+const handleActivateLogin = async () => {
+  if (!id) {
+    alert("Organization ID not found in URL.");
+    return;
+  }
 
-    // API integration later
-    alert("Login activation updated successfully!");
-  };
+  try {
+    setLoading(true);
+
+    const payload = {
+      organizationID: Number(id),
+      isLoginActivated: isLoginActivate,
+      loginRemarks: loginRemarks.trim(),
+      modifiedBy: "aDMIN",
+    };
+
+    const response = await PutActivateLoginsAsync(payload);
+    console.log("API Response:", response);
+
+    const result = Array.isArray(response) ? response[0] : response;
+
+    if (result?.value === 1) {
+      alert(result.MSG || "Success");
+    } else {
+      alert(result?.MSG || "Operation failed.");
+    }
+  } catch (error) {
+    console.error("Error activating login:", error);
+    alert("Something went wrong while updating login activation.");
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <Card className="mb-3">
@@ -44,9 +78,16 @@ const LoginActivationSection: React.FC = () => {
             <Button
               variant="success"
               onClick={handleActivateLogin}
-              disabled={!loginRemarks.trim()}
+              disabled={!loginRemarks.trim() || loading}
             >
-               Activate & Deactivate Logins
+              {loading ? (
+                <>
+                  <Spinner size="sm" animation="border" className="me-2" />
+                  Processing...
+                </>
+              ) : (
+                "Activate & Deactivate Logins"
+              )}
             </Button>
           </Col>
         </Row>

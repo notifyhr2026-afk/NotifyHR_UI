@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Button, Modal, Form, Table, Row, Col, Pagination } from 'react-bootstrap';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { GetRolesAsync } from '../../services/roleService';
+import {GetRolesAsync, PostRoleByAsync, DeleteRoleByAsync } from '../../services/roleService';
 
 interface Role {
   RoleID: number;
@@ -21,7 +21,6 @@ const ManageRoles: React.FC = () => {
   const [editRole, setEditRole] = useState<Role | null>(null);
   const [validated, setValidated] = useState(false);
 
-  // ✅ Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -33,7 +32,6 @@ const ManageRoles: React.FC = () => {
   });
 
   /* ================= API ================= */
-
   useEffect(() => {
     fetchRoles();
   }, []);
@@ -50,17 +48,15 @@ const ManageRoles: React.FC = () => {
   };
 
   /* ================= SEARCH ================= */
-
   useEffect(() => {
     const filtered = roles.filter((role) =>
       role.RoleName.toLowerCase().includes(searchTerm.toLowerCase())
     );
     setFilteredRoles(filtered);
-    setCurrentPage(1); // Reset page when searching
+    setCurrentPage(1);
   }, [searchTerm, roles]);
 
   /* ================= PAGINATION LOGIC ================= */
-
   const totalPages = Math.ceil(filteredRoles.length / itemsPerPage);
 
   const paginatedRoles = useMemo(() => {
@@ -69,7 +65,6 @@ const ManageRoles: React.FC = () => {
   }, [filteredRoles, currentPage]);
 
   /* ================= MODAL ================= */
-
   const handleOpenRoleModal = (role?: Role) => {
     if (role) {
       setEditRole(role);
@@ -94,7 +89,6 @@ const ManageRoles: React.FC = () => {
   };
 
   /* ================= FORM ================= */
-
   const handleChange = (e: React.ChangeEvent<any>) => {
     const { name, value, type, checked } = e.target;
     setNewRole((prev) => ({
@@ -103,42 +97,92 @@ const ManageRoles: React.FC = () => {
     }));
   };
 
-  const handleSaveRole = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setValidated(true);
+  const handleSaveRole = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  setValidated(true);
+  if (!e.currentTarget.checkValidity()) return;
 
-    if (!e.currentTarget.checkValidity()) return;
+  try {
+    const payload = {
+      roleID: newRole.RoleID,
+      roleName: newRole.RoleName,
+      roleCode: newRole.RoleCode || '',
+      description: newRole.Description,
+      isActive: newRole.IsActive,
+      createdBy: 'Admin',
+    };
 
-    if (editRole) {
-      setRoles((prev) =>
-        prev.map((r) => (r.RoleID === newRole.RoleID ? newRole : r))
-      );
-      toast.success('Role updated successfully!');
+    const result = await PostRoleByAsync(payload);
+
+    // Normalize: if result is array, take first element, else use object
+    const normalizedResult = Array.isArray(result) ? result[0] : result;
+
+    if (normalizedResult?.value === 1) {
+      toast.success(normalizedResult.message || 'Role saved successfully!');
+      fetchRoles();
+      handleCloseRoleModal();
     } else {
-      const newID = roles.length
-        ? Math.max(...roles.map((r) => r.RoleID)) + 1
-        : 1;
-
-      setRoles((prev) => [...prev, { ...newRole, RoleID: newID }]);
-      toast.success('Role added successfully!');
+      toast.warning(normalizedResult?.message || 'Something went wrong!');
     }
+  } catch (error) {
+    console.error(error);
+    toast.error('Failed to save role');
+  }
+};
 
-    handleCloseRoleModal();
+
+  /* ================= DELETE ROLE ================= */
+  const handleDeleteRole = async (roleID: number) => {
+    if (!window.confirm('Are you sure you want to delete this role?')) return;
+
+    try {
+      const result = await DeleteRoleByAsync(roleID);
+      
+      if (result[0]?.value === 1) {
+        toast.success(result[0].Message);
+        fetchRoles();
+      } else {
+        toast.warning(result[0]?.Message || 'Failed to delete role');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Error deleting role');
+    }
   };
 
   /* ================= STATUS TOGGLE ================= */
-
-  const handleToggleActive = (roleID: number) => {
+  const handleToggleActive = async (role: Role) => {
+    // Toggle locally first for instant UI feedback
     setRoles((prev) =>
       prev.map((r) =>
-        r.RoleID === roleID ? { ...r, IsActive: !r.IsActive } : r
+        r.RoleID === role.RoleID ? { ...r, IsActive: !r.IsActive } : r
       )
     );
-    toast.info('Role status updated!');
+
+    try {
+      // Call backend to update
+      const payload = {
+        roleID: role.RoleID,
+        roleName: role.RoleName,
+        roleCode: role.RoleCode || '',
+        description: role.Description,
+        isActive: !role.IsActive,
+        createdBy: 'Admin',
+      };
+      const result = await PostRoleByAsync(payload);
+
+      if (result.value === 1) {
+        toast.info('Role status updated!');
+      } else {
+        toast.warning(result.message || 'Failed to update status');
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to update role status');
+    }
   };
 
   /* ================= UI ================= */
-
   return (
     <div className="mt-5">
       <h2 className="mb-4">Manage Roles</h2>
@@ -176,7 +220,7 @@ const ManageRoles: React.FC = () => {
                     <Form.Check
                       type="switch"
                       checked={role.IsActive}
-                      onChange={() => handleToggleActive(role.RoleID)}
+                      onChange={() => handleToggleActive(role)}
                     />
                   </td>
                   <td>
@@ -184,8 +228,16 @@ const ManageRoles: React.FC = () => {
                       size="sm"
                       variant="primary"
                       onClick={() => handleOpenRoleModal(role)}
+                      className="me-2"
                     >
                       Edit
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="danger"
+                      onClick={() => handleDeleteRole(role.RoleID)}
+                    >
+                      Delete
                     </Button>
                   </td>
                 </tr>
@@ -201,14 +253,12 @@ const ManageRoles: React.FC = () => {
         </Table>
       </div>
 
-      {/* ✅ Pagination UI */}
       {totalPages > 1 && (
         <Pagination className="justify-content-center mt-3">
           <Pagination.Prev
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(currentPage - 1)}
           />
-
           {[...Array(totalPages)].map((_, index) => (
             <Pagination.Item
               key={index + 1}
@@ -218,7 +268,6 @@ const ManageRoles: React.FC = () => {
               {index + 1}
             </Pagination.Item>
           ))}
-
           <Pagination.Next
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(currentPage + 1)}

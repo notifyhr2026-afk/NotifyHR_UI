@@ -97,7 +97,80 @@ const ManageLeavePolicy: React.FC = () => {
   }, []);
 
   /* =========================
-     FUNCTIONS
+     VALIDATION
+  ========================= */
+  const validate = () => {
+    const newValid = {
+      policyName: policyData.policyName.trim().length > 0,
+      totalAnnualLeaves: policyData.totalAnnualLeaves > 0,
+    };
+    setValid(newValid);
+    return Object.values(newValid).every(v => v === true);
+  };
+
+  /* =========================
+     SAVE OR UPDATE POLICY
+  ========================= */
+  const savePolicy = async () => {
+    if (!validate()) {
+      ToastMessage.show("Please fix validation errors.", "error");
+      return;
+    }
+
+    const payload = {
+      leavePolicyID: policyData.id,
+      policyName: policyData.policyName,
+      leaveTypeID: policyData.leaveTypeId,
+      totalAnnualLeaves: policyData.totalAnnualLeaves,
+      maxCarryForward: policyData.maxCarryForward,
+      encashable: policyData.encashable,
+      allowNegativeBalance: policyData.allowNegativeBalance,
+      isActive: true,
+      createdBy: "admin", // You can replace with current user
+    };
+
+    try {
+      const res = await leavePolicyService.PostLeavePolicyByAsync(payload);
+
+      if (res.value === 1) {
+        ToastMessage.show(res.message, "success");
+        await fetchLeavePolicies();
+        setShowModal(false);
+      } else {
+        ToastMessage.show(res.message || "Warning occurred.", "warning");
+      }
+    } catch (error) {
+      ToastMessage.show("Failed to save leave policy", "error");
+    }
+  };
+
+  /* =========================
+     DELETE POLICY
+  ========================= */
+  const deletePolicy = async () => {
+    if (!deleteId) return;
+
+    try {
+      const res = await leavePolicyService.DeleteLeavePolicyByAsync(deleteId);
+
+      if (res[0]?.value === 1) {
+        ToastMessage.show(res[0].message, "success");
+        setPolicies(policies.filter(p => p.id !== deleteId));
+      } else {
+        ToastMessage.show(res[0]?.message || "Warning occurred", "warning");
+      }
+    } catch (error) {
+      ToastMessage.show("Failed to delete leave policy", "error");
+    } finally {
+      setShowDeleteModal(false);
+    }
+  };
+
+  const getLeaveTypeName = (id: number) =>
+    leaveTypes.find(t => t.id === id)?.name || "-";
+
+  /* =========================
+     MODAL HELPERS
   ========================= */
   const openCreateModal = () => {
     setEditingId(null);
@@ -122,43 +195,6 @@ const ManageLeavePolicy: React.FC = () => {
     setValid({ policyName: true, totalAnnualLeaves: true });
     setShowModal(true);
   };
-
-  const validate = () => {
-    const newValid = {
-      policyName: policyData.policyName.trim().length > 0,
-      totalAnnualLeaves: policyData.totalAnnualLeaves > 0,
-    };
-    setValid(newValid);
-    return Object.values(newValid).every(v => v === true);
-  };
-
-  const savePolicy = () => {
-    if (!validate()) {
-      ToastMessage.show("Please fix validation errors.", "error");
-      return;
-    }
-
-    if (editingId) {
-      setPolicies(policies.map(p => (p.id === editingId ? policyData : p)));
-      ToastMessage.show("Leave policy updated successfully!", "success");
-    } else {
-      setPolicies([...policies, { ...policyData, id: Date.now() }]);
-      ToastMessage.show("Leave policy created successfully!", "success");
-    }
-
-    setShowModal(false);
-  };
-
-  const deletePolicy = () => {
-    if (deleteId) {
-      setPolicies(policies.filter(p => p.id !== deleteId));
-      ToastMessage.show("Leave policy deleted successfully!", "success");
-    }
-    setShowDeleteModal(false);
-  };
-
-  const getLeaveTypeName = (id: number) =>
-    leaveTypes.find(t => t.id === id)?.name || "-";
 
   /* =========================
      UI
@@ -240,9 +276,7 @@ const ManageLeavePolicy: React.FC = () => {
                 <div className="mb-3">
                   <label className="form-label fw-bold">Policy Name</label>
                   <input
-                    className={`form-control ${
-                      valid.policyName === false ? "is-invalid" : ""
-                    }`}
+                    className={`form-control ${valid.policyName === false ? "is-invalid" : ""}`}
                     value={policyData.policyName}
                     onChange={e =>
                       setPolicyData({ ...policyData, policyName: e.target.value })
@@ -260,10 +294,7 @@ const ManageLeavePolicy: React.FC = () => {
                     className="form-select"
                     value={policyData.leaveTypeId}
                     onChange={e =>
-                      setPolicyData({
-                        ...policyData,
-                        leaveTypeId: Number(e.target.value),
-                      })
+                      setPolicyData({ ...policyData, leaveTypeId: Number(e.target.value) })
                     }
                   >
                     {leaveTypes.map(type => (
@@ -282,10 +313,7 @@ const ManageLeavePolicy: React.FC = () => {
                       className="form-control"
                       value={policyData.totalAnnualLeaves}
                       onChange={e =>
-                        setPolicyData({
-                          ...policyData,
-                          totalAnnualLeaves: Number(e.target.value),
-                        })
+                        setPolicyData({ ...policyData, totalAnnualLeaves: Number(e.target.value) })
                       }
                     />
                   </div>
@@ -297,10 +325,7 @@ const ManageLeavePolicy: React.FC = () => {
                       className="form-control"
                       value={policyData.maxCarryForward}
                       onChange={e =>
-                        setPolicyData({
-                          ...policyData,
-                          maxCarryForward: Number(e.target.value),
-                        })
+                        setPolicyData({ ...policyData, maxCarryForward: Number(e.target.value) })
                       }
                     />
                   </div>
@@ -312,10 +337,7 @@ const ManageLeavePolicy: React.FC = () => {
                     type="checkbox"
                     checked={policyData.encashable}
                     onChange={e =>
-                      setPolicyData({
-                        ...policyData,
-                        encashable: e.target.checked,
-                      })
+                      setPolicyData({ ...policyData, encashable: e.target.checked })
                     }
                   />
                   <label className="form-check-label">Encashable</label>
@@ -327,23 +349,15 @@ const ManageLeavePolicy: React.FC = () => {
                     type="checkbox"
                     checked={policyData.allowNegativeBalance}
                     onChange={e =>
-                      setPolicyData({
-                        ...policyData,
-                        allowNegativeBalance: e.target.checked,
-                      })
+                      setPolicyData({ ...policyData, allowNegativeBalance: e.target.checked })
                     }
                   />
-                  <label className="form-check-label">
-                    Allow Negative Balance
-                  </label>
+                  <label className="form-check-label">Allow Negative Balance</label>
                 </div>
               </div>
 
               <div className="modal-footer">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowModal(false)}
-                >
+                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
                 <button className="btn btn-success" onClick={savePolicy}>
@@ -362,19 +376,13 @@ const ManageLeavePolicy: React.FC = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5>Delete Leave Policy</h5>
-                <button
-                  className="btn-close"
-                  onClick={() => setShowDeleteModal(false)}
-                />
+                <button className="btn-close" onClick={() => setShowDeleteModal(false)} />
               </div>
               <div className="modal-body">
                 Are you sure you want to delete this policy?
               </div>
               <div className="modal-footer">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowDeleteModal(false)}
-                >
+                <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>
                   Cancel
                 </button>
                 <button className="btn btn-danger" onClick={deletePolicy}>

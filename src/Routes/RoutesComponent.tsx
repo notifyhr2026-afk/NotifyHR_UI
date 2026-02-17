@@ -46,7 +46,7 @@ import EmployeeAttendanceLogs from '../pages/Attendance/AttendancePage';
 import SalaryComponentMaster from '../pages/Payroll/SalaryComponentMaster';
 import OrgPayrollCyclePage from '../pages/Payroll/OrgPayrollCyclePage';
 import SalaryStructureMaster from '../pages/Payroll/SalaryStructureMaster';
-import SalaryStructureComponentMaster from '../pages/Payroll/SalaryStructureComponentMaster';
+import SalaryStructureComponentMaster from '../pages/Payroll/OrgSalaryStructurePage';
 import OrgSalaryStructurePage from '../pages/Payroll/OrgSalaryStructurePage';
 import OrgSalaryStructureAccordion from '../pages/Payroll/OrgSalaryStructureAccordion';
 import EmployeeSalaryAssignment from '../pages/Payroll/EmployeeSalaryAssignment';

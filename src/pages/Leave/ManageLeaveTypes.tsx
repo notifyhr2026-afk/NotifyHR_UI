@@ -9,11 +9,12 @@ import {
   Badge,
   Spinner,
   Alert,
+  Toast,
+  ToastContainer,
 } from "react-bootstrap";
 import { BsPencilSquare, BsTrash, BsPlus } from "react-icons/bs";
 import leaveTypesService from "../../services/leaveTypesService";
 
-// Helper for react-icons
 const Icon = (Component: any, props: any = {}) => <Component {...props} />;
 
 interface LeaveType {
@@ -28,6 +29,8 @@ const ManageLeaveTypes: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [validated, setValidated] = useState(false);
+
   const [leaveFormData, setLeaveFormData] = useState<LeaveType>({
     LeaveTypeID: 0,
     LeaveTypeName: "",
@@ -35,14 +38,17 @@ const ManageLeaveTypes: React.FC = () => {
     isActive: true,
   });
 
-  const [editLeave, setEditLeave] = useState<LeaveType | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [leaveToDelete, setLeaveToDelete] = useState<number | null>(null);
 
-  // ============================
-  // Fetch Leave Types
-  // ============================
+  // Toast state
+  const [toast, setToast] = useState({
+    show: false,
+    message: "",
+    bg: "success",
+  });
+
   useEffect(() => {
     fetchLeaveTypes();
   }, []);
@@ -50,29 +56,23 @@ const ManageLeaveTypes: React.FC = () => {
   const fetchLeaveTypes = async () => {
     try {
       setLoading(true);
-      setError(null);
-
       const data = await leaveTypesService.getLeaveLeaveTypes();
 
-      // Map backend response → frontend model
       const mappedData: LeaveType[] = data.map((item: any) => ({
         LeaveTypeID: item.LeaveTypeID,
         LeaveTypeName: item.LeaveTypeName,
         Description: item.Description,
-        isActive: item.isActive ?? true, // default if backend doesn't send it
+        isActive: item.isActive ?? true,
       }));
 
       setLeaveTypes(mappedData);
-    } catch (err) {
+    } catch {
       setError("Failed to load leave types.");
     } finally {
       setLoading(false);
     }
   };
 
-  // ============================
-  // Handlers
-  // ============================
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -92,65 +92,122 @@ const ManageLeaveTypes: React.FC = () => {
   };
 
   const openAddModal = () => {
-    setEditLeave(null);
     setLeaveFormData({
       LeaveTypeID: 0,
       LeaveTypeName: "",
       Description: "",
       isActive: true,
     });
+    setValidated(false);
     setShowModal(true);
   };
 
   const openEditModal = (leave: LeaveType) => {
-    setEditLeave(leave);
     setLeaveFormData(leave);
+    setValidated(false);
     setShowModal(true);
   };
 
-  const handleSave = () => {
-    if (!leaveFormData.LeaveTypeName || !leaveFormData.Description) {
-      alert("Please fill all required fields.");
+  // ============================
+  // SAVE
+  // ============================
+  const handleSave = async (event: any) => {
+    const form = event.currentTarget;
+
+    if (form.checkValidity() === false) {
+      event.preventDefault();
+      event.stopPropagation();
+      setValidated(true);
       return;
     }
 
-    if (editLeave) {
-      // Local update (replace with PUT API later)
-      setLeaveTypes((prev) =>
-        prev.map((l) =>
-          l.LeaveTypeID === leaveFormData.LeaveTypeID ? leaveFormData : l
-        )
-      );
-    } else {
-      // Local add (replace with POST API later)
-      setLeaveTypes((prev) => [
-        ...prev,
-        { ...leaveFormData, LeaveTypeID: Date.now() },
-      ]);
-    }
+    try {
+      setLoading(true);
 
-    setShowModal(false);
+      const payload = {
+        leaveTypeID: leaveFormData.LeaveTypeID,
+        leaveTypeName: leaveFormData.LeaveTypeName,
+        description: leaveFormData.Description,
+      };
+
+      const response =
+        await leaveTypesService.PostLeaveTypeByAsync(
+          payload
+        );
+
+      if (response.value === 1) {
+        setToast({
+          show: true,
+          message: response.message,
+          bg: "success",
+        });
+        await fetchLeaveTypes();
+        setShowModal(false);
+      } else if (response.value === 0) {
+        setToast({
+          show: true,
+          message: response.message,
+          bg: "warning",
+        });
+      }
+    } catch {
+      setToast({
+        show: true,
+        message: "Something went wrong.",
+        bg: "danger",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // ============================
+  // DELETE
+  // ============================
   const confirmDeleteLeave = (id: number) => {
     setLeaveToDelete(id);
     setConfirmDelete(true);
   };
 
-  const handleDelete = () => {
-    if (leaveToDelete !== null) {
-      // Local delete (replace with DELETE API later)
-      setLeaveTypes((prev) =>
-        prev.filter((l) => l.LeaveTypeID !== leaveToDelete)
-      );
-      setLeaveToDelete(null);
+  const handleDelete = async () => {
+    if (!leaveToDelete) return;
+
+    try {
+      setLoading(true);
+
+      const response =
+        await leaveTypesService.DeleteLeaveTypeByAsync(
+          leaveToDelete
+        );
+
+      if (response[0]?.value === 1) {
+        setToast({
+          show: true,
+          message: response[0]?.message,
+          bg: "success",
+        });
+        await fetchLeaveTypes();
+      } else {
+        setToast({
+          show: true,
+          message: response[0]?.message,
+          bg: "warning",
+        });
+      }
+
       setConfirmDelete(false);
+      setLeaveToDelete(null);
+    } catch {
+      setToast({
+        show: true,
+        message: "Delete failed.",
+        bg: "danger",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ============================
-  // Render
-  // ============================
   return (
     <div className="mt-5">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -161,127 +218,113 @@ const ManageLeaveTypes: React.FC = () => {
       </div>
 
       {loading && (
-        <div className="text-center my-4">
+        <div className="text-center my-3">
           <Spinner animation="border" />
         </div>
       )}
 
       {error && <Alert variant="danger">{error}</Alert>}
 
-      {!loading && leaveTypes.length > 0 ? (
-        <Table bordered hover responsive className="shadow-sm">
-          <thead className="table-light">
-            <tr>
-              <th>Leave Type</th>
-              <th>Description</th>
-              <th>Active</th>
-              <th style={{ width: "140px" }}>Actions</th>
+      <Table bordered hover responsive className="shadow-sm">
+        <thead className="table-light">
+          <tr>
+            <th>Leave Type</th>
+            <th>Description</th>
+            <th>Active</th>
+            <th style={{ width: "140px" }}>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {leaveTypes.map((l) => (
+            <tr key={l.LeaveTypeID}>
+              <td>{l.LeaveTypeName}</td>
+              <td>{l.Description}</td>
+              <td>
+                {l.isActive ? (
+                  <Badge bg="success">Active</Badge>
+                ) : (
+                  <Badge bg="danger">Inactive</Badge>
+                )}
+              </td>
+              <td>
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  className="me-2"
+                  onClick={() => openEditModal(l)}
+                >
+                  {Icon(BsPencilSquare, { size: 16 })}
+                </Button>
+                <Button
+                  variant="outline-danger"
+                  size="sm"
+                  onClick={() => confirmDeleteLeave(l.LeaveTypeID)}
+                >
+                  {Icon(BsTrash, { size: 16 })}
+                </Button>
+              </td>
             </tr>
-          </thead>
-          <tbody>
-            {leaveTypes.map((l) => (
-              <tr key={l.LeaveTypeID}>
-                <td>{l.LeaveTypeName}</td>
-                <td>{l.Description}</td>
-                <td>
-                  {l.isActive ? (
-                    <Badge bg="success">Active</Badge>
-                  ) : (
-                    <Badge bg="danger">Inactive</Badge>
-                  )}
-                </td>
-                <td>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    className="me-2"
-                    onClick={() => openEditModal(l)}
-                  >
-                    {Icon(BsPencilSquare, { size: 16 })}
-                  </Button>
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={() => confirmDeleteLeave(l.LeaveTypeID)}
-                  >
-                    {Icon(BsTrash, { size: 16 })}
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      ) : (
-        !loading && <p className="text-muted">No leave types added yet.</p>
-      )}
+          ))}
+        </tbody>
+      </Table>
 
       {/* Add / Edit Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-        <Modal.Header closeButton>
-          <Modal.Title>
-            {editLeave ? "Edit Leave Type" : "Add New Leave Type"}
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form>
+        <Form noValidate validated={validated} onSubmit={handleSave}>
+          <Modal.Header closeButton>
+            <Modal.Title>
+              {leaveFormData.LeaveTypeID === 0
+                ? "Add New Leave Type"
+                : "Edit Leave Type"}
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
             <Row>
               <Col md={12} className="mb-3">
-                <Form.Label>
-                  Leave Type Name <span className="text-danger">*</span>
-                </Form.Label>
+                <Form.Label>Leave Type Name</Form.Label>
                 <Form.Control
+                  required
                   id="LeaveTypeName"
                   type="text"
                   value={leaveFormData.LeaveTypeName}
                   onChange={handleInputChange}
                 />
+                <Form.Control.Feedback type="invalid">
+                  Leave Type Name is required.
+                </Form.Control.Feedback>
               </Col>
             </Row>
 
             <Row>
               <Col md={12} className="mb-3">
-                <Form.Label>
-                  Description <span className="text-danger">*</span>
-                </Form.Label>
+                <Form.Label>Description</Form.Label>
                 <Form.Control
+                  required
                   as="textarea"
                   rows={3}
                   id="Description"
                   value={leaveFormData.Description}
                   onChange={handleInputChange}
                 />
+                <Form.Control.Feedback type="invalid">
+                  Description is required.
+                </Form.Control.Feedback>
               </Col>
             </Row>
-
-            <Row>
-              <Col md={6}>
-                <Form.Check
-                  type="switch"
-                  id="isActive"
-                  label="Active Leave Type"
-                  checked={leaveFormData.isActive}
-                  onChange={handleInputChange}
-                />
-              </Col>
-            </Row>
-          </Form>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="light" onClick={() => setShowModal(false)}>
-            Cancel
-          </Button>
-          <Button variant="primary" onClick={handleSave}>
-            {editLeave ? "Update Leave Type" : "Save Leave Type"}
-          </Button>
-        </Modal.Footer>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="light" onClick={() => setShowModal(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="primary">
+              {leaveFormData.LeaveTypeID === 0 ? "Save" : "Update"}
+            </Button>
+          </Modal.Footer>
+        </Form>
       </Modal>
 
       {/* Delete Confirmation */}
-      <Modal
-        show={confirmDelete}
-        onHide={() => setConfirmDelete(false)}
-        centered
-      >
+      <Modal show={confirmDelete} onHide={() => setConfirmDelete(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>Delete Leave Type?</Modal.Title>
         </Modal.Header>
@@ -297,6 +340,19 @@ const ManageLeaveTypes: React.FC = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      {/* Toast */}
+      <ToastContainer position="top-end" className="p-3">
+        <Toast
+          bg={toast.bg}
+          show={toast.show}
+          delay={3000}
+          autohide
+          onClose={() => setToast({ ...toast, show: false })}
+        >
+          <Toast.Body className="text-white">{toast.message}</Toast.Body>
+        </Toast>
+      </ToastContainer>
     </div>
   );
 };

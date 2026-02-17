@@ -1,14 +1,17 @@
-import api from "../api/axiosAttendanceInstance";
+import axiosInstance from "../api/axiosAttendanceInstance";
 const leaveTypesService = {
   // ✅ Get all branches by OrganizationID
-  getLeaveLeaveTypes: async () => {
-    try {
-      const { data } = await api.get(`LeaveType`);
+   getLeaveLeaveTypes: async () => {
+      const { data } = await axiosInstance.get(`LeaveType`);
       return data;
-    } catch (error) {
-      console.error('Error fetching branches:', error);
-      throw error;
-    }
-  }
+   },
+   PostLeaveTypeByAsync: async (payload: any) => {
+    const res = await axiosInstance.post("LeaveType", payload);
+    return res.data[0];
+  },
+   DeleteLeaveTypeByAsync: async (leaveTypeID:number) => {   
+      const { data } = await axiosInstance.delete(`LeaveType?leaveTypeID=${leaveTypeID}`);
+      return data;   
+  },
 };
 export default leaveTypesService;

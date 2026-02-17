@@ -25,16 +25,23 @@ export const getOrganizationTypes = async (): Promise<organizationTypes[]> => {
 };
 
 // Service to create a new organization
-export const createOrganization = async (newOrg: Omit<Organization, 'OrganizationID'>): Promise<number> => {
-    try {
-        const response = await axiosInstance.post<Organization>('/Organizations', newOrg);
-        // Assuming the response contains the created organization with its ID
-        return response.data.OrganizationID; // Return the new OrganizationID
-    } catch (error) {
-        console.error('Failed to create organization:', error);
-        throw error;
-    }
+export const createOrganization = async (
+  newOrg: Omit<Organization, 'OrganizationID'>
+): Promise<any> => {
+  try {
+    const response = await axiosInstance.post('/Organizations', newOrg);
+    return response.data; // return full response
+  } catch (error) {
+    console.error('Failed to create organization:', error);
+    throw error;
+  }
 };
+
+ export const PutActivateLoginsAsync = async (payload: any) => {
+    const res = await axiosInstance.put("Organizations/ActivateLogins", payload);
+    return res.data[0];
+};
+
 
 // Service to update a new organization
 export const updateOrganization = async (newOrg: Omit<Organization, 'OrganizationID'>): Promise<number> => {
@@ -100,5 +107,6 @@ export default {
     updateOrganization,
     getOrgRolesAsync,
     getOrgDetailsAsync,
-    GetOrgPositionsAsync
+    GetOrgPositionsAsync,
+    PutActivateLoginsAsync
 };

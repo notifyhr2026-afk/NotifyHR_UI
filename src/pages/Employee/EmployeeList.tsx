@@ -1,15 +1,25 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Button, Modal, Form, Row, Col, Spinner } from 'react-bootstrap';
+import {
+  Button,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Spinner,
+  OverlayTrigger,
+  Tooltip,
+} from 'react-bootstrap';
 import employeeService from '../../services/employeeService';
 import { toast } from 'react-toastify';
 import { Employee } from '../../types/Employee';
-import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 const EmployeeList: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [filteredEmployees, setFilteredEmployees] = useState<Employee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState<string>('');
+  const [selectedDepartment, setSelectedDepartment] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -21,6 +31,16 @@ const EmployeeList: React.FC = () => {
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const organizationID: number | undefined = user?.organizationID;
+
+  // 🔹 Static Data (Replace with API later)
+  const branches = [
+    'Head Office',
+    'Mumbai Branch',
+    'Delhi Branch',
+    'Chennai Branch',
+  ];
+
+  const departments = ['HR', 'Finance', 'IT', 'Operations', 'Sales'];
 
   const [newEmp, setNewEmp] = useState<Employee>({
     EmployeeID: 0,
@@ -56,15 +76,26 @@ const EmployeeList: React.FC = () => {
     fetchEmployees();
   }, []);
 
-  // ✅ Search Filter
+  // ✅ Search + Branch + Department Filter
   useEffect(() => {
-    const filtered = employees.filter(
-      (emp) =>
+    const filtered = employees.filter((emp: any) => {
+      const matchesSearch =
         emp.EmployeeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        emp.EmployeeCode?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+        emp.EmployeeCode?.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const matchesBranch = selectedBranch
+        ? emp.Branch === selectedBranch
+        : true;
+
+      const matchesDepartment = selectedDepartment
+        ? emp.Department === selectedDepartment
+        : true;
+
+      return matchesSearch && matchesBranch && matchesDepartment;
+    });
+
     setFilteredEmployees(filtered);
-  }, [searchTerm, employees]);
+  }, [searchTerm, employees, selectedBranch, selectedDepartment]);
 
   // ✅ Save Employee
   const handleSaveEmployee = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -80,7 +111,6 @@ const EmployeeList: React.FC = () => {
     setSaving(true);
 
     try {
-      // ✅ Build request payload (camelCase keys for API)
       const payload = {
         organizationID: newEmp.OrganizationID,
         firstName: newEmp.FirstName,
@@ -98,12 +128,12 @@ const EmployeeList: React.FC = () => {
         passportNumber: newEmp.PassportNumber,
       };
 
-      console.log('🔹 Sending Employee Payload:', payload);
-
       const newEmployeeID = await employeeService.createEmployee(payload);
 
       if (newEmployeeID) {
-        toast.success(`✅ Employee created successfully (ID: ${newEmployeeID})`);
+        toast.success(
+          `✅ Employee created successfully (ID: ${newEmployeeID})`
+        );
 
         const data = await employeeService.getEmployees();
         setEmployees(data);
@@ -111,6 +141,7 @@ const EmployeeList: React.FC = () => {
 
         setShowModal(false);
         setValidated(false);
+
         setNewEmp({
           EmployeeID: 0,
           OrganizationID: organizationID || 0,
@@ -132,7 +163,6 @@ const EmployeeList: React.FC = () => {
         toast.error('❌ Failed to create employee.');
       }
     } catch (error) {
-      console.error('Error creating employee:', error);
       toast.error('⚠️ Something went wrong while saving employee.');
     } finally {
       setSaving(false);
@@ -141,21 +171,59 @@ const EmployeeList: React.FC = () => {
   };
 
   if (loading) return <div className="text-center mt-5">Loading...</div>;
-  if (error) return <div className="alert alert-danger mt-3">{error}</div>;
+  if (error)
+    return <div className="alert alert-danger mt-3">{error}</div>;
 
   return (
     <div className="mt-5">
       <h2 className="mb-4">Employee List</h2>
 
-      <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
-        <div className="d-flex align-items-center flex-grow-1" style={{ maxWidth: '450px' }}>
-          <Form.Control
-            type="text"
-            placeholder="Search by employee name or code..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+      {/* 🔍 Filters Section */}
+      <div className="d-flex flex-wrap gap-3 mb-4 align-items-center">
+        <Form.Control
+          type="text"
+          placeholder="Search by name or code..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          style={{ maxWidth: '250px' }}
+        />
+
+        <Form.Select
+          value={selectedBranch}
+          onChange={(e) => setSelectedBranch(e.target.value)}
+          style={{ maxWidth: '200px' }}
+        >
+          <option value="">All Branches</option>
+          {branches.map((branch, index) => (
+            <option key={index} value={branch}>
+              {branch}
+            </option>
+          ))}
+        </Form.Select>
+
+        <Form.Select
+          value={selectedDepartment}
+          onChange={(e) => setSelectedDepartment(e.target.value)}
+          style={{ maxWidth: '200px' }}
+        >
+          <option value="">All Departments</option>
+          {departments.map((dept, index) => (
+            <option key={index} value={dept}>
+              {dept}
+            </option>
+          ))}
+        </Form.Select>
+
+        <Button
+          variant="outline-secondary"
+          onClick={() => {
+            setSearchTerm('');
+            setSelectedBranch('');
+            setSelectedDepartment('');
+          }}
+        >
+          Clear Filters
+        </Button>
 
         <OverlayTrigger
           placement="top"
@@ -163,22 +231,24 @@ const EmployeeList: React.FC = () => {
         >
           <Form.Check
             type="switch"
-            id="openInNewTabSwitch"
+            label="Open in New Tab"
             checked={openInNewTab}
             onChange={(e) => setOpenInNewTab(e.target.checked)}
-            className="ms-3 mt-2 mt-md-0"
           />
         </OverlayTrigger>
 
-        <Button variant="success" className="mt-2 mt-md-0" onClick={() => setShowModal(true)}>
+        <Button
+          variant="success"
+          onClick={() => setShowModal(true)}
+        >
           + Add New Employee
         </Button>
       </div>
 
-      {/* ✅ Employee Table */}
+      {/* 📋 Employee Table */}
       <div className="table-responsive">
         <table className="table table-bordered table-hover table-striped">
-          <thead className="thead-dark">
+          <thead>
             <tr>
               <th>Employee Name</th>
               <th>Employee Code</th>
@@ -204,11 +274,9 @@ const EmployeeList: React.FC = () => {
                       className="btn btn-primary btn-sm"
                       onClick={() => {
                         const path = `/Employees/manageEmployee/${emp.EmployeeID}`;
-                        if (openInNewTab) {
-                          window.open(path, '_blank');
-                        } else {
-                          navigate(path);
-                        }
+                        openInNewTab
+                          ? window.open(path, '_blank')
+                          : navigate(path);
                       }}
                     >
                       Manage
@@ -227,7 +295,7 @@ const EmployeeList: React.FC = () => {
         </table>
       </div>
 
-      {/* ✅ Add Employee Modal */}
+       {/* ✅ Add Employee Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg" centered>
         <Modal.Header closeButton>
           <Modal.Title>Add New Employee</Modal.Title>

@@ -4,12 +4,10 @@ import {
   Table,
   Modal,
   Form,
-  Row,
-  Col,
   Spinner,
   Alert,
 } from 'react-bootstrap';
-import salaryService from '../../services/salaryService'; // adjust path
+import salaryService from '../../services/salaryService';
 
 interface SalaryStructure {
   StructureID: number;
@@ -18,14 +16,26 @@ interface SalaryStructure {
   IsActive: boolean;
 }
 
+interface LoggedInUser {
+  organizationID: number;
+}
+
 const SalaryStructureMaster: React.FC = () => {
-  // Sample static data
+  const userString = localStorage.getItem('user');
+  const user: LoggedInUser | null = userString
+    ? JSON.parse(userString)
+    : null;
+
+  const organizationID = user?.organizationID ?? 0;
+
   const [structures, setStructures] = useState<SalaryStructure[]>([]);
-const [loading, setLoading] = useState<boolean>(false);
-const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
-  const [editStructure, setEditStructure] = useState<SalaryStructure | null>(null);
+  const [editStructure, setEditStructure] =
+    useState<SalaryStructure | null>(null);
   const [validated, setValidated] = useState(false);
 
   const [formData, setFormData] = useState<SalaryStructure>({
@@ -35,11 +45,12 @@ const [error, setError] = useState<string | null>(null);
     IsActive: true,
   });
 
-  useEffect(() => {
+  // ================= FETCH DATA =================
   const fetchStructures = async () => {
     try {
       setLoading(true);
-      const data = await salaryService.getSalaryStructuresAsync(); // orgId if needed
+      setError(null);
+      const data = await salaryService.getSalaryStructuresAsync(organizationID);
       setStructures(data);
     } catch (err) {
       setError('Failed to load salary structures.');
@@ -48,11 +59,11 @@ const [error, setError] = useState<string | null>(null);
     }
   };
 
-  fetchStructures();
-}, []);
+  useEffect(() => {
+    fetchStructures();
+  }, []);
 
-
-  // Input change handler
+  // ================= INPUT CHANGE =================
   const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -61,31 +72,53 @@ const [error, setError] = useState<string | null>(null);
     }));
   };
 
-  // Save Add/Edit
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  // ================= SAVE / UPDATE =================
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
+
     if (form.checkValidity() === false) {
       e.stopPropagation();
       setValidated(true);
       return;
     }
 
-    if (editStructure) {
-      setStructures((prev) =>
-        prev.map((s) => (s.StructureID === editStructure.StructureID ? formData : s))
-      );
-    } else {
-      setStructures((prev) => [...prev, { ...formData, StructureID: Date.now() }]);
-    }
+    try {
+      setLoading(true);
+      setError(null);
 
-    setValidated(false);
-    setShowModal(false);
+      const payload = {
+        structureID: editStructure ? formData.StructureID : 0,
+        structureName: formData.StructureName,
+        description: formData.Description,
+        isActive: formData.IsActive,
+        organizationID: organizationID,
+      };
+
+      const response = await salaryService.PostSalaryStructureByAsync({
+        requestType: 'Salary/SaveOrUpdateSalaryStructure',
+        ...payload,
+      });
+
+      if (response.value === 1) {
+        setSuccessMessage(response.msg);
+        setShowModal(false);
+        setValidated(false);
+        await fetchStructures();
+      } else {
+        setError(response.msg || 'Operation failed.');
+      }
+    } catch (err) {
+      setError('Failed to save salary structure.');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // ================= ADD =================
   const handleAdd = () => {
     setFormData({
-      StructureID: Date.now(),
+      StructureID: 0,
       StructureName: '',
       Description: '',
       IsActive: true,
@@ -94,15 +127,33 @@ const [error, setError] = useState<string | null>(null);
     setShowModal(true);
   };
 
+  // ================= EDIT =================
   const handleEdit = (structure: SalaryStructure) => {
     setEditStructure(structure);
     setFormData(structure);
     setShowModal(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this structure?')) {
-      setStructures((prev) => prev.filter((s) => s.StructureID !== id));
+  // ================= DELETE =================
+  const handleDelete = async (structureID: number) => {
+    if (!window.confirm('Are you sure you want to delete this structure?'))
+      return;
+
+    try {
+      setLoading(true);
+      const response =
+        await salaryService.DeleteSalaryStructureByAsync(structureID);
+
+      if (response[0]?.value === 1) {
+        setSuccessMessage(response[0].msg);
+        await fetchStructures();
+      } else {
+        setError(response[0]?.msg || 'Delete failed.');
+      }
+    } catch (err) {
+      setError('Failed to delete salary structure.');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -114,63 +165,77 @@ const [error, setError] = useState<string | null>(null);
         </Button>
       </div>
 
+      {loading && (
+        <div className="text-center my-4">
+          <Spinner animation="border" />
+        </div>
+      )}
 
+      {error && (
+        <Alert
+          variant="danger"
+          onClose={() => setError(null)}
+          dismissible
+        >
+          {error}
+        </Alert>
+      )}
 
-{loading && (
-  <div className="text-center my-4">
-    <Spinner animation="border" />
-  </div>
-)}
+      {successMessage && (
+        <Alert
+          variant="success"
+          onClose={() => setSuccessMessage(null)}
+          dismissible
+        >
+          {successMessage}
+        </Alert>
+      )}
 
-{error && (
-  <Alert variant="danger" className="my-3">
-    {error}
-  </Alert>
-)}
+      {!loading && structures.length > 0 && (
+        <Table striped bordered hover>
+          <thead>
+            <tr>
+              <th>Structure Name</th>
+              <th>Description</th>
+              <th>Is Active?</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {structures.map((s) => (
+              <tr key={s.StructureID}>
+                <td>{s.StructureName}</td>
+                <td>{s.Description}</td>
+                <td>{s.IsActive ? 'Yes' : 'No'}</td>
+                <td>
+                  <Button
+                    size="sm"
+                    variant="outline-primary"
+                    onClick={() => handleEdit(s)}
+                  >
+                    Edit
+                  </Button>{' '}
+                  <Button
+                    size="sm"
+                    variant="outline-danger"
+                    onClick={() =>
+                      handleDelete(s.StructureID)
+                    }
+                  >
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
 
-{!loading && !error && structures.length ? (
-  <Table striped bordered hover>
-    <thead>
-      <tr>
-        <th>Structure Name</th>
-        <th>Description</th>
-        <th>Is Active?</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {structures.map((s) => (
-        <tr key={s.StructureID}>
-          <td>{s.StructureName}</td>
-          <td>{s.Description}</td>
-          <td>{s.IsActive ? 'Yes' : 'No'}</td>
-          <td>
-            <Button
-              size="sm"
-              variant="outline-primary"
-              onClick={() => handleEdit(s)}
-            >
-              Edit
-            </Button>{' '}
-            <Button
-              size="sm"
-              variant="outline-danger"
-              onClick={() => handleDelete(s.StructureID)}
-            >
-              Delete
-            </Button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </Table>
-) : (
-  !loading && <p>No salary structures added yet.</p>
-)}
+      {!loading && structures.length === 0 && (
+        <p>No salary structures added yet.</p>
+      )}
 
-
-
-      {/* Add/Edit Modal */}
+      {/* Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -211,7 +276,10 @@ const [error, setError] = useState<string | null>(null);
             />
 
             <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowModal(false)}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowModal(false)}
+              >
                 Cancel
               </Button>
               <Button variant="primary" type="submit">

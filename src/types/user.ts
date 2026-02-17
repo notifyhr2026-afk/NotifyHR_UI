@@ -10,4 +10,5 @@ export interface User {
   isActive: boolean;
   isDeleted: boolean;
   User_ID:number;
+  isCompanyUser: boolean;
 }

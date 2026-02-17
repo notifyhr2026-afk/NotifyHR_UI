@@ -7,8 +7,10 @@ import {
   Row,
   Col,
   Spinner,
+  Alert,
 } from 'react-bootstrap';
 import departmentService from '../../services/departmentService';
+import positionService from '../../services/positionService';
 import LoggedInUser from '../../types/LoggedInUser';
 import Select from 'react-select';
 
@@ -27,11 +29,6 @@ interface Position {
 }
 
 const ManagePositions: React.FC = () => {
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [loadingDepartments, setLoadingDepartments] = useState<boolean>(false);
-  const [departmentsError, setDepartmentsError] = useState<string | null>(null);
-  const [validated, setValidated] = useState(false);
-
   const userString = localStorage.getItem('user');
   const user: LoggedInUser | null = userString
     ? JSON.parse(userString)
@@ -48,6 +45,12 @@ const ManagePositions: React.FC = () => {
   };
 
   const [positions, setPositions] = useState<Position[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [validated, setValidated] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [messageType, setMessageType] = useState<'success' | 'danger' | 'warning'>('success');
+
   const [editPosition, setEditPosition] = useState<Position | null>(null);
   const [positionFormData, setPositionFormData] =
     useState<Position>(emptyForm);
@@ -57,29 +60,47 @@ const ManagePositions: React.FC = () => {
   const [positionToDelete, setPositionToDelete] =
     useState<number | null>(null);
 
-  // Load Departments
-  useEffect(() => {
-    const fetchDepartments = async () => {
-      try {
-        setLoadingDepartments(true);
-        const res =
-          await departmentService.getdepartmentesAsync(
-            organizationID
-          );
-        setDepartments(res?.Table ?? []);
-      } catch (error) {
-        console.error('Error fetching departments:', error);
-        setDepartmentsError('Failed to load departments');
-      } finally {
-        setLoadingDepartments(false);
-      }
-    };
+  // ================= LOAD POSITIONS =================
+  const loadPositions = async () => {
+    try {
+      setLoading(true);
+      const res = await positionService.getPositionsAsync(organizationID);
 
+      const mapped = res.map((item: any) => ({
+        id: item.PositionID,
+        positionCode: item.PositionCode,
+        positionName: item.PositionTitle,
+        description: item.Description,
+        departmentId: item.DepartmentID,
+        isActive: item.IsActive,
+      }));
+
+      setPositions(mapped);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ================= LOAD DEPARTMENTS =================
+  const loadDepartments = async () => {
+    try {
+      const res = await departmentService.getdepartmentesAsync(organizationID);
+      setDepartments(res?.Table ?? []);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
     if (organizationID > 0) {
-      fetchDepartments();
+      loadDepartments();
+      loadPositions();
     }
   }, [organizationID]);
 
+  // ================= INPUT CHANGE =================
   const handleInputChange = (
     e: React.ChangeEvent<any>
   ) => {
@@ -94,29 +115,13 @@ const ManagePositions: React.FC = () => {
     } else {
       setPositionFormData((prev) => ({
         ...prev,
-        [id]:
-          id === 'departmentId'
-            ? Number(value)
-            : value,
+        [id]: value,
       }));
     }
   };
 
-  const openAddModal = () => {
-    setEditPosition(null);
-    setPositionFormData(emptyForm);
-    setValidated(false);
-    setShowModal(true);
-  };
-
-  const openEditModal = (position: Position) => {
-    setEditPosition(position);
-    setPositionFormData(position);
-    setValidated(false);
-    setShowModal(true);
-  };
-
-  const handleSave = (
+  // ================= SAVE / UPDATE =================
+  const handleSave = async (
     event: React.FormEvent<HTMLFormElement>
   ) => {
     event.preventDefault();
@@ -131,71 +136,117 @@ const ManagePositions: React.FC = () => {
       return;
     }
 
-    if (editPosition) {
-      setPositions((prev) =>
-        prev.map((p) =>
-          p.id === positionFormData.id
-            ? positionFormData
-            : p
-        )
-      );
-    } else {
-      setPositions((prev) => [
-        ...prev,
-        { ...positionFormData, id: Date.now() },
-      ]);
+    try {
+      setLoading(true);
+
+      const payload = {
+        positionID: positionFormData.id,
+        organizationID: organizationID,
+        positionCode: positionFormData.positionCode,
+        positionTitle: positionFormData.positionName,
+        description: positionFormData.description,
+        departmentID: positionFormData.departmentId,
+        isActive: positionFormData.isActive,
+        createdBy:  'Admin',
+      };
+
+      const response = await positionService.createOrUpdatePositionAsync(payload);
+
+      if (response.length > 0) {
+        const result = response[0];
+
+        if (result.value === 1) {
+          setMessage(result.MSG);
+          setMessageType('success');
+          loadPositions();
+          setShowModal(false);
+          setPositionFormData(emptyForm);
+          setEditPosition(null);
+        } else {
+          setMessage(result.MSG);
+          setMessageType('warning');
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage('Something went wrong');
+      setMessageType('danger');
+    } finally {
+      setLoading(false);
+      setValidated(false);
     }
-
-    setShowModal(false);
-    setPositionFormData(emptyForm);
-    setEditPosition(null);
-    setValidated(false);
   };
 
-  const confirmDeletePosition = (id: number) => {
-    setPositionToDelete(id);
-    setConfirmDelete(true);
-  };
+  // ================= DELETE =================
+  const handleDelete = async () => {
+    if (!positionToDelete) return;
 
-  const handleDelete = () => {
-    if (positionToDelete !== null) {
-      setPositions((prev) =>
-        prev.filter((p) => p.id !== positionToDelete)
-      );
+    try {
+      setLoading(true);
+      const response = await positionService.deletePositionAsync(positionToDelete);
+
+      if (response.length > 0) {
+        const result = response[0];
+
+        if (result.value === 1) {
+          setMessage(result.MSG);
+          setMessageType('success');
+          loadPositions();
+        } else {
+          setMessage(result.MSG);
+          setMessageType('warning');
+        }
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage('Delete failed');
+      setMessageType('danger');
+    } finally {
       setConfirmDelete(false);
       setPositionToDelete(null);
+      setLoading(false);
     }
   };
 
-  const getDepartmentName = (
-    departmentId: number
-  ) =>
-    departments.find(
-      (d) => d.DepartmentID === departmentId
-    )?.DepartmentName || '-';
+  const getDepartmentName = (departmentId: number) =>
+    departments.find((d) => d.DepartmentID === departmentId)
+      ?.DepartmentName || '-';
 
   return (
     <div className="container mt-5">
       <h3 className="mb-4">Manage Positions</h3>
 
-      <div className="text-end mb-3">
-        <Button
-          variant="success"
-          onClick={openAddModal}
+      {message && (
+        <Alert
+          variant={messageType}
+          onClose={() => setMessage(null)}
+          dismissible
         >
+          {message}
+        </Alert>
+      )}
+
+      <div className="text-end mb-3">
+        <Button variant="success" onClick={() => {
+          setEditPosition(null);
+          setPositionFormData(emptyForm);
+          setShowModal(true);
+        }}>
           + Add Position
         </Button>
       </div>
 
-      {positions.length > 0 ? (
+      {loading ? (
+        <Spinner />
+      ) : positions.length > 0 ? (
         <Table bordered hover responsive>
           <thead className="table-light">
             <tr>
-              <th>Position Code</th>
-              <th>Position Name</th>
+              <th>Code</th>
+              <th>Name</th>
               <th>Description</th>
               <th>Department</th>
-              <th>Is Active</th>
+              <th>Active</th>
               <th>Actions</th>
             </tr>
           </thead>
@@ -205,31 +256,28 @@ const ManagePositions: React.FC = () => {
                 <td>{p.positionCode}</td>
                 <td>{p.positionName}</td>
                 <td>{p.description}</td>
-                <td>
-                  {getDepartmentName(
-                    p.departmentId
-                  )}
-                </td>
-                <td>
-                  {p.isActive ? 'Yes' : 'No'}
-                </td>
+                <td>{getDepartmentName(p.departmentId)}</td>
+                <td>{p.isActive ? 'Yes' : 'No'}</td>
                 <td>
                   <Button
-                    variant="outline-primary"
                     size="sm"
+                    variant="outline-primary"
                     className="me-2"
-                    onClick={() =>
-                      openEditModal(p)
-                    }
+                    onClick={() => {
+                      setEditPosition(p);
+                      setPositionFormData(p);
+                      setShowModal(true);
+                    }}
                   >
                     Edit
                   </Button>
                   <Button
-                    variant="outline-danger"
                     size="sm"
-                    onClick={() =>
-                      confirmDeletePosition(p.id)
-                    }
+                    variant="outline-danger"
+                    onClick={() => {
+                      setPositionToDelete(p.id);
+                      setConfirmDelete(true);
+                    }}
                   >
                     Delete
                   </Button>
@@ -239,162 +287,94 @@ const ManagePositions: React.FC = () => {
           </tbody>
         </Table>
       ) : (
-        <p className="text-muted">
-          No positions added yet.
-        </p>
+        <p>No positions found.</p>
       )}
 
       {/* Add/Edit Modal */}
-      <Modal
-        show={showModal}
-        onHide={() => setShowModal(false)}
-        centered
-      >
+      <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>
-            {editPosition
-              ? 'Edit Position'
-              : 'Add Position'}
+            {editPosition ? 'Update Position' : 'Add Position'}
           </Modal.Title>
         </Modal.Header>
 
-        <Form
-          noValidate
-          validated={validated}
-          onSubmit={handleSave}
-        >
+        <Form noValidate validated={validated} onSubmit={handleSave}>
           <Modal.Body>
             <Row>
               <Col md={6}>
-                <Form.Group
-                  className="mb-3"
-                  controlId="positionCode"
-                >
-                  <Form.Label>
-                    Position Code *
-                  </Form.Label>
+                <Form.Group controlId="positionCode" className="mb-3">
+                  <Form.Label>Code *</Form.Label>
                   <Form.Control
                     required
                     type="text"
                     value={positionFormData.positionCode}
                     onChange={handleInputChange}
                   />
-                  <Form.Control.Feedback type="invalid">
-                    Please enter position code.
-                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
 
               <Col md={6}>
-                <Form.Group
-                  className="mb-3"
-                  controlId="positionName"
-                >
-                  <Form.Label>
-                    Position Name *
-                  </Form.Label>
+                <Form.Group controlId="positionName" className="mb-3">
+                  <Form.Label>Name *</Form.Label>
                   <Form.Control
                     required
                     type="text"
                     value={positionFormData.positionName}
                     onChange={handleInputChange}
                   />
-                  <Form.Control.Feedback type="invalid">
-                    Please enter position name.
-                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
             </Row>
 
-            <Row>
-              <Col md={6}>
-                <Form.Group
-                  className="mb-3"
-                  controlId="departmentId"
-                >
-                  <Form.Label>Department *</Form.Label>
-                  {loadingDepartments ? (
-                    <Spinner size="sm" />
-                  ) : departmentsError ? (
-                    <p className="text-danger">{departmentsError}</p>
-                  ) : (
-                    <Select
-                      options={departments.map((dept) => ({
-                        value: dept.DepartmentID,
-                        label: dept.DepartmentName,
-                      }))}
-                      value={
-                        positionFormData.departmentId
-                          ? {
-                              value: positionFormData.departmentId,
-                              label: getDepartmentName(positionFormData.departmentId),
-                            }
-                          : null
+            <Form.Group className="mb-3">
+              <Form.Label>Department *</Form.Label>
+              <Select
+                options={departments.map((d) => ({
+                  value: d.DepartmentID,
+                  label: d.DepartmentName,
+                }))}
+                value={
+                  positionFormData.departmentId
+                    ? {
+                        value: positionFormData.departmentId,
+                        label: getDepartmentName(positionFormData.departmentId),
                       }
-                      onChange={(selectedOption: any) => {
-                        setPositionFormData((prev) => ({
-                          ...prev,
-                          departmentId: selectedOption?.value || 0,
-                        }));
-                      }}
-                      placeholder="Select Department"
-                    />
-                  )}
-                  {validated && positionFormData.departmentId === 0 && (
-                    <div className="text-danger mt-1" style={{ fontSize: '0.875em' }}>
-                      Please select a department.
-                    </div>
-                  )}
-                </Form.Group>
-              </Col>
+                    : null
+                }
+                onChange={(option: any) =>
+                  setPositionFormData((prev) => ({
+                    ...prev,
+                    departmentId: option?.value || 0,
+                  }))
+                }
+              />
+            </Form.Group>
 
-              <Col md={6}>
-                <Form.Group
-                  className="mb-3"
-                  controlId="description"
-                >
-                  <Form.Label>
-                    Description *
-                  </Form.Label>
-                  <Form.Control
-                    required
-                    as="textarea"
-                    rows={3}
-                    value={positionFormData.description}
-                    onChange={handleInputChange}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    Please enter description.
-                  </Form.Control.Feedback>
-                </Form.Group>
-              </Col>
-            </Row>
+            <Form.Group className="mb-3" controlId="description">
+              <Form.Label>Description *</Form.Label>
+              <Form.Control
+                required
+                as="textarea"
+                rows={3}
+                value={positionFormData.description}
+                onChange={handleInputChange}
+              />
+            </Form.Group>
 
-            <Row>
-              <Col md={12}>
-                <Form.Group controlId="isActive">
-                  <Form.Check
-                    type="checkbox"
-                    label="Is Active"
-                    checked={positionFormData.isActive}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
+            <Form.Check
+              type="checkbox"
+              id="isActive"
+              label="Is Active"
+              checked={positionFormData.isActive}
+              onChange={handleInputChange}
+            />
           </Modal.Body>
 
           <Modal.Footer>
-            <Button
-              variant="secondary"
-              onClick={() => setShowModal(false)}
-            >
+            <Button variant="secondary" onClick={() => setShowModal(false)}>
               Cancel
             </Button>
-            <Button
-              variant="primary"
-              type="submit"
-            >
+            <Button type="submit" variant="primary">
               {editPosition ? 'Update' : 'Save'}
             </Button>
           </Modal.Footer>
@@ -402,30 +382,18 @@ const ManagePositions: React.FC = () => {
       </Modal>
 
       {/* Delete Modal */}
-      <Modal
-        show={confirmDelete}
-        onHide={() => setConfirmDelete(false)}
-        centered
-      >
+      <Modal show={confirmDelete} onHide={() => setConfirmDelete(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>
-            Confirm Delete
-          </Modal.Title>
+          <Modal.Title>Confirm Delete</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           Are you sure you want to delete this position?
         </Modal.Body>
         <Modal.Footer>
-          <Button
-            variant="secondary"
-            onClick={() => setConfirmDelete(false)}
-          >
+          <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
             Cancel
           </Button>
-          <Button
-            variant="danger"
-            onClick={handleDelete}
-          >
+          <Button variant="danger" onClick={handleDelete}>
             Delete
           </Button>
         </Modal.Footer>

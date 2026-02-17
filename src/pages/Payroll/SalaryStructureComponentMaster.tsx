@@ -10,6 +10,7 @@ import {
   Alert,
 } from 'react-bootstrap';
 import salaryService from '../../services/salaryService';
+import LoggedInUser from '../../types/LoggedInUser';
 
 /* ===================== INTERFACES ===================== */
 
@@ -53,6 +54,13 @@ interface SalaryStructureComponentForm {
 /* ===================== COMPONENT ===================== */
 
 const SalaryStructureComponentMaster: React.FC = () => {
+    const userString = localStorage.getItem('user');
+  const user: LoggedInUser | null = userString
+    ? JSON.parse(userString)
+    : null;
+
+  const organizationID = user?.organizationID ?? 0;
+
   /* ---------- Static master data ---------- */
 const [structures, setStructures] = useState<SalaryStructure[]>([]);
 const [structureLoading, setStructureLoading] = useState(false);
@@ -120,7 +128,7 @@ const [validated, setValidated] = useState(false);
   const fetchStructures = async () => {
     try {
       setStructureLoading(true);
-      const data = await salaryService.getSalaryStructuresAsync();
+      const data = await salaryService.getSalaryStructuresAsync(organizationID);
       setStructures(data.filter((s: SalaryStructure) => s.IsActive));
     } catch {
       console.error('Failed to load salary structures');

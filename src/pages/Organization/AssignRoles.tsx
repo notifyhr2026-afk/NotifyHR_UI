@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Card, Form, Table, Button, Alert } from 'react-bootstrap';
+import { Container, Card, Form, Table, Button, Alert, Spinner } from 'react-bootstrap';
 import Select from 'react-select';
 import { toast } from 'react-toastify';
-import { GetRolesAsync } from '../../services/roleService';
+import { GetRolesAsync,GetRolesByorganizationIDAsync, AssignRolesByAsync } from '../../services/roleService';
 import { getOrganizations } from '../../services/organizationService';
 
 /* ================= TYPES ================= */
@@ -37,13 +37,48 @@ const AssignRoles: React.FC = () => {
   const [organizationRoles, setOrganizationRoles] = useState<OrganizationRole[]>([]);
   const [selectedOrgID, setSelectedOrgID] = useState<number | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
   /* ================= LOAD DATA ================= */
 
-  useEffect(() => {
-    fetchRoles();
+  useEffect(() => {    
     fetchOrganizations();
   }, []);
+const fetchRolesByOrganization = async (organizationID: number) => {
+  try {
+    setLoading(true);
+
+    const response = await GetRolesByorganizationIDAsync(organizationID);
+
+    // Keep only active roles
+    const activeRoles = response.filter((r: any) => r.IsActive);
+
+    setRoles(activeRoles);
+
+    // Extract assigned roles (IsAssigned === 1)
+    const assignedRoleIDs = activeRoles
+      .filter((r: any) => r.IsAssigned === 1)
+      .map((r: any) => r.RoleID);
+
+    // Update organizationRoles state
+    setOrganizationRoles(prev =>
+      prev.map(org =>
+        org.OrganizationID === organizationID
+          ? {
+              ...org,
+              assignedRoles: assignedRoleIDs,
+            }
+          : org
+      )
+    );
+
+  } catch (error) {
+    toast.error('Failed to load roles for organization');
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const fetchRoles = async () => {
     try {
@@ -60,7 +95,6 @@ const AssignRoles: React.FC = () => {
       const response = await getOrganizations();
       setOrganizations(response);
 
-      // initialize role assignment structure
       setOrganizationRoles(
         response.map((org: Organization) => ({
           OrganizationID: org.OrganizationID,
@@ -73,7 +107,7 @@ const AssignRoles: React.FC = () => {
     }
   };
 
-  /* ================= ROLE ASSIGN ================= */
+  /* ================= ROLE TOGGLE ================= */
 
   const handleRoleToggle = (roleID: number) => {
     if (selectedOrgID === null) return;
@@ -92,17 +126,51 @@ const AssignRoles: React.FC = () => {
     );
   };
 
-  const handleSave = () => {
-    console.log('Assigned Roles Payload:', {
-      OrganizationID: selectedOrgID,
-      Roles:
-        organizationRoles.find(o => o.OrganizationID === selectedOrgID)
-          ?.assignedRoles || [],
-    });
+  /* ================= SAVE ================= */
 
+  const handleSave = async () => {
+  if (!selectedOrgID) {
+    toast.warning('Please select an organization');
+    return;
+  }
+
+  const selectedOrgRoles =
+    organizationRoles.find(o => o.OrganizationID === selectedOrgID)
+      ?.assignedRoles || [];
+
+  if (selectedOrgRoles.length === 0) {
+    toast.warning('Please select at least one role');
+    return;
+  }
+
+  // Create array format required by SP
+  const rolesArray = selectedOrgRoles.map(roleID => ({
+    OrganizationID: selectedOrgID,
+    RoleID: roleID,
+  }));
+
+  // Final API payload
+  const payload = {
+    CreatedBy: 'Admin', // static value as required
+    RolesJson: JSON.stringify(rolesArray), // must stringify
+  };
+
+  try {
+    setLoading(true);
+
+    await AssignRolesByAsync(payload);
+
+    toast.success('Roles assigned successfully!');
     setSuccessMessage('Roles assigned successfully!');
     setTimeout(() => setSuccessMessage(null), 3000);
-  };
+  } catch (error) {
+    toast.error('Failed to assign roles');
+    console.error(error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   /* ================= DERIVED DATA ================= */
 
@@ -132,14 +200,19 @@ const AssignRoles: React.FC = () => {
       <Card className="p-3 mb-4">
         <Form.Group>
           <Form.Label>Select Organization</Form.Label>
-          <Select
-            options={orgOptions}
-            onChange={option =>
-              setSelectedOrgID(option ? option.value : null)
-            }
-            placeholder="Search and select organization..."
-            isClearable
-          />
+       <Select
+  options={orgOptions}
+  onChange={option => {
+    const orgID = option ? option.value : null;
+    setSelectedOrgID(orgID);
+
+    if (orgID) {
+      fetchRolesByOrganization(orgID);
+    }
+  }}
+  placeholder="Search and select organization..."
+  isClearable
+/>
         </Form.Group>
       </Card>
 
@@ -182,8 +255,18 @@ const AssignRoles: React.FC = () => {
           </Table>
 
           <div className="text-end mt-3">
-            <Button variant="success" onClick={handleSave}>
-              Save Roles
+            <Button
+              variant="success"
+              onClick={handleSave}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <Spinner size="sm" animation="border" /> Saving...
+                </>
+              ) : (
+                'Save Roles'
+              )}
             </Button>
           </div>
         </Card>

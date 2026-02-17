@@ -1,56 +1,92 @@
-// src/pages/Organization/PlanManagement.tsx
-import React, { useState } from "react";
-import { Plan } from "../../types/PlanTypes";
-import { plansMock, featuresList } from "../../data/planData";
+import React, { useEffect, useState } from "react";
+import planService from "../../services/planService";
 import ToastMessage, { ToastProvider } from "../../components/ToastMessage";
 import { ValidationMessage } from "../../components/ValidationMessage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import Select from "react-select";
+
+interface Plan {
+  planID: number;
+  planName: string;
+  pricePerMonth: number;
+  includedEmployees: number;
+  extraEmployeeCost: number;
+  billingCycleID: number;
+}
 
 const PlanManagement: React.FC = () => {
-  // ------------------------
-  // STATE
-  // ------------------------
-  const [plans, setPlans] = useState<Plan[]>(plansMock);
+  const [plans, setPlans] = useState<Plan[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [planData, setPlanData] = useState<Plan>({
-    id: 0,
-    name: "",
-    price: 0,
-    billingCycle: "monthly",
-    employeeLimit: 0,
-    storageLimit: 0,
-    apiLimit: 0,
-    features: [],
-  });
-  const [valid, setValid] = useState({ name: null as boolean | null, price: null as boolean | null });
-  const [deleteId, setDeleteId] = useState<number | null>(null);
 
-  // ------------------------
-  // FUNCTIONS
-  // ------------------------
+  const [planData, setPlanData] = useState<Plan>({
+    planID: 0,
+    planName: "",
+    pricePerMonth: 0,
+    includedEmployees: 0,
+    extraEmployeeCost: 0,
+    billingCycleID: 1,
+  });
+
+  const [valid, setValid] = useState({
+    name: null as boolean | null,
+    price: null as boolean | null,
+  });
+
+  const [deleteId, setDeleteId] = useState<number>(0);
+
+  // =========================
+  // MAPPER (API → UI)
+  // =========================
+  const mapPlan = (item: any): Plan => ({
+    planID: item.PlanID,
+    planName: item.PlanName,
+    pricePerMonth: item.PricePerMonth,
+    includedEmployees: item.IncludedEmployees,
+    extraEmployeeCost: item.ExtraEmployeeCost,
+    billingCycleID: item.BillingCycleID,
+  });
+
+  // =========================
+  // LOAD PLANS
+  // =========================
+  const loadPlans = async () => {
+    try {
+      setLoading(true);
+      const res = await planService.GePlansAsync();
+      const mapped = res.map(mapPlan);
+      setPlans(mapped);
+    } catch (error) {
+      ToastMessage.show("Failed to load plans.", "error");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPlans();
+  }, []);
+
+  // =========================
+  // MODAL HANDLERS
+  // =========================
   const openCreateModal = () => {
-    setEditingId(null);
     setPlanData({
-      id: 0,
-      name: "",
-      price: 0,
-      billingCycle: "monthly",
-      employeeLimit: 0,
-      storageLimit: 0,
-      apiLimit: 0,
-      features: [],
+      planID: 0,
+      planName: "",
+      pricePerMonth: 0,
+      includedEmployees: 0,
+      extraEmployeeCost: 0,
+      billingCycleID: 1,
     });
     setValid({ name: null, price: null });
     setShowModal(true);
   };
 
   const openEditModal = (plan: Plan) => {
-    setEditingId(plan.id);
-    setPlanData(plan);
+    setPlanData({ ...plan });
     setValid({ name: true, price: true });
     setShowModal(true);
   };
@@ -60,54 +96,74 @@ const PlanManagement: React.FC = () => {
     setShowDeleteModal(true);
   };
 
+  // =========================
+  // VALIDATION
+  // =========================
   const validate = () => {
     const newValid = {
-      name: planData.name.trim().length > 0,
-      price: planData.price > 0,
+      name: planData.planName.trim().length > 0,
+      price: planData.pricePerMonth > 0,
     };
     setValid(newValid);
-    return Object.values(newValid).every((v) => v === true);
+    return Object.values(newValid).every(Boolean);
   };
 
-  const toggleFeature = (id: number) => {
-    setPlanData({
-      ...planData,
-      features: planData.features.includes(id)
-        ? planData.features.filter((f) => f !== id)
-        : [...planData.features, id],
-    });
-  };
-
-  const savePlan = () => {
+  // =========================
+  // SAVE (CREATE / UPDATE)
+  // =========================
+  const savePlan = async () => {
     if (!validate()) {
       ToastMessage.show("Please fix validation errors.", "error");
       return;
     }
 
-    if (editingId) {
-      const updated = plans.map((p) => (p.id === editingId ? planData : p));
-      setPlans(updated);
-      ToastMessage.show("Plan updated successfully!", "success");
-    } else {
-      const newPlan = { ...planData, id: Date.now() };
-      setPlans([...plans, newPlan]);
-      ToastMessage.show("Plan created successfully!", "success");
-    }
+    try {
+      const payload = {
+        planID: planData.planID,
+        planName: planData.planName,
+        pricePerMonth: planData.pricePerMonth,
+        includedEmployees: planData.includedEmployees,
+        extraEmployeeCost: planData.extraEmployeeCost,
+        billingCycleID: planData.billingCycleID,
+      };
 
-    setShowModal(false);
+      const response = await planService.PostplanByAsync(payload);
+
+      if (response.value === 1) {
+        ToastMessage.show(response.message, "success");
+        setShowModal(false);
+        loadPlans();
+      } else {
+        ToastMessage.show(response.message, "warning");
+      }
+    } catch (error) {
+      ToastMessage.show("Save failed.", "error");
+    }
   };
 
-  const deletePlan = () => {
-    if (deleteId) {
-      setPlans(plans.filter((p) => p.id !== deleteId));
-      ToastMessage.show("Plan deleted successfully!", "success");
+  // =========================
+  // DELETE
+  // =========================
+  const deletePlan = async () => {
+    try {
+      const response = await planService.DeleteplanByAsync(deleteId);
+
+      if (response.value === 1) {
+        ToastMessage.show(response.message, "success");
+        loadPlans();
+      } else {
+        ToastMessage.show(response.message, "warning");
+      }
+    } catch (error) {
+      ToastMessage.show("Delete failed.", "error");
+    } finally {
+      setShowDeleteModal(false);
     }
-    setShowDeleteModal(false);
   };
 
-  // ------------------------
+  // =========================
   // UI
-  // ------------------------
+  // =========================
   return (
     <>
       <ToastProvider />
@@ -120,55 +176,56 @@ const PlanManagement: React.FC = () => {
           </button>
         </div>
 
-        {/* PLAN LIST TABLE */}
         <div className="table-responsive shadow-sm rounded">
           <table className="table table-striped align-middle mb-0">
             <thead className="table-dark">
               <tr>
                 <th>Name</th>
                 <th>Price ($)</th>
-                <th>Limits</th>
-                <th>Billing</th>
-                <th>Features</th>
+                <th>Included Employees</th>
+                <th>Extra Cost</th>
+                <th>Billing Cycle</th>
                 <th className="text-center">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {plans.map((plan) => (
-                <tr key={plan.id}>
-                  <td className="fw-semibold">{plan.name}</td>
-                  <td>${plan.price}</td>
-                  <td>
-                    <small>{plan.employeeLimit} Employees</small>
-                    <br />
-                    <small>{plan.storageLimit} GB</small>
-                    <br />
-                    <small>{plan.apiLimit} API</small>
-                  </td>
-                  <td className="text-capitalize">{plan.billingCycle}</td>
-                  <td>
-                    {plan.features
-                      .map((fid) => featuresList.find((f) => f.id === fid)?.name)
-                      .join(", ")}
-                  </td>
-                  <td className="text-center">
-                    <button
-                      className="btn btn-outline-warning btn-sm me-2"
-                      title="Edit"
-                      onClick={() => openEditModal(plan)}
-                    >
-                      <i className="bi bi-pencil-square"></i>
-                    </button>
-                    <button
-                      className="btn btn-outline-danger btn-sm"
-                      title="Delete"
-                      onClick={() => openDeleteModal(plan.id)}
-                    >
-                      <i className="bi bi-trash"></i>
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="text-center p-4">
+                    Loading...
                   </td>
                 </tr>
-              ))}
+              ) : plans.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center p-4">
+                    No plans found.
+                  </td>
+                </tr>
+              ) : (
+                plans.map((plan) => (
+                  <tr key={plan.planID}>
+                    <td className="fw-semibold">{plan.planName}</td>
+                    <td>${plan.pricePerMonth}</td>
+                    <td>{plan.includedEmployees}</td>
+                    <td>${plan.extraEmployeeCost}</td>
+                    <td>{plan.billingCycleID === 1 ? "Monthly" : "Other"}</td>
+                    <td className="text-center">
+                      <button
+                        className="btn btn-outline-warning btn-sm me-2"
+                        onClick={() => openEditModal(plan)}
+                      >
+                        <i className="bi bi-pencil-square"></i>
+                      </button>
+                      <button
+                        className="btn btn-outline-danger btn-sm"
+                        onClick={() => openDeleteModal(plan.planID)}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>
@@ -176,143 +233,127 @@ const PlanManagement: React.FC = () => {
 
       {/* CREATE / EDIT MODAL */}
       {showModal && (
-        <div className="modal fade show d-block" tabIndex={-1}>
+        <div className="modal fade show d-block">
           <div className="modal-dialog modal-lg modal-dialog-centered">
             <div className="modal-content shadow rounded">
               <div className="modal-header bg-primary text-white">
                 <h5 className="modal-title">
-                  {editingId ? "Edit Plan" : "Create Plan"}
+                  {planData.planID === 0 ? "Create Plan" : "Edit Plan"}
                 </h5>
-                <button className="btn-close btn-close-white" onClick={() => setShowModal(false)}></button>
+                <button
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowModal(false)}
+                />
               </div>
-              <div className="modal-body">
-                <div className="row g-3">
-                  {/* NAME */}
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold">Plan Name</label>
-                    <input
-                      className={`form-control ${
-                        valid.name === false ? "is-invalid" : valid.name ? "is-valid" : ""
-                      }`}
-                      value={planData.name}
-                      onChange={(e) =>
-                        setPlanData({ ...planData, name: e.target.value })
-                      }
-                    />
-                    <ValidationMessage
-                      message={
-                        valid.name ? "Valid name" : "Plan name is required"
-                      }
-                      isValid={valid.name}
-                    />
-                  </div>
 
-                  {/* PRICE */}
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold">Price ($)</label>
-                    <input
-                      type="number"
-                      className={`form-control ${
-                        valid.price === false ? "is-invalid" : valid.price ? "is-valid" : ""
-                      }`}
-                      value={planData.price}
-                      onChange={(e) =>
-                        setPlanData({
-                          ...planData,
-                          price: parseFloat(e.target.value),
-                        })
-                      }
-                    />
-                    <ValidationMessage
-                      message={
-                        valid.price ? "Valid price" : "Price must be greater than 0"
-                      }
-                      isValid={valid.price}
-                    />
-                  </div>
+              <div className="modal-body row g-3">
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Plan Name</label>
+                  <input
+                    className={`form-control ${
+                      valid.name === false
+                        ? "is-invalid"
+                        : valid.name
+                        ? "is-valid"
+                        : ""
+                    }`}
+                    value={planData.planName}
+                    onChange={(e) =>
+                      setPlanData({ ...planData, planName: e.target.value })
+                    }
+                  />
+                  <ValidationMessage
+                    message={
+                      valid.name ? "Valid name" : "Plan name is required"
+                    }
+                    isValid={valid.name}
+                  />
+                </div>
 
-                  {/* LIMITS */}
-                  <div className="col-md-4">
-                    <label className="form-label">Employee Limit</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={planData.employeeLimit}
-                      onChange={(e) =>
-                        setPlanData({ ...planData, employeeLimit: parseInt(e.target.value) })
-                      }
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">Storage (GB)</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={planData.storageLimit}
-                      onChange={(e) =>
-                        setPlanData({ ...planData, storageLimit: parseInt(e.target.value) })
-                      }
-                    />
-                  </div>
-                  <div className="col-md-4">
-                    <label className="form-label">API Limit</label>
-                    <input
-                      type="number"
-                      className="form-control"
-                      value={planData.apiLimit}
-                      onChange={(e) =>
-                        setPlanData({ ...planData, apiLimit: parseInt(e.target.value) })
-                      }
-                    />
-                  </div>
+                <div className="col-md-6">
+                  <label className="form-label fw-bold">Price Per Month</label>
+                  <input
+                    type="number"
+                    className={`form-control ${
+                      valid.price === false
+                        ? "is-invalid"
+                        : valid.price
+                        ? "is-valid"
+                        : ""
+                    }`}
+                    value={planData.pricePerMonth}
+                    onChange={(e) =>
+                      setPlanData({
+                        ...planData,
+                        pricePerMonth: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                  />
+                  <ValidationMessage
+                    message={
+                      valid.price
+                        ? "Valid price"
+                        : "Price must be greater than 0"
+                    }
+                    isValid={valid.price}
+                  />
+                </div>
 
-                  {/* BILLING */}
-                  <div className="col-md-6">
-                    <label className="form-label fw-bold">Billing Cycle</label>
-                    <select
-                      className="form-select"
-                      value={planData.billingCycle}
-                      onChange={(e) =>
-                        setPlanData({
-                          ...planData,
-                          billingCycle: e.target.value as Plan["billingCycle"],
-                        })
-                      }
-                    >
-                      <option value="monthly">Monthly</option>
-                      <option value="yearly">Yearly</option>
-                      <option value="custom">Custom</option>
-                    </select>
-                  </div>
+                <div className="col-md-4">
+                  <label className="form-label">Included Employees</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={planData.includedEmployees}
+                    onChange={(e) =>
+                      setPlanData({
+                        ...planData,
+                        includedEmployees: parseInt(e.target.value) || 0,
+                      })
+                    }
+                  />
+                </div>
 
-                  {/* FEATURES */}
-{/* FEATURES */}
-<div className="mb-3">
-  <label className="form-label fw-bold">Features</label>
-  <Select
-    isMulti
-    options={featuresList.map(f => ({ value: f.id, label: `${f.group} → ${f.name}` }))}
-    value={featuresList
-      .filter(f => planData.features.includes(f.id))
-      .map(f => ({ value: f.id, label: `${f.group} → ${f.name}` }))}
-    onChange={(selectedOptions) => {
-      const selectedIds = selectedOptions ? selectedOptions.map(opt => opt.value) : [];
-      setPlanData({ ...planData, features: selectedIds });
-    }}
-    placeholder="Select features..."
-    classNamePrefix="react-select"
-  />
-</div>
+                <div className="col-md-4">
+                  <label className="form-label">Extra Employee Cost</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={planData.extraEmployeeCost}
+                    onChange={(e) =>
+                      setPlanData({
+                        ...planData,
+                        extraEmployeeCost: parseFloat(e.target.value) || 0,
+                      })
+                    }
+                  />
+                </div>
 
+                <div className="col-md-4">
+                  <label className="form-label">Billing Cycle ID</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={planData.billingCycleID}
+                    onChange={(e) =>
+                      setPlanData({
+                        ...planData,
+                        billingCycleID: parseInt(e.target.value) || 1,
+                      })
+                    }
+                  />
                 </div>
               </div>
 
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowModal(false)}
+                >
                   Cancel
                 </button>
                 <button className="btn btn-primary" onClick={savePlan}>
-                  <i className="bi bi-check2 me-1"></i> Save
+                  Save
                 </button>
               </div>
             </div>
@@ -320,24 +361,30 @@ const PlanManagement: React.FC = () => {
         </div>
       )}
 
-      {/* DELETE CONFIRM MODAL */}
+      {/* DELETE MODAL */}
       {showDeleteModal && (
-        <div className="modal fade show d-block" tabIndex={-1}>
+        <div className="modal fade show d-block">
           <div className="modal-dialog modal-dialog-centered">
             <div className="modal-content shadow rounded">
               <div className="modal-header bg-danger text-white">
                 <h5 className="modal-title">Delete Plan</h5>
-                <button className="btn-close btn-close-white" onClick={() => setShowDeleteModal(false)} />
+                <button
+                  className="btn-close btn-close-white"
+                  onClick={() => setShowDeleteModal(false)}
+                />
               </div>
               <div className="modal-body">
-                <p>Are you sure you want to delete this plan?</p>
+                Are you sure you want to delete this plan?
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>
+                <button
+                  className="btn btn-secondary"
+                  onClick={() => setShowDeleteModal(false)}
+                >
                   Cancel
                 </button>
                 <button className="btn btn-danger" onClick={deletePlan}>
-                  <i className="bi bi-trash me-1"></i> Delete
+                  Delete
                 </button>
               </div>
             </div>

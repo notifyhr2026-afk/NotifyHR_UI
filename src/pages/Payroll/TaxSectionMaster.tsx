@@ -12,7 +12,7 @@ import {
   Alert,
 } from 'react-bootstrap';
 import { PencilSquare, Trash, PlusCircle } from 'react-bootstrap-icons';
-import payrollService from '../../services/payrollService'; // adjust path
+import payrollService from '../../services/payrollService';
 
 interface TaxSection {
   TaxSectionID: number;
@@ -29,6 +29,8 @@ const TaxSectionMaster: React.FC = () => {
   const [taxSections, setTaxSections] = useState<TaxSection[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [alertMessage, setAlertMessage] = useState<string | null>(null);
+  const [alertVariant, setAlertVariant] = useState<'success' | 'warning' | null>(null);
 
   const [showModal, setShowModal] = useState(false);
   const [editSection, setEditSection] = useState<TaxSection | null>(null);
@@ -46,31 +48,38 @@ const TaxSectionMaster: React.FC = () => {
   });
 
   // 🔹 FETCH TAX SECTIONS
-  useEffect(() => {
-    const fetchTaxSections = async () => {
-      try {
-        setLoading(true);
-        const data = await payrollService.GetTaxSectionsAsync();
-        setTaxSections(data);
-      } catch (err) {
-        setError('Failed to load tax sections.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchTaxSections = async () => {
+    try {
+      setLoading(true);
+      const data = await payrollService.GetTaxSectionsAsync();
+      setTaxSections(data);
+    } catch (err) {
+      setError('Failed to load tax sections.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchTaxSections();
-  }, []);  
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value, type, checked } = e.target;
+
     setFormData(prev => ({
       ...prev,
-      [id]: type === 'checkbox' ? checked : value,
+      [id]:
+        type === 'checkbox'
+          ? checked
+          : type === 'number'
+          ? value === '' ? null : Number(value)
+          : value,
     }));
   };
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  // 🔹 SAVE / UPDATE
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
 
@@ -80,26 +89,75 @@ const TaxSectionMaster: React.FC = () => {
       return;
     }
 
-    if (editSection) {
-      setTaxSections(prev =>
-        prev.map(s =>
-          s.TaxSectionID === editSection.TaxSectionID ? formData : s
-        )
-      );
-    } else {
-      setTaxSections(prev => [
-        ...prev,
-        { ...formData, TaxSectionID: Date.now() },
-      ]);
-    }
+    try {
+      setLoading(true);
 
-    setShowModal(false);
-    setValidated(false);
+      const payload = {
+        taxSectionID: editSection ? formData.TaxSectionID : 0,
+        sectionCode: formData.SectionCode,
+        sectionName: formData.SectionName,
+        maxLimit: formData.MaxLimit ?? 0,
+        isActive: formData.IsActive,
+        deductionPercentage: formData.DeductionPercentage ?? 0,
+        description: formData.Description,
+        applicableRegime: formData.ApplicableRegime,
+        createdBy: 'Admin', // replace with logged-in user
+      };
+
+      const response = await payrollService.PostSalaryStructurecomponentMappingByAsync(payload);
+
+      if (response.value === 0) {
+        setAlertVariant('warning');
+        setAlertMessage(response.message || 'Operation failed.');
+      } else {
+        setAlertVariant('success');
+        setAlertMessage(response.message || 'Saved successfully.');
+        setShowModal(false);
+        fetchTaxSections();
+      }
+    } catch (err) {
+      setAlertVariant('warning');
+      setAlertMessage('Something went wrong.');
+    } finally {
+      setLoading(false);
+      setValidated(false);
+    }
+  };
+
+  // 🔹 DELETE
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this tax section?')) return;
+
+    try {
+      setLoading(true);
+
+      const payload = {
+        taxSectionID: id,
+        createdBy: 'Admin',
+      };
+
+      const response = await payrollService.DeleteSalaryStructurecomponentMappingByAsync(payload);
+
+      if (response.value === 0) {
+        setAlertVariant('warning');
+        setAlertMessage('Delete failed.');
+      } else {
+        setAlertVariant('success');
+        setAlertMessage('Deleted successfully.');
+        fetchTaxSections();
+      }
+    } catch (err) {
+      setAlertVariant('warning');
+      setAlertMessage('Error deleting tax section.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleAdd = () => {
+    setEditSection(null);
     setFormData({
-      TaxSectionID: Date.now(),
+      TaxSectionID: 0,
       SectionCode: '',
       SectionName: '',
       Description: '',
@@ -108,7 +166,6 @@ const TaxSectionMaster: React.FC = () => {
       DeductionPercentage: null,
       IsActive: true,
     });
-    setEditSection(null);
     setShowModal(true);
   };
 
@@ -116,12 +173,6 @@ const TaxSectionMaster: React.FC = () => {
     setEditSection(section);
     setFormData(section);
     setShowModal(true);
-  };
-
-  const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this tax section?')) {
-      setTaxSections(prev => prev.filter(s => s.TaxSectionID !== id));
-    }
   };
 
   return (
@@ -141,71 +192,75 @@ const TaxSectionMaster: React.FC = () => {
         </Button>
       </div>
 
-      {/* TABLE */}
- {loading && (
-  <div className="text-center my-4">
-    <Spinner animation="border" />
-  </div>
-)}
+      {alertMessage && (
+        <Alert
+          variant={alertVariant || 'success'}
+          onClose={() => setAlertMessage(null)}
+          dismissible
+        >
+          {alertMessage}
+        </Alert>
+      )}
 
-{error && (
-  <Alert variant="danger" className="my-3">
-    {error}
-  </Alert>
-)}
+      {loading && (
+        <div className="text-center my-4">
+          <Spinner animation="border" />
+        </div>
+      )}
 
-{!loading && !error && taxSections.length ? (
-  <Table bordered hover responsive className="align-middle">
-    <thead className="table-light">
-      <tr>
-        <th>Code</th>
-        <th>Section Name</th>
-        <th>Description</th>
-        <th className="text-center">Status</th>
-        <th className="text-center">Actions</th>
-      </tr>
-    </thead>
-    <tbody>
-      {taxSections.map(s => (
-        <tr key={s.TaxSectionID}>
-          <td className="fw-semibold">{s.SectionCode}</td>
-          <td>{s.SectionName}</td>
-          <td className="text-muted">{s.Description}</td>
-          <td className="text-center">
-            <Badge bg={s.IsActive ? 'success' : 'secondary'} pill>
-              {s.IsActive ? 'Active' : 'Inactive'}
-            </Badge>
-          </td>
-          <td className="text-center">
-            <Button
-              size="sm"
-              variant="outline-primary"
-              className="me-2"
-              onClick={() => handleEdit(s)}
-            >
-              <PencilSquare />
-            </Button>
-            <Button
-              size="sm"
-              variant="outline-danger"
-              onClick={() => handleDelete(s.TaxSectionID)}
-            >
-              <Trash />
-            </Button>
-          </td>
-        </tr>
-      ))}
-    </tbody>
-  </Table>
-) : (
-  !loading && <p className="text-muted">No tax sections added yet.</p>
-)}
+      {!loading && taxSections.length > 0 && (
+        <Table bordered hover responsive className="align-middle">
+          <thead className="table-light">
+            <tr>
+              <th>Code</th>
+              <th>Section Name</th>
+              <th>Description</th>
+              <th className="text-center">Status</th>
+              <th className="text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {taxSections.map(s => (
+              <tr key={s.TaxSectionID}>
+                <td>{s.SectionCode}</td>
+                <td>{s.SectionName}</td>
+                <td>{s.Description}</td>
+                <td className="text-center">
+                  <Badge bg={s.IsActive ? 'success' : 'secondary'} pill>
+                    {s.IsActive ? 'Active' : 'Inactive'}
+                  </Badge>
+                </td>
+                <td className="text-center">
+                  <Button
+                    size="sm"
+                    variant="outline-primary"
+                    className="me-2"
+                    onClick={() => handleEdit(s)}
+                  >
+                    <PencilSquare />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline-danger"
+                    onClick={() => handleDelete(s.TaxSectionID)}
+                  >
+                    <Trash />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
+      )}
 
+      {!loading && taxSections.length === 0 && (
+        <p className="text-muted">No tax sections found.</p>
+      )}
 
-      {/* ADD / EDIT MODAL */}
+      {/* MODAL */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
-        <Modal.Header closeButton className="bg-light">
-          <Modal.Title className="fw-semibold">
+        <Modal.Header closeButton>
+          <Modal.Title>
             {editSection ? 'Edit Tax Section' : 'Add Tax Section'}
           </Modal.Title>
         </Modal.Header>
