@@ -18,5 +18,17 @@ const leavePolicyService = {
       const { data } = await axiosInstance.delete(`LeavePolicy?leavePolicyID=${leavePolicyID}`);
       return data;   
   },
+   getOrgLeavePolicy: async (organizationID : number) => {    
+      const { data } = await axiosInstance.get(`/LeavePolicy/OrgLeavePolicies?organizationID=${organizationID}`);
+      return data;
+  },
+  PostOrgLeavePolicyByAsync: async (payload: any) => {
+    const res = await axiosInstance.post("LeavePolicy/CreateOrUpdateOrgLeavePolicy", payload);
+    return res.data[0];
+  },
+  DeleteOrgLeavePolicyByAsync: async (orgLeavePolicyID:number) => {   
+      const { data } = await axiosInstance.delete(`LeavePolicy/DeleteOrgLeavePolicy?orgLeavePolicyID=${orgLeavePolicyID}`);
+      return data;   
+  },
 };
 export default leavePolicyService;

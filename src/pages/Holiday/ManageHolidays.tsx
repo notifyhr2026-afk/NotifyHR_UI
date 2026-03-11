@@ -4,16 +4,17 @@ import {
   Table,
   Modal,
   Form,
-  Row,
-  Col,
   Badge,
   Toast,
   ToastContainer,
+  Row,
+  Col,
 } from "react-bootstrap";
-import { BsPencilSquare, BsTrash, BsPlus } from "react-icons/bs";
+import { BsPencilSquare, BsPlus } from "react-icons/bs";
 import branchService from "../../services/branchService";
 import holidayService from "../../services/holidayService";
-import LoggedInUser from '../../types/LoggedInUser'
+import LoggedInUser from "../../types/LoggedInUser";
+
 const Icon = (Component: any, props: any = {}) => <Component {...props} />;
 
 interface Holiday {
@@ -30,8 +31,6 @@ interface Branch {
   BranchName: string;
 }
 
-
-
 const ManageHolidays: React.FC = () => {
   const userString = localStorage.getItem("user");
   const user: LoggedInUser | null = userString
@@ -41,6 +40,7 @@ const ManageHolidays: React.FC = () => {
 
   const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<number>(0);
   const [validated, setValidated] = useState(false);
 
   const [holidayFormData, setHolidayFormData] = useState<Holiday>({
@@ -97,11 +97,16 @@ const ManageHolidays: React.FC = () => {
     }
   };
 
+  /* ================= FILTERED DATA ================= */
+
+  const filteredHolidays =
+    selectedBranch === 0
+      ? holidays
+      : holidays.filter((h) => h.branchID === selectedBranch || h.branchID === 0);
+
   /* ================= FORM HANDLING ================= */
 
-  const handleInputChange = (
-    e: React.ChangeEvent<any>
-  ) => {
+  const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value, type } = e.target;
 
     if (type === "checkbox") {
@@ -122,7 +127,7 @@ const ManageHolidays: React.FC = () => {
     setValidated(false);
     setHolidayFormData({
       id: 0,
-      branchID: 0,
+      branchID: selectedBranch || 0,
       holidayName: "",
       holidayDate: "",
       isOptional: false,
@@ -192,18 +197,34 @@ const ManageHolidays: React.FC = () => {
 
   return (
     <div className="mt-5">
-      <div className="d-flex justify-content-between mb-4">
-        <h3>Manage Holidays</h3>
-        <Button onClick={openAddModal}>
-          {Icon(BsPlus, { className: "me-1" })}
-          Add Holiday
-        </Button>
-      </div>
+      <Row className="mb-4 align-items-center">
+        <Col md={4}>
+          <h3>Manage Holidays</h3>
+        </Col>
+        <Col md={4}>
+          <Form.Select
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(Number(e.target.value))}
+          >
+            <option value={0}>All Branches</option>
+            {branches.map((b) => (
+              <option key={b.BranchID} value={b.BranchID}>
+                {b.BranchName}
+              </option>
+            ))}
+          </Form.Select>
+        </Col>
+        <Col md={4} className="text-end">
+          <Button onClick={openAddModal}>
+            {Icon(BsPlus, { className: "me-1" })}
+            Add Holiday
+          </Button>
+        </Col>
+      </Row>
 
       <Table bordered hover responsive>
         <thead>
           <tr>
-            <th>Branch</th>
             <th>Holiday</th>
             <th>Date</th>
             <th>Optional</th>
@@ -212,14 +233,8 @@ const ManageHolidays: React.FC = () => {
           </tr>
         </thead>
         <tbody>
-          {holidays.map((h) => (
+          {filteredHolidays.map((h) => (
             <tr key={h.id}>
-              <td>
-                {
-                  branches.find((b) => b.BranchID === h.branchID)
-                    ?.BranchName
-                }
-              </td>
               <td>{h.holidayName}</td>
               <td>
                 <Badge bg="secondary">{h.holidayDate}</Badge>

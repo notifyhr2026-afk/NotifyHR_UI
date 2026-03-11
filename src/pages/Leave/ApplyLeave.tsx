@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { Container, Button, Tabs, Tab } from 'react-bootstrap';
-import { Leave, LeaveTypeOption, EmployeeOption } from  '../../types/Leaves';
+import { Leave, LeaveTypeOption, EmployeeOption } from '../../types/Leaves';
 
-
-import LeaveHistoryTab   from  './LeaveHistoryTab'
+import LeaveHistoryTab from './LeaveHistoryTab';
 import LeaveBalanceTab from './LeaveBalanceTab';
 import ApproveLeavesTab from './ApproveLeavesTab';
 import EmployeeLeavesTab from './EmployeeLeavesTab';
@@ -31,6 +30,9 @@ const ApplyLeave: React.FC = () => {
     { value: '2', label: 'Sick Leave', totalLeaves: 10 },
     { value: '3', label: 'Earned Leave', totalLeaves: 15 },
   ];
+
+  // Wrap setEditLeave to match LeaveHistoryTab prop
+  const handleEditLeave = (leave: Leave) => setEditLeave(leave);
 
   const handleSaveLeave = (leave: Leave) => {
     if (editLeave) {
@@ -65,10 +67,10 @@ const ApplyLeave: React.FC = () => {
       <Tabs activeKey={activeTab} onSelect={k => setActiveTab(k || 'history')}>
         <Tab eventKey="history" title="Leave History">
           <LeaveHistoryTab
-            leaves={leaves}
+           employeeID={6}
             employees={employeeOptions}
             leaveTypes={leaveTypeOptions}
-            onEdit={setEditLeave}
+            onEdit={handleEditLeave} // ✅ wrapped function
             onDelete={(id) => {
               setLeaveToDelete(id);
               setConfirmDelete(true);
@@ -100,11 +102,13 @@ const ApplyLeave: React.FC = () => {
       </Tabs>
 
       <ApplyLeaveModal
-  show={showModal}
-  onHide={() => { setShowModal(false); setEditLeave(null); }}
-  editLeave={editLeave}
-  onSave={handleSaveLeave}
-/>
+        show={showModal}
+        onHide={() => { setShowModal(false); setEditLeave(null); }}
+        editLeave={editLeave}
+        onSave={() => {
+          if (editLeave) handleSaveLeave(editLeave);
+        }}
+      />
 
       <DeleteConfirmModal
         show={confirmDelete}

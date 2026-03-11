@@ -50,6 +50,14 @@ const employeeService = {
     const { data } = await api.get('Master/positionChangeStatus');
     return data;
   },
+  getEmployeeByOrganizationIdAsync: async (organizationID : number) => {    
+      const { data } = await api.get(`Employee/GetEmployeesForCreateLogins?organizationID=${organizationID}`);
+      return data;
+  },
+  PutUpdateEmployeeUserIdAsync: async (payload: any) => {
+    const res = await api.put("Employee/UpdateEmployeeUserId", payload);
+    return res.data[0];
+   },
 };
 
 export default employeeService;

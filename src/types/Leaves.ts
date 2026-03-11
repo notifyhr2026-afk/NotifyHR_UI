@@ -7,8 +7,9 @@ export interface Leave {
   numberOfDays: number;
   status: string;
   reason: string;
+  isHalfDay?: boolean;      // ✅ optional
+  halfDayType?: string;     // ✅ optional
 }
-
 export interface LeaveTypeOption {
   value: string;
   label: string;
@@ -19,3 +20,4 @@ export interface EmployeeOption {
   value: string;
   label: string;
 }
+
