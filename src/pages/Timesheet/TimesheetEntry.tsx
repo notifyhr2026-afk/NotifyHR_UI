@@ -112,7 +112,9 @@ const TimesheetEntry: React.FC = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [timesheets, setTimesheets] = useState<ProjectTimesheet[]>([]);
-
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID: number | undefined = user?.organizationID;
+  const employeeID: number | undefined = user?.employeeID;
   const dates = useMemo(
     () => generateDates(fromDate, toDate),
     [fromDate, toDate]
@@ -216,7 +218,7 @@ const saveProject = async (projectId: number) => {
     // 🔹 Convert UI entries → API format
     const timesheetPayload = projectSheet.entries.map((entry, index) => ({
       TimesheetID: 0, // 0 for new entry
-      EmployeeID: 1,  // Replace with logged-in employee ID
+      EmployeeID: employeeID,  // Replace with logged-in employee ID
       ProjectID: projectId,
       EntryDate: entry.date,
       Shift: entry.shift,

@@ -1,34 +1,55 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import AssetService from "../../services/AssetService";
+import { useParams } from "react-router-dom";
 
 interface AssetRecord {
   id: number;
   assetName: string;
   assignedDate: string;
-  expectedReturnDate: string;
-  actualReturnDate: string;
+  expectedReturnDate: string | null;
+  actualReturnDate: string | null;
   conditionOnReturn: string;
   remarks: string;
   reportRemarks: string;
 }
 
 const EmployeeAsset: React.FC = () => {
-  const [data, setData] = useState<AssetRecord[]>([
-    {
-      id: 1,
-      assetName: "Laptop - Dell",
-      assignedDate: "2024-01-10",
-      expectedReturnDate: "2024-12-31",
-      actualReturnDate: "2024-12-20",
-      conditionOnReturn: "Good",
-      remarks: "No issues",
-      reportRemarks: ""
-    }
-  ]);
+  const [data, setData] = useState<AssetRecord[]>([]);
+  const { employeeID } = useParams<{ employeeID: string }>();
 
-  const handleReportRemarksChange = (
-    id: number,
-    value: string
-  ) => {
+  useEffect(() => {
+    if (employeeID) {
+      fetchAssets(Number(employeeID));
+    }
+  }, [employeeID]);
+
+  const fetchAssets = async (empID: number) => {
+    try {
+      const response =
+        await AssetService.GetAssetAssignmentsByEmployeeID(empID);
+
+      const formattedData = response.map((item: any) => ({
+        id: item.AssetAssignmentID,
+        assetName: item.AssetName,
+        assignedDate: item.AssignedDate?.split("T")[0],
+        expectedReturnDate: item.ExpectedReturnDate
+          ? item.ExpectedReturnDate.split("T")[0]
+          : "",
+        actualReturnDate: item.ActualReturnDate
+          ? item.ActualReturnDate.split("T")[0]
+          : "",
+        conditionOnReturn: item.ConditionOnReturn,
+        remarks: item.Remarks,
+        reportRemarks: ""
+      }));
+
+      setData(formattedData);
+    } catch (error) {
+      console.error("Error fetching assets:", error);
+    }
+  };
+
+  const handleReportRemarksChange = (id: number, value: string) => {
     setData(prev =>
       prev.map(item =>
         item.id === id ? { ...item, reportRemarks: value } : item

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Row,
   Col,
@@ -10,14 +10,10 @@ import {
   InputGroup,
   Modal,
 } from "react-bootstrap";
-import {
-  BsCalendar3,
-  BsSearch,
-  BsFilter,
-  BsDownload,
-} from "react-icons/bs";
+import { BsCalendar3, BsSearch, BsFilter, BsDownload } from "react-icons/bs";
+import holidayService from "../../services/holidayService";
 
-// Safe icon renderer to avoid JSX issues
+// Safe icon renderer
 const Icon = (Component: any, props: any = {}) => <Component {...props} />;
 
 interface EmployeeHoliday {
@@ -28,7 +24,7 @@ interface EmployeeHoliday {
 }
 
 const HolidayList: React.FC = () => {
-  const [selectedYear, setSelectedYear] = useState<number>(2025);
+  const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [search, setSearch] = useState<string>("");
 
   // Filter modal states
@@ -36,15 +32,40 @@ const HolidayList: React.FC = () => {
   const [filterType, setFilterType] = useState<string>("");
   const [filterMonth, setFilterMonth] = useState<string>("");
 
-  // Sample data (replace with API later)
-  const holidays: EmployeeHoliday[] = [
-    { id: 1, name: "New Year’s Day", date: "2025-01-01", type: "Company" },
-    { id: 2, name: "Pongal", date: "2025-01-15", type: "Normal" },
-    { id: 3, name: "Republic Day", date: "2025-01-26", type: "Company" },
-    { id: 4, name: "Good Friday", date: "2025-03-29", type: "Special" },
-    { id: 5, name: "Ugadi", date: "2025-04-09", type: "Optional" },
-    { id: 6, name: "May Day", date: "2025-05-01", type: "Company" },
-  ];
+  // Holidays fetched from API
+  const [holidays, setHolidays] = useState<EmployeeHoliday[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+
+  // Example organization ID (replace with dynamic ID if needed)
+  const organizationID = 45;
+
+  // Fetch holidays whenever organizationID or selectedYear changes
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      setLoading(true);
+      try {
+        const data = await holidayService.getOrgholidays(organizationID);
+
+        // Map API response to EmployeeHoliday format
+        const mappedHolidays: EmployeeHoliday[] = data
+          .filter((h: any) => new Date(h.HolidayDate).getFullYear() === selectedYear)
+          .map((h: any) => ({
+            id: h.HolidayID,
+            name: h.HolidayName,
+            date: h.HolidayDate.split("T")[0], // Keep only yyyy-mm-dd
+            type: h.IsOptional ? "Optional" : "Company",
+          }));
+
+        setHolidays(mappedHolidays);
+      } catch (error) {
+        console.error("Error fetching holidays:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHolidays();
+  }, [organizationID, selectedYear]);
 
   const badgeColor = (type: string) => {
     switch (type) {
@@ -76,11 +97,10 @@ const HolidayList: React.FC = () => {
 
   return (
     <div className="p-3 mt-5">
-
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
-          <h3 className="fw-bold mb-0">Employee Holiday Calendar</h3>        
+          <h3 className="fw-bold mb-0">Employee Holiday Calendar</h3>
         </div>
 
         {/* Year + Export */}
@@ -124,31 +144,32 @@ const HolidayList: React.FC = () => {
       </Row>
 
       {/* Holiday List */}
-      <Row>
-        {filteredHolidays.map((h) => (
-          <Col md={6} key={h.id} className="mb-3">
-            <Card className="shadow-sm border-0">
-              <Card.Body className="d-flex justify-content-between align-items-center">
-                <div>
-                  <h5 className="mb-1">{h.name}</h5>
-                  <div className="text-muted">
-                    {new Date(h.date).toLocaleDateString("en-US", {
-                      weekday: "short",
-                      year: "numeric",
-                      month: "short",
-                      day: "numeric",
-                    })}
+      {loading ? (
+        <div className="text-center text-muted mt-5">Loading holidays...</div>
+      ) : filteredHolidays.length > 0 ? (
+        <Row>
+          {filteredHolidays.map((h) => (
+            <Col md={6} key={h.id} className="mb-3">
+              <Card className="shadow-sm border-0">
+                <Card.Body className="d-flex justify-content-between align-items-center">
+                  <div>
+                    <h5 className="mb-1">{h.name}</h5>
+                    <div className="text-muted">
+                      {new Date(h.date).toLocaleDateString("en-US", {
+                        weekday: "short",
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </div>
                   </div>
-                </div>
-                <Badge bg={badgeColor(h.type)}>{h.type}</Badge>
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
-
-      {/* No Results */}
-      {filteredHolidays.length === 0 && (
+                  <Badge bg={badgeColor(h.type)}>{h.type}</Badge>
+                </Card.Body>
+              </Card>
+            </Col>
+          ))}
+        </Row>
+      ) : (
         <div className="text-center text-muted mt-5">
           {Icon(BsCalendar3, { size: 40, className: "mb-3" })}
           <p>No holidays found</p>

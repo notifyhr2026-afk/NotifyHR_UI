@@ -29,9 +29,10 @@ const ApplyLeaveModal: React.FC<Props> = ({
 // Get organizationID from localStorage
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID: number | undefined = user?.organizationID;
+  const employeeID: number | undefined = user?.employeeID;
   const [data, setData] = useState<any>({
     id: 0,
-    employeeID: 6, // Static employee ID for now
+    employeeID: employeeID, // Static employee ID for now
     leaveTypeID: '',
     startDate: '',
     endDate: '',
@@ -63,7 +64,7 @@ const ApplyLeaveModal: React.FC<Props> = ({
     if (editLeave) {
       setData({
         ...editLeave,
-        employeeID: 6,
+        employeeID: employeeID,
       });
     }
   }, [editLeave]);
@@ -108,7 +109,7 @@ const ApplyLeaveModal: React.FC<Props> = ({
 
       const payload = {
         EmployeeLeaveID: editLeave?.id ?? 0,
-        EmployeeID: 6,
+        EmployeeID: employeeID,
         LeaveTypeID: Number(data.leaveTypeID),
         StartDate: data.startDate,
         EndDate: data.endDate,

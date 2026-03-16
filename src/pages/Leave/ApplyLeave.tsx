@@ -10,6 +10,9 @@ import ApplyLeaveModal from './ApplyLeaveModal';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 
 const ApplyLeave: React.FC = () => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID: number | undefined = user?.organizationID;
+  const employeeID: number  = user?.employeeID;
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [activeTab, setActiveTab] = useState('history');
 
@@ -67,7 +70,7 @@ const ApplyLeave: React.FC = () => {
       <Tabs activeKey={activeTab} onSelect={k => setActiveTab(k || 'history')}>
         <Tab eventKey="history" title="Leave History">
           <LeaveHistoryTab
-           employeeID={6}
+           employeeID={employeeID}
             employees={employeeOptions}
             leaveTypes={leaveTypeOptions}
             onEdit={handleEditLeave} // ✅ wrapped function

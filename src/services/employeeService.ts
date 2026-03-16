@@ -1,6 +1,11 @@
 import api from "../api/axiosHRInstance";
 
 const employeeService = {
+
+  getEmployeesByOrganizationIdAsync: async (organizationID : number) => {    
+      const { data } = await api.get(`Employee?organizationID=${organizationID}`);
+      return data;
+  },
   getEmployees: async () => {
     debugger;
     const { data } = await api.get('Master/employees');

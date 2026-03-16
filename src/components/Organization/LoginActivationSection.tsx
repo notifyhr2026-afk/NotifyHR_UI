@@ -3,10 +3,6 @@ import { Button, Form, Row, Col, Card, Spinner } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import { PutActivateLoginsAsync } from "../../services/organizationService";
 
-interface ApiResponse {
-  value: number;
-  MSG: string;
-}
 
 const LoginActivationSection: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
@@ -28,7 +24,7 @@ const handleActivateLogin = async () => {
       organizationID: Number(id),
       isLoginActivated: isLoginActivate,
       loginRemarks: loginRemarks.trim(),
-      modifiedBy: "aDMIN",
+      modifiedBy: "Admin",
     };
 
     const response = await PutActivateLoginsAsync(payload);

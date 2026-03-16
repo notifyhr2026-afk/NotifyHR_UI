@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
-import ToggleSection from '../ToggleSection';
 import employeeService from '../../services/employeeService';
-
+import { useParams } from "react-router-dom";
 // 🟢 Interface for list (Table1 data)
 interface ManagerHistory {
   ManagerHistoryID: number;
@@ -42,7 +41,7 @@ const EmployeePositionHistory: React.FC = () => {
   const [editRecord, setEditRecord] = useState<ManagerHistory | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-
+ const { employeeID } = useParams<{ employeeID: string }>();
   // 🟢 Modal form state
   const [formData, setFormData] = useState<PositionHistoryForm>({
     branchId: 0,
@@ -94,9 +93,9 @@ const [showToast, setShowToast] = useState(false);
   // 🟢 Fetch API list (Table1)
   useEffect(() => {
     const fetchManagerHistory = async () => {
-      try {
-        const employeeID = 14; // replace with prop or context if needed
-        const response = await employeeService.GetEmployeeDetialsByEmployeeID(employeeID);
+      try {       
+        if (!employeeID) return;
+        const response = await employeeService.GetEmployeeDetialsByEmployeeID(Number(employeeID!));
         if (response?.Table1) {
           setRecords(response.Table1);
         }

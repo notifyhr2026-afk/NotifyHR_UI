@@ -78,9 +78,10 @@ const ManageHolidays: React.FC = () => {
   };
 
   const loadHolidays = async () => {
+    debugger;
     try {
-      const res = await holidayService.GetHolidaysAsync(organizationID);
-      const data = res?.Table ?? [];
+      const res = await holidayService.getOrgholidays(organizationID);
+      const data = res;
 
       const mapped: Holiday[] = data.map((h: any) => ({
         id: h.HolidayID,

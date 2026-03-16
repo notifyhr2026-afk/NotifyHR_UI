@@ -58,7 +58,6 @@ const OrganizationDetails: React.FC = () => {
     try {
       setLoading(true);
       const data = await getOrgDetailsAsync(orgId);
-
       if (data?.length) {
         const org = data[0];
         setFormData({

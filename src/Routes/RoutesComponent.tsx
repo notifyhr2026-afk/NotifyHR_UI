@@ -34,7 +34,6 @@ import OrganizationFeatures from '../pages/Organization/OrganizationFeatures';
 import HolidaySettings from '../pages/Holiday/HolidaySettings';
 import ManageHolidays from '../pages/Holiday/ManageHolidays';
 import HolidayList from '../pages/Holiday/HolidayList';
-import ShiftManagement from '../pages/Shift/ShiftManagement';
 import PlanList from '../pages/Organization/PlanManagement';
 import { EmployeeProvider } from '../context/EmployeeContext';
 import FeatureManagement from  '../pages/Features/FeatureManagement';
@@ -85,6 +84,12 @@ import EmployeePerformanceReview from '../pages/Performance/EmployeePerformanceR
 import EmployeeSelfReview from '../pages/Performance/EmployeeSelfReview';
 import Feedback360Page from '../pages/Performance/Feedback360Page';
 
+// import ShiftManagement from '../pages/Shift/ShiftManagement';
+import ShiftManagement from '../pages/Shift/ManageShifts';
+import ManageShiftPatterns from '../pages/Shift/ManageShiftPatterns';
+import AssignShifts from '../pages/Shift/AssignShifts';
+import ManageProjects from '../components/Organization/ManageProjects';
+
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -129,8 +134,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="EmployeeDashboard" element={<EmployeeDashboard />} />
         <Route path="OrganizationFeatures" element={<OrganizationFeatures />} />
         <Route path="HolidaySettings" element={<HolidaySettings />} />
-        <Route path="HolidayList" element={<HolidayList />} />
-        <Route path="ShiftManagement" element={<ShiftManagement />} />
+        <Route path="HolidayList" element={<HolidayList />} />      
         <Route path="AttendanceCalendar" element={<AttendanceCalendar />} />
         <Route path="plans" element={<PlanList />} />        
         <Route path="RoleMenuPermissions" element={<RoleMenuPermissions />} />
@@ -177,6 +181,13 @@ const RoutesComponent: React.FC = () => {
         <Route path="/CreateTicket" element={<CreateTicket />} />
         {/* <Route path="/ticket/:id" element={<TicketDetails />} /> */}
         <Route path="/ManagerTicketVerification" element={<ManagerTicketVerification />} />
+
+        {/* <Route path="ShiftManagement" element={<ShiftManagement />} /> */}
+        <Route path="/ShiftManagement" element={<ShiftManagement />} />
+        <Route path="/Shiftpatterns" element={<ManageShiftPatterns />} />
+        <Route path="/assignshifts" element={<AssignShifts />} />
+        <Route path="/ManageProjects" element={<ManageProjects />} />
+        
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
           path="Employees/manageEmployee/:employeeID"

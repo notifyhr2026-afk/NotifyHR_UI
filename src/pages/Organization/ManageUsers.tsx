@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
 import Select from 'react-select';
 import userService from '../../services/userService';
 import employeeService from '../../services/employeeService';
+import LoggedInUser from '../../types/LoggedInUser';
+
 interface User {
   id: number;
   branchID: number | null;
@@ -26,6 +28,9 @@ interface DropdownOption {
 }
 
 const ManageUsers: React.FC = () => {
+
+const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
+const organizationID: number  = userFromStorage?.organizationID ?? 0;
 
   const [users, setUsers] = useState<User[]>([]);
   const [generating, setGenerating] = useState(false);
@@ -74,14 +79,45 @@ const ManageUsers: React.FC = () => {
     { value: 'Guest', label: 'Guest' },
   ];
 
+  const loadUsers = async () => {
+  try {
+
+    const data = await userService.getUsersByOrganizationIdAsync(organizationID);
+
+    const mappedUsers: User[] = data.map((u: any) => ({
+      id: u.UserID,
+      branchID: null,
+      divisionID: null,
+      departmentID: null,
+      fullName: u.FullName,
+      email: u.Email,
+      phone: u.Phone,
+      username: u.Username,
+      passwordHash: '',
+      isPasswordReset: u.IsPasswordReset,
+      passwordResetDate: u.PasswordResetDate,
+      isActive: u.IsActive,
+      isCompanyEmail: u.IsCompanyEmail,
+      roles: u.Roles ? u.Roles.split(',').map((r: string) => r.trim()) : []
+    }));
+
+    setUsers(mappedUsers);
+
+  } catch (error) {
+    console.error("Error loading users", error);
+  }
+};
+
+useEffect(() => {
+  loadUsers();
+}, [])
+
   // =============================
   // GENERATE LOGINS
   // =============================
   const handleGenerateLogins = async () => {
     try {
-      setGenerating(true);
-
-      const organizationID = 9;
+      setGenerating(true);   
 
       const employees =
         await employeeService.getEmployeeByOrganizationIdAsync(organizationID);
@@ -111,7 +147,7 @@ const ManageUsers: React.FC = () => {
       };
 
       await employeeService.PutUpdateEmployeeUserIdAsync(payload1);
-
+      await loadUsers(); // refresh grid
       alert("Logins generated successfully");
 
     } catch (error) {

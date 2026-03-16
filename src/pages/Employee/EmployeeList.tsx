@@ -30,7 +30,7 @@ const EmployeeList: React.FC = () => {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const organizationID: number | undefined = user?.organizationID;
+  const organizationID: number  = user?.organizationID;
 
   // 🔹 Static Data (Replace with API later)
   const branches = [
@@ -64,7 +64,7 @@ const EmployeeList: React.FC = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const data = await employeeService.getEmployees();
+        const data = await employeeService.getEmployeesByOrganizationIdAsync(organizationID);
         setEmployees(data);
         setFilteredEmployees(data);
       } catch (err) {
@@ -135,7 +135,7 @@ const EmployeeList: React.FC = () => {
           `✅ Employee created successfully (ID: ${newEmployeeID})`
         );
 
-        const data = await employeeService.getEmployees();
+        const data = await employeeService.getEmployeeByOrganizationIdAsync(organizationID);
         setEmployees(data);
         setFilteredEmployees(data);
 

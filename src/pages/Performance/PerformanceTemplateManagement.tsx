@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import ToastMessage, { ToastProvider } from "../../components/ToastMessage";
 import { ValidationMessage } from "../../components/ValidationMessage";
 import "bootstrap/dist/css/bootstrap.min.css";
+import performanceService from "../../services/performanceService";
 
 /* ================= TYPES ================= */
 
@@ -13,56 +14,53 @@ interface PerformanceTemplate {
   IsActive: boolean;
 }
 
-/* ================= MOCK DATA ================= */
-
-const templatesMock: PerformanceTemplate[] = [
-  {
-    TemplateID: 1,
-    OrganizationID: 1,
-    TemplateName: "Annual Review",
-    Description: "Yearly employee performance review",
-    IsActive: true,
-  },
-  {
-    TemplateID: 2,
-    OrganizationID: 1,
-    TemplateName: "Probation Review",
-    Description: "3-month probation evaluation",
-    IsActive: true,
-  },
-];
-
 /* ================= COMPONENT ================= */
 
 const PerformanceTemplateManagement: React.FC = () => {
-  const [templates, setTemplates] =
-    useState<PerformanceTemplate[]>(templatesMock);
-
+  const [templates, setTemplates] = useState<PerformanceTemplate[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-
-  const [templateData, setTemplateData] =
-    useState<PerformanceTemplate>({
-      TemplateID: 0,
-      OrganizationID: 1, // usually from logged-in user
-      TemplateName: "",
-      Description: "",
-      IsActive: true,
-    });
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+const organizationID: number | undefined = user?.organizationID;
+  const [templateData, setTemplateData] = useState<PerformanceTemplate>({
+    TemplateID: 0,
+    OrganizationID: organizationID ?? 0, // replace with logged-in user's org ID
+    TemplateName: "",
+    Description: "",
+    IsActive: true,
+  });
 
   const [valid, setValid] = useState({
     TemplateName: null as boolean | null,
   });
 
-  /* ================= FUNCTIONS ================= */
+  /* ================= FETCH TEMPLATES ================= */
+
+  const fetchTemplates = async () => {
+    try {
+      const data = await performanceService.getPerformanceTemplatesByOrganizationIDAsync(
+        templateData.OrganizationID
+      );
+      setTemplates(data);
+    } catch (error) {
+      ToastMessage.show("Failed to fetch templates.", "error");
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    fetchTemplates();
+  }, []);
+
+  /* ================= MODAL HANDLERS ================= */
 
   const openCreateModal = () => {
     setEditingId(null);
     setTemplateData({
       TemplateID: 0,
-      OrganizationID: 1,
+      OrganizationID: organizationID ?? 0,
       TemplateName: "",
       Description: "",
       IsActive: true,
@@ -83,56 +81,71 @@ const PerformanceTemplateManagement: React.FC = () => {
     setShowDeleteModal(true);
   };
 
+  /* ================= VALIDATION ================= */
+
   const validate = () => {
     const newValid = {
       TemplateName: templateData.TemplateName.trim().length > 0,
     };
     setValid(newValid);
-    return Object.values(newValid).every(v => v === true);
+    return Object.values(newValid).every((v) => v === true);
   };
 
-  const saveTemplate = () => {
+  /* ================= SAVE TEMPLATE ================= */
+
+  const saveTemplate = async () => {
     if (!validate()) {
       ToastMessage.show("Please fix validation errors.", "error");
       return;
     }
 
-    if (editingId) {
-      setTemplates(prev =>
-        prev.map(t =>
-          t.TemplateID === editingId ? templateData : t
-        )
-      );
-      ToastMessage.show(
-        "Template updated successfully!",
-        "success"
-      );
-    } else {
-      setTemplates(prev => [
-        ...prev,
-        { ...templateData, TemplateID: Date.now() },
-      ]);
-      ToastMessage.show(
-        "Template created successfully!",
-        "success"
-      );
+    try {
+      const payload = {
+        templateID: templateData.TemplateID,
+        organizationID: templateData.OrganizationID,
+        templateName: templateData.TemplateName,
+        description: templateData.Description,
+        createdBy: "Admin", // replace with logged-in user if needed
+        isActive: templateData.IsActive,
+      };
+
+      const res = await performanceService.PostPerformanceTemplatesByAsync(payload);
+
+      if (res.value === 1) {
+        ToastMessage.show(res.message, "success");
+        fetchTemplates(); // Refresh list from API
+      } else {
+        ToastMessage.show("Failed to save template.", "error");
+      }
+    } catch (error) {
+      ToastMessage.show("Error saving template.", "error");
+      console.error(error);
     }
 
     setShowModal(false);
   };
 
-  const deleteTemplate = () => {
-    if (deleteId) {
-      setTemplates(prev =>
-        prev.filter(t => t.TemplateID !== deleteId)
-      );
-      ToastMessage.show(
-        "Template deleted successfully!",
-        "success"
-      );
+  /* ================= DELETE TEMPLATE ================= */
+
+  const deleteTemplate = async () => {
+  if (deleteId === null) return; // make sure we have a template ID
+
+  try {
+    const res = await performanceService.DeletePerformanceTemplatesByAsync(deleteId); // pass the template ID
+
+    if (res[0]?.value === 1) {
+      ToastMessage.show(res[0].message, "success");
+      fetchTemplates(); // Refresh list
+    } else {
+      ToastMessage.show("Failed to delete template.", "error");
     }
-    setShowDeleteModal(false);
-  };
+  } catch (error) {
+    ToastMessage.show("Error deleting template.", "error");
+    console.error(error);
+  }
+
+  setShowDeleteModal(false);
+};
 
   /* ================= UI ================= */
 
@@ -141,14 +154,9 @@ const PerformanceTemplateManagement: React.FC = () => {
       <ToastProvider />
 
       <div className="container mt-5">
-        <h3 className="mb-3">
-          Performance Template Management
-        </h3>
+        <h3 className="mb-3">Performance Template Management</h3>
 
-        <button
-          className="btn btn-primary mb-3"
-          onClick={openCreateModal}
-        >
+        <button className="btn btn-primary mb-3" onClick={openCreateModal}>
           + Create Template
         </button>
 
@@ -162,39 +170,29 @@ const PerformanceTemplateManagement: React.FC = () => {
             </tr>
           </thead>
           <tbody>
-            {templates.map(template => (
+            {templates.map((template) => (
               <tr key={template.TemplateID}>
                 <td>{template.TemplateName}</td>
                 <td>{template.Description}</td>
                 <td>
                   <span
                     className={`badge ${
-                      template.IsActive
-                        ? "bg-success"
-                        : "bg-secondary"
+                      template.IsActive ? "bg-success" : "bg-secondary"
                     }`}
                   >
-                    {template.IsActive
-                      ? "Active"
-                      : "Inactive"}
+                    {template.IsActive ? "Active" : "Inactive"}
                   </span>
                 </td>
                 <td>
                   <button
                     className="btn btn-warning btn-sm me-2"
-                    onClick={() =>
-                      openEditModal(template)
-                    }
+                    onClick={() => openEditModal(template)}
                   >
                     Edit
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
-                    onClick={() =>
-                      openDeleteModal(
-                        template.TemplateID
-                      )
-                    }
+                    onClick={() => openDeleteModal(template.TemplateID)}
                   >
                     Delete
                   </button>
@@ -213,9 +211,7 @@ const PerformanceTemplateManagement: React.FC = () => {
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
-                  {editingId
-                    ? "Edit Template"
-                    : "Create Template"}
+                  {editingId ? "Edit Template" : "Create Template"}
                 </h5>
                 <button
                   className="btn-close"
@@ -226,9 +222,7 @@ const PerformanceTemplateManagement: React.FC = () => {
               <div className="modal-body">
                 {/* TEMPLATE NAME */}
                 <div className="mb-3">
-                  <label className="form-label fw-bold">
-                    Template Name
-                  </label>
+                  <label className="form-label fw-bold">Template Name</label>
                   <input
                     className={`form-control ${
                       valid.TemplateName === false
@@ -238,7 +232,7 @@ const PerformanceTemplateManagement: React.FC = () => {
                         : ""
                     }`}
                     value={templateData.TemplateName}
-                    onChange={e =>
+                    onChange={(e) =>
                       setTemplateData({
                         ...templateData,
                         TemplateName: e.target.value,
@@ -257,14 +251,12 @@ const PerformanceTemplateManagement: React.FC = () => {
 
                 {/* DESCRIPTION */}
                 <div className="mb-3">
-                  <label className="form-label fw-bold">
-                    Description
-                  </label>
+                  <label className="form-label fw-bold">Description</label>
                   <textarea
                     className="form-control"
                     rows={3}
                     value={templateData.Description}
-                    onChange={e =>
+                    onChange={(e) =>
                       setTemplateData({
                         ...templateData,
                         Description: e.target.value,
@@ -279,16 +271,14 @@ const PerformanceTemplateManagement: React.FC = () => {
                     className="form-check-input"
                     type="checkbox"
                     checked={templateData.IsActive}
-                    onChange={e =>
+                    onChange={(e) =>
                       setTemplateData({
                         ...templateData,
                         IsActive: e.target.checked,
                       })
                     }
                   />
-                  <label className="form-check-label">
-                    Is Active
-                  </label>
+                  <label className="form-check-label">Is Active</label>
                 </div>
               </div>
 
@@ -299,10 +289,7 @@ const PerformanceTemplateManagement: React.FC = () => {
                 >
                   Cancel
                 </button>
-                <button
-                  className="btn btn-success"
-                  onClick={saveTemplate}
-                >
+                <button className="btn btn-success" onClick={saveTemplate}>
                   Save
                 </button>
               </div>
@@ -321,23 +308,16 @@ const PerformanceTemplateManagement: React.FC = () => {
                 <h5>Delete Template</h5>
                 <button
                   className="btn-close"
-                  onClick={() =>
-                    setShowDeleteModal(false)
-                  }
+                  onClick={() => setShowDeleteModal(false)}
                 />
               </div>
               <div className="modal-body">
-                <p>
-                  Are you sure you want to delete this
-                  template?
-                </p>
+                <p>Are you sure you want to delete this template?</p>
               </div>
               <div className="modal-footer">
                 <button
                   className="btn btn-secondary"
-                  onClick={() =>
-                    setShowDeleteModal(false)
-                  }
+                  onClick={() => setShowDeleteModal(false)}
                 >
                   Cancel
                 </button>

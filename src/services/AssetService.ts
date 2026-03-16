@@ -82,7 +82,11 @@ deleteAssetAssignment: async (AssetAssignmentID: number) => {
   const { data } = await api.get(`Asset/GetAssetCategories`);
   return data;
 },
-  
+
+GetAssetAssignmentsByEmployeeID: async (employeeID: number) => {
+  const { data } = await api.get(`AssetAssignment/GetAssetAssignmentsByEmployeeID?employeeID=${employeeID}`);
+  return data;
+},
 
 };
 
