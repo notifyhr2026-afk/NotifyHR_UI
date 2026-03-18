@@ -63,7 +63,7 @@ const EmployeeProjects: React.FC = () => {
   const loadEmployeeProjects = async () => {
     try {
 
-      const res = await employeeProjectService.GetEmployeeProjectsByOrganization(empId);
+      const res = await employeeProjectService.GetEmployeeProjectsByemployeeId(empId);
 
       const formatted = res.map((item: any) => ({
         EmployeeProjectId: item.EmployeeProjectId,

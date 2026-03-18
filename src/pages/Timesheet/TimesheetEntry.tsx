@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   Accordion,
   Badge,
@@ -9,8 +9,9 @@ import {
   Row,
   Table,
 } from "react-bootstrap";
-import timesheetService from '../../services/timesheetService';
-import shiftService from '../../services/shiftService';
+import timesheetService from "../../services/timesheetService";
+import shiftService from "../../services/shiftService";
+import employeeProjectService from "../../services/employeeProjectService";
 
 /* ================= CONFIG ================= */
 
@@ -49,22 +50,6 @@ interface CalendarDay {
   date: string;
   type: "HOLIDAY" | "LEAVE" | "HALF_LEAVE";
 }
-
-/* ================= MOCK DATA ================= */
-
-const projects: Project[] = [
-  { projectId: 1, projectName: "Project A" },
-  { projectId: 2, projectName: "Project B" },
-];
-
-const shiftOptions = ["General", "Night"];
-const activityOptions: Activity[] = [
-  "PRESENT",
-  "HALF_LEAVE",
-  "LEAVE",
-  "HOLIDAY",
-  "WEEKOFF",
-];
 
 /* ================= HELPERS ================= */
 
@@ -112,13 +97,44 @@ const TimesheetEntry: React.FC = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [timesheets, setTimesheets] = useState<ProjectTimesheet[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]); // ✅ NEW
+
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID: number | undefined = user?.organizationID;
   const employeeID: number | undefined = user?.employeeID;
+
   const dates = useMemo(
     () => generateDates(fromDate, toDate),
     [fromDate, toDate]
   );
+
+  /* ===== LOAD PROJECTS (API INTEGRATION) ===== */
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        if (!employeeID) return;
+
+        const response =
+          await employeeProjectService.GetEmployeeProjectsByemployeeId(
+            employeeID
+          );
+
+        const mappedProjects: Project[] = response.map((p: any) => ({
+          projectId: p.ProjectId,
+          projectName: p.ProjectName,
+        }));
+
+        setProjects(mappedProjects);
+      } catch (error) {
+        console.error("Project API Error:", error);
+
+        // fallback (optional safety)
+        setProjects([]);
+      }
+    };
+
+    loadProjects();
+  }, [employeeID]);
 
   /* ===== LOAD TIMESHEETS ===== */
   const loadTimesheets = async () => {
@@ -129,7 +145,7 @@ const TimesheetEntry: React.FC = () => {
     dates.forEach((date) => {
       const calendarDay = calendarData.find((c) => c.date === date);
 
-      // 🔹 HALF DAY LEAVE → SHOW DATE TWICE
+      // HALF DAY LEAVE → DOUBLE ENTRY
       if (calendarDay?.type === "HALF_LEAVE") {
         entries.push(
           {
@@ -207,47 +223,45 @@ const TimesheetEntry: React.FC = () => {
   };
 
   /* ===== SAVE PROJECT ===== */
-const saveProject = async (projectId: number) => {
-  try {
-    const projectSheet = timesheets.find(
-      (p) => p.projectId === projectId
-    );
+  const saveProject = async (projectId: number) => {
+    try {
+      const projectSheet = timesheets.find(
+        (p) => p.projectId === projectId
+      );
 
-    if (!projectSheet) return;
+      if (!projectSheet) return;
 
-    // 🔹 Convert UI entries → API format
-    const timesheetPayload = projectSheet.entries.map((entry, index) => ({
-      TimesheetID: 0, // 0 for new entry
-      EmployeeID: employeeID,  // Replace with logged-in employee ID
-      ProjectID: projectId,
-      EntryDate: entry.date,
-      Shift: entry.shift,
-      Activity: entry.activity,
-      Hours: entry.hours,
-    }));
+      const timesheetPayload = projectSheet.entries.map((entry) => ({
+        TimesheetID: 0,
+        EmployeeID: employeeID,
+        ProjectID: projectId,
+        EntryDate: entry.date,
+        Shift: entry.shift,
+        Activity: entry.activity,
+        Hours: entry.hours,
+      }));
 
-    const requestBody = {
-      createdBy: "Admin", // Replace with logged-in username
-      timesheetEntryJson: JSON.stringify(timesheetPayload),
-    };
+      const requestBody = {
+        createdBy: "Admin",
+        timesheetEntryJson: JSON.stringify(timesheetPayload),
+      };
 
-    console.log("Final Request:", requestBody);
+      console.log("Final Request:", requestBody);
 
-    const response = await timesheetService.createTimesheetEntries(
-      requestBody
-    );
+      const response = await timesheetService.createTimesheetEntries(
+        requestBody
+      );
 
-    if (response.length > 0) {
-      alert(response[0].msg);
-    } else {
-      alert("Timesheet saved successfully.");
+      if (response.length > 0) {
+        alert(response[0].msg);
+      } else {
+        alert("Timesheet saved successfully.");
+      }
+    } catch (error) {
+      console.error("Save Error:", error);
+      alert("Error saving timesheet.");
     }
-  } catch (error) {
-    console.error("Save Error:", error);
-    alert("Error saving timesheet.");
-  }
-};
-
+  };
 
   return (
     <Card className="p-5">
@@ -333,7 +347,7 @@ const saveProject = async (projectId: number) => {
                               )
                             }
                           >
-                            {shiftOptions.map((s) => (
+                            {["General", "Night"].map((s) => (
                               <option key={s}>{s}</option>
                             ))}
                           </Form.Select>
@@ -353,7 +367,13 @@ const saveProject = async (projectId: number) => {
                               )
                             }
                           >
-                            {activityOptions.map((a) => (
+                            {[
+                              "PRESENT",
+                              "HALF_LEAVE",
+                              "LEAVE",
+                              "HOLIDAY",
+                              "WEEKOFF",
+                            ].map((a) => (
                               <option key={a}>{a}</option>
                             ))}
                           </Form.Select>

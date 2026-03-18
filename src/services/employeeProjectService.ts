@@ -2,7 +2,7 @@ import axiosInstance from '../api/axiosHRInstance';
 
 const employeeProjectService = {
   
- GetEmployeeProjectsByOrganization: async (employeeId: number) => {
+ GetEmployeeProjectsByemployeeId: async (employeeId: number) => {
     const response = await axiosInstance.get(`EmployeeProject?employeeId=${employeeId}`);
     return response.data;
   },

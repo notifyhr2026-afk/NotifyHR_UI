@@ -1,23 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
 import Select from 'react-select';
-import { useLocation } from 'react-router-dom';
-
-const shifts = [
-  { id: 1, name: 'Morning Shift' },
-  { id: 2, name: 'Evening Shift' },
-  { id: 3, name: 'Night Shift' },
-];
-
-const weekdays = [
-  { value: 'Monday', label: 'Monday' },
-  { value: 'Tuesday', label: 'Tuesday' },
-  { value: 'Wednesday', label: 'Wednesday' },
-  { value: 'Thursday', label: 'Thursday' },
-  { value: 'Friday', label: 'Friday' },
-  { value: 'Saturday', label: 'Saturday' },
-  { value: 'Sunday', label: 'Sunday' },
-];
+import { useParams } from 'react-router-dom';
+import employeeshiftService from '../../services/employeeshiftService';
+import shiftService from '../../services/shiftService';
 
 interface EmployeeShift {
   id: number;
@@ -25,18 +11,36 @@ interface EmployeeShift {
   shiftId: number;
   shiftName: string;
   effectiveFrom: string;
-  effectiveTo: string;
+  effectiveTo: string | null;
   isRotational: boolean;
   isFixed: boolean;
   weekends: string[];
 }
 
+interface ShiftOption {
+  value: number;
+  label: string;
+}
+
+const weekdays = [
+  { value: 1, label: 'Monday' },
+  { value: 2, label: 'Tuesday' },
+  { value: 3, label: 'Wednesday' },
+  { value: 4, label: 'Thursday' },
+  { value: 5, label: 'Friday' },
+  { value: 6, label: 'Saturday' },
+  { value: 7, label: 'Sunday' },
+];
+
 const EmployeeShifts: React.FC = () => {
-  const location = useLocation();
-  const query = new URLSearchParams(location.search);
-  const employeeIdFromQuery = Number(query.get('employeeId') || 0);
+  const { employeeID } = useParams<{ employeeID: string }>();
+  const empId = Number(employeeID);
+
+  const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID = userFromStorage?.organizationID ?? 0;
 
   const [records, setRecords] = useState<EmployeeShift[]>([]);
+  const [shifts, setShifts] = useState<ShiftOption[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editRecord, setEditRecord] = useState<EmployeeShift | null>(null);
   const [validated, setValidated] = useState(false);
@@ -45,19 +49,75 @@ const EmployeeShifts: React.FC = () => {
 
   const [formData, setFormData] = useState<EmployeeShift>({
     id: 0,
-    employeeId: employeeIdFromQuery,
+    employeeId: empId,
     shiftId: 0,
     shiftName: '',
     effectiveFrom: '',
-    effectiveTo: '',
+    effectiveTo: null,
     isRotational: false,
     isFixed: false,
     weekends: [],
   });
 
+  // Convert ISO string to yyyy-MM-dd
+  const formatDate = (iso: string | null) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const month = `${d.getMonth() + 1}`.padStart(2, '0');
+    const day = `${d.getDate()}`.padStart(2, '0');
+    return `${d.getFullYear()}-${month}-${day}`;
+  };
+
+  // Fetch shifts for dropdown
+  const fetchShifts = async () => {
+    try {
+      const data = await shiftService.GetShiftsByOrganization(organizationID);
+      const mapped = data.map((s: any) => ({ value: s.ShiftID, label: s.ShiftName }));
+      setShifts(mapped);
+    } catch (err) {
+      console.error('Error fetching shifts', err);
+    }
+  };
+
+  // Fetch employee shifts
+  const fetchEmployeeShifts = async () => {
+    try {
+      const data = await employeeshiftService.GetEmployeeShiftByEmployeeID(empId);
+      const mapped: EmployeeShift[] = data.map((item: any) => {
+        // Parse weekends JSON
+        let weekends: string[] = [];
+        if (item.WeekendsJson) {
+          try {
+            const w = JSON.parse(item.WeekendsJson);
+            weekends = w.map((d: any) => weekdays.find(wd => wd.value === d.WeekdayID)?.label || '');
+          } catch { }
+        }
+        return {
+          id: item.EmployeeShiftID,
+          employeeId: item.EmployeeID,
+          shiftId: item.OrgShiftID,
+          shiftName: shifts.find(s => s.value === item.OrgShiftID)?.label || '',
+          effectiveFrom: formatDate(item.EffectiveFrom),
+          effectiveTo: formatDate(item.EffectiveTo),
+          isRotational: item.IsRotational,
+          isFixed: false,
+          weekends,
+        };
+      });
+      setRecords(mapped);
+    } catch (err) {
+      console.error('Error fetching employee shifts', err);
+    }
+  };
+
   useEffect(() => {
-    setFormData(prev => ({ ...prev, employeeId: employeeIdFromQuery }));
-  }, [employeeIdFromQuery]);
+    setFormData(prev => ({ ...prev, employeeId: empId }));
+    fetchShifts();
+  }, [empId]);
+
+  useEffect(() => {
+    if (shifts.length) fetchEmployeeShifts();
+  }, [shifts]);
 
   const handleChange = (e: React.ChangeEvent<any>) => {
     const { id, value, type, checked } = e.target;
@@ -65,17 +125,20 @@ const EmployeeShifts: React.FC = () => {
   };
 
   const handleWeekendSelect = (selected: any) => {
-    setFormData(prev => ({ ...prev, weekends: selected ? selected.map((s: any) => s.value) : [] }));
+    setFormData(prev => ({
+      ...prev,
+      weekends: selected ? selected.map((s: any) => s.label) : [],
+    }));
   };
 
   const handleAdd = () => {
     setFormData({
       id: 0,
-      employeeId: employeeIdFromQuery,
+      employeeId: empId,
       shiftId: 0,
       shiftName: '',
       effectiveFrom: '',
-      effectiveTo: '',
+      effectiveTo: null,
       isRotational: false,
       isFixed: false,
       weekends: [],
@@ -85,7 +148,7 @@ const EmployeeShifts: React.FC = () => {
     setValidated(false);
   };
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     if (form.checkValidity() === false) {
@@ -94,21 +157,37 @@ const EmployeeShifts: React.FC = () => {
       return;
     }
 
-    const shift = shifts.find(s => s.id === Number(formData.shiftId));
-    const updatedRecord = { ...formData, shiftName: shift?.name || '' };
+    const payload = {
+      EmployeeShiftID: formData.id,
+      EmployeeID: formData.employeeId,
+      OrgShiftID: Number(formData.shiftId) || 0,
+      EffectiveFrom: formData.effectiveFrom,
+      EffectiveTo: formData.effectiveTo || null,
+      IsRotational: formData.isRotational,
+      AssignedBy: userFromStorage?.username || 'system',
+      IsActive: true,
+      WeekendsJson: JSON.stringify(
+        formData.weekends.map(w => ({ WeekdayID: weekdays.find(d => d.label === w)?.value }))
+      ),
+    };
 
-    if (editRecord) {
-      setRecords(prev => prev.map(r => (r.id === editRecord.id ? updatedRecord : r)));
-    } else {
-      setRecords(prev => [...prev, { ...updatedRecord, id: Date.now() }]);
+    try {
+      const res = await employeeshiftService.PostEmployeeShiftAsync(payload);
+      alert(res.message);
+      setShowModal(false);
+      fetchEmployeeShifts();
+    } catch (err) {
+      console.error('Error saving shift', err);
     }
-
-    setShowModal(false);
   };
 
   const handleEdit = (record: EmployeeShift) => {
     setEditRecord(record);
-    setFormData(record);
+    setFormData({
+      ...record,
+      effectiveFrom: formatDate(record.effectiveFrom),
+      effectiveTo: formatDate(record.effectiveTo),
+    });
     setShowModal(true);
   };
 
@@ -117,17 +196,24 @@ const EmployeeShifts: React.FC = () => {
     setConfirmDelete(true);
   };
 
-  const confirmDeleteAction = () => {
-    setRecords(prev => prev.filter(r => r.id !== deleteId));
-    setConfirmDelete(false);
+  const confirmDeleteAction = async () => {
+    if (deleteId !== null) {
+      try {
+        const res = await employeeshiftService.DeleteEmployeeShiftAsync(deleteId);
+        alert(res.message);
+        fetchEmployeeShifts();
+      } catch (err) {
+        console.error('Error deleting shift', err);
+      } finally {
+        setConfirmDelete(false);
+      }
+    }
   };
 
   return (
     <div className="p-3 mt-4">
       <div className="text-end mb-3">
-        <Button variant="success" onClick={handleAdd}>
-          + Assign Shift
-        </Button>
+        <Button variant="success" onClick={handleAdd}>+ Assign Shift</Button>
       </div>
 
       <Table striped bordered hover>
@@ -164,7 +250,7 @@ const EmployeeShifts: React.FC = () => {
         </tbody>
       </Table>
 
-      {/* Add/Edit Modal */}
+      {/* Modal for Add/Edit */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>{editRecord ? 'Edit Shift Assignment' : 'Assign Shift'}</Modal.Title>
@@ -177,7 +263,7 @@ const EmployeeShifts: React.FC = () => {
                   <Form.Label>Shift</Form.Label>
                   <Form.Select required value={formData.shiftId} onChange={handleChange}>
                     <option value="">Select Shift</option>
-                    {shifts.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    {shifts.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -193,7 +279,7 @@ const EmployeeShifts: React.FC = () => {
               <Col md={6}>
                 <Form.Group controlId="effectiveTo">
                   <Form.Label>Effective To</Form.Label>
-                  <Form.Control type="date" value={formData.effectiveTo} onChange={handleChange} />
+                  <Form.Control type="date" value={formData.effectiveTo || ''} onChange={handleChange} />
                 </Form.Group>
               </Col>
               <Col md={3} className="mt-4">
@@ -210,8 +296,8 @@ const EmployeeShifts: React.FC = () => {
                   <Form.Label>Weekends / Off Days</Form.Label>
                   <Select
                     isMulti
-                    options={weekdays}
-                    value={weekdays.filter(d => formData.weekends.includes(d.value))}
+                    options={weekdays.map(d => ({ value: d.value, label: d.label }))}
+                    value={weekdays.filter(d => formData.weekends.includes(d.label))}
                     onChange={handleWeekendSelect}
                   />
                 </Form.Group>

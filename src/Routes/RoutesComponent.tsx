@@ -52,6 +52,8 @@ import EmployeeSalaryAssignment from '../pages/Payroll/EmployeeSalaryAssignment'
 import EmployeeSalaryBackupView from '../pages/Payroll/EmployeeSalaryBackupView';
 import OrgSalaryStructureMaster from '../pages/Payroll/OrgSalaryStructureMaster';
 import EmployeePayslip from '../pages/Payroll/EmployeePayslip'
+import PayrollProcessPage from '../pages/Payroll/PayrollProcessPage';
+import PayrollReportPage from '../pages/Payroll/PayrollReportPage';
 import TaxSectionMaster from '../pages/Payroll/TaxSectionMaster';
 import EmployeeTaxDeclaration from '../pages/Payroll/EmployeeTaxDeclaration';
 import RecruiterApprovalPage from '../pages/Recruitment/RecruiterApprovalPage';
@@ -60,7 +62,7 @@ import CandidateList from '../pages/Recruitment/CandidateList';
 import ManageJobRequisitions from '../pages/Recruitment/ManageJobRequisitions';
 import ManageJobRequisitionRecruiters from '../pages/Recruitment/ManageJobRequisitionRecruiters';
 import ManageJobRequisitionApprovals from '../pages/Recruitment/ManageJobRequisitionApprovals';
-import EmployeeTaskMaster from '../pages/Employee/EmployeeTaskMaster'
+import EmployeeTaskMaster from '../pages/Employee/EmployeeTaskMaster';
 
 import HelpdeskDashboard from '../pages/helpdesk/Dashboard';
 import CreateTicket from '../pages/helpdesk/CreateTicket';
@@ -153,6 +155,8 @@ const RoutesComponent: React.FC = () => {
         <Route path="/EmployeeSalaryBackupView" element={<EmployeeSalaryBackupView />} />
         <Route path="/OrgSalaryStructureMaster" element={<OrgSalaryStructureMaster />} />        
         <Route path="/EmployeePayslip" element={<EmployeePayslip />} />
+        <Route path="/PayrollProcessPage" element={<PayrollProcessPage />} />
+        <Route path="/PayrollReportPage" element={<PayrollReportPage />} />
         <Route path="/TaxSectionMaster" element={<TaxSectionMaster />} />
         <Route path="/EmployeeTaxDeclaration" element={<EmployeeTaxDeclaration />} />
         <Route path="/RecruiterApprovalPage" element={<RecruiterApprovalPage />} />

@@ -2,38 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { Button, Modal, Form, Table, Row, Col, Container, Card, Spinner } from 'react-bootstrap';
 import { toast } from 'react-toastify';
 import Select from 'react-select';
-import { useNavigate } from 'react-router-dom';
+
 import employeeService from '../../services/employeeService';
 import branchService from '../../services/branchService';
 import salaryService from '../../services/salaryService';
-
-// Sample static data for demonstration
-const salaryAssignments = [
-  {
-    SalaryAssignmentID: 1,
-    EmployeeID: 1024,
-    EmployeeName: 'Nidhi Sri Kalipu',
-    OrganizationID: 45,
-    StructureID: 1,
-    ChangeStatusID: 1,
-    CTC: 600000,
-    EffectiveFrom: '2023-01-01',
-    EffectiveTo: '2023-12-31',
-    IsActive: true,
-  },
-  {
-    SalaryAssignmentID: 2,
-    EmployeeID: 1025,
-    EmployeeName: 'Kushal sai Kalipu',
-    OrganizationID: 45,
-    StructureID: 2,
-    ChangeStatusID: 2,
-    CTC: 550000,
-    EffectiveFrom: '2023-06-01',
-    EffectiveTo: '2023-12-31',
-    IsActive: true,
-  },
-];
+import employeeSalaryAssignment from '../../services/employeeSalaryAssignment';
 
 const changeStatuses = [
   { ChangeStatusID: 5, Status: 'Initial Salary' },
@@ -44,33 +17,38 @@ const changeStatuses = [
 ];
 
 const EmployeeSalaryAssignment: React.FC = () => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID = user?.organizationID ?? 0;
+  const createdBy = '1'; // user?.username ?? 'system';
+
   const [showModal, setShowModal] = useState(false);
+  const [showBreakupModal, setShowBreakupModal] = useState(false);
+  const [salaryData, setSalaryData] = useState<any[]>([]);
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
-  const [salaryData, setSalaryData] = useState(salaryAssignments);
-  
+
   const [branches, setBranches] = useState<any[]>([]);
   const [employees, setEmployees] = useState<any[]>([]);
+  const [salaryStructures, setSalaryStructures] = useState<any[]>([]);
+
   const [selectedBranch, setSelectedBranch] = useState<any>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
 
+  const [salaryBreakup, setSalaryBreakup] = useState<any[]>([]);
+  const [breakupLoading, setBreakupLoading] = useState(false);
+
   const [loadingBranches, setLoadingBranches] = useState(false);
   const [loadingEmployees, setLoadingEmployees] = useState(false);
-
-  const [salaryStructures, setSalaryStructures] = useState<any[]>([]);
   const [loadingStructures, setLoadingStructures] = useState(false);
 
-  const navigate = useNavigate();
-  const organizationID = 45; // replace with dynamic org ID if needed
-
-  // Fetch branches from API
+  /* ---------------- Fetch Branches ---------------- */
   useEffect(() => {
     const fetchBranches = async () => {
       try {
         setLoadingBranches(true);
         const res = await branchService.getBranchesAsync(organizationID);
         setBranches(res.Table || []);
-      } catch (error) {
-        toast.error('Failed to fetch branches');
+      } catch {
+        toast.error("Failed to load branches");
       } finally {
         setLoadingBranches(false);
       }
@@ -78,30 +56,15 @@ const EmployeeSalaryAssignment: React.FC = () => {
     fetchBranches();
   }, [organizationID]);
 
-  useEffect(() => {
-  const fetchSalaryStructures = async () => {
-    try {
-      setLoadingStructures(true);
-      const res = await salaryService.getSalaryStructuresAsync(organizationID);
-      setSalaryStructures(res);
-    } catch (error) {
-      toast.error('Failed to fetch salary structures');
-    } finally {
-      setLoadingStructures(false);
-    }
-  };
-  fetchSalaryStructures();
-}, [organizationID]);
-
-  // Fetch employees from API
+  /* ---------------- Fetch Employees ---------------- */
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
         setLoadingEmployees(true);
         const res = await employeeService.getEmployeesByOrganizationIdAsync(organizationID);
         setEmployees(res || []);
-      } catch (error) {
-        toast.error('Failed to fetch employees');
+      } catch {
+        toast.error("Failed to load employees");
       } finally {
         setLoadingEmployees(false);
       }
@@ -109,83 +72,147 @@ const EmployeeSalaryAssignment: React.FC = () => {
     fetchEmployees();
   }, [organizationID]);
 
-  // Open Modal for Add
-  const handleAddSalaryAssignment = () => {
-    setSelectedAssignment(null);
-    setShowModal(true);
+  /* ---------------- Fetch Salary Structures ---------------- */
+  useEffect(() => {
+    const fetchStructures = async () => {
+      try {
+        setLoadingStructures(true);
+        const res = await salaryService.getSalaryStructuresAsync(organizationID);
+        setSalaryStructures(res || []);
+      } catch {
+        toast.error("Failed to load salary structures");
+      } finally {
+        setLoadingStructures(false);
+      }
+    };
+    fetchStructures();
+  }, [organizationID]);
+
+  /* ---------------- Fetch Salary Assignments ---------------- */
+  const fetchSalaryAssignments = async (employeeId: number) => {
+    try {
+      const res = await employeeSalaryAssignment.GetEmployeeSalaryAssignmentByEmployeeID(employeeId);
+      setSalaryData(res || []);
+    } catch {
+      toast.error("Failed to fetch salary assignments");
+    }
   };
 
-  // Open Modal for Edit
-  const handleEditSalaryAssignment = (assignment: any) => {
-    setSelectedAssignment(assignment);
-    setShowModal(true);
-  };
-
-  // Handle Save (Add/Edit)
-  const handleSave = () => {
-    if (!selectedAssignment) return;
-    if (!selectedAssignment.SalaryAssignmentID) {
-      selectedAssignment.SalaryAssignmentID = salaryData.length + 1;
-      setSalaryData([...salaryData, selectedAssignment]);
-      toast.success('Employee Salary Assignment Added!');
+  useEffect(() => {
+    if (selectedEmployee) {
+      fetchSalaryAssignments(selectedEmployee.value);
     } else {
-      setSalaryData(
-        salaryData.map((item) =>
-          item.SalaryAssignmentID === selectedAssignment.SalaryAssignmentID
-            ? selectedAssignment
-            : item
-        )
-      );
-      toast.success('Employee Salary Assignment Updated!');
+      fetchSalaryAssignments(0); // If employee cleared, load all
     }
-    setShowModal(false);
+  }, [selectedEmployee]);
+
+  /* ---------------- Add ---------------- */
+  const handleAdd = () => {
+    setSelectedAssignment({
+      SalaryAssignmentID: 0,
+      EmployeeID: selectedEmployee?.value || 0,
+      OrganizationID: organizationID,
+      StructureID: "",
+      ChangeStatusID: "",
+      CTC: "",
+      EffectiveFrom: "",
+      EffectiveTo: "",
+      IsActive: true
+    });
+    setShowModal(true);
   };
 
-  // Handle Delete
-  const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this assignment?')) {
-      setSalaryData(salaryData.filter((a) => a.SalaryAssignmentID !== id));
-      toast.success('Employee Salary Assignment Deleted!');
+  /* ---------------- Edit ---------------- */
+  const handleEdit = (row: any) => {
+    setSelectedAssignment({
+      ...row,
+      EffectiveFrom: row.EffectiveFrom?.split("T")[0],
+      EffectiveTo: row.EffectiveTo ? row.EffectiveTo.split("T")[0] : ""
+    });
+    setShowModal(true);
+  };
+
+  /* ---------------- Delete ---------------- */
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Delete this salary assignment?")) return;
+    try {
+      const res = await employeeSalaryAssignment.DeleteEmployeeSalaryAssignmentAsync(id);
+      toast.success(res.message);
+      fetchSalaryAssignments(selectedEmployee.value);
+    } catch {
+      toast.error("Delete failed");
     }
   };
 
-  // Handle Input Change
-  const handleChange = (e: React.ChangeEvent<any>) => {
+  /* ---------------- Handle Change ---------------- */
+  const handleChange = (e: any) => {
     const { id, value } = e.target;
     setSelectedAssignment((prev: any) => ({
       ...prev,
-      [id]: value,
+      [id]: value
     }));
   };
 
-  // Navigate to Backup
-  const handleViewBackup = (employeeId: number) => {
-    navigate(`/EmployeeSalaryBackupView/${employeeId}`);
+  /* ---------------- Save ---------------- */
+  const handleSave = async () => {
+    try {
+      const payload = {
+        salaryAssignmentID: selectedAssignment?.SalaryAssignmentID || 0,
+        employeeID: selectedAssignment?.EmployeeID,
+        organizationID: organizationID,
+        structureID: Number(selectedAssignment.StructureID),
+        changeStatusID: Number(selectedAssignment.ChangeStatusID),
+        ctc: Number(selectedAssignment.CTC),
+        effectiveFrom: selectedAssignment.EffectiveFrom,
+        effectiveTo: selectedAssignment.EffectiveTo || null,
+        isActive: true,
+        createdBy: createdBy
+      };
+      const res = await employeeSalaryAssignment.PostEmployeeSalaryAssignmentAsync(payload);
+      toast.success(res.message);
+      setShowModal(false);
+      fetchSalaryAssignments(selectedEmployee?.value || 0);
+    } catch (error) {
+      toast.error("Save failed");
+    }
   };
 
-  return (
-    <Container className="mt-5">
-      <h3>Manage Employee Salary Assignments</h3>
+  /* ---------------- Fetch Salary Breakup ---------------- */
+  const handleViewBreakup = async (employeeId: number) => {
+    try {
+      setBreakupLoading(true);
+      const res = await employeeSalaryAssignment.GetEmployeeSalaryBreakupByEmployeeID(employeeId);
+      setSalaryBreakup(res || []);
+      setShowBreakupModal(true);
+    } catch {
+      toast.error("Failed to fetch salary breakup");
+    } finally {
+      setBreakupLoading(false);
+    }
+  };
 
-      <Row className="mb-5">
+  const earnings = salaryBreakup.filter(x => x.ComponentTypeName === "Earning");
+  const deductions = salaryBreakup.filter(x => x.ComponentTypeName === "Deduction");
+  const employeeCTC = salaryBreakup.length > 0 ? salaryBreakup[0].EmployeeCTC : 0;
+
+  /* ---------------- Render ---------------- */
+  return (
+    <Container className="mt-4">
+      <h4>Employee Salary Assignment</h4>
+
+      <Row className="mb-4">
         <Col md={4}>
           <Card>
             <Card.Body>
-              <Form.Label>Select Branch</Form.Label>
-              {loadingBranches ? (
-                <Spinner animation="border" size="sm" />
-              ) : (
+              <Form.Label>Branch</Form.Label>
+              {loadingBranches ? <Spinner size="sm" /> :
                 <Select
-                  options={branches.map((branch) => ({
-                    value: branch.BranchID,
-                    label: branch.BranchName,
-                  }))}
+                  options={branches.map((b) => ({ value: b.BranchID, label: b.BranchName }))}
                   value={selectedBranch}
                   onChange={setSelectedBranch}
-                  placeholder="Search Branch"
                   isClearable
                 />
-              )}
+              }
             </Card.Body>
           </Card>
         </Col>
@@ -193,144 +220,111 @@ const EmployeeSalaryAssignment: React.FC = () => {
         <Col md={4}>
           <Card>
             <Card.Body>
-              <Form.Label>Select Employee</Form.Label>
-              {loadingEmployees ? (
-                <Spinner animation="border" size="sm" />
-              ) : (
+              <Form.Label>Employee</Form.Label>
+              {loadingEmployees ? <Spinner size="sm" /> :
                 <Select
-                  options={employees.map((emp) => ({
-                    value: emp.EmployeeID,
-                    label: emp.EmployeeName,
-                  }))}
+                  options={employees.map((e) => ({ value: e.EmployeeID, label: e.EmployeeName }))}
                   value={selectedEmployee}
                   onChange={setSelectedEmployee}
-                  placeholder="Search Employee"
                   isClearable
                 />
-              )}
+              }
             </Card.Body>
           </Card>
         </Col>
 
-        <Col md={4} className="d-flex justify-content-end align-items-end">
-          <Button variant="success" onClick={handleAddSalaryAssignment}>
-            + Add Salary Assignment
+        <Col md={4} className="d-flex align-items-end justify-content-end">
+          <Button variant="success" disabled={!selectedEmployee} onClick={handleAdd}>
+            + Add Salary
           </Button>
         </Col>
       </Row>
 
-      {/* Salary Table */}
-      <Table bordered hover responsive size="sm">
+      {/* Salary Assignment Table */}
+      <Table bordered hover size="sm">
         <thead className="table-light">
           <tr>
-            <th>Employee ID</th>
-            <th>Salary Structure</th>
+            <th>Employee Name</th> {/* NEW COLUMN */}
+            <th>Structure</th>
             <th>CTC</th>
             <th>Effective From</th>
             <th>Effective To</th>
-            <th>Change Status</th>
+            <th>Status</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
-          {salaryData.map((assignment) => (
-            <tr key={assignment.SalaryAssignmentID}>
-              <td>{assignment.EmployeeID}</td>
-              <td>
-                {salaryStructures.find((s) => s.StructureID === assignment.StructureID)?.StructureName}
-              </td>
-              <td>{assignment.CTC}</td>
-              <td>{assignment.EffectiveFrom}</td>
-              <td>{assignment.EffectiveTo}</td>
-              <td>
-                {changeStatuses.find((c) => c.ChangeStatusID === assignment.ChangeStatusID)?.Status}
-              </td>
-              <td>
-                <Button variant="info" size="sm" className="me-2" onClick={() => handleEditSalaryAssignment(assignment)}>Edit</Button>
-                <Button variant="danger" size="sm" className="me-2" onClick={() => handleDelete(assignment.SalaryAssignmentID)}>Delete</Button>
-                <Button variant="secondary" size="sm" onClick={() => handleViewBackup(assignment.EmployeeID)}>View Backup</Button>
-              </td>
-            </tr>
-          ))}
+          {salaryData.map((row) => {
+            const emp = employees.find(e => e.EmployeeID === row.EmployeeID);
+            return (
+              <tr key={row.SalaryAssignmentID}>
+                <td>{emp?.EmployeeName || "N/A"}</td> {/* NEW COLUMN */}
+                <td>{salaryStructures.find(s => s.StructureID === row.StructureID)?.StructureName}</td>
+                <td>{row.CTC}</td>
+                <td>{row.EffectiveFrom?.split('T')[0]}</td>
+                <td>{row.EffectiveTo?.split('T')[0]}</td>
+                <td>{changeStatuses.find(s => s.ChangeStatusID === row.ChangeStatusID)?.Status}</td>
+                <td>
+                  <Button size="sm" variant="secondary" className="me-2"
+                    onClick={() => handleViewBreakup(row.EmployeeID)}>
+                    View Breakup
+                  </Button>
+                  <Button size="sm" variant="info" className="me-2"
+                    onClick={() => handleEdit(row)}>
+                    Edit
+                  </Button>
+                  <Button size="sm" variant="danger"
+                    onClick={() => handleDelete(row.SalaryAssignmentID)}>
+                    Delete
+                  </Button>
+                </td>
+              </tr>
+            )
+          })}
         </tbody>
       </Table>
 
       {/* Add/Edit Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{selectedAssignment ? 'Edit Salary Assignment' : 'Add Salary Assignment'}</Modal.Title>
+          <Modal.Title>Salary Assignment</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
-            <Form.Group controlId="EmployeeID">
-             <Form.Label>Select Employee</Form.Label>
-              {loadingEmployees ? (
-                <Spinner animation="border" size="sm" />
-              ) : (
-                <Select
-                  options={employees.map((emp) => ({
-                    value: emp.EmployeeID,
-                    label: emp.EmployeeName,
-                  }))}
-                  value={selectedEmployee}
-                  onChange={setSelectedEmployee}
-                  placeholder="Search Employee"
-                  isClearable
-                />
-              )}
+            <Form.Group className="mb-3" controlId="StructureID">
+              <Form.Label>Salary Structure</Form.Label>
+              <Form.Select value={selectedAssignment?.StructureID || ""} onChange={handleChange}>
+                <option value="">Select</option>
+                {salaryStructures.map((s) => (
+                  <option key={s.StructureID} value={s.StructureID}>{s.StructureName}</option>
+                ))}
+              </Form.Select>
             </Form.Group>
 
-            <Form.Group controlId="StructureID">
-              <Form.Label>hangeStatus</Form.Label>
-              <Form.Select
-                value={selectedAssignment?.ChangeStatusID || ''}
-                onChange={handleChange}
-                required
-              >
-                <option value="">-- Select change Status --</option>
+            <Form.Group className="mb-3" controlId="ChangeStatusID">
+              <Form.Label>Change Status</Form.Label>
+              <Form.Select value={selectedAssignment?.ChangeStatusID || ""} onChange={handleChange}>
+                <option value="">Select</option>
                 {changeStatuses.map((s) => (
                   <option key={s.ChangeStatusID} value={s.ChangeStatusID}>{s.Status}</option>
                 ))}
               </Form.Select>
             </Form.Group>
 
-            <Form.Group controlId="CTC">
+            <Form.Group className="mb-3" controlId="CTC">
               <Form.Label>CTC</Form.Label>
-              <Form.Control
-                type="number"
-                value={selectedAssignment?.CTC || ''}
-                onChange={handleChange}
-                required
-              />
+              <Form.Control type="number" value={selectedAssignment?.CTC || ""} onChange={handleChange} />
             </Form.Group>
 
-            <Form.Group controlId="EffectiveFrom">
+            <Form.Group className="mb-3" controlId="EffectiveFrom">
               <Form.Label>Effective From</Form.Label>
-              <Form.Control
-                type="date"
-                value={selectedAssignment?.EffectiveFrom || ''}
-                onChange={handleChange}
-                required
-              />
+              <Form.Control type="date" value={selectedAssignment?.EffectiveFrom || ""} onChange={handleChange} />
             </Form.Group>
 
-           <Form.Group controlId="StructureID">
-            <Form.Label>Salary Structure</Form.Label>
-            {loadingStructures ? (
-              <Spinner animation="border" size="sm" />
-            ) : (
-              <Form.Select
-                value={selectedAssignment?.StructureID || ''}
-                onChange={handleChange}
-                required
-              >
-                <option value="">-- Select Structure --</option>
-                {salaryStructures.map((s) => (
-                  <option key={s.StructureID} value={s.StructureID}>{s.StructureName}</option>
-                ))}
-              </Form.Select>
-            )}
-          </Form.Group>
+            <Form.Group className="mb-3" controlId="EffectiveTo">
+              <Form.Label>Effective To</Form.Label>
+              <Form.Control type="date" value={selectedAssignment?.EffectiveTo || ""} onChange={handleChange} />
+            </Form.Group>
           </Form>
         </Modal.Body>
         <Modal.Footer>
@@ -338,6 +332,49 @@ const EmployeeSalaryAssignment: React.FC = () => {
           <Button variant="primary" onClick={handleSave}>Save</Button>
         </Modal.Footer>
       </Modal>
+
+      {/* View Breakup Modal */}
+      <Modal show={showBreakupModal} onHide={() => setShowBreakupModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Salary Breakup</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {breakupLoading ? <Spinner /> :
+            <>
+              <h6>Employee CTC: ₹ {employeeCTC}</h6>
+              <Row className="mt-3">
+                <Col md={6}>
+                  <h6>Earnings</h6>
+                  <Table bordered size="sm">
+                    <thead>
+                      <tr><th>Component</th><th>Amount</th></tr>
+                    </thead>
+                    <tbody>
+                      {earnings.map((e, i) => (
+                        <tr key={i}><td>{e.ComponentName}</td><td>{e.ComponentAmount}</td></tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </Col>
+                <Col md={6}>
+                  <h6>Deductions</h6>
+                  <Table bordered size="sm">
+                    <thead>
+                      <tr><th>Component</th><th>Amount</th></tr>
+                    </thead>
+                    <tbody>
+                      {deductions.map((d, i) => (
+                        <tr key={i}><td>{d.ComponentName}</td><td>{d.ComponentAmount}</td></tr>
+                      ))}
+                    </tbody>
+                  </Table>
+                </Col>
+              </Row>
+            </>
+          }
+        </Modal.Body>
+      </Modal>
+
     </Container>
   );
 };

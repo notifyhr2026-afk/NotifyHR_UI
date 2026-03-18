@@ -27,6 +27,10 @@ const employeeService = {
     const { data } = await api.post('Employee/CreateEmployee', employee);
     return Array.isArray(data?.Table) ? data.Table : [];
   },
+   PostUpdateProbationDetails: async (payload: any) => {
+    const res = await api.post("Employee/UpdateProbationDetails", payload);
+    return res.data[0];
+   },
   getDepartments: async () => {
     const { data } = await api.get('Master/departments');
     return data;
