@@ -4,6 +4,8 @@
 //     AttendanceserviceURL: 'http://192.168.1.10:36524/api',
 //     RecruitmentserviceURL: 'http://192.168.1.10:36525/api'
 // };
+
+// for runing in local machine
 // const apiConfig = {
 //     IdentityURL: 'http://115.98.2.37:36522/api',
 //     HRserviceURL: 'http://115.98.2.37:36523/api',
@@ -12,6 +14,7 @@
 //     PayrollserviceURL: 'http://115.98.2.37:36526/api'
 // };
 
+// for running in QA machine using docker
 const apiConfig = {
   IdentityURL: process.env.REACT_APP_IDENTITY_API_URL,
   HRserviceURL: process.env.REACT_APP_HR_API_URL,

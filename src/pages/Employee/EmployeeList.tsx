@@ -58,6 +58,9 @@ const EmployeeList: React.FC = () => {
     PAN: '',
     Aadhar: '',
     PassportNumber: '',
+    personalPhone: '',
+    workPhone: '',
+    personalEmail: '',
   });
 
   // ✅ Fetch Employees
@@ -126,6 +129,9 @@ const EmployeeList: React.FC = () => {
         pan: newEmp.PAN,
         aadhar: newEmp.Aadhar,
         passportNumber: newEmp.PassportNumber,
+        personalPhone: newEmp.personalPhone,
+        workPhone: newEmp.workPhone,
+        personalEmail: newEmp.personalEmail,
       };
 
       const newEmployeeID = await employeeService.createEmployee(payload);
@@ -342,7 +348,27 @@ const EmployeeList: React.FC = () => {
                 </Form.Group>
               </Col>
             </Row>
-
+              {/* CONTACT NEW */}
+                                    <Row className="mb-3">
+                                        <Col md={4}>
+                                            <Form.Group controlId="personalPhone">
+                                                <Form.Label>Personal Phone</Form.Label>
+                                                <Form.Control required value={newEmp.personalPhone} onChange={(e) => setNewEmp({ ...newEmp, personalPhone: e.target.value })}/>
+                                            </Form.Group>
+                                        </Col>
+                                        <Col md={4}>
+                                            <Form.Group controlId="workPhone">
+                                                <Form.Label>Work Phone</Form.Label>
+                                                <Form.Control required value={newEmp.workPhone} onChange={(e) => setNewEmp({ ...newEmp, workPhone: e.target.value })}/>
+                                            </Form.Group>
+                                        </Col>
+                                        <Col md={4}>
+                                            <Form.Group controlId="personalEmail">
+                                                <Form.Label>Personal Email</Form.Label>
+                                                <Form.Control type="email" required value={newEmp.personalEmail} onChange={(e) => setNewEmp({ ...newEmp, personalEmail: e.target.value })}/>
+                                            </Form.Group>
+                                        </Col>
+                                    </Row>
             <Row className="mb-3">
               <Col md={4}>
                 <Form.Group controlId="employeeCode">

@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
+import branchService from '../../services/branchService';
+import divisionService from '../../services/divisionService';
+import departmentService from '../../services/departmentService';
+import positionService from '../../services/positionService';
 import employeeService from '../../services/employeeService';
 import { useParams } from "react-router-dom";
 // 🟢 Interface for list (Table1 data)
@@ -64,25 +68,37 @@ const EmployeePositionHistory: React.FC = () => {
   const [positions, setPositions] = useState<DropdownOption[]>([]);
   const [managers, setManagers] = useState<DropdownOption[]>([]);
 const [showToast, setShowToast] = useState(false);
-  // 🟢 Fetch dropdown master data
+  // 🟢 Fetch dropdown master data (org-scoped)
   useEffect(() => {
     const fetchMasters = async () => {
       try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const organizationID = user.organizationID;
+
+        if (!organizationID) {
+          throw new Error('Organization ID missing in user context');
+        }
+
         const [b, d, dept, empT, pos, mgr] = await Promise.all([
-          employeeService.getBranches(),
-          employeeService.getDivisions(),
-          employeeService.getDepartments(),
+          branchService.getBranchesAsync(organizationID),
+          divisionService.getdivisionesAsync(organizationID),
+          departmentService.getdepartmentesAsync(organizationID),
           employeeService.getEmploymentTypes(),
-          employeeService.getPositions(),
-          employeeService.getManagers(),
+          positionService.getPositionsAsync(organizationID),
+          employeeService.getEmployeesByOrganizationIdAsync(organizationID),
         ]);
 
-        setBranches(b.map((x: any) => ({ id: x.BranchID, name: x.BranchName })));
-        setDivisions(d.map((x: any) => ({ id: x.DivisionID, name: x.DivisionName })));
-        setDepartments(dept.map((x: any) => ({ id: x.DepartmentID, name: x.DepartmentName })));
+        const branchesList = Array.isArray(b) ? b : b?.Table || [];
+        const divisionsList = Array.isArray(d) ? d : d?.Table || [];
+        const departmentsList = Array.isArray(dept) ? dept : dept?.Table || [];
+        const positionsList = Array.isArray(pos) ? pos : pos?.Table || [];
+
+        setBranches(branchesList.map((x: any) => ({ id: x.BranchID || x.id, name: x.BranchName || x.name })));
+        setDivisions(divisionsList.map((x: any) => ({ id: x.DivisionID || x.id, name: x.DivisionName || x.name })));
+        setDepartments(departmentsList.map((x: any) => ({ id: x.DepartmentID || x.id, name: x.DepartmentName || x.name })));
         setEmploymentTypes(empT.map((x: any) => ({ id: x.EmploymentTypeID, name: x.EmploymentTypeName })));
-        setPositions(pos.map((x: any) => ({ id: x.PositionID, name: x.PositionTitle })));
-        setManagers(mgr.map((x: any) => ({ id: x.EmployeeID, name: x.EmployeeName })));
+        setPositions(positionsList.map((x: any) => ({ id: x.PositionID || x.PositionId || x.id, name: x.PositionTitle || x.PositionName || x.name })));
+        setManagers(mgr.map((x: any) => ({ id: x.EmployeeID || x.id, name: x.EmployeeName || x.EmployeeName || x.name || x.EmployeeName || 'Unknown' })));
       } catch (err) {
         console.error('Error loading master data', err);
       }

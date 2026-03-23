@@ -64,10 +64,11 @@ import ManageJobRequisitionRecruiters from '../pages/Recruitment/ManageJobRequis
 import ManageJobRequisitionApprovals from '../pages/Recruitment/ManageJobRequisitionApprovals';
 import EmployeeTaskMaster from '../pages/Employee/EmployeeTaskMaster';
 
-import HelpdeskDashboard from '../pages/helpdesk/Dashboard';
+import HelpdeskDashboard from '../pages/helpdesk/EmployeeTickets';
 import CreateTicket from '../pages/helpdesk/CreateTicket';
 import TicketDetails from '../pages/helpdesk/TicketDetails';
 import ManagerTicketVerification from '../pages/helpdesk/ManagerTicketVerification';
+import EmployeeTickets from '../pages/helpdesk/EmployeeTickets';
 
 import ResetPassword from '../pages/Main/ResetPassword';
 
@@ -92,6 +93,8 @@ import ManageShiftPatterns from '../pages/Shift/ManageShiftPatterns';
 import AssignShifts from '../pages/Shift/AssignShifts';
 import ManageProjects from '../components/Organization/ManageProjects';
 
+import DepartmentCategoryMapping from '../pages/helpdesk/DepartmentCategoryMapping';
+
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -100,9 +103,9 @@ const RoutesComponent: React.FC = () => {
       <Route path="/" element={<Home />} />
       <Route path="login" element={<LoginPage />} />
       <Route
-  path="/reset-password/:userId/:organizationID"
-  element={<ResetPassword />}
-/>
+        path="/ResetPassword/:userId/:organizationID"
+        element={<ResetPassword />}
+      />
       <Route path="RequestDemo" element={<RequestDemo />} />
       <Route path="/" element={<Home />} />
       {/* Dashboard layout routes */}
@@ -185,6 +188,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="/CreateTicket" element={<CreateTicket />} />
         {/* <Route path="/ticket/:id" element={<TicketDetails />} /> */}
         <Route path="/ManagerTicketVerification" element={<ManagerTicketVerification />} />
+        <Route path="/EmployeeTickets" element={<EmployeeTickets />} />
 
         {/* <Route path="ShiftManagement" element={<ShiftManagement />} /> */}
         <Route path="/ShiftManagement" element={<ShiftManagement />} />
@@ -192,6 +196,8 @@ const RoutesComponent: React.FC = () => {
         <Route path="/assignshifts" element={<AssignShifts />} />
         <Route path="/ManageProjects" element={<ManageProjects />} />
         
+
+        <Route path="/DepartmentCategoryMapping" element={<DepartmentCategoryMapping />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
           path="Employees/manageEmployee/:employeeID"

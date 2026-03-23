@@ -1,6 +1,6 @@
 import api from "../api/axiosIdentityInstance";
 
-interface LoginResponse {
+export interface LoginResponse {
   isValid?: boolean;
   isPasswordResetRequired?: boolean;
   message?: string;
@@ -18,18 +18,33 @@ interface LoginResponse {
   permissions?: any[];
 }
 
-export const loginService = async (username: string, password: string): Promise<LoginResponse> => {
-  debugger;
+export const loginService = async (
+  username: string,
+  password: string
+): Promise<LoginResponse> => {
   try {
-    const response = await api.post('Auth/login', { username, password });
+    const response = await api.post("Auth/login", { username, password });
     return response.data;
   } catch (error: any) {
-    if(error.status === 403){
-      window.location.href = '/ResetPassword';
-      //window.location.href = `/reset-password/${userId}/${organizationID}`;
-      return false as any;
+    console.error("Login API error:", error);
+
+    // 🔴 Handle 403 → Redirect مباشرة
+    if (error.response?.status === 403) {
+      const userId = error.response.data?.userID;
+      const orgId = error.response.data?.organizationID;
+
+      // ✅ Redirect without React hook
+      window.location.href = `/ResetPassword/${userId}/${orgId}`;
+
+      return {
+        isValid: false,
+        isPasswordResetRequired: true,
+        message: "Redirecting to reset password...",
+      };
     }
-    console.error('Login API error:', error);
-    throw error.response?.data || { message: 'An error occurred during login.' };
+
+    throw error.response?.data || {
+      message: "An error occurred during login.",
+    };
   }
 };
