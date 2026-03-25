@@ -12,10 +12,23 @@ interface ManagerHistory {
   EmployeeID: number;
   EmployeeName: string;
   ReportingManagerName: string;
+  ReportingManagerID: number;
   CurrentPosition: string;
   CurrentBranch: string;
   CurrentDivision: string;
+  DepartmentName: string;
+  BranchID: number;
+  DivisionID: number;
+  DepartmentID: number;
+  PositionID: number;
+  EmploymentTypeID: number;
+  EffectiveFrom: string;
+  EffectiveTo: string | null;
+  Reason: string;
+  Notes: string | null;
   IsCurrent: boolean;
+  CreatedAt: string;
+  CreatedBy: string;
 }
 
 // 🟢 Interface for dropdown options
@@ -68,6 +81,8 @@ const EmployeePositionHistory: React.FC = () => {
   const [positions, setPositions] = useState<DropdownOption[]>([]);
   const [managers, setManagers] = useState<DropdownOption[]>([]);
 const [showToast, setShowToast] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   // 🟢 Fetch dropdown master data (org-scoped)
   useEffect(() => {
     const fetchMasters = async () => {
@@ -155,11 +170,12 @@ const [showToast, setShowToast] = useState(false);
     });
     setEditRecord(null);
     setValidated(false);
+    setSaveError(null);
     setShowModal(true);
   };
 
   // 🟢 Save (create/update)
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     if (form.checkValidity() === false) {
@@ -168,27 +184,57 @@ const [showToast, setShowToast] = useState(false);
       return;
     }
 
-    const newRecord: ManagerHistory = {
-      ManagerHistoryID: editRecord ? editRecord.ManagerHistoryID : Date.now(),
-      EmployeeID: 14,
-      EmployeeName: 'Hidden Employee',
-      ReportingManagerName: managers.find(m => m.id === formData.reportingManagerId)?.name || '',
-      CurrentPosition: positions.find(p => p.id === formData.positionId)?.name || '',
-      CurrentBranch: branches.find(b => b.id === formData.branchId)?.name || '',
-      CurrentDivision: divisions.find(d => d.id === formData.divisionId)?.name || '',
-      IsCurrent: formData.isCurrent,
-    };
+    try {
+      setSaving(true);
+      setSaveError(null);
 
-    if (editRecord) {
-      setRecords(prev =>
-        prev.map(r => (r.ManagerHistoryID === editRecord.ManagerHistoryID ? newRecord : r))
-      );
-    } else {
-      setRecords(prev => [...prev, newRecord]);
+      // Prepare payload for API
+      const payload = {
+        ManagerHistoryID: editRecord ? editRecord.ManagerHistoryID : 0,
+        EmployeeID: Number(employeeID),
+        BranchID: formData.branchId,
+        DivisionID: formData.divisionId,
+        DepartmentID: formData.departmentId,
+        EmploymentTypeID: formData.employmentTypeId,
+        PositionID: formData.positionId,
+        ReportingManagerID: formData.reportingManagerId,
+        EffectiveFrom: formData.effectiveFrom,
+        EffectiveTo: formData.effectiveTo || null,
+        IsCurrent: formData.isCurrent,
+        Reason: formData.reason,
+      };
+
+      // Call API
+      const response = await positionService.SaveOrUpdateReportingManagerHistoryAsync(payload);
+
+      if (response) {
+        // Refresh the data after successful save
+        const updatedResponse = await employeeService.GetEmployeeDetialsByEmployeeID(Number(employeeID!));
+        if (updatedResponse?.Table1) {
+          setRecords(updatedResponse.Table1);
+        }
+
+        setShowModal(false);
+        setValidated(false);
+        setFormData({
+          branchId: 0,
+          divisionId: 0,
+          departmentId: 0,
+          employmentTypeId: 0,
+          positionId: 0,
+          reportingManagerId: 0,
+          effectiveFrom: '',
+          effectiveTo: '',
+          isCurrent: false,
+          reason: '',
+        });
+      }
+    } catch (error) {
+      console.error('Error saving manager history:', error);
+      setSaveError('Failed to save manager history. Please try again.');
+    } finally {
+      setSaving(false);
     }
-
-    setShowModal(false);
-    setValidated(false);
   };
 
   // 🟢 Delete record
@@ -265,6 +311,20 @@ const [showToast, setShowToast] = useState(false);
                         size="sm"
                         onClick={() => {
                           setEditRecord(r);
+                          setFormData({
+                            branchId: r.BranchID || 0,
+                            divisionId: r.DivisionID || 0,
+                            departmentId: r.DepartmentID || 0,
+                            employmentTypeId: r.EmploymentTypeID || 0,
+                            positionId: r.PositionID || 0,
+                            reportingManagerId: r.ReportingManagerID || 0,
+                            effectiveFrom: r.EffectiveFrom ? r.EffectiveFrom.split('T')[0] : '',
+                            effectiveTo: r.EffectiveTo ? r.EffectiveTo.split('T')[0] : '',
+                            isCurrent: r.IsCurrent || false,
+                            reason: r.Reason || '',
+                          });
+                          setValidated(false);
+                          setSaveError(null);
                           setShowModal(true);
                         }}
                       >
@@ -410,11 +470,16 @@ const [showToast, setShowToast] = useState(false);
             </Row>
 
             <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowModal(false)}>
+              {saveError && (
+                <div className="alert alert-danger w-100 me-3">
+                  {saveError}
+                </div>
+              )}
+              <Button variant="secondary" onClick={() => setShowModal(false)} disabled={saving}>
                 Cancel
               </Button>
-              <Button variant="primary" type="submit">
-                {editRecord ? 'Update' : 'Save'}
+              <Button variant="primary" type="submit" disabled={saving}>
+                {saving ? 'Saving...' : (editRecord ? 'Update' : 'Save')}
               </Button>
             </Modal.Footer>
           </Form>

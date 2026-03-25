@@ -1,5 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ToastMessage, { ToastProvider } from "../../components/ToastMessage";
+import employeeService from "../../services/employeeService";
+import performanceService from "../../services/performanceService";
 import "bootstrap/dist/css/bootstrap.min.css";
 
 /* ================= TYPES ================= */
@@ -11,6 +13,8 @@ interface ReviewGridRow {
   TemplateName: string;
   ReviewDate: string;
   Status: string;
+  Comments: string;
+  ReviewStatus: string;
 }
 
 interface CriteriaRating {
@@ -20,11 +24,23 @@ interface CriteriaRating {
   Feedback: string;
 }
 
+interface Employee {
+  EmployeeID: number;
+  EmployeeName: string;
+}
+
+interface ReviewCycle {
+  PerformanceReviewCycleID: number;
+  CycleName: string;
+}
+
+interface Template {
+  PerformanceTemplateID: number;
+  TemplateName: string;
+}
+
 /* ================= STATIC DATA (MOCK) ================= */
 
-const employees = ["John Doe", "Jane Smith"];
-const cycles = ["FY 2024", "Mid-Year 2024"];
-const templates = ["Annual Review", "Probation Review"];
 const statuses = ["Draft", "Submitted", "Approved", "Rejected"];
 
 const reviewsMock: ReviewGridRow[] = [
@@ -35,6 +51,8 @@ const reviewsMock: ReviewGridRow[] = [
     TemplateName: "Annual Review",
     ReviewDate: "2024-12-31",
     Status: "Submitted",
+    Comments: "Good performance overall",
+    ReviewStatus: "Submitted",
   },
   {
     ReviewID: 2,
@@ -43,6 +61,8 @@ const reviewsMock: ReviewGridRow[] = [
     TemplateName: "Probation Review",
     ReviewDate: "2024-06-30",
     Status: "Approved",
+    Comments: "Excellent progress during probation",
+    ReviewStatus: "Submitted",
   },
 ];
 
@@ -68,6 +88,117 @@ const SubmittedPerformanceReviews: React.FC = () => {
   const [selectedCycle, setSelectedCycle] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [comments, setComments] = useState("");
+  const [reviewStatus, setReviewStatus] = useState<"Draft" | "Submitted">("Draft");
+
+  /* ================= API DATA STATE ================= */
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [cycles, setCycles] = useState<ReviewCycle[]>([]);
+  const [templates, setTemplates] = useState<Template[]>([]);
+  const [templateCriteria, setTemplateCriteria] = useState<CriteriaRating[]>([]);
+  
+  const [loading, setLoading] = useState(false);
+  const [criteriaLoading, setCriteriaLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  /* ================= FETCH API DATA ================= */
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Get organizationID from localStorage
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const organizationID = user.organizationID;
+
+        if (!organizationID) {
+          setError("Organization ID not found");
+          setLoading(false);
+          return;
+        }
+
+        // Fetch employees
+        const employeesData = await employeeService.getEmployeesByOrganizationIdAsync(organizationID);
+        const employeesArray = Array.isArray(employeesData) ? employeesData : employeesData?.Table || [];
+        const mappedEmployees: Employee[] = employeesArray.map((emp: any) => ({
+          EmployeeID: emp.EmployeeID || emp.id,
+          EmployeeName: emp.EmployeeName || emp.name,
+        }));
+        setEmployees(mappedEmployees);
+
+        // Fetch review cycles
+        const cyclesData = await performanceService.getPerformanceReviewCyclesByOrganizationIDAsync(organizationID);
+        const cyclesArray = Array.isArray(cyclesData) ? cyclesData : cyclesData?.Table || [];
+        const mappedCycles: ReviewCycle[] = cyclesArray.map((cycle: any) => ({
+          PerformanceReviewCycleID: cycle.PerformanceReviewCycleID || cycle.id,
+          CycleName: cycle.CycleName || cycle.name,
+        }));
+        setCycles(mappedCycles);
+
+        // Fetch templates
+        const templatesData = await performanceService.getPerformanceTemplatesByOrganizationIDAsync(organizationID);
+        const templatesArray = Array.isArray(templatesData) ? templatesData : templatesData?.Table || [];
+        const mappedTemplates: Template[] = templatesArray.map((template: any) => ({
+          PerformanceTemplateID: template.PerformanceTemplateID || template.id,
+          TemplateName: template.TemplateName || template.name,
+        }));
+        setTemplates(mappedTemplates);
+
+        setLoading(false);
+      } catch (err) {
+        console.error("Failed to fetch dropdown data", err);
+        setError("Failed to load data. Please check the console for details.");
+        setLoading(false);
+      }
+    };
+
+    fetchDropdownData();
+  }, []);
+
+  /* ================= FETCH CRITERIA WHEN TEMPLATE SELECTED ================= */
+  useEffect(() => {
+    const fetchTemplateCriteria = async () => {
+      if (!selectedTemplate || !isNewReview) {
+        return;
+      }
+
+      try {
+        setCriteriaLoading(true);
+
+        // Get organizationID from localStorage
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const organizationID = user.organizationID;
+
+        if (!organizationID) {
+          console.error("Organization ID not found");
+          setCriteriaLoading(false);
+          return;
+        }
+
+        // Fetch criteria for the organization
+        // (The backend can filter by template if needed)
+        const criteriaData = await performanceService.getPerformanceCriteriaByOrganizationIDAsync(organizationID);
+        const criteriaArray = Array.isArray(criteriaData) ? criteriaData : criteriaData?.Table || [];
+        
+        const mappedCriteria: CriteriaRating[] = criteriaArray.map((criteria: any) => ({
+          CriteriaID: criteria.PerformanceCriteriaID || criteria.id,
+          CriteriaName: criteria.CriteriaName || criteria.name,
+          Rating: 0,
+          Feedback: "",
+        }));
+
+        setTemplateCriteria(mappedCriteria);
+        setCriteriaRatings(mappedCriteria);
+        setCriteriaLoading(false);
+      } catch (err) {
+        console.error("Failed to fetch template criteria", err);
+        setCriteriaLoading(false);
+      }
+    };
+
+    fetchTemplateCriteria();
+  }, [selectedTemplate, isNewReview]);
 
   /* ================= FILTER LOGIC ================= */
 
@@ -85,6 +216,8 @@ const SubmittedPerformanceReviews: React.FC = () => {
     setSelectedCycle(review.CycleName);
     setSelectedTemplate(review.TemplateName);
     setSelectedEmployee(review.EmployeeName);
+    setComments(review.Comments || "");
+    setReviewStatus((review.ReviewStatus as "Draft" | "Submitted") || "Draft");
 
     setCriteriaRatings([
       {
@@ -118,6 +251,8 @@ const SubmittedPerformanceReviews: React.FC = () => {
         TemplateName: selectedTemplate,
         ReviewDate: new Date().toISOString().split("T")[0],
         Status: "Submitted",
+        Comments: comments,
+        ReviewStatus: reviewStatus,
       };
 
       setReviews(prev => [...prev, newReview]);
@@ -133,7 +268,7 @@ const SubmittedPerformanceReviews: React.FC = () => {
       setReviews(prev =>
         prev.map(r =>
           r.ReviewID === selectedReview!.ReviewID
-            ? { ...r, Status: selectedReview!.Status }
+            ? { ...r, Status: selectedReview!.Status, Comments: comments, ReviewStatus: reviewStatus }
             : r
         )
       );
@@ -177,6 +312,25 @@ const SubmittedPerformanceReviews: React.FC = () => {
       <div className="container mt-4">
         <h3 className="mb-3">Submitted Performance Reviews</h3>
 
+        {/* ERROR MESSAGE */}
+        {error && (
+          <div className="alert alert-danger alert-dismissible fade show" role="alert">
+            {error}
+            <button
+              type="button"
+              className="btn-close"
+              onClick={() => setError(null)}
+            ></button>
+          </div>
+        )}
+
+        {/* LOADING STATE */}
+        {loading && (
+          <div className="alert alert-info">
+            Loading employees, cycles, and templates...
+          </div>
+        )}
+
         {/* NEW REVIEW BUTTON */}
         <button
           className="btn btn-primary mb-3"
@@ -186,20 +340,9 @@ const SubmittedPerformanceReviews: React.FC = () => {
             setSelectedEmployee("");
             setSelectedCycle("");
             setSelectedTemplate("");
-            setCriteriaRatings([
-              {
-                CriteriaID: 1,
-                CriteriaName: "Technical Skills",
-                Rating: 0,
-                Feedback: "",
-              },
-              {
-                CriteriaID: 2,
-                CriteriaName: "Communication",
-                Rating: 0,
-                Feedback: "",
-              },
-            ]);
+            setComments("");
+            setReviewStatus("Draft");
+            setCriteriaRatings([]);
             setShowEditModal(true);
           }}
         >
@@ -217,7 +360,7 @@ const SubmittedPerformanceReviews: React.FC = () => {
             >
               <option value="">All Employees</option>
               {employees.map(e => (
-                <option key={e}>{e}</option>
+                <option key={e.EmployeeID}>{e.EmployeeName}</option>
               ))}
             </select>
           </div>
@@ -231,7 +374,7 @@ const SubmittedPerformanceReviews: React.FC = () => {
             >
               <option value="">All Cycles</option>
               {cycles.map(c => (
-                <option key={c}>{c}</option>
+                <option key={c.PerformanceReviewCycleID}>{c.CycleName}</option>
               ))}
             </select>
           </div>
@@ -330,7 +473,7 @@ const SubmittedPerformanceReviews: React.FC = () => {
                       >
                         <option value="">Select Employee</option>
                         {employees.map(e => (
-                          <option key={e}>{e}</option>
+                          <option key={e.EmployeeID}>{e.EmployeeName}</option>
                         ))}
                       </select>
                     </div>
@@ -344,7 +487,7 @@ const SubmittedPerformanceReviews: React.FC = () => {
                       >
                         <option value="">Select Cycle</option>
                         {cycles.map(c => (
-                          <option key={c}>{c}</option>
+                          <option key={c.PerformanceReviewCycleID}>{c.CycleName}</option>
                         ))}
                       </select>
                     </div>
@@ -358,55 +501,97 @@ const SubmittedPerformanceReviews: React.FC = () => {
                       >
                         <option value="">Select Template</option>
                         {templates.map(t => (
-                          <option key={t}>{t}</option>
+                          <option key={t.PerformanceTemplateID}>{t.TemplateName}</option>
                         ))}
                       </select>
                     </div>
                   </div>
                 )}
 
+                {/* COMMENTS */}
+                <div className="mb-3">
+                  <label className="fw-bold">Comments</label>
+                  <textarea
+                    className="form-control"
+                    rows={3}
+                    placeholder="Enter review comments..."
+                    value={comments}
+                    onChange={e => setComments(e.target.value)}
+                  />
+                </div>
+
+                {/* REVIEW STATUS */}
+                <div className="mb-3">
+                  <label className="fw-bold">Review Status</label>
+                  <select
+                    className="form-select"
+                    value={reviewStatus}
+                    onChange={e => setReviewStatus(e.target.value as "Draft" | "Submitted")}
+                  >
+                    <option value="Draft">Draft</option>
+                    <option value="Submitted">Submitted</option>
+                  </select>
+                </div>
+
                 {/* CRITERIA RATINGS */}
-                {criteriaRatings.map(c => (
-                  <div key={c.CriteriaID} className="mb-3">
-                    <strong>{c.CriteriaName}</strong>
-                    <div className="row mt-2">
-                      <div className="col-md-2">
-                        <select
-                          className="form-select"
-                          value={c.Rating}
-                          onChange={e =>
-                            setCriteriaRatings(prev =>
-                              prev.map(x =>
-                                x.CriteriaID === c.CriteriaID
-                                  ? { ...x, Rating: Number(e.target.value) }
-                                  : x
+                <h6 className="mb-3 fw-bold">Criteria Ratings</h6>
+                {criteriaLoading ? (
+                  <div className="alert alert-info">
+                    Loading criteria for selected template...
+                  </div>
+                ) : criteriaRatings.length === 0 ? (
+                  <div className="alert alert-warning">
+                    {isNewReview && selectedTemplate
+                      ? "No criteria found for this template"
+                      : "Please select a template to load criteria"}
+                  </div>
+                ) : (
+                  criteriaRatings.map(c => (
+                    <div key={c.CriteriaID} className="mb-3">
+                      <strong>{c.CriteriaName}</strong>
+                      <div className="row mt-2">
+                        <div className="col-md-2">
+                          <select
+                            className="form-select"
+                            value={c.Rating}
+                            onChange={e =>
+                              setCriteriaRatings(prev =>
+                                prev.map(x =>
+                                  x.CriteriaID === c.CriteriaID
+                                    ? { ...x, Rating: Number(e.target.value) }
+                                    : x
+                                )
                               )
-                            )
-                          }
-                        >
-                          {[1, 2, 3, 4, 5].map(r => (
-                            <option key={r}>{r}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div className="col-md-10">
-                        <textarea
-                          className="form-control"
-                          value={c.Feedback}
-                          onChange={e =>
-                            setCriteriaRatings(prev =>
-                              prev.map(x =>
-                                x.CriteriaID === c.CriteriaID
-                                  ? { ...x, Feedback: e.target.value }
-                                  : x
+                            }
+                          >
+                            <option value="">Select Rating</option>
+                            {[1, 2, 3, 4, 5].map(r => (
+                              <option key={r} value={r}>
+                                {r}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+                        <div className="col-md-10">
+                          <textarea
+                            className="form-control"
+                            placeholder="Enter feedback..."
+                            value={c.Feedback}
+                            onChange={e =>
+                              setCriteriaRatings(prev =>
+                                prev.map(x =>
+                                  x.CriteriaID === c.CriteriaID
+                                    ? { ...x, Feedback: e.target.value }
+                                    : x
+                                )
                               )
-                            )
-                          }
-                        />
+                            }
+                          />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
 
               <div className="modal-footer">

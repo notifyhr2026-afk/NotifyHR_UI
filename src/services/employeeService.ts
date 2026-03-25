@@ -1,4 +1,5 @@
 import api from "../api/axiosHRInstance";
+import { ReportingManagerHistory } from "../types/ReportingManagerHistory";
 
 const employeeService = {
 
@@ -66,7 +67,7 @@ const employeeService = {
   PutUpdateEmployeeUserIdAsync: async (payload: any) => {
     const res = await api.put("Employee/UpdateEmployeeUserId", payload);
     return res.data[0];
-   },
+   }, 
 };
 
 export default employeeService;

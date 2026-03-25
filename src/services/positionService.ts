@@ -15,7 +15,11 @@ const positionService = {
   deletePositionAsync: async (PositionID: number) => {  
     const { data } = await api.delete(`Position?PositionID=${PositionID}`);
     return data;   // this is correct
-  }
+  },
+   SaveOrUpdateReportingManagerHistoryAsync: async (payload: any) => {
+    const res = await api.post("Employee/SaveOrUpdateReportingManagerHistory", payload);
+    return res.data;
+   },
 };
 
 export default positionService;
