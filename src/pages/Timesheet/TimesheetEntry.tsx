@@ -15,28 +15,33 @@ import employeeProjectService from "../../services/employeeProjectService";
 
 /* ================= CONFIG ================= */
 
-// 0 = Sunday, 6 = Saturday
 const WEEK_OFF_CONFIG: number[] = [0, 6];
 
 /* ================= TYPES ================= */
 
 type Status = "PENDING" | "APPROVED";
-type Activity =
-  | "PRESENT"
-  | "HOLIDAY"
-  | "LEAVE"
-  | "HALF_LEAVE"
-  | "WEEKOFF";
 
 interface Project {
   projectId: number;
   projectName: string;
 }
 
+interface ShiftOption {
+  value: number;
+  label: string;
+}
+
+interface ActivityOption {
+  value: number;
+  label: string;
+}
+
 interface TimesheetEntry {
   date: string;
   shift: string;
-  activity: Activity;
+  shiftId: number;
+  activity: string;
+  activityId: number;
   hours: number;
   status: Status;
 }
@@ -78,6 +83,18 @@ const isWeekOff = (date: string): boolean => {
   return WEEK_OFF_CONFIG.includes(day);
 };
 
+/* ===== SAFE ACTIVITY MATCH ===== */
+const normalize = (val: string) =>
+  val.replace(/\s+/g, "").toUpperCase();
+
+const findActivityId = (activities: ActivityOption[], name: string) => {
+  return (
+    activities.find(
+      (a) => normalize(a.label) === normalize(name)
+    )?.value || 0
+  );
+};
+
 /* ================= MOCK API ================= */
 
 const fetchCalendarData = async (
@@ -97,7 +114,9 @@ const TimesheetEntry: React.FC = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [timesheets, setTimesheets] = useState<ProjectTimesheet[]>([]);
-  const [projects, setProjects] = useState<Project[]>([]); // ✅ NEW
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [shifts, setShifts] = useState<ShiftOption[]>([]);
+  const [activities, setActivities] = useState<ActivityOption[]>([]);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID: number | undefined = user?.organizationID;
@@ -108,33 +127,48 @@ const TimesheetEntry: React.FC = () => {
     [fromDate, toDate]
   );
 
-  /* ===== LOAD PROJECTS (API INTEGRATION) ===== */
+  /* ===== LOAD DATA ===== */
   useEffect(() => {
     const loadProjects = async () => {
-      try {
-        if (!employeeID) return;
-
-        const response =
-          await employeeProjectService.GetEmployeeProjectsByemployeeId(
-            employeeID
-          );
-
-        const mappedProjects: Project[] = response.map((p: any) => ({
+      if (!employeeID) return;
+      const res =
+        await employeeProjectService.GetEmployeeProjectsByemployeeId(
+          employeeID
+        );
+      setProjects(
+        res.map((p: any) => ({
           projectId: p.ProjectId,
           projectName: p.ProjectName,
-        }));
+        }))
+      );
+    };
 
-        setProjects(mappedProjects);
-      } catch (error) {
-        console.error("Project API Error:", error);
+    const loadShifts = async () => {
+      if (!organizationID) return;
+      const data =
+        await shiftService.GetShiftsByOrganization(organizationID);
+      setShifts(
+        data.map((s: any) => ({
+          value: s.ShiftID,
+          label: s.ShiftName,
+        }))
+      );
+    };
 
-        // fallback (optional safety)
-        setProjects([]);
-      }
+    const loadActivities = async () => {
+      const data = await shiftService.GetActivityMaster();
+      setActivities(
+        data.map((a: any) => ({
+          value: a.ActivityID,
+          label: a.ActivityName,
+        }))
+      );
     };
 
     loadProjects();
-  }, [employeeID]);
+    loadShifts();
+    loadActivities();
+  }, [employeeID, organizationID]);
 
   /* ===== LOAD TIMESHEETS ===== */
   const loadTimesheets = async () => {
@@ -142,23 +176,29 @@ const TimesheetEntry: React.FC = () => {
 
     const entries: TimesheetEntry[] = [];
 
+    const defaultShift = shifts[0];
+
     dates.forEach((date) => {
       const calendarDay = calendarData.find((c) => c.date === date);
 
-      // HALF DAY LEAVE → DOUBLE ENTRY
+      // HALF DAY
       if (calendarDay?.type === "HALF_LEAVE") {
         entries.push(
           {
             date,
-            shift: "General",
+            shift: defaultShift?.label ?? "General",
+            shiftId: defaultShift?.value ?? 0,
             activity: "HALF_LEAVE",
+            activityId: findActivityId(activities, "HALF_LEAVE"),
             hours: 4,
             status: "PENDING",
           },
           {
             date,
-            shift: "General",
+            shift: defaultShift?.label ?? "General",
+            shiftId: defaultShift?.value ?? 0,
             activity: "PRESENT",
+            activityId: findActivityId(activities, "PRESENT"),
             hours: 4,
             status: "PENDING",
           }
@@ -166,7 +206,7 @@ const TimesheetEntry: React.FC = () => {
         return;
       }
 
-      let activity: Activity = "PRESENT";
+      let activity = "PRESENT";
 
       if (calendarDay?.type === "HOLIDAY") activity = "HOLIDAY";
       else if (calendarDay?.type === "LEAVE") activity = "LEAVE";
@@ -174,8 +214,10 @@ const TimesheetEntry: React.FC = () => {
 
       entries.push({
         date,
-        shift: "General",
+        shift: defaultShift?.label ?? "General",
+        shiftId: defaultShift?.value ?? 0,
         activity,
+        activityId: findActivityId(activities, activity),
         hours: activity === "PRESENT" ? 8 : 0,
         status: "PENDING",
       });
@@ -209,12 +251,26 @@ const TimesheetEntry: React.FC = () => {
                   : {
                       ...e,
                       [field]: value,
-                      hours:
-                        field === "activity" && value === "PRESENT"
-                          ? 8
-                          : field === "activity" && value !== "PRESENT"
-                          ? 0
-                          : e.hours,
+                      ...(field === "shift"
+                        ? {
+                            shiftId:
+                              shifts.find((s) => s.label === value)?.value ??
+                              e.shiftId,
+                          }
+                        : {}),
+                      ...(field === "activity"
+                        ? {
+                            activityId: findActivityId(
+                              activities,
+                              value
+                            ),
+                          }
+                        : {}),
+                      ...(field === "hours"
+                          ? {
+                              hours: value,
+                            }
+                          : {}),
                     }
               ),
             }
@@ -222,52 +278,38 @@ const TimesheetEntry: React.FC = () => {
     );
   };
 
-  /* ===== SAVE PROJECT ===== */
+  /* ===== SAVE ===== */
   const saveProject = async (projectId: number) => {
-    try {
-      const projectSheet = timesheets.find(
-        (p) => p.projectId === projectId
-      );
+    const sheet = timesheets.find((p) => p.projectId === projectId);
+    if (!sheet) return;
 
-      if (!projectSheet) return;
+    console.log("Saving:", sheet.entries);
 
-      const timesheetPayload = projectSheet.entries.map((entry) => ({
-        TimesheetID: 0,
-        EmployeeID: employeeID,
-        ProjectID: projectId,
-        EntryDate: entry.date,
-        Shift: entry.shift,
-        Activity: entry.activity,
-        Hours: entry.hours,
-      }));
+    const payload = sheet.entries.map((e) => ({
+      TimesheetID: 0,
+      EmployeeID: employeeID,
+      OrganizationID: organizationID,
+      ProjectID: projectId,
+      EntryDate: e.date,
+      Shift: e.shift,
+      ShiftID: e.shiftId,
+      Activity: e.activity,
+      ActivityID: e.activityId,
+      Hours: e.hours,
+    }));
 
-      const requestBody = {
-        createdBy: "Admin",
-        timesheetEntryJson: JSON.stringify(timesheetPayload),
-      };
+    await timesheetService.createTimesheetEntries({
+      createdBy: "1",
+      timesheetEntryJson: JSON.stringify(payload),
+    });
 
-      console.log("Final Request:", requestBody);
-
-      const response = await timesheetService.createTimesheetEntries(
-        requestBody
-      );
-
-      if (response.length > 0) {
-        alert(response[0].msg);
-      } else {
-        alert("Timesheet saved successfully.");
-      }
-    } catch (error) {
-      console.error("Save Error:", error);
-      alert("Error saving timesheet.");
-    }
+    alert("Saved successfully");
   };
 
   return (
     <Card className="p-5">
       <h5 className="mb-3">Timesheet</h5>
 
-      {/* DATE RANGE */}
       <Row className="mb-3">
         <Col md={3}>
           <Form.Control
@@ -287,7 +329,7 @@ const TimesheetEntry: React.FC = () => {
             min={fromDate}
             onChange={(e) => {
               if (fromDate && isMoreThanOneMonth(fromDate, e.target.value)) {
-                alert("You can select a maximum of one month only.");
+                alert("Max 1 month only");
                 return;
               }
               setToDate(e.target.value);
@@ -296,16 +338,13 @@ const TimesheetEntry: React.FC = () => {
         </Col>
 
         <Col md={3}>
-          <Button onClick={loadTimesheets} disabled={!fromDate || !toDate}>
-            Load
-          </Button>
+          <Button onClick={loadTimesheets}>Load</Button>
         </Col>
       </Row>
 
-      {/* PROJECT ACCORDION */}
       <Accordion alwaysOpen>
         {projects.map((project) => {
-          const projectSheet = timesheets.find(
+          const sheet = timesheets.find(
             (p) => p.projectId === project.projectId
           );
 
@@ -314,7 +353,9 @@ const TimesheetEntry: React.FC = () => {
               key={project.projectId}
               eventKey={project.projectId.toString()}
             >
-              <Accordion.Header>{project.projectName}</Accordion.Header>
+              <Accordion.Header>
+                {project.projectName}
+              </Accordion.Header>
 
               <Accordion.Body>
                 <Table bordered size="sm" responsive>
@@ -329,7 +370,7 @@ const TimesheetEntry: React.FC = () => {
                   </thead>
 
                   <tbody>
-                    {projectSheet?.entries.map((entry, index) => (
+                    {sheet?.entries.map((entry, index) => (
                       <tr key={`${entry.date}-${index}`}>
                         <td>{entry.date}</td>
 
@@ -347,8 +388,10 @@ const TimesheetEntry: React.FC = () => {
                               )
                             }
                           >
-                            {["General", "Night"].map((s) => (
-                              <option key={s}>{s}</option>
+                            {shifts.map((s) => (
+                              <option key={s.value} value={s.label}>
+                                {s.label}
+                              </option>
                             ))}
                           </Form.Select>
                         </td>
@@ -363,18 +406,14 @@ const TimesheetEntry: React.FC = () => {
                                 entry.date,
                                 index,
                                 "activity",
-                                e.target.value as Activity
+                                e.target.value
                               )
                             }
                           >
-                            {[
-                              "PRESENT",
-                              "HALF_LEAVE",
-                              "LEAVE",
-                              "HOLIDAY",
-                              "WEEKOFF",
-                            ].map((a) => (
-                              <option key={a}>{a}</option>
+                            {activities.map((a) => (
+                              <option key={a.value} value={a.label}>
+                                {a.label}
+                              </option>
                             ))}
                           </Form.Select>
                         </td>
@@ -384,7 +423,15 @@ const TimesheetEntry: React.FC = () => {
                             size="sm"
                             type="number"
                             value={entry.hours}
-                            disabled={entry.activity !== "PRESENT"}
+                            onChange={(e) =>
+                              updateEntry(
+                                project.projectId,
+                                entry.date,
+                                index,
+                                "hours",
+                                Number(e.target.value)
+                              )
+                            }
                           />
                         </td>
 
