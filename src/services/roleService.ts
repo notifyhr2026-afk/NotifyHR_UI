@@ -40,3 +40,14 @@ export const DeleteRoleByAsync= async (roleID:number) => {
     const { data } = await axiosInstance.post('Roles/AssignOrganizationRoles', AssignRoles);
     return Array.isArray(data?.Table) ? data.Table : [];
   };
+
+  export const GetAssignedRolesAsync = async (organizationID : number,userID: number) => {
+  const res = await axiosInstance.get( `/Roles/GetUserRoles?organizationID=${organizationID}&userID=${userID}`);
+  return res.data;
+};
+
+/* ===================== SAVE FEATURE PERMISSIONS ===================== */
+export const AssignOrganizationRolesAsync = async (payload: any) => {
+  const res = await axiosInstance.post("/Roles/AssignOrganizationRoles", payload);
+  return res.data;
+};

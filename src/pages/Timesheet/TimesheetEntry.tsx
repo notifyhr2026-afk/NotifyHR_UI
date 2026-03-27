@@ -19,7 +19,10 @@ const WEEK_OFF_CONFIG: number[] = [0, 6];
 
 /* ================= TYPES ================= */
 
-type Status = "PENDING" | "APPROVED";
+interface StatusMaster {
+  StatusID: number;
+  StatusName: string;
+}
 
 interface Project {
   projectId: number;
@@ -43,17 +46,13 @@ interface TimesheetEntry {
   activity: string;
   activityId: number;
   hours: number;
-  status: Status;
+  statusId: number;
+  statusName: string;
 }
 
 interface ProjectTimesheet {
   projectId: number;
   entries: TimesheetEntry[];
-}
-
-interface CalendarDay {
-  date: string;
-  type: "HOLIDAY" | "LEAVE" | "HALF_LEAVE";
 }
 
 /* ================= HELPERS ================= */
@@ -71,19 +70,11 @@ const generateDates = (from: string, to: string): string[] => {
   return dates;
 };
 
-const isMoreThanOneMonth = (from: string, to: string): boolean => {
-  const start = new Date(from);
-  const max = new Date(start);
-  max.setMonth(max.getMonth() + 1);
-  return new Date(to) > max;
-};
-
 const isWeekOff = (date: string): boolean => {
   const day = new Date(date).getDay();
   return WEEK_OFF_CONFIG.includes(day);
 };
 
-/* ===== SAFE ACTIVITY MATCH ===== */
 const normalize = (val: string) =>
   val.replace(/\s+/g, "").toUpperCase();
 
@@ -95,20 +86,7 @@ const findActivityId = (activities: ActivityOption[], name: string) => {
   );
 };
 
-/* ================= MOCK API ================= */
-
-const fetchCalendarData = async (
-  from: string,
-  to: string
-): Promise<CalendarDay[]> => {
-  return [
-    { date: "2026-01-01", type: "HOLIDAY" },
-    { date: "2026-01-03", type: "LEAVE" },
-    { date: "2026-01-04", type: "HALF_LEAVE" },
-  ];
-};
-
-/* ================= MAIN COMPONENT ================= */
+/* ================= MAIN ================= */
 
 const TimesheetEntry: React.FC = () => {
   const [fromDate, setFromDate] = useState("");
@@ -117,121 +95,146 @@ const TimesheetEntry: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [shifts, setShifts] = useState<ShiftOption[]>([]);
   const [activities, setActivities] = useState<ActivityOption[]>([]);
+  const [statusMaster, setStatusMaster] = useState<StatusMaster[]>([]);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const organizationID: number | undefined = user?.organizationID;
-  const employeeID: number | undefined = user?.employeeID;
+  const organizationID = user?.organizationID;
+  const employeeID = user?.employeeID;
 
   const dates = useMemo(
     () => generateDates(fromDate, toDate),
     [fromDate, toDate]
   );
 
-  /* ===== LOAD DATA ===== */
+  /* ===== LOAD MASTER ===== */
   useEffect(() => {
-    const loadProjects = async () => {
-      if (!employeeID) return;
-      const res =
+    const loadAll = async () => {
+      if (!employeeID || !organizationID) return;
+
+      const proj =
         await employeeProjectService.GetEmployeeProjectsByemployeeId(
           employeeID
         );
+
       setProjects(
-        res.map((p: any) => ({
+        proj.map((p: any) => ({
           projectId: p.ProjectId,
           projectName: p.ProjectName,
         }))
       );
-    };
 
-    const loadShifts = async () => {
-      if (!organizationID) return;
-      const data =
+      const shiftRes =
         await shiftService.GetShiftsByOrganization(organizationID);
+
       setShifts(
-        data.map((s: any) => ({
+        shiftRes.map((s: any) => ({
           value: s.ShiftID,
           label: s.ShiftName,
         }))
       );
-    };
 
-    const loadActivities = async () => {
-      const data = await shiftService.GetActivityMaster();
+      const act = await shiftService.GetActivityMaster();
+
       setActivities(
-        data.map((a: any) => ({
+        act.map((a: any) => ({
           value: a.ActivityID,
           label: a.ActivityName,
         }))
       );
+
+      // ✅ STATUS MASTER
+      const statusRes =
+        await timesheetService.GetTimesheetStatusMaster();
+
+      setStatusMaster(statusRes);
     };
 
-    loadProjects();
-    loadShifts();
-    loadActivities();
+    loadAll();
   }, [employeeID, organizationID]);
 
-  /* ===== LOAD TIMESHEETS ===== */
-  const loadTimesheets = async () => {
-    const calendarData = await fetchCalendarData(fromDate, toDate);
+  /* ===== HELPERS ===== */
 
-    const entries: TimesheetEntry[] = [];
-
-    const defaultShift = shifts[0];
-
-    dates.forEach((date) => {
-      const calendarDay = calendarData.find((c) => c.date === date);
-
-      // HALF DAY
-      if (calendarDay?.type === "HALF_LEAVE") {
-        entries.push(
-          {
-            date,
-            shift: defaultShift?.label ?? "General",
-            shiftId: defaultShift?.value ?? 0,
-            activity: "HALF_LEAVE",
-            activityId: findActivityId(activities, "HALF_LEAVE"),
-            hours: 4,
-            status: "PENDING",
-          },
-          {
-            date,
-            shift: defaultShift?.label ?? "General",
-            shiftId: defaultShift?.value ?? 0,
-            activity: "PRESENT",
-            activityId: findActivityId(activities, "PRESENT"),
-            hours: 4,
-            status: "PENDING",
-          }
-        );
-        return;
-      }
-
-      let activity = "PRESENT";
-
-      if (calendarDay?.type === "HOLIDAY") activity = "HOLIDAY";
-      else if (calendarDay?.type === "LEAVE") activity = "LEAVE";
-      else if (isWeekOff(date)) activity = "WEEKOFF";
-
-      entries.push({
-        date,
-        shift: defaultShift?.label ?? "General",
-        shiftId: defaultShift?.value ?? 0,
-        activity,
-        activityId: findActivityId(activities, activity),
-        hours: activity === "PRESENT" ? 8 : 0,
-        status: "PENDING",
-      });
-    });
-
-    setTimesheets(
-      projects.map((p) => ({
-        projectId: p.projectId,
-        entries,
-      }))
+  const getStatusName = (id: number): string => {
+    return (
+      statusMaster.find((s) => s.StatusID === id)?.StatusName ||
+      "PENDING"
     );
   };
 
-  /* ===== UPDATE ENTRY ===== */
+  const isApproved = (statusId: number) => {
+    return getStatusName(statusId) === "APPROVED";
+  };
+
+  /* ===== LOAD TIMESHEETS ===== */
+
+  const loadTimesheets = async () => {
+    if (!employeeID) return;
+
+    const apiData =
+      await timesheetService.GetTimesheetEntriesByEmployeeID(employeeID);
+
+    const map = new Map<string, any>();
+
+    apiData.forEach((item: any) => {
+      const key = `${item.ProjectID}_${item.EntryDate.split("T")[0]}`;
+      map.set(key, item);
+    });
+
+    const defaultShift = shifts[0];
+
+    const sheets = projects.map((p) => {
+      const entries: TimesheetEntry[] = [];
+
+      dates.forEach((date) => {
+        const key = `${p.projectId}_${date}`;
+        const existing = map.get(key);
+
+        // ✅ EXISTING RECORD
+        if (existing) {
+          entries.push({
+            date,
+            shift:
+              shifts.find((s) => s.value === existing.ShiftId)?.label ||
+              "",
+            shiftId: existing.ShiftId,
+            activity:
+              activities.find(
+                (a) => a.value === existing.ActivityId
+              )?.label || "",
+            activityId: existing.ActivityId,
+            hours: existing.Hours,
+            statusId: existing.StatusID,
+            statusName: getStatusName(existing.StatusID),
+          });
+          return;
+        }
+
+        // ✅ DEFAULT ENTRY
+        const activity = isWeekOff(date) ? "WEEKOFF" : "PRESENT";
+
+        entries.push({
+          date,
+          shift: defaultShift?.label ?? "General",
+          shiftId: defaultShift?.value ?? 0,
+          activity,
+          activityId: findActivityId(activities, activity),
+          hours: activity === "PRESENT" ? 8 : 0,
+          statusId: 0,
+          statusName: "PENDING",
+        });
+      });
+
+      return {
+        projectId: p.projectId,
+        entries,
+      };
+    });
+
+    setTimesheets(sheets);
+  };
+
+  /* ===== UPDATE (UNCHANGED LOGIC) ===== */
+
   const updateEntry = (
     projectId: number,
     date: string,
@@ -266,11 +269,6 @@ const TimesheetEntry: React.FC = () => {
                             ),
                           }
                         : {}),
-                      ...(field === "hours"
-                          ? {
-                              hours: value,
-                            }
-                          : {}),
                     }
               ),
             }
@@ -279,11 +277,10 @@ const TimesheetEntry: React.FC = () => {
   };
 
   /* ===== SAVE ===== */
+
   const saveProject = async (projectId: number) => {
     const sheet = timesheets.find((p) => p.projectId === projectId);
     if (!sheet) return;
-
-    console.log("Saving:", sheet.entries);
 
     const payload = sheet.entries.map((e) => ({
       TimesheetID: 0,
@@ -296,6 +293,7 @@ const TimesheetEntry: React.FC = () => {
       Activity: e.activity,
       ActivityID: e.activityId,
       Hours: e.hours,
+      StatusID: e.statusId,
     }));
 
     await timesheetService.createTimesheetEntries({
@@ -327,13 +325,7 @@ const TimesheetEntry: React.FC = () => {
             type="date"
             value={toDate}
             min={fromDate}
-            onChange={(e) => {
-              if (fromDate && isMoreThanOneMonth(fromDate, e.target.value)) {
-                alert("Max 1 month only");
-                return;
-              }
-              setToDate(e.target.value);
-            }}
+            onChange={(e) => setToDate(e.target.value)}
           />
         </Col>
 
@@ -370,76 +362,95 @@ const TimesheetEntry: React.FC = () => {
                   </thead>
 
                   <tbody>
-                    {sheet?.entries.map((entry, index) => (
-                      <tr key={`${entry.date}-${index}`}>
-                        <td>{entry.date}</td>
+                    {sheet?.entries.map((entry, index) => {
+                      const disabled = isApproved(entry.statusId);
 
-                        <td>
-                          <Form.Select
-                            size="sm"
-                            value={entry.shift}
-                            onChange={(e) =>
-                              updateEntry(
-                                project.projectId,
-                                entry.date,
-                                index,
-                                "shift",
-                                e.target.value
-                              )
-                            }
-                          >
-                            {shifts.map((s) => (
-                              <option key={s.value} value={s.label}>
-                                {s.label}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </td>
+                      return (
+                        <tr key={`${entry.date}-${index}`}>
+                          <td>{entry.date}</td>
 
-                        <td>
-                          <Form.Select
-                            size="sm"
-                            value={entry.activity}
-                            onChange={(e) =>
-                              updateEntry(
-                                project.projectId,
-                                entry.date,
-                                index,
-                                "activity",
-                                e.target.value
-                              )
-                            }
-                          >
-                            {activities.map((a) => (
-                              <option key={a.value} value={a.label}>
-                                {a.label}
-                              </option>
-                            ))}
-                          </Form.Select>
-                        </td>
+                          <td>
+                            <Form.Select
+                              size="sm"
+                              value={entry.shift}
+                              disabled={disabled}
+                              onChange={(e) =>
+                                updateEntry(
+                                  project.projectId,
+                                  entry.date,
+                                  index,
+                                  "shift",
+                                  e.target.value
+                                )
+                              }
+                            >
+                              {shifts.map((s) => (
+                                <option key={s.value} value={s.label}>
+                                  {s.label}
+                                </option>
+                              ))}
+                            </Form.Select>
+                          </td>
 
-                        <td>
-                          <Form.Control
-                            size="sm"
-                            type="number"
-                            value={entry.hours}
-                            onChange={(e) =>
-                              updateEntry(
-                                project.projectId,
-                                entry.date,
-                                index,
-                                "hours",
-                                Number(e.target.value)
-                              )
-                            }
-                          />
-                        </td>
+                          <td>
+                            <Form.Select
+                              size="sm"
+                              value={entry.activity}
+                              disabled={disabled}
+                              onChange={(e) =>
+                                updateEntry(
+                                  project.projectId,
+                                  entry.date,
+                                  index,
+                                  "activity",
+                                  e.target.value
+                                )
+                              }
+                            >
+                              {activities.map((a) => (
+                                <option key={a.value} value={a.label}>
+                                  {a.label}
+                                </option>
+                              ))}
+                            </Form.Select>
+                          </td>
 
-                        <td>
-                          <Badge bg="warning">{entry.status}</Badge>
-                        </td>
-                      </tr>
-                    ))}
+                          <td>
+                            <Form.Control
+                              size="sm"
+                              type="number"
+                              value={entry.hours}
+                              disabled={disabled}
+                              onChange={(e) =>
+                                updateEntry(
+                                  project.projectId,
+                                  entry.date,
+                                  index,
+                                  "hours",
+                                  Number(e.target.value)
+                                )
+                              }
+                            />
+                          </td>
+
+                          <td>
+                            <Badge
+                              bg={
+                                entry.statusName === "APPROVED"
+                                  ? "success"
+                                  : entry.statusName === "REJECTED"
+                                  ? "danger"
+                                  : entry.statusName === "SUBMITTED"
+                                  ? "primary"
+                                  : "warning"
+                              }
+                            >
+                              {entry.statusName}
+                            </Badge>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </Table>
 
