@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Container,
   Row,
@@ -9,6 +9,7 @@ import {
   Alert,
   Spinner,
 } from 'react-bootstrap';
+import ticketService from '../../services/ticketService';
 
 const CreateTicket: React.FC = () => {
   const [form, setForm] = useState({
@@ -18,24 +19,89 @@ const CreateTicket: React.FC = () => {
     description: '',
   });
 
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
-
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID: number | undefined = user?.organizationID;
+  const employeeID: number | undefined = user?.employeeID;
+  // =============================
+  // HANDLE INPUT CHANGE
+  // =============================
   const handleChange = (key: string, value: string) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
+  // =============================
+  // FETCH CATEGORIES
+  // =============================
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const organizationID = user.organizationID;
+
+        const res =
+          await ticketService.GetSupportCategoryByOrganization(
+            organizationID
+          );
+
+        setCategories(res || []);
+      } catch (err) {
+        console.error('Failed to load categories', err);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // =============================
+  // HANDLE SUBMIT
+  // =============================
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    setLoading(true);
-    setMessage('');
+    // Validation
+    if (!form.categoryId || !form.priorityId || !form.subject) {
+      setMessage('⚠️ Please fill all required fields');
+      return;
+    }
 
-    // Simulate API
-    setTimeout(() => {
+    try {
+      setLoading(true);
+      setMessage('');
+
+      
+
+      const payload = {
+        ticketNumber: `TKT-${Date.now()}`,
+        organizationId: organizationID,
+        requestedByUserId: employeeID,
+        categoryId: Number(form.categoryId),
+        priorityId: Number(form.priorityId),
+        statusId: 1, // Default Open
+        subject: form.subject,
+        description: form.description,
+        createdByUserId: employeeID,
+      };
+
+      await ticketService.PostCreateSupportTicketByAsync(payload);
+
       setMessage('✅ Ticket created successfully!');
+
+      // Reset form
+      setForm({
+        categoryId: '',
+        priorityId: '',
+        subject: '',
+        description: '',
+      });
+    } catch (error) {
+      console.error(error);
+      setMessage('❌ Failed to create ticket');
+    } finally {
       setLoading(false);
-    }, 1000);
+    }
   };
 
   return (
@@ -44,7 +110,6 @@ const CreateTicket: React.FC = () => {
         <Col md={8} lg={6}>
           <Card className="shadow-lg border-0 rounded-4">
             <Card.Body className="p-4">
-
               {/* HEADER */}
               <div className="mb-4 text-center">
                 <h4 className="fw-bold">🎫 Create Ticket</h4>
@@ -53,20 +118,23 @@ const CreateTicket: React.FC = () => {
                 </p>
               </div>
 
+              {/* MESSAGE */}
               {message && (
-                <Alert variant="success" className="text-center">
+                <Alert
+                  variant={message.includes('success') ? 'success' : 'danger'}
+                  className="text-center"
+                >
                   {message}
                 </Alert>
               )}
 
               <Form onSubmit={handleSubmit}>
-
                 {/* CATEGORY + PRIORITY */}
                 <Row>
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">
-                        Category
+                        Category *
                       </Form.Label>
                       <Form.Select
                         value={form.categoryId}
@@ -75,9 +143,14 @@ const CreateTicket: React.FC = () => {
                         }
                       >
                         <option value="">Select Category</option>
-                        <option value="1">IT Support</option>
-                        <option value="2">HR</option>
-                        <option value="3">Finance</option>
+                        {categories.map((cat) => (
+                          <option
+                            key={cat.CategoryId}
+                            value={cat.CategoryId}
+                          >
+                            {cat.CategoryName}
+                          </option>
+                        ))}
                       </Form.Select>
                     </Form.Group>
                   </Col>
@@ -85,7 +158,7 @@ const CreateTicket: React.FC = () => {
                   <Col md={6}>
                     <Form.Group className="mb-3">
                       <Form.Label className="fw-semibold">
-                        Priority
+                        Priority *
                       </Form.Label>
                       <Form.Select
                         value={form.priorityId}
@@ -94,9 +167,10 @@ const CreateTicket: React.FC = () => {
                         }
                       >
                         <option value="">Select Priority</option>
-                        <option value="1">🔴 High</option>
+                        <option value="4">🔥 Critical</option>
+                        <option value="3">🔴 High</option>
                         <option value="2">🟡 Medium</option>
-                        <option value="3">🟢 Low</option>
+                        <option value="1">🟢 Low</option>
                       </Form.Select>
                     </Form.Group>
                   </Col>
@@ -104,7 +178,9 @@ const CreateTicket: React.FC = () => {
 
                 {/* SUBJECT */}
                 <Form.Group className="mb-3">
-                  <Form.Label className="fw-semibold">Subject</Form.Label>
+                  <Form.Label className="fw-semibold">
+                    Subject *
+                  </Form.Label>
                   <Form.Control
                     type="text"
                     placeholder="Enter a short subject"
@@ -117,7 +193,9 @@ const CreateTicket: React.FC = () => {
 
                 {/* DESCRIPTION */}
                 <Form.Group className="mb-4">
-                  <Form.Label className="fw-semibold">Description</Form.Label>
+                  <Form.Label className="fw-semibold">
+                    Description
+                  </Form.Label>
                   <Form.Control
                     as="textarea"
                     rows={4}
@@ -129,21 +207,25 @@ const CreateTicket: React.FC = () => {
                   />
                 </Form.Group>
 
-                {/* ACTION BUTTON */}
+                {/* SUBMIT BUTTON */}
                 <div className="d-grid">
                   <Button
                     type="submit"
                     size="lg"
                     disabled={loading}
                     style={{
-                      background: 'linear-gradient(135deg, #0d6efd, #4dabf7)',
+                      background:
+                        'linear-gradient(135deg, #0d6efd, #4dabf7)',
                       border: 'none',
                       borderRadius: '10px',
                       fontWeight: '600',
                     }}
                   >
                     {loading ? (
-                      <Spinner size="sm" />
+                      <>
+                        <Spinner size="sm" className="me-2" />
+                        Submitting...
+                      </>
                     ) : (
                       '🚀 Submit Ticket'
                     )}

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Button, Tab, Tabs, Form, Row, Col } from 'react-bootstrap';
+import { Button, Tab, Tabs, Form, Row, Col, Card, Alert } from 'react-bootstrap';
 
 interface TaxDeduction {
   EmpTaxDeductionID: number;
@@ -7,6 +7,7 @@ interface TaxDeduction {
   TaxSectionID: number;
   DeductionType: string;
   Amount: number;
+  isDirty?: boolean;
 }
 
 interface TaxSection {
@@ -16,87 +17,142 @@ interface TaxSection {
 }
 
 const EmployeeTaxDeclaration: React.FC = () => {
-  // Sample static data for Tax Sections
   const taxSections: TaxSection[] = [
     { TaxSectionID: 1, SectionCode: '80C', SectionName: '80C - Life Insurance Premium' },
     { TaxSectionID: 2, SectionCode: '80D', SectionName: '80D - Medical Insurance Premium' },
     { TaxSectionID: 3, SectionCode: '80E', SectionName: '80E - Education Loan Interest' },
   ];
 
-  // State to hold form data for each Tax Section
   const [declarations, setDeclarations] = useState<TaxDeduction[]>([
     { EmpTaxDeductionID: 1, EmployeePayrollID: 101, TaxSectionID: 1, DeductionType: 'Insurance', Amount: 20000 },
     { EmpTaxDeductionID: 2, EmployeePayrollID: 101, TaxSectionID: 2, DeductionType: 'Health Insurance', Amount: 15000 },
     { EmpTaxDeductionID: 3, EmployeePayrollID: 101, TaxSectionID: 3, DeductionType: 'Interest on Loan', Amount: 10000 },
   ]);
 
-  const [activeKey, setActiveKey] = useState<string>('80C'); // Default active tab
+  const [activeKey, setActiveKey] = useState<string>('80C');
+  const [successMsg, setSuccessMsg] = useState<string>('');
 
-  // Input change handler for each deduction
-  const handleInputChange = (e: React.ChangeEvent<any>, sectionID: number) => {
-    const { id, value } = e.target;
-    setDeclarations((prevDeclarations) =>
-      prevDeclarations.map((decl) =>
+  const handleInputChange = (
+    e: React.ChangeEvent<any>,
+    sectionID: number,
+    field: 'DeductionType' | 'Amount'
+  ) => {
+    const value = field === 'Amount' ? parseFloat(e.target.value) || 0 : e.target.value;
+
+    setDeclarations((prev) =>
+      prev.map((decl) =>
         decl.TaxSectionID === sectionID
-          ? { ...decl, [id]: id === 'Amount' ? parseFloat(value) : value }
+          ? { ...decl, [field]: value, isDirty: true }
           : decl
       )
     );
   };
 
-  // Handle Save
   const handleSave = (sectionID: number) => {
-    // Simulating a save action
-    console.log(`Saved data for Section ${sectionID}`);
+    setDeclarations((prev) =>
+      prev.map((decl) =>
+        decl.TaxSectionID === sectionID ? { ...decl, isDirty: false } : decl
+      )
+    );
+
+    setSuccessMsg(`Section ${sectionID} saved successfully!`);
+    setTimeout(() => setSuccessMsg(''), 3000);
   };
 
+  const getDeclaration = (sectionID: number) =>
+    declarations.find((d) => d.TaxSectionID === sectionID);
+
   return (
-    <div className="employee-tax-declaration mt-5">
-      <h3>Employee Tax Declaration</h3>
+    <div className="container mt-4">
+      <Card className="shadow-sm border-0">
+        <Card.Body>
+          <h4 className="mb-1">Employee Tax Declaration</h4>
+          <p className="text-muted mb-4">
+            Declare your tax-saving investments under different sections.
+          </p>
 
-      <Tabs
-        id="tax-declaration-tabs"
-        activeKey={activeKey}
-        onSelect={(k) => setActiveKey(k || '')}
-        className="mb-3"
-      >
-        {taxSections.map((section) => (
-          <Tab eventKey={section.SectionCode} title={section.SectionName} key={section.TaxSectionID}>
-            <div className="tab-content p-3">
-              {/* Form inside each tab */}
-              <Form>
-                <Row>
-                  <Col md={6}>
-                    <Form.Group className="mb-3" controlId={`DeductionType-${section.TaxSectionID}`}>
-                      <Form.Label>Deduction Type</Form.Label>
-                      <Form.Control
-                        type="text"
-                        value={declarations.find((decl) => decl.TaxSectionID === section.TaxSectionID)?.DeductionType || ''}
-                        onChange={(e) => handleInputChange(e, section.TaxSectionID)}
-                      />
-                    </Form.Group>
-                  </Col>
-                  <Col md={6}>
-                    <Form.Group className="mb-3" controlId={`Amount-${section.TaxSectionID}`}>
-                      <Form.Label>Amount</Form.Label>
-                      <Form.Control
-                        type="number"
-                        value={declarations.find((decl) => decl.TaxSectionID === section.TaxSectionID)?.Amount || ''}
-                        onChange={(e) => handleInputChange(e, section.TaxSectionID)}
-                      />
-                    </Form.Group>
-                  </Col>
-                </Row>
+          {successMsg && <Alert variant="success">{successMsg}</Alert>}
 
-                {/* Save button */}
-                <Button variant="primary" onClick={() => handleSave(section.TaxSectionID)}>
-                  Save
-                </Button>
-              </Form>
-            </div>
-          </Tab>
-        ))}
-      </Tabs>
+          <Tabs
+            activeKey={activeKey}
+            onSelect={(k) => setActiveKey(k || '')}
+            className="mb-3"
+          >
+            {taxSections.map((section) => {
+              const declaration = getDeclaration(section.TaxSectionID);
+
+              return (
+                <Tab
+                  key={section.TaxSectionID}
+                  eventKey={section.SectionCode}
+                  title={section.SectionCode}
+                >
+                  <Card className="p-3 border-0 bg-light">
+                    <h5 className="mb-3">{section.SectionName}</h5>
+
+                    <Form>
+                      <Row>
+                        <Col md={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Deduction Type</Form.Label>
+                            <Form.Control
+                              type="text"
+                              placeholder="e.g., LIC Premium"
+                              value={declaration?.DeductionType || ''}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  e,
+                                  section.TaxSectionID,
+                                  'DeductionType'
+                                )
+                              }
+                            />
+                          </Form.Group>
+                        </Col>
+
+                        <Col md={6}>
+                          <Form.Group className="mb-3">
+                            <Form.Label>Amount (₹)</Form.Label>
+                            <Form.Control
+                              type="number"
+                              placeholder="Enter amount"
+                              value={declaration?.Amount || ''}
+                              onChange={(e) =>
+                                handleInputChange(
+                                  e,
+                                  section.TaxSectionID,
+                                  'Amount'
+                                )
+                              }
+                            />
+                          </Form.Group>
+                        </Col>
+                      </Row>
+
+                      <div className="d-flex justify-content-between align-items-center mt-3">
+                        <div className="text-muted">
+                          Total Declared:{' '}
+                          <strong>
+                            ₹ {declaration?.Amount?.toLocaleString('en-IN') || 0}
+                          </strong>
+                        </div>
+
+                        <Button
+                          variant="primary"
+                          disabled={!declaration?.isDirty}
+                          onClick={() => handleSave(section.TaxSectionID)}
+                        >
+                          Save Changes
+                        </Button>
+                      </div>
+                    </Form>
+                  </Card>
+                </Tab>
+              );
+            })}
+          </Tabs>
+        </Card.Body>
+      </Card>
     </div>
   );
 };

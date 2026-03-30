@@ -72,6 +72,7 @@ const employeeService = {
       const { data } = await api.get(`Employee/GetReportedEmployees?employeeID=${employeeID}`);
       return data;
   },
+
 };
 
 export default employeeService;

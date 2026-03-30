@@ -71,7 +71,6 @@ const ApplyLeave: React.FC = () => {
         <Tab eventKey="history" title="Leave History">
           <LeaveHistoryTab
            employeeID={employeeID}
-            employees={employeeOptions}
             leaveTypes={leaveTypeOptions}
             onEdit={handleEditLeave} // ✅ wrapped function
             onDelete={(id) => {
@@ -82,23 +81,18 @@ const ApplyLeave: React.FC = () => {
         </Tab>
 
         <Tab eventKey="balance" title="Leave Balance">
-          <LeaveBalanceTab leaves={leaves} leaveTypes={leaveTypeOptions} />
+         <LeaveBalanceTab />
         </Tab>
 
         <Tab eventKey="approve" title="Approve Leaves">
-          <ApproveLeavesTab
-            leaves={leaves}
-            employees={employeeOptions}
-            leaveTypes={leaveTypeOptions}
+         <ApproveLeavesTab
             onApprove={handleApprove}
             onReject={handleReject}
           />
         </Tab>
 
         <Tab eventKey="employee" title="Employee Leaves">
-          <EmployeeLeavesTab
-            leaves={leaves}
-            employees={employeeOptions}
+          <EmployeeLeavesTab  
             leaveTypes={leaveTypeOptions}
           />
         </Tab>

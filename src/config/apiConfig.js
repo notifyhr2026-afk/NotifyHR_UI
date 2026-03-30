@@ -11,7 +11,8 @@
 //     HRserviceURL: 'http://115.98.2.37:36523/api',
 //     AttendanceserviceURL: 'http://115.98.2.37:36524/api',
 //     RecruitmentserviceURL: 'http://115.98.2.37:36525/api'
-//     PayrollserviceURL: 'http://115.98.2.37:36526/api'
+//     PayrollserviceURL: 'http://115.98.2.37:36526/api',
+//     HelpdeskserviceURL: 'http://115.98.2.37:36527/api'
 // };
 
 // for running in QA machine using docker
@@ -21,6 +22,7 @@ const apiConfig = {
   AttendanceserviceURL: process.env.REACT_APP_ATTENDANCE_API_URL,
   RecruitmentserviceURL: process.env.REACT_APP_RECRUITMENT_API_URL,
   PayrollserviceURL: process.env.REACT_APP_PAYROLL_API_URL,
+  HelpdeskserviceURL: process.env.REACT_APP_HELPDESK_API_URL,
 };
 
 // const apiConfig = {
@@ -28,7 +30,8 @@ const apiConfig = {
 //     HRserviceURL: 'http://localhost:36523/api',
 //     AttendanceserviceURL: 'http://localhost:36524/api',
 //     RecruitmentserviceURL: 'http://localhost:36525/api',
-//     PayrollserviceURL: 'http://localhost:36526/api'
+//     PayrollserviceURL: 'http://localhost:36526/api',
+//     HelpdeskserviceURL: 'http://localhost:36527/api'
 // };
 
 export default apiConfig;

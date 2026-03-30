@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button, Card, Col, Row, Form, Table, Modal } from "react-bootstrap";
 import Select from "react-select";
 
-// Sample static data
+// Static Data
 const staticBranches = [
   { value: "HQ", label: "Headquarters" },
   { value: "Branch1", label: "Branch 1" },
@@ -19,6 +19,12 @@ const staticEmployees = [
   { id: 1, name: "John Doe", branch: "HQ", department: "HR" },
   { id: 2, name: "Samantha Red", branch: "Branch1", department: "IT" },
   { id: 3, name: "Michael Adams", branch: "Branch2", department: "Sales" },
+];
+
+// ✅ NEW: Groups
+const staticGroups = [
+  { id: 1, name: "HR Team" },
+  { id: 2, name: "Night Support Team" },
 ];
 
 const staticShifts = [
@@ -38,26 +44,31 @@ const allDays = [
 
 const AssignShifts: React.FC = () => {
   const [assignments, setAssignments] = useState<any[]>([]);
+
   const [selectedBranch, setSelectedBranch] = useState<any>(null);
   const [selectedDepartment, setSelectedDepartment] = useState<any>(null);
   const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [selectedGroup, setSelectedGroup] = useState<any>(null);
 
-  const [assignData, setAssignData] = useState({
+  const [assignType, setAssignType] = useState<"employee" | "group">("employee");
+
+  const [assignData, setAssignData] = useState<any>({
     id: "",
     employeeId: "",
+    groupId: "",
     shiftId: "",
     effectiveFrom: "",
     effectiveTo: "",
     isRotational: false,
     isFixed: false,
-    weekends: [] as string[],
+    weekends: [],
   });
 
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(false);
   const [filteredEmployees, setFilteredEmployees] = useState(staticEmployees);
 
-  // Filter employees based on branch and department
+  // Filter employees
   useEffect(() => {
     let filtered = staticEmployees;
     if (selectedBranch) {
@@ -71,32 +82,38 @@ const AssignShifts: React.FC = () => {
 
   const handleAssignInput = (e: any) => {
     const { id, value, type, checked } = e.target;
-    setAssignData((prev) => ({ ...prev, [id]: type === "checkbox" ? checked : value }));
+    setAssignData((prev: any) => ({
+      ...prev,
+      [id]: type === "checkbox" ? checked : value,
+    }));
   };
 
   const handleWeekendSelect = (selected: any) => {
-    setAssignData((prev) => ({
+    setAssignData((prev: any) => ({
       ...prev,
       weekends: selected ? selected.map((s: any) => s.value) : [],
     }));
   };
 
   const openModal = (editData?: any) => {
-    if (!selectedEmployee && !editData) {
-      return alert("Please select an employee first");
+    if (!editData) {
+      if (assignType === "employee" && !selectedEmployee) {
+        return alert("Select employee");
+      }
+      if (assignType === "group" && !selectedGroup) {
+        return alert("Select group");
+      }
     }
 
     if (editData) {
       setAssignData(editData);
-      setSelectedEmployee({
-        value: editData.employeeId,
-        label: editData.employeeName,
-      });
+      setAssignType(editData.type);
       setEditing(true);
     } else {
       setAssignData({
         id: "",
         employeeId: selectedEmployee?.value || "",
+        groupId: selectedGroup?.value || "",
         shiftId: "",
         effectiveFrom: "",
         effectiveTo: "",
@@ -106,25 +123,37 @@ const AssignShifts: React.FC = () => {
       });
       setEditing(false);
     }
+
     setShowModal(true);
   };
 
   const saveAssignment = () => {
-    if (!assignData.employeeId || !assignData.shiftId || !assignData.effectiveFrom) {
+    if (!assignData.shiftId || !assignData.effectiveFrom) {
       return alert("Fill required fields");
     }
 
-    const employeeName = staticEmployees.find(e => e.id === Number(assignData.employeeId))?.name;
+    let name = "";
+    let type = assignType;
+
+    if (assignType === "employee") {
+      name = staticEmployees.find(e => e.id === Number(assignData.employeeId))?.name || "";
+    } else {
+      name = staticGroups.find(g => g.id === Number(assignData.groupId))?.name || "";
+    }
+
     const shiftName = staticShifts.find(s => s.id === Number(assignData.shiftId))?.name;
 
+    const newAssign = {
+      ...assignData,
+      id: editing ? assignData.id : Date.now(),
+      name,
+      shiftName,
+      type,
+    };
+
     if (editing) {
-      setAssignments(assignments.map(a =>
-        a.id === assignData.id
-          ? { ...assignData, employeeName, shiftName }
-          : a
-      ));
+      setAssignments(assignments.map(a => (a.id === assignData.id ? newAssign : a)));
     } else {
-      const newAssign = { ...assignData, id: Date.now(), employeeName, shiftName };
       setAssignments([newAssign, ...assignments]);
     }
 
@@ -132,7 +161,7 @@ const AssignShifts: React.FC = () => {
   };
 
   const deleteAssignment = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this assignment?")) {
+    if (window.confirm("Delete this assignment?")) {
       setAssignments(assignments.filter(a => a.id !== id));
     }
   };
@@ -140,75 +169,92 @@ const AssignShifts: React.FC = () => {
   return (
     <div className="p-3 mt-3">
       <h3 className="fw-bold">Assign Shifts</h3>
+
       <div className="text-end mb-3">
-        <Button variant="primary" onClick={() => openModal()}>Assign Shift</Button>
-      </div>      
-      <Card className="shadow-sm mb-4">
+        <Button onClick={() => openModal()}>Assign Shift</Button>
+      </div>
+
+      {/* Filters */}
+      <Card className="mb-3">
         <Card.Body>
-          <Row className="mb-3">
+          <Row>
             <Col md={4}>
-              <Form.Label>Branch</Form.Label>
-              <Select
-                options={staticBranches}
-                value={selectedBranch}
-                onChange={setSelectedBranch}
-                placeholder="Select branch"
-              />
+              <Form.Label>Assign Type</Form.Label>
+              <Form.Select
+                value={assignType}
+                onChange={(e) => setAssignType(e.target.value as any)}
+              >
+                <option value="employee">Employee</option>
+                <option value="group">Group</option>
+              </Form.Select>
             </Col>
-            <Col md={4}>
-              <Form.Label>Department</Form.Label>
-              <Select
-                options={staticDepartments}
-                value={selectedDepartment}
-                onChange={setSelectedDepartment}
-                placeholder="Select department"
-              />
-            </Col>
-            <Col md={4}>
-              <Form.Label>Employee</Form.Label>
-              <Select
-                options={filteredEmployees.map(emp => ({ value: emp.id, label: emp.name }))}
-                value={selectedEmployee}
-                onChange={setSelectedEmployee}
-                placeholder="Select employee"
-                isSearchable
-              />
-            </Col>
-          </Row>          
+
+            {assignType === "employee" && (
+              <>
+                <Col md={4}>
+                  <Form.Label>Branch</Form.Label>
+                  <Select options={staticBranches} onChange={setSelectedBranch} />
+                </Col>
+                <Col md={4}>
+                  <Form.Label>Department</Form.Label>
+                  <Select options={staticDepartments} onChange={setSelectedDepartment} />
+                </Col>
+                <Col md={4} className="mt-2">
+                  <Form.Label>Employee</Form.Label>
+                  <Select
+                    options={filteredEmployees.map(emp => ({
+                      value: emp.id,
+                      label: emp.name,
+                    }))}
+                    onChange={setSelectedEmployee}
+                  />
+                </Col>
+              </>
+            )}
+
+            {assignType === "group" && (
+              <Col md={4}>
+                <Form.Label>Group</Form.Label>
+                <Select
+                  options={staticGroups.map(g => ({
+                    value: g.id,
+                    label: g.name,
+                  }))}
+                  onChange={setSelectedGroup}
+                />
+              </Col>
+            )}
+          </Row>
         </Card.Body>
       </Card>
 
-      <h5 className="fw-bold">Recent Assignments</h5>
-      <Table bordered hover>
+      {/* Table */}
+      <Table bordered>
         <thead>
           <tr>
-            <th>Employee</th>
+            <th>Type</th>
+            <th>Name</th>
             <th>Shift</th>
             <th>From</th>
             <th>To</th>
-            <th>Rotational</th>
-            <th>Fixed</th>
-            <th>Weekends</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {assignments.length === 0 ? (
             <tr>
-              <td colSpan={8} className="text-center text-muted">No assignments yet</td>
+              <td colSpan={6} className="text-center">No data</td>
             </tr>
           ) : (
             assignments.map(a => (
               <tr key={a.id}>
-                <td>{a.employeeName}</td>
+                <td>{a.type}</td>
+                <td>{a.name}</td>
                 <td>{a.shiftName}</td>
                 <td>{a.effectiveFrom}</td>
                 <td>{a.effectiveTo || "--"}</td>
-                <td>{a.isRotational ? "Yes" : "No"}</td>
-                <td>{a.isFixed ? "Yes" : "No"}</td>
-                <td>{a.weekends.join(", ") || "--"}</td>
                 <td>
-                  <Button size="sm" variant="warning" className="me-2" onClick={() => openModal(a)}>Edit</Button>
+                  <Button size="sm" onClick={() => openModal(a)}>Edit</Button>{" "}
                   <Button size="sm" variant="danger" onClick={() => deleteAssignment(a.id)}>Delete</Button>
                 </td>
               </tr>
@@ -220,83 +266,46 @@ const AssignShifts: React.FC = () => {
       {/* Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editing ? "Edit Shift Assignment" : "Assign Shift"}</Modal.Title>
+          <Modal.Title>{editing ? "Edit" : "Assign Shift"}</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Row>
-            <Col md={12}>
-              <Form.Group className="mb-3">
-                <Form.Label>Shift</Form.Label>
-                <Form.Select
-                  id="shiftId"
-                  value={assignData.shiftId}
-                  onChange={handleAssignInput}
-                >
-                  <option value="">-- Select Shift --</option>
-                  {staticShifts.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </Form.Select>
-              </Form.Group>
-            </Col>
+          <Form.Group className="mb-3">
+            <Form.Label>Shift</Form.Label>
+            <Form.Select id="shiftId" value={assignData.shiftId} onChange={handleAssignInput}>
+              <option value="">Select Shift</option>
+              {staticShifts.map(s => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </Form.Select>
+          </Form.Group>
 
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Effective From</Form.Label>
-                <Form.Control
-                  type="date"
-                  id="effectiveFrom"
-                  value={assignData.effectiveFrom}
-                  onChange={handleAssignInput}
-                />
-              </Form.Group>
-            </Col>
+          <Form.Group className="mb-3">
+            <Form.Label>Effective From</Form.Label>
+            <Form.Control type="date" id="effectiveFrom" value={assignData.effectiveFrom} onChange={handleAssignInput} />
+          </Form.Group>
 
-            <Col md={6}>
-              <Form.Group className="mb-3">
-                <Form.Label>Effective To</Form.Label>
-                <Form.Control
-                  type="date"
-                  id="effectiveTo"
-                  value={assignData.effectiveTo}
-                  onChange={handleAssignInput}
-                />
-              </Form.Group>
-            </Col>
+          <Form.Group className="mb-3">
+            <Form.Label>Effective To</Form.Label>
+            <Form.Control type="date" id="effectiveTo" value={assignData.effectiveTo} onChange={handleAssignInput} />
+          </Form.Group>
 
-            <Col md={6} className="mt-2">
-              <Form.Check
-                id="isRotational"
-                checked={assignData.isRotational}
-                onChange={handleAssignInput}
-                label="Rotational Shift"
-              />
-            </Col>
+          <Form.Check id="isRotational" label="Rotational" checked={assignData.isRotational} onChange={handleAssignInput} />
+          <Form.Check id="isFixed" label="Fixed" checked={assignData.isFixed} onChange={handleAssignInput} />
 
-            <Col md={6} className="mt-2">
-              <Form.Check
-                id="isFixed"
-                checked={assignData.isFixed}
-                onChange={handleAssignInput}
-                label="Fixed Shift"
-              />
-            </Col>
-
-            <Col md={12}>
-              <Form.Group className="mb-3 mt-2">
-                <Form.Label>Weekends / Off Days</Form.Label>
-                <Select
-                  isMulti
-                  options={allDays}
-                  value={allDays.filter(opt => assignData.weekends.includes(opt.value))}
-                  onChange={handleWeekendSelect}
-                  placeholder="Select off days"
-                />
-              </Form.Group>
-            </Col>
-          </Row>
+          <Form.Group className="mt-3">
+            <Form.Label>Weekends</Form.Label>
+            <Select
+              isMulti
+              options={allDays}
+              value={allDays.filter(opt => assignData.weekends.includes(opt.value))}
+              onChange={handleWeekendSelect}
+            />
+          </Form.Group>
         </Modal.Body>
+
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-          <Button variant="primary" onClick={saveAssignment}>{editing ? "Update" : "Assign"}</Button>
+          <Button onClick={() => setShowModal(false)}>Cancel</Button>
+          <Button onClick={saveAssignment}>{editing ? "Update" : "Save"}</Button>
         </Modal.Footer>
       </Modal>
     </div>

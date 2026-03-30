@@ -10,7 +10,28 @@ import {
 } from "react-bootstrap";
 import employeeSalaryAssignment from "../../services/employeeSalaryAssignment";
 
-// Static Employee Info (for now)
+// ---------------------------
+// TypeScript Interfaces
+// ---------------------------
+interface PayslipSummary {
+  TotalDays: number;
+  PaidDays: number;
+  Leaves: number;
+  LossOfPay: number;
+  GrossSalary: number;
+  TotalDeductions: number;
+  NetSalary: number;
+}
+
+interface PayslipComponent {
+  ComponentName: string;
+  ComponentTypeName: "Earning" | "Deduction";
+  MonthlyAmount: number;
+}
+
+// ---------------------------
+// Static Employee Info
+// ---------------------------
 const employee = {
   EmployeeID: 1024,
   EmployeeName: "John Doe",
@@ -22,21 +43,28 @@ const employee = {
   AccountNumber: "XXXXXX1234",
 };
 
+// ---------------------------
+// Main Component
+// ---------------------------
 const EmployeePayslip: React.FC = () => {
-  const [summary, setSummary] = useState<any>(null);
-  const [components, setComponents] = useState<any[]>([]);
+  const [summary, setSummary] = useState<PayslipSummary | null>(null);
+  const [components, setComponents] = useState<PayslipComponent[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const employeeID: number | undefined = user?.employeeID;
+
+  // Fetch Payslip Data
   const fetchPayslip = async () => {
+    if (!employeeID) return;
+
     try {
       const response =
         await employeeSalaryAssignment.GetEmployeeMonthlyPayslipByEmployeeID(
-          employee.EmployeeID,
+          employeeID,
           employee.Month,
           employee.Year
         );
-
-      console.log("API Response:", response);
 
       setSummary(response?.Table?.[0] || null);
       setComponents(response?.Table1 || []);
@@ -54,14 +82,14 @@ const EmployeePayslip: React.FC = () => {
   }, []);
 
   // Split Earnings & Deductions
-  const earnings = components.filter(
-    (c) => c.ComponentTypeName === "Earning"
-  );
+  const earnings = components.filter((c) => c.ComponentTypeName === "Earning");
   const deductions = components.filter(
     (c) => c.ComponentTypeName === "Deduction"
   );
 
-  // ✅ Safe loading / null guard
+  // ---------------------------
+  // Loading state
+  // ---------------------------
   if (loading || !summary) {
     return (
       <div className="text-center mt-5">
@@ -70,6 +98,9 @@ const EmployeePayslip: React.FC = () => {
     );
   }
 
+  // ---------------------------
+  // JSX Rendering
+  // ---------------------------
   return (
     <Container className="mt-5">
       <Card>
@@ -107,16 +138,16 @@ const EmployeePayslip: React.FC = () => {
           {/* Attendance Info */}
           <Row className="mb-3">
             <Col md={3}>
-              <strong>Total Days:</strong> {summary?.TotalDays}
+              <strong>Total Days:</strong> {summary.TotalDays}
             </Col>
             <Col md={3}>
-              <strong>Paid Days:</strong> {summary?.PaidDays}
+              <strong>Paid Days:</strong> {summary.PaidDays}
             </Col>
             <Col md={3}>
-              <strong>Leaves:</strong> {summary?.Leaves}
+              <strong>Leaves:</strong> {summary.Leaves}
             </Col>
             <Col md={3}>
-              <strong>LOP:</strong> {summary?.LossOfPay}
+              <strong>LOP:</strong> {summary.LossOfPay}
             </Col>
           </Row>
 
@@ -125,13 +156,16 @@ const EmployeePayslip: React.FC = () => {
             {/* Earnings */}
             <Col md={6}>
               <h5 className="mb-3">Earnings</h5>
-              <Table bordered size="sm">
+              <Table bordered size="sm" responsive>
                 <tbody>
                   {earnings.map((item, index) => (
                     <tr key={index}>
                       <td>{item.ComponentName}</td>
                       <td className="text-end">
-                        ₹ {Number(item.MonthlyAmount).toFixed(2)}
+                        ₹{" "}
+                        {Number(item.MonthlyAmount).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
                       </td>
                     </tr>
                   ))}
@@ -141,7 +175,10 @@ const EmployeePayslip: React.FC = () => {
                     </td>
                     <td className="text-end">
                       <strong>
-                        ₹ {Number(summary?.GrossSalary).toFixed(2)}
+                        ₹{" "}
+                        {Number(summary.GrossSalary).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
                       </strong>
                     </td>
                   </tr>
@@ -152,13 +189,16 @@ const EmployeePayslip: React.FC = () => {
             {/* Deductions */}
             <Col md={6}>
               <h5 className="mb-3">Deductions</h5>
-              <Table bordered size="sm">
+              <Table bordered size="sm" responsive>
                 <tbody>
                   {deductions.map((item, index) => (
                     <tr key={index}>
                       <td>{item.ComponentName}</td>
                       <td className="text-end">
-                        ₹ {Number(item.MonthlyAmount).toFixed(2)}
+                        ₹{" "}
+                        {Number(item.MonthlyAmount).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
                       </td>
                     </tr>
                   ))}
@@ -168,7 +208,10 @@ const EmployeePayslip: React.FC = () => {
                     </td>
                     <td className="text-end">
                       <strong>
-                        ₹ {Number(summary?.TotalDeductions).toFixed(2)}
+                        ₹{" "}
+                        {Number(summary.TotalDeductions).toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
                       </strong>
                     </td>
                   </tr>
@@ -184,7 +227,10 @@ const EmployeePayslip: React.FC = () => {
                 <Card.Body className="text-center">
                   <h5>Net Pay</h5>
                   <h3 className="text-success">
-                    ₹ {Number(summary?.NetSalary).toFixed(2)}
+                    ₹{" "}
+                    {Number(summary.NetSalary).toLocaleString("en-IN", {
+                      minimumFractionDigits: 2,
+                    })}
                   </h3>
                   <small>(After all deductions)</small>
                 </Card.Body>
@@ -198,10 +244,7 @@ const EmployeePayslip: React.FC = () => {
               <Button variant="primary" className="me-2">
                 Download PDF
               </Button>
-              <Button
-                variant="secondary"
-                onClick={() => window.print()}
-              >
+              <Button variant="secondary" onClick={() => window.print()}>
                 Print Payslip
               </Button>
             </Col>

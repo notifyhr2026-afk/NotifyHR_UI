@@ -19,6 +19,8 @@ const PayrollProcessPage: React.FC = () => {
   const [year, setYear] = useState(2026);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("All");
+  const [branchFilter, setBranchFilter] = useState("All");
+  const [deptFilter, setDeptFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [selected, setSelected] = useState<number[]>([]);
 
@@ -28,12 +30,12 @@ const PayrollProcessPage: React.FC = () => {
 
   // Static Employees
   const employees = [
-    { id: 1024, name: "John Doe", dept: "IT", gross: 20000, deductions: 3000, net: 17000, status: "Pending" },
-    { id: 1025, name: "Jane Smith", dept: "HR", gross: 25000, deductions: 4000, net: 21000, status: "Processed" },
-    { id: 1026, name: "Ravi Kumar", dept: "Finance", gross: 22000, deductions: 2500, net: 19500, status: "Pending" },
-    { id: 1027, name: "Anita Rao", dept: "IT", gross: 27000, deductions: 5000, net: 22000, status: "Processed" },
-    { id: 1028, name: "Vikram Singh", dept: "Admin", gross: 18000, deductions: 2000, net: 16000, status: "Pending" },
-    { id: 1029, name: "Priya Sharma", dept: "HR", gross: 26000, deductions: 3500, net: 22500, status: "Pending" },
+    { id: 1024, name: "John Doe", branch: "Hyderabad", dept: "IT", gross: 20000, deductions: 3000, net: 17000, status: "Pending" },
+    { id: 1025, name: "Jane Smith", branch: "Chennai", dept: "HR", gross: 25000, deductions: 4000, net: 21000, status: "Processed" },
+    { id: 1026, name: "Ravi Kumar", branch: "Bangalore", dept: "Finance", gross: 22000, deductions: 2500, net: 19500, status: "Pending" },
+    { id: 1027, name: "Anita Rao", branch: "Hyderabad", dept: "IT", gross: 27000, deductions: 5000, net: 22000, status: "Processed" },
+    { id: 1028, name: "Vikram Singh", branch: "Mumbai", dept: "Admin", gross: 18000, deductions: 2000, net: 16000, status: "Pending" },
+    { id: 1029, name: "Priya Sharma", branch: "Chennai", dept: "HR", gross: 26000, deductions: 3500, net: 22500, status: "Pending" },
   ];
 
   // Dummy Attendance Data
@@ -53,9 +55,15 @@ const PayrollProcessPage: React.FC = () => {
       const matchStatus =
         statusFilter === "All" || emp.status === statusFilter;
 
-      return matchSearch && matchStatus;
+      const matchBranch =
+        branchFilter === "All" || emp.branch === branchFilter;
+
+      const matchDept =
+        deptFilter === "All" || emp.dept === deptFilter;
+
+      return matchSearch && matchStatus && matchBranch && matchDept;
     });
-  }, [search, statusFilter]);
+  }, [search, statusFilter, branchFilter, deptFilter]);
 
   // Pagination
   const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
@@ -96,8 +104,8 @@ const PayrollProcessPage: React.FC = () => {
         <Card.Body>
           <h3 className="text-center mb-4">Payroll Processing</h3>
 
-          {/* Filters */}
-          <Row className="mb-3">
+          {/* First Row Filters */}
+          <Row className="mb-3">   
             <Col md={2}>
               <Form.Select value={month} onChange={(e) => setMonth(Number(e.target.value))}>
                 {[...Array(12)].map((_, i) => (
@@ -114,20 +122,41 @@ const PayrollProcessPage: React.FC = () => {
               />
             </Col>
 
-            <Col md={3}>
-              <Form.Control
-                placeholder="Search Employee..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-              />
-            </Col>
-
             <Col md={2}>
               <Form.Select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
                 <option>All</option>
                 <option>Pending</option>
                 <option>Processed</option>
               </Form.Select>
+            </Col>     
+          </Row>
+
+          {/* Second Row Filters */}
+          <Row className="mb-3">
+<Col md={3}>
+              <Form.Select value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)}>
+                <option>All</option>
+                <option>Hyderabad</option>
+                <option>Chennai</option>
+                <option>Bangalore</option>
+                <option>Mumbai</option>
+              </Form.Select>
+            </Col>
+            <Col md={3}>
+              <Form.Select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
+                <option>All</option>
+                <option>IT</option>
+                <option>HR</option>
+                <option>Finance</option>
+                <option>Admin</option>
+              </Form.Select>
+            </Col>
+            <Col md={3}>
+              <Form.Control
+                placeholder="Search Employee..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
             </Col>
           </Row>
 
@@ -150,6 +179,7 @@ const PayrollProcessPage: React.FC = () => {
               <tr>
                 <th><Form.Check onChange={toggleSelectAll} /></th>
                 <th>Name</th>
+                <th>Branch</th>
                 <th>Dept</th>
                 <th>Gross</th>
                 <th>Deduction</th>
@@ -168,6 +198,7 @@ const PayrollProcessPage: React.FC = () => {
                     />
                   </td>
                   <td>{emp.name}</td>
+                  <td>{emp.branch}</td>
                   <td>{emp.dept}</td>
                   <td>₹ {emp.gross}</td>
                   <td>₹ {emp.deductions}</td>
@@ -238,7 +269,6 @@ const PayrollProcessPage: React.FC = () => {
         </Modal.Header>
 
         <Modal.Body>
-          {/* Summary */}
           <Row className="mb-3">
             <Col>Total Days: 31</Col>
             <Col>Present: 28</Col>
@@ -246,7 +276,6 @@ const PayrollProcessPage: React.FC = () => {
             <Col>LOP: 1</Col>
           </Row>
 
-          {/* Attendance Table */}
           <Table bordered size="sm">
             <thead>
               <tr>

@@ -2,32 +2,31 @@ import React, { useState, useEffect } from 'react';
 import { Form, Table } from 'react-bootstrap';
 import Select from 'react-select';
 import { GetAssignedRolesAsync,AssignOrganizationRolesAsync } from '../../services/roleService';
+import { useParams } from 'react-router-dom';
 
 interface RoleOption {
   value: string;
   label: string;
 }
 
-const EmployeeRoles: React.FC = () => {
+  const EmployeeRoles: React.FC = () => {
   const [roles, setRoles] = useState<string[]>([]);
   const [roleOptions, setRoleOptions] = useState<RoleOption[]>([]);
   const [allRoles, setAllRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-
+  const { employeeID } = useParams<{ employeeID: string }>();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const organizationID = user.organizationID;   
+  const userIDNum = Number(employeeID!);
   useEffect(() => {
     const fetchRoles = async () => {
-      try {
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const organizationID = user.organizationID;
-        const userID = user.userID;
-
+      try {          
         if (!organizationID) {
           console.error('Organization ID not found');
           setLoading(false);
           return;
         }
-
-        const data = await GetAssignedRolesAsync(organizationID,userID);
+        const data = await GetAssignedRolesAsync(organizationID,userIDNum);
         setAllRoles(data);
         const mappedOptions: RoleOption[] = data.map((role: any) => ({
           value: role.RoleID.toString(),
@@ -50,6 +49,23 @@ const EmployeeRoles: React.FC = () => {
 
     fetchRoles();
   }, []);
+
+  const handleAssignRoles = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userID = user.userID;
+      const payload = {
+        createdBy: "Admin",
+        roles: roles.join(','),
+        userID: userIDNum
+      };
+      await AssignOrganizationRolesAsync(payload);
+      alert('Roles assigned successfully!');
+    } catch (error) {
+      console.error('Error assigning roles:', error);
+      alert('Failed to assign roles.');
+    }
+  };
 
   if (loading) {
     return <div>Loading roles...</div>;
@@ -97,6 +113,10 @@ const EmployeeRoles: React.FC = () => {
           </tbody>
         </Table>
       )}
+
+      <button type="button" className="btn btn-primary" onClick={handleAssignRoles}>
+        Assign Roles
+      </button>
     </Form>
   );
 };

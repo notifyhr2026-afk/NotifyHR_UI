@@ -1,46 +1,38 @@
+// LeaveHistoryTab.tsx
 import React, { useEffect, useState } from "react";
-import { Table, Button, Badge, Alert } from "react-bootstrap";
-import { Leave, EmployeeOption, LeaveTypeOption } from "../../types/Leaves";
+import { Table, Button, Badge, Spinner, Alert, Card } from "react-bootstrap";
+import { Leave, LeaveTypeOption } from "../../types/Leaves";
 import leaveService from "../../services/leaveService";
 
 interface Props {
   employeeID: number;
-  employees: EmployeeOption[];
   leaveTypes: LeaveTypeOption[];
   onEdit: (leave: Leave) => void;
   onDelete: (id: number) => void;
 }
 
-// Robust date formatter for YYYY-MM-DD
+// Format YYYY-MM-DD to locale date
 const formatDate = (date?: string | null) => {
   if (!date) return "";
   const parts = date.split("-");
   if (parts.length !== 3) return "";
   const [year, month, day] = parts.map(Number);
-  if (!year || !month || !day) return "";
   return new Date(year, month - 1, day).toLocaleDateString();
 };
 
-const LeaveHistoryTab: React.FC<Props> = ({
-  employeeID,
-  employees,
-  leaveTypes,
-  onEdit,
-  onDelete
-}) => {
+const LeaveHistoryTab: React.FC<Props> = ({ employeeID, leaveTypes, onEdit, onDelete }) => {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>("");
 
   useEffect(() => {
-    loadLeaves();
+    fetchLeaves();
   }, [employeeID]);
 
-  const loadLeaves = async () => {
+  const fetchLeaves = async () => {
     try {
       setLoading(true);
       const data = await leaveService.GetEmployeeLeavesByAsync(employeeID);
-
-      // Map API response to Leave interface
       const mapped: Leave[] = data.map((l: any) => ({
         id: l.EmployeeLeaveID,
         employeeID: String(l.EmployeeID),
@@ -56,12 +48,12 @@ const LeaveHistoryTab: React.FC<Props> = ({
             : "Pending",
         reason: l.Reason,
         isHalfDay: l.IsHalfDay,
-        halfDayType: l.HalfDayType
+        halfDayType: l.HalfDayType,
       }));
-
       setLeaves(mapped);
-    } catch (error) {
-      console.error("Error loading leaves", error);
+    } catch (err: any) {
+      console.error(err);
+      setError("Failed to load leave history.");
     } finally {
       setLoading(false);
     }
@@ -78,54 +70,67 @@ const LeaveHistoryTab: React.FC<Props> = ({
     }
   };
 
-  if (loading) return <Alert variant="info">Loading leave history...</Alert>;
+  if (loading)
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "200px" }}>
+        <Spinner animation="border" variant="primary" />
+      </div>
+    );
+
+  if (error) return <Alert variant="danger">{error}</Alert>;
   if (!leaves.length) return <Alert variant="info">No leaves applied yet.</Alert>;
 
   return (
-    <Table striped bordered hover responsive>
-      <thead className="table-dark">
-        <tr>
-          <th>Leave Type</th>
-          <th>Dates</th>
-          <th>Days</th>
-          <th>reason</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
+    <Card className="shadow-sm mb-4">    
+      <Card.Body>
+        <div className="table-responsive">
+          <Table striped bordered hover>
+            <thead className="table-dark">
+              <tr>
+                <th>Leave Type</th>
+                <th>Dates</th>
+                <th>Days</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {leaves.map((l) => (
+                <tr key={l.id}>
+                  <td>{leaveTypes.find((t) => t.value === l.leaveTypeID)?.label || l.leaveTypeID}</td>
 
-      <tbody>
-        {leaves.map((l) => (
-          <tr key={l.id}>
-            <td>
-              {leaveTypes.find((t) => t.value === l.leaveTypeID)?.label || l.leaveTypeID}
-            </td>
+                  <td>
+                    {formatDate(l.startDate)}
+                    {l.startDate && l.endDate ? " → " : ""}
+                    {formatDate(l.endDate)}
+                    {l.isHalfDay && (
+                      <span className="text-muted ms-1">
+                        ({l.halfDayType === "FirstHalf" ? "Morning" : "Afternoon"})
+                      </span>
+                    )}
+                  </td>
 
-            <td>
-              {formatDate(l.startDate)}
-              {l.startDate && l.endDate ? " → " : ""}
-              {formatDate(l.endDate)}
-              {l.isHalfDay && (
-                <span className="text-muted ms-1">
-                  ({l.halfDayType === "FirstHalf" ? "Morning" : "Afternoon"})
-                </span>
-              )}
-            </td>
-
-            <td>{l.numberOfDays}</td>
-            <td>{l.reason}</td>
-            <td>
-              <Badge bg={getStatusBadge(l.status)}>{l.status}</Badge>
-            </td>
-
-            <td>
-              <Button size="sm" variant="primary" onClick={() => onEdit(l)}>Edit</Button>{" "}
-              <Button size="sm" variant="danger" onClick={() => onDelete(l.id)}>Delete</Button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </Table>
+                  <td>{l.numberOfDays}</td>
+                  <td>{l.reason}</td>
+                  <td>
+                    <Badge bg={getStatusBadge(l.status)}>{l.status}</Badge>
+                  </td>
+                  <td>
+                    <Button size="sm" variant="primary" className="me-2" onClick={() => onEdit(l)}>
+                      Edit
+                    </Button>
+                    <Button size="sm" variant="danger" onClick={() => onDelete(l.id)}>
+                      Delete
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
+      </Card.Body>
+    </Card>
   );
 };
 

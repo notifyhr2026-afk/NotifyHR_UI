@@ -64,11 +64,12 @@ import ManageJobRequisitionRecruiters from '../pages/Recruitment/ManageJobRequis
 import ManageJobRequisitionApprovals from '../pages/Recruitment/ManageJobRequisitionApprovals';
 import EmployeeTaskMaster from '../pages/Employee/EmployeeTaskMaster';
 
-import HelpdeskDashboard from '../pages/helpdesk/EmployeeTickets';
-import CreateTicket from '../pages/helpdesk/CreateTicket';
+import HelpdeskDashboard from '../pages/helpdesk/AssignedTicketsPage';
+import AssignTicketsPage from '../pages/helpdesk/AssignTicketsPage';
 import TicketDetails from '../pages/helpdesk/TicketDetails';
 import ManagerTicketVerification from '../pages/helpdesk/ManagerTicketVerification';
 import EmployeeTickets from '../pages/helpdesk/EmployeeTickets';
+import MyServiceTicket from '../pages/helpdesk/MyServiceTicket';
 
 import ResetPassword from '../pages/Main/ResetPassword';
 
@@ -94,6 +95,8 @@ import AssignShifts from '../pages/Shift/AssignShifts';
 import ManageProjects from '../components/Organization/ManageProjects';
 
 import DepartmentCategoryMapping from '../pages/helpdesk/DepartmentCategoryMapping';
+import EmployeeGroups from '../pages/Employee/EmployeeGroups';
+import GroupEmployeeMapping from '../pages/Employee/GroupEmployeeMapping';
 
 
 const RoutesComponent: React.FC = () => {
@@ -185,17 +188,20 @@ const RoutesComponent: React.FC = () => {
         <Route path="/Feedback360Page" element={<Feedback360Page />} />
 
         <Route path="/HelpdeskDashboard" element={<HelpdeskDashboard />} />
-        <Route path="/CreateTicket" element={<CreateTicket />} />
+        <Route path="/AssignTicketsPage" element={<AssignTicketsPage />} />
         {/* <Route path="/ticket/:id" element={<TicketDetails />} /> */}
         <Route path="/ManagerTicketVerification" element={<ManagerTicketVerification />} />
         <Route path="/EmployeeTickets" element={<EmployeeTickets />} />
+        
 
         {/* <Route path="ShiftManagement" element={<ShiftManagement />} /> */}
         <Route path="/ShiftManagement" element={<ShiftManagement />} />
         <Route path="/Shiftpatterns" element={<ManageShiftPatterns />} />
         <Route path="/assignshifts" element={<AssignShifts />} />
         <Route path="/ManageProjects" element={<ManageProjects />} />
-        
+        <Route path="/EmployeeGroups" element={<EmployeeGroups />} />
+        <Route path="/GroupEmployeeMapping" element={<GroupEmployeeMapping />} />
+        <Route path="/MyServiceTicket" element={<MyServiceTicket />} />
 
         <Route path="/DepartmentCategoryMapping" element={<DepartmentCategoryMapping />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}

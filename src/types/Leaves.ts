@@ -20,4 +20,11 @@ export interface EmployeeOption {
   value: string;
   label: string;
 }
-
+export interface LeaveBalance {
+  LeaveTypeID: number;
+  LeaveTypeName: string;
+  TotalLeaves: number;
+  UsedLeaves: number;
+  AppliedLeaves: number;
+  LeaveBalance: number;
+}

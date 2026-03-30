@@ -8,5 +8,18 @@ const leaveService = {
     const res = await axiosInstance.post("EmployeeLeave", payload);
     return res.data[0];
   },
+  GetEmployeeLeaveBalanceAsync: async (organizationId: number, employeeID: number  ) => {
+      const { data } = await axiosInstance.get(`EmployeeLeave/GetEmployeeLeaveBalanceAsync?organizationID=${organizationId}&employeeID=${employeeID}`);
+      return data;
+   },
+   GetEmployeeLeavesForApproveByAsync: async (employeeIDs: number[]) => {
+  const res = await axiosInstance.post(
+    "EmployeeLeave/GetEmployeeLeavesForApproveAsync",
+    {
+      employeeIDs: "[" + employeeIDs.join(",") + "]" // ✅ convert to string
+    }
+  );
+  return res.data;
+},
 };
 export default leaveService;

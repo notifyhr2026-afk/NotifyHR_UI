@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Row, Col, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
 import employeeService from '../../services/employeeService';
@@ -7,20 +7,51 @@ const ProbationDetails: React.FC = () => {
   const { employeeID } = useParams<{ employeeID: string }>();
   const [validated, setValidated] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Static data for Probation details
-  const staticProbationData = {
-    joiningDate: '2024-01-15',
-    initialProbationEndDate: '2024-07-15',
+  // Default probation data
+  const defaultProbationData = {
+    joiningDate: '',
+    initialProbationEndDate: '',
     extendedProbationEndDate: '',
     confirmationDate: '',
-    status: 'Confirmed', // Editable dropdown
-    remarks: 'Employee has completed the probation period successfully.',
+    status: '',
+    remarks: '',
   };
 
-  const [probationData, setProbationData] = useState(staticProbationData);
+  const [probationData, setProbationData] = useState(defaultProbationData);
+
+  useEffect(() => {
+    const fetchProbationDetails = async () => {
+      if (!employeeID) return;
+
+      try {
+        const id = parseInt(employeeID);
+        const res = await employeeService.GetEmployeeDetialsByEmployeeID(id);
+
+        if (res?.Table4?.length) {
+          const probation = res.Table4[0];
+          setProbationData({
+            joiningDate: probation.JoiningDate ? probation.JoiningDate.split('T')[0] : '',
+            initialProbationEndDate: probation.InitialProbationEndDate ? probation.InitialProbationEndDate.split('T')[0] : '',
+            extendedProbationEndDate: probation.ExtendedProbationEndDate ? probation.ExtendedProbationEndDate.split('T')[0] : '',
+            confirmationDate: probation.ConfirmationDate ? probation.ConfirmationDate.split('T')[0] : '',
+            status: probation.Status || '',
+            remarks: probation.Remarks || '',
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching probation details:', error);
+        setErrorMessage('Failed to load probation details.');
+      } finally {
+        setFetchLoading(false);
+      }
+    };
+
+    fetchProbationDetails();
+  }, [employeeID]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     const form = event.currentTarget;
@@ -69,8 +100,8 @@ const ProbationDetails: React.FC = () => {
     setValidated(false);
     setSuccessMessage(null);
     setErrorMessage(null);
-    // Optionally, reset form fields here if needed
-    setProbationData(staticProbationData); // Reset to static data
+    // Reset to default data
+    setProbationData(defaultProbationData);
   };
 
   const handleChange = (e: React.ChangeEvent<any>) => {
@@ -83,17 +114,24 @@ const ProbationDetails: React.FC = () => {
 
   return (
     <>
-      {successMessage && (
-        <Alert variant="success" onClose={() => setSuccessMessage(null)} dismissible>
-          {successMessage}
-        </Alert>
-      )}
-      {errorMessage && (
-        <Alert variant="danger" onClose={() => setErrorMessage(null)} dismissible>
-          {errorMessage}
-        </Alert>
-      )}
-      <Form noValidate validated={validated} onSubmit={handleSubmit}>
+      {fetchLoading ? (
+        <div className="text-center">
+          <Spinner animation="border" />
+          <p>Loading probation details...</p>
+        </div>
+      ) : (
+        <>
+          {successMessage && (
+            <Alert variant="success" onClose={() => setSuccessMessage(null)} dismissible>
+              {successMessage}
+            </Alert>
+          )}
+          {errorMessage && (
+            <Alert variant="danger" onClose={() => setErrorMessage(null)} dismissible>
+              {errorMessage}
+            </Alert>
+          )}
+          <Form noValidate validated={validated} onSubmit={handleSubmit}>
       <Row className="mb-3">
         <Col>
           <Form.Group controlId="joiningDate">
@@ -215,6 +253,8 @@ const ProbationDetails: React.FC = () => {
         </Button>
       </div>
     </Form>
+        </>
+      )}
     </>
   );
 };
