@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import SideMenu from './OrgSideMenu';
 import { useAuth } from '../auth/AuthContext';
@@ -14,10 +14,18 @@ const DashboardLayout: React.FC = () => {
   const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
 
-  // Mode toggle state
-  const [isAdminMode, setIsAdminMode] = useState(false);
+  // 🌙 Dark mode state
+  const [isDarkMode, setIsDarkMode] = useState(
+    localStorage.getItem('theme') === 'dark'
+  );
+
+  useEffect(() => {
+    document.body.className = isDarkMode ? 'dark-mode' : 'light-mode';
+    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+  }, [isDarkMode]);
 
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
   const handleLogout = () => {
     logout();
     navigate('/');
@@ -27,7 +35,15 @@ const DashboardLayout: React.FC = () => {
   const hideTopBar = hideTopBarPaths.includes(location.pathname);
 
   return (
-    <div className="d-flex" style={{ minHeight: '100vh', overflow: 'hidden' }}>
+    <div
+      className="d-flex"
+      style={{
+        minHeight: '100vh',
+        overflow: 'hidden',
+        backgroundColor: isDarkMode ? '#1e1e2f' : '#f4f7fa',
+        color: isDarkMode ? '#fff' : '#000',
+      }}
+    >
       {/* Sidebar */}
       <SideMenu isOpen={isSidebarOpen} />
 
@@ -37,7 +53,6 @@ const DashboardLayout: React.FC = () => {
         style={{
           marginLeft: isSidebarOpen ? 250 : 60,
           transition: 'margin-left 0.3s ease',
-          backgroundColor: '#f4f7fa',
           minHeight: '100vh',
           overflow: 'auto',
         }}
@@ -48,7 +63,7 @@ const DashboardLayout: React.FC = () => {
             style={{
               height: '56px',
               position: 'fixed',
-              backgroundColor: '#f0f4f8',
+              backgroundColor: isDarkMode ? '#2a2a3d' : '#f0f4f8',
               top: 0,
               left: isSidebarOpen ? 250 : 60,
               right: 0,
@@ -57,7 +72,8 @@ const DashboardLayout: React.FC = () => {
             }}
           >
             <button
-              className="btn btn-link text-primary fs-4"
+              className="btn btn-link fs-4"
+              style={{ color: isDarkMode ? '#fff' : '#0d6efd' }}
               onClick={toggleSidebar}
               aria-label="Toggle sidebar"
             >
@@ -65,7 +81,7 @@ const DashboardLayout: React.FC = () => {
             </button>
 
             <div className="d-flex align-items-center gap-2">
-              <span className="fw-semibold text-dark user-select-none">
+              <span className="fw-semibold user-select-none">
                 {user?.name || 'User'}
               </span>
 
@@ -79,7 +95,12 @@ const DashboardLayout: React.FC = () => {
                   variant="light"
                   id="dropdown-user"
                   className="p-0 border-0 bg-transparent"
-                  style={{ width: 40, height: 40, borderRadius: '50%', overflow: 'hidden' }}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: '50%',
+                    overflow: 'hidden',
+                  }}
                 >
                   <img
                     src={avatarImg}
@@ -90,25 +111,46 @@ const DashboardLayout: React.FC = () => {
                   />
                 </Dropdown.Toggle>
 
-                <Dropdown.Menu style={{ minWidth: 230, padding: '0.5rem 1rem' }}>
-                  <Dropdown.Item href="/myprofile">My Profile</Dropdown.Item>
-                  <Dropdown.Item href="/ChangePassword">Change Password</Dropdown.Item>
+                <Dropdown.Menu
+                  style={{
+                    minWidth: 230,
+                    padding: '0.5rem 1rem',
+                    backgroundColor: isDarkMode ? '#2a2a3d' : '#fff',
+                    color: isDarkMode ? '#fff' : '#000',
+                  }}
+                >
+                  <Dropdown.Item href="/myprofile">
+                    My Profile
+                  </Dropdown.Item>
+                  <Dropdown.Item href="/ChangePassword">
+                    Change Password
+                  </Dropdown.Item>
 
                   <Dropdown.Divider />
 
-                  {/* Mode Switch */}
-                  <div className="d-flex flex-column align-items-start px-2 py-2">
-                    <small className="text-muted mb-1">Switch View Mode</small>
+                  {/* 🌙 Dark Mode Toggle */}
+                  <div className="d-flex flex-column px-2 py-2">
+                    <small className="text-muted mb-1">
+                      Theme Mode
+                    </small>
+
                     <div
-                      className="d-flex align-items-center justify-content-between w-100 px-2 py-1 bg-light rounded"
-                      style={{ cursor: 'pointer', userSelect: 'none' }}
-                      onClick={() => setIsAdminMode(prev => !prev)}
+                      className="d-flex align-items-center justify-content-between px-2 py-1 rounded"
+                      style={{
+                        cursor: 'pointer',
+                        backgroundColor: isDarkMode ? '#3a3a50' : '#f1f1f1',
+                      }}
+                      onClick={() => setIsDarkMode(prev => !prev)}
                     >
                       <span
-                        className={`badge ${!isAdminMode ? 'bg-primary text-white' : 'bg-secondary text-dark'}`}
+                        className={`badge ${
+                          !isDarkMode
+                            ? 'bg-primary text-white'
+                            : 'bg-secondary'
+                        }`}
                         style={{ width: 70, textAlign: 'center', fontSize: 12 }}
                       >
-                        Employee
+                        Light
                       </span>
 
                       <div
@@ -116,36 +158,45 @@ const DashboardLayout: React.FC = () => {
                         style={{
                           height: 24,
                           borderRadius: 12,
-                          backgroundColor: '#e0e0e0',
+                          backgroundColor: '#ccc',
                           display: 'flex',
                           alignItems: 'center',
                           padding: 2,
                         }}
                       >
                         <div
-                          className="bg-primary"
                           style={{
                             width: 20,
                             height: 20,
                             borderRadius: '50%',
+                            backgroundColor: '#0d6efd',
                             transition: 'transform 0.3s ease',
-                            transform: isAdminMode ? 'translateX(26px)' : 'translateX(0px)',
+                            transform: isDarkMode
+                              ? 'translateX(26px)'
+                              : 'translateX(0px)',
                           }}
-                        ></div>
+                        />
                       </div>
 
                       <span
-                        className={`badge ${isAdminMode ? 'bg-primary text-white' : 'bg-secondary text-dark'}`}
+                        className={`badge ${
+                          isDarkMode
+                            ? 'bg-primary text-white'
+                            : 'bg-secondary'
+                        }`}
                         style={{ width: 70, textAlign: 'center', fontSize: 12 }}
                       >
-                        Admin
+                        Dark
                       </span>
                     </div>
                   </div>
 
                   <Dropdown.Divider />
 
-                  <Dropdown.Item onClick={handleLogout} className="text-danger">
+                  <Dropdown.Item
+                    onClick={handleLogout}
+                    className="text-danger"
+                  >
                     Logout
                   </Dropdown.Item>
                 </Dropdown.Menu>

@@ -253,7 +253,7 @@ const EmployeeList: React.FC = () => {
 
       {/* 📋 Employee Table */}
       <div className="table-responsive">
-        <table className="table table-bordered table-hover table-striped">
+        <table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Employee Name</th>
