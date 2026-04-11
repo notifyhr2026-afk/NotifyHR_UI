@@ -109,7 +109,7 @@ const loadFeatures = async (orgID: number) => {
   };
 
   return (
-    <Container className="mt-5">
+    <Container>
       <h3 className="mb-4">Feature Visibility Settings</h3>
 
       {successMessage && (

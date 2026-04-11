@@ -86,7 +86,7 @@ const saveSingle = async (setting: SettingType, index: number) => {
   }
 
   return (
-    <Card className="p-4 mt-5 shadow">
+    <Card className="Container shadow">
       <h3 className="mb-4">Holiday Setting Types</h3>
 
      {settings.map((s, index) => (

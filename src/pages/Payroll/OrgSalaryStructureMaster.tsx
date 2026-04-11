@@ -104,7 +104,7 @@ const OrgSalaryStructureMaster: React.FC = () => {
 
   /* ===================== UI ===================== */
   return (
-    <Container className="mt-5">
+    <Container>
       {/* HEADER */}
       <div className="mb-4">
         <h3 className="fw-bold mb-1">Salary Structure Master</h3>

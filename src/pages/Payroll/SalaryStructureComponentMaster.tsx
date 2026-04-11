@@ -279,7 +279,7 @@ const handleEdit = (item: SalaryStructureComponent) => {
   /* ===================== RENDER ===================== */
 
   return (
-    <div className="salary-structure-component-container mt-5">
+    <div className="container">
       <Row className="mb-3 align-items-end">
         <Col md={4}>
           <Form.Group>

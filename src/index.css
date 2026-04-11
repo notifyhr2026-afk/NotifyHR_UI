@@ -551,14 +551,51 @@ nav {
 }
 /* ================= LIGHT MODE ================= */
 body.light-mode {
-  --sidebar-bg: #f0f4f8;
+  --bg-color: #f4f7fa;
   --text-color: #212529;
-  --menu-hover: rgba(13,110,253,0.08);
+  --card-bg: #ffffff;
+  --sidebar-bg: #f0f4f8;
+  --topbar-bg: #f0f4f8;
 }
 
 /* ================= DARK MODE ================= */
 body.dark-mode {
-  --sidebar-bg: #1f1f2f;
+  --bg-color: #1e1e2f;
   --text-color: #e4e6eb;
-  --menu-hover: rgba(255,255,255,0.08);
+  --card-bg: #2a2a3d;
+  --sidebar-bg: #1f1f2f;
+  --topbar-bg: #2a2a3d;
 }
+/* ================= FINAL CHECKBOX FORCE FIX ================= */
+
+.form-check-input {
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  -moz-appearance: auto !important;
+
+  width: 1.1em;
+  height: 1.1em;
+  cursor: pointer;
+}
+
+/* DARK MODE */
+body.dark-mode .form-check-input {
+  background-color: #2a2a3d !important;
+  border: 1px solid #666 !important;
+}
+
+/* CHECKED STATE */
+body.dark-mode .form-check-input:checked {
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+
+  /* FORCE Bootstrap tick */
+  background-image: var(--bs-form-check-bg-image) !important;
+}
+
+/* LIGHT MODE */
+body.light-mode .form-check-input {
+  background-color: #fff !important;
+  border: 1px solid #ced4da !important;
+}
+

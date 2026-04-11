@@ -110,7 +110,7 @@ const GroupEmployeeMapping: React.FC = () => {
   };
 
   return (
-    <div className="container mt-5">
+    <div className="container">
       <h4 className="mb-3">Assign Employees to Groups</h4>
 
       <Row>

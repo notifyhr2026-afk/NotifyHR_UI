@@ -220,7 +220,7 @@ const ShiftManagement: React.FC = () => {
 
   // -------------------- UI --------------------
   return (
-    <div className="p-3 mt-3">
+    <div className="Container">
       <h3 className="fw-bold">Shift Management</h3>
       <p className="text-muted">Manage shifts, patterns & employee assignments</p>
 

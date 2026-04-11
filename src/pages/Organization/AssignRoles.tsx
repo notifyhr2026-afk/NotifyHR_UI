@@ -192,7 +192,7 @@ const fetchRolesByOrganization = async (organizationID: number) => {
   /* ================= UI ================= */
 
   return (
-    <Container className="mt-5">
+    <Container>
       <h3 className="mb-4">Assign Roles to Organization</h3>
 
       {successMessage && <Alert variant="success">{successMessage}</Alert>}

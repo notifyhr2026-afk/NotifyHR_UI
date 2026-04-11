@@ -203,7 +203,7 @@ const ManageLeavePolicy: React.FC = () => {
     <>
       <ToastProvider />
 
-      <div className="container mt-5">
+      <div className="container">
         <h3 className="mb-3">Manage Leave Policies</h3>
 
         <button className="btn btn-primary mb-3" onClick={openCreateModal}>

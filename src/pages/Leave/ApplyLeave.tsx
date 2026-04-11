@@ -61,7 +61,7 @@ const ApplyLeave: React.FC = () => {
   };
 
   return (
-    <Container className="mt-5">
+    <Container>
       <div className="d-flex justify-content-between mb-4">
         <h3>My Leaves</h3>
         <Button onClick={() => setShowModal(true)}>+ Apply Leave</Button>

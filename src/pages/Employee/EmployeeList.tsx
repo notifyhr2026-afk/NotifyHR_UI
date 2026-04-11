@@ -181,7 +181,7 @@ const EmployeeList: React.FC = () => {
     return <div className="alert alert-danger mt-3">{error}</div>;
 
   return (
-    <div className="mt-5">
+    <div className="container">
       <h2 className="mb-4">Employee List</h2>
 
       {/* 🔍 Filters Section */}

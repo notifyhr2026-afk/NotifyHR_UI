@@ -203,7 +203,7 @@ const handleEdit = (project: Project) => {
 
   return (
 
-    <div className="mt-5">
+    <div className="Container">
 
       <Row className="mb-3">
 

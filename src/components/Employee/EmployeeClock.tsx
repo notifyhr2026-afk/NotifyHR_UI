@@ -111,7 +111,7 @@ const EmployeeClock: React.FC = () => {
   const lastType = lastRecord?.type;
 
   return (
-    <div className="container mt-5">
+    <div className="container">
       <div className="card shadow-sm">
         <div className="card-header bg-primary text-white text-center">
           <h4>Employee Clock In / Clock Out</h4>

@@ -181,7 +181,7 @@ const AssignPositions: React.FC = () => {
   /* ================= UI ================= */
 
   return (
-    <Container className="mt-5">
+    <Container>
       <h3 className="mb-4">Manage Positions for Organization</h3>
 
       {successMessage && <Alert variant="success">{successMessage}</Alert>}

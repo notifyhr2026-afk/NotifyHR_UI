@@ -261,7 +261,7 @@ const ManageJobRequisitions: React.FC = () => {
 
   // ======= Render =======
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Manage Job Requisitions</h3>
 
       {loading ? (

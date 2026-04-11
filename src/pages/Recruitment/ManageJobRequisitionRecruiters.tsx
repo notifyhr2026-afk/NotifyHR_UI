@@ -137,7 +137,7 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
 
   // ======= Render =======
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Manage Job Requisition Recruiters</h3>
       <div className="text-end mb-3">
         <Button variant="success" onClick={openAddModal}>

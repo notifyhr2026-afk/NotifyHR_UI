@@ -102,7 +102,7 @@ const EmployeePayslip: React.FC = () => {
   // JSX Rendering
   // ---------------------------
   return (
-    <Container className="mt-5">
+    <Container>
       <Card>
         <Card.Body>
           <h3 className="text-center mb-4">

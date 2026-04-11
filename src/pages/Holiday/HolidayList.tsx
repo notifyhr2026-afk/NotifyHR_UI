@@ -96,7 +96,7 @@ const HolidayList: React.FC = () => {
   });
 
   return (
-    <div className="p-3 mt-5">
+    <div className="Container">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>

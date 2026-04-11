@@ -96,7 +96,7 @@ const EmployeeTickets: React.FC = () => {
   };
 
   return (
-    <Container className="mt-5">
+    <Container>
       <h3 className="mb-3">My Tickets Dashboard</h3>
 
       {/* ✅ SUMMARY CARDS */}

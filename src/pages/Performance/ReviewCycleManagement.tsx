@@ -174,7 +174,7 @@ const openEditModal = (cycle: ReviewCycle) => {
     <>
       <ToastProvider />
 
-      <div className="container mt-5">
+      <div className="container">
         <h3 className="mb-3">Review Cycle Management</h3>
 
         <button className="btn btn-primary mb-3" onClick={openCreateModal}>

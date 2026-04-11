@@ -228,7 +228,7 @@ const deletePolicy = async (id: number) => {
   const [filterLeaveType, setFilterLeaveType] = useState("");
 
   return (
-    <Container className="mt-5">
+    <Container>
       <h3>Manage Leave Policies</h3>
       <Accordion defaultActiveKey="0">
 

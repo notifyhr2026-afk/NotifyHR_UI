@@ -209,7 +209,7 @@ const Menus: React.FC = () => {
   /* ===================== JSX ===================== */
 
   return (
-    <div className="container mt-5">
+    <div className="container">
       <div className="d-flex justify-content-between mb-4">
         <h4>Menu Management</h4>
         <Button onClick={() => handleShowModal()}>

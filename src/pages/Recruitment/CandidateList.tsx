@@ -202,7 +202,7 @@ const CandidateList: React.FC = () => {
   if (loading) return <div className="text-center mt-5">Loading...</div>;
 
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h2 className="mb-4">Candidate List</h2>
 
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">

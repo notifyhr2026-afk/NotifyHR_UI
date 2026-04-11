@@ -178,7 +178,7 @@ const OrganizationList: React.FC = () => {
   if (error) return <div className="alert alert-danger mt-3">{error}</div>;
 
   return (
-    <div className="mt-5">
+    <div className="Container">
       <ToastContainer position="top-right" autoClose={3000} />
       <h2 className="mb-4">Organization List</h2>
 

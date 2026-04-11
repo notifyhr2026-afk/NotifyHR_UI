@@ -193,7 +193,7 @@ const OrgPayrollCyclePage: React.FC = () => {
 
   // ================= UI =================
   return (
-    <Card className="p-5 shadow-sm">
+    <Card className="container ">
       <h4 className="mb-4">Organization Payroll Cycles</h4>
 
       {/* Branch */}

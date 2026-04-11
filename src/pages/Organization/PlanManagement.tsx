@@ -168,7 +168,7 @@ const PlanManagement: React.FC = () => {
     <>
       <ToastProvider />
 
-      <div className="container mt-5">
+      <div className="container">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h3 className="fw-bold">Subscription Plan Management</h3>
           <button className="btn btn-primary" onClick={openCreateModal}>

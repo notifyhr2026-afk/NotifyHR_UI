@@ -132,7 +132,7 @@ const EmployeeAttendanceLogs: React.FC = () => {
   };
 
   return (
-    <div className="container mt-5">
+    <div className="container">
       <h2 className="text-center mb-4">Employee Attendance Logs</h2>
 
       {/* 🔽 Employee Dropdown */}

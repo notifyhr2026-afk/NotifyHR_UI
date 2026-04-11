@@ -95,7 +95,7 @@ const EmployeeGroups: React.FC = () => {
     employees.filter(emp => emp.groupID === groupID);
 
   return (
-    <div className="container mt-5">
+    <div className="container">
       <h3>Employee Groups</h3>
 
       {/* Top Controls */}

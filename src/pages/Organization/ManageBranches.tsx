@@ -145,7 +145,7 @@ const organizationID: number | undefined = user?.organizationID;
   };
 
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Manage Branches</h3>
       <div className="text-end mb-3">
         <Button variant="success" onClick={openAddModal}>

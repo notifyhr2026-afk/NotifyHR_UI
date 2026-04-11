@@ -260,7 +260,7 @@ useEffect(() => {
   };
 
   return (
-    <div className="mt-5">
+    <div className="Container">
 
       <h3>Manage Users</h3>
 

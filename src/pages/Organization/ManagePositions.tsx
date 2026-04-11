@@ -213,7 +213,7 @@ const ManagePositions: React.FC = () => {
       ?.DepartmentName || '-';
 
   return (
-    <div className="container mt-5">
+    <div className="container">
       <h3 className="mb-4">Manage Positions</h3>
 
       {message && (

@@ -250,7 +250,7 @@ const saveFeaturePermissions = async (featureID: number) => {
 
   /* ===================== JSX ===================== */
   return (
-    <div className="container mt-5">
+    <div className="container">
       <h4 className="mb-4">Role Menu Permissions</h4>
 
       {/* SEARCHABLE ROLE SELECT */}

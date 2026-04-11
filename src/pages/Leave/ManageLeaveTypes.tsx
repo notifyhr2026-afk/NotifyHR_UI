@@ -209,7 +209,7 @@ const ManageLeaveTypes: React.FC = () => {
   };
 
   return (
-    <div className="mt-5">
+    <div className="Container">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold">Manage Leave Types</h3>
         <Button variant="primary" onClick={openAddModal}>

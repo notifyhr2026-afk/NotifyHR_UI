@@ -178,7 +178,7 @@ const AssignTicketsPage: React.FC = () => {
      Render
      =========================== */
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>🎫 Assign Tickets</h3>
 
       {loading && <Spinner />}

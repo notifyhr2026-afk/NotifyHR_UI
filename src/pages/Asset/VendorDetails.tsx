@@ -147,7 +147,7 @@ const loadVendors = async () => {
      Render
      =========================== */
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Vendor Details</h3>
 
       <div className="text-end mb-3">

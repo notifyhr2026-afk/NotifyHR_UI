@@ -80,10 +80,10 @@ const OrgSalaryStructureViewAccordion: React.FC = () => {
 
   /* ===================== UI ===================== */
   if (loading) return <Container className="mt-5 text-center"><Spinner animation="border" /></Container>;
-  if (error) return <Container className="mt-5"><Alert variant="danger">{error}</Alert></Container>;
+  if (error) return <Container><Alert variant="danger">{error}</Alert></Container>;
 
   return (
-    <Container className="mt-5">
+    <Container>
       {/* HEADER + MANAGE BUTTON */}
       <Row className="mb-3 align-items-center">
         <Col>

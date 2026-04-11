@@ -167,7 +167,7 @@ const ManageAssets: React.FC = () => {
      Render
      =========================== */
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Manage Assets</h3>
 
       <Row className="align-items-center mb-3">

@@ -50,7 +50,7 @@ const AssignedPositions: React.FC = () => {
   }
 
   return (
-    <Container className="mt-5">
+    <Container>
       <h3 className="mb-4">Assigned Positions</h3>
 
       <Card className="p-3">

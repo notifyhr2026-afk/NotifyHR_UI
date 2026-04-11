@@ -60,7 +60,7 @@ const EmployeeSalaryBackupView: React.FC = () => {
   }, [employeeID]);
 
   return (
-    <Container className="mt-5">
+    <Container>
       <h3 className="mb-4 text-center">💰 My Salary Breakdown</h3>
 
       {loading ? (

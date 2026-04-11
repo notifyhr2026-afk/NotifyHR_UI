@@ -108,7 +108,7 @@ const RecruiterApprovalPage: React.FC = () => {
 
   // ======= Render =======
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Recruiter Approval Page</h3>
 
       {/* Table */}

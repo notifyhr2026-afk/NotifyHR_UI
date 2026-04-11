@@ -31,7 +31,7 @@ const ManageOrganization: React.FC = () => {
   ];
 
   return (
-    <Container className="mt-5">
+    <Container>
       <h2 className="mb-4">Manage - Organizations</h2>
 
       <Accordion defaultActiveKey="0" flush>

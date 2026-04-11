@@ -158,7 +158,7 @@ const SalaryStructureMaster: React.FC = () => {
   };
 
   return (
-    <div className="salary-structure-container mt-5">
+    <div className="container">
       <div className="text-end mb-3">
         <Button variant="success" onClick={handleAdd}>
           + Add Structure

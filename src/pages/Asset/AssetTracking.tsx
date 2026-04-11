@@ -225,7 +225,7 @@ const AssetTracking: React.FC = () => {
   };
 
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Assets Tracking</h3>
 
       <div className="text-end mb-3">

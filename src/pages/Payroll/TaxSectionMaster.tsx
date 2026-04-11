@@ -176,7 +176,7 @@ const TaxSectionMaster: React.FC = () => {
   };
 
   return (
-    <Container className="mt-5">
+    <Container>
       {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>

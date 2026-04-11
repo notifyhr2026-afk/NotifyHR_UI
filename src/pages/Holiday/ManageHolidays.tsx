@@ -197,7 +197,7 @@ const ManageHolidays: React.FC = () => {
   /* ================= UI ================= */
 
   return (
-    <div className="mt-5">
+    <div className="Container">
       <Row className="mb-4 align-items-center">
         <Col md={4}>
           <h3>Manage Holidays</h3>
