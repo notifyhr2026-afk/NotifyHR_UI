@@ -192,7 +192,7 @@ const SalaryStructureMaster: React.FC = () => {
       )}
 
       {!loading && structures.length > 0 && (
-        <Table striped bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Structure Name</th>

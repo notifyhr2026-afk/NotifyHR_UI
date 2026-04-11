@@ -170,7 +170,7 @@ const EmployeeAttendanceLogs: React.FC = () => {
             <Spinner animation="border" />
           </div>
         ) : (
-          <Table striped bordered hover>
+          <Table className="table table-hover table-dark-custom">
             <thead>
               <tr>
                 <th><Button variant="link" onClick={() => handleSort('employeeID')}>Employee</Button></th>

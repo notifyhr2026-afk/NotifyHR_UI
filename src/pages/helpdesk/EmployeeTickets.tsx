@@ -135,7 +135,7 @@ const EmployeeTickets: React.FC = () => {
       ) : tickets.length === 0 ? (
         <p>No tickets found</p>
       ) : (
-        <Table bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>#</th>

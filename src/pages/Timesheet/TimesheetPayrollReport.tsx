@@ -134,7 +134,7 @@ const TimesheetPayrollReport: React.FC = () => {
         </Col>
       </Row>
 
-      <Table bordered hover size="sm">
+      <Table className="table table-hover table-dark-custom">
         <thead className="table-light">
           <tr>
             <th>Employee</th>

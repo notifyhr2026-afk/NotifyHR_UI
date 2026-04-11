@@ -225,7 +225,7 @@ const EmployeeGroups: React.FC = () => {
           <Modal.Title>Employees in "{viewGroup?.groupName}"</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Table bordered hover responsive>
+          <Table className="table table-hover table-dark-custom">
             <thead>
               <tr>
                 <th>Name</th>

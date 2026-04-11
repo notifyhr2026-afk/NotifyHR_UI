@@ -84,7 +84,7 @@ const LeaveHistoryTab: React.FC<Props> = ({ employeeID, leaveTypes, onEdit, onDe
     <Card className="shadow-sm mb-4">    
       <Card.Body>
         <div className="table-responsive">
-          <Table striped bordered hover>
+          <Table className="table table-hover table-dark-custom">
             <thead className="table-dark">
               <tr>
                 <th>Leave Type</th>

@@ -112,7 +112,7 @@ const RecruiterApprovalPage: React.FC = () => {
       <h3>Recruiter Approval Page</h3>
 
       {/* Table */}
-      <Table striped bordered hover responsive className="shadow-sm table-sm">
+      <Table className="table table-hover table-dark-custom">
         <thead className="table-dark">
           <tr>
             <th>ID</th>

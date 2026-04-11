@@ -238,7 +238,7 @@ const EmployeeProjects: React.FC = () => {
 
       {records.length ? (
 
-        <Table striped bordered hover>
+        <Table className="table table-hover table-dark-custom">
 
           <thead>
             <tr>

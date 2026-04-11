@@ -174,7 +174,7 @@ const PayrollProcessPage: React.FC = () => {
           </Row>
 
           {/* Table */}
-          <Table bordered hover>
+          <Table className="table table-hover table-dark-custom">
             <thead className="table-dark">
               <tr>
                 <th><Form.Check onChange={toggleSelectAll} /></th>

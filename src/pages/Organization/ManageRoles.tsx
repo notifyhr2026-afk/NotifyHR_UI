@@ -201,7 +201,7 @@ const ManageRoles: React.FC = () => {
       </div>
 
       <div className="table-responsive">
-        <Table bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Role Name</th>

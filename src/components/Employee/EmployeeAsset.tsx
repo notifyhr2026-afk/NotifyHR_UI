@@ -67,7 +67,7 @@ const EmployeeAsset: React.FC = () => {
       <h4 className="mb-3">Asset Return Report</h4>
 
       <div className="table-responsive">
-        <table className="table table-bordered table-striped">
+       <table className="table table-hover table-dark-custom">
           <thead className="table-dark">
             <tr>
               <th>Asset Name</th>

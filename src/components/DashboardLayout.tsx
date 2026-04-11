@@ -8,8 +8,10 @@ import { Dropdown } from 'react-bootstrap';
 const DashboardLayout: React.FC = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const { logout } = useAuth();
+
   const data: any = localStorage.getItem('user');
   const user = { name: JSON.parse(data)?.fullName };
+
   const navigate = useNavigate();
   const location = useLocation();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -19,10 +21,13 @@ const DashboardLayout: React.FC = () => {
     localStorage.getItem('theme') === 'dark'
   );
 
-  useEffect(() => {
-    document.body.className = isDarkMode ? 'dark-mode' : 'light-mode';
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-  }, [isDarkMode]);
+  // Apply theme globally
+useEffect(() => {
+  document.body.classList.remove('dark-mode', 'light-mode');
+  document.body.classList.add(isDarkMode ? 'dark-mode' : 'light-mode');
+
+  localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+}, [isDarkMode]);
 
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
@@ -35,21 +40,13 @@ const DashboardLayout: React.FC = () => {
   const hideTopBar = hideTopBarPaths.includes(location.pathname);
 
   return (
-    <div
-      className="d-flex"
-      style={{
-        minHeight: '100vh',
-        overflow: 'hidden',
-        backgroundColor: isDarkMode ? '#1e1e2f' : '#f4f7fa',
-        color: isDarkMode ? '#fff' : '#000',
-      }}
-    >
+    <div className="d-flex app-container">
       {/* Sidebar */}
       <SideMenu isOpen={isSidebarOpen} />
 
       {/* Main Content */}
       <div
-        className="flex-grow-1 position-relative"
+        className="flex-grow-1 position-relative main-wrapper"
         style={{
           marginLeft: isSidebarOpen ? 250 : 60,
           transition: 'margin-left 0.3s ease',
@@ -57,29 +54,20 @@ const DashboardLayout: React.FC = () => {
           overflow: 'auto',
         }}
       >
+        {/* TOP BAR */}
         {!hideTopBar && (
-          <div
-            className="d-flex justify-content-between align-items-center px-4 border-bottom shadow-sm"
-            style={{
-              height: '56px',
-              position: 'fixed',
-              backgroundColor: isDarkMode ? '#2a2a3d' : '#f0f4f8',
-              top: 0,
-              left: isSidebarOpen ? 250 : 60,
-              right: 0,
-              zIndex: 1000,
-              transition: 'left 0.3s ease',
-            }}
-          >
+          <div className="topbar d-flex justify-content-between align-items-center px-4 shadow-sm">
+            {/* Sidebar Toggle */}
             <button
               className="btn btn-link fs-4"
-              style={{ color: isDarkMode ? '#fff' : '#0d6efd' }}
               onClick={toggleSidebar}
               aria-label="Toggle sidebar"
+              style={{ color: isDarkMode ? '#fff' : '#0d6efd' }}
             >
               <i className="bi bi-list"></i>
             </button>
 
+            {/* User Section */}
             <div className="d-flex align-items-center gap-2">
               <span className="fw-semibold user-select-none">
                 {user?.name || 'User'}
@@ -93,7 +81,6 @@ const DashboardLayout: React.FC = () => {
               >
                 <Dropdown.Toggle
                   variant="light"
-                  id="dropdown-user"
                   className="p-0 border-0 bg-transparent"
                   style={{
                     width: 40,
@@ -111,66 +98,35 @@ const DashboardLayout: React.FC = () => {
                   />
                 </Dropdown.Toggle>
 
-                <Dropdown.Menu
-                  style={{
-                    minWidth: 230,
-                    padding: '0.5rem 1rem',
-                    backgroundColor: isDarkMode ? '#2a2a3d' : '#fff',
-                    color: isDarkMode ? '#fff' : '#000',
-                  }}
-                >
+                <Dropdown.Menu className="theme-dropdown">
                   <Dropdown.Item href="/myprofile">
                     My Profile
                   </Dropdown.Item>
+
                   <Dropdown.Item href="/ChangePassword">
                     Change Password
                   </Dropdown.Item>
 
                   <Dropdown.Divider />
 
-                  {/* 🌙 Dark Mode Toggle */}
-                  <div className="d-flex flex-column px-2 py-2">
-                    <small className="text-muted mb-1">
-                      Theme Mode
-                    </small>
+                  {/* 🌙 Theme Toggle */}
+                  <div className="px-3 py-2">
+                  <small className={isDarkMode ? "text-light" : "text-muted"}>
+                    Theme Mode
+                  </small>
 
                     <div
-                      className="d-flex align-items-center justify-content-between px-2 py-1 rounded"
-                      style={{
-                        cursor: 'pointer',
-                        backgroundColor: isDarkMode ? '#3a3a50' : '#f1f1f1',
-                      }}
+                      className="theme-switch mt-2"
                       onClick={() => setIsDarkMode(prev => !prev)}
                     >
-                      <span
-                        className={`badge ${
-                          !isDarkMode
-                            ? 'bg-primary text-white'
-                            : 'bg-secondary'
-                        }`}
-                        style={{ width: 70, textAlign: 'center', fontSize: 12 }}
-                      >
+                      <span className={!isDarkMode ? 'active' : ''}>
                         Light
                       </span>
 
-                      <div
-                        className="position-relative flex-grow-1 mx-2"
-                        style={{
-                          height: 24,
-                          borderRadius: 12,
-                          backgroundColor: '#ccc',
-                          display: 'flex',
-                          alignItems: 'center',
-                          padding: 2,
-                        }}
-                      >
+                      <div className="switch-track">
                         <div
+                          className="switch-thumb"
                           style={{
-                            width: 20,
-                            height: 20,
-                            borderRadius: '50%',
-                            backgroundColor: '#0d6efd',
-                            transition: 'transform 0.3s ease',
                             transform: isDarkMode
                               ? 'translateX(26px)'
                               : 'translateX(0px)',
@@ -178,14 +134,7 @@ const DashboardLayout: React.FC = () => {
                         />
                       </div>
 
-                      <span
-                        className={`badge ${
-                          isDarkMode
-                            ? 'bg-primary text-white'
-                            : 'bg-secondary'
-                        }`}
-                        style={{ width: 70, textAlign: 'center', fontSize: 12 }}
-                      >
+                      <span className={isDarkMode ? 'active' : ''}>
                         Dark
                       </span>
                     </div>
@@ -205,12 +154,8 @@ const DashboardLayout: React.FC = () => {
           </div>
         )}
 
-        <main
-          className="p-4"
-          style={{
-            paddingTop: hideTopBar ? 0 : 70,
-          }}
-        >
+        {/* PAGE CONTENT */}
+        <main className="p-4 page-content">
           <Outlet />
         </main>
       </div>

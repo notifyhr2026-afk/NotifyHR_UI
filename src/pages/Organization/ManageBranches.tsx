@@ -155,7 +155,7 @@ const organizationID: number | undefined = user?.organizationID;
 
       {/* ✅ Branch Table */}
       {branches.length > 0 ? (
-        <Table striped bordered hover responsive className="shadow-sm table-sm">
+        <Table className="table table-hover table-dark-custom">
           <thead className="table-dark">
             <tr>
               <th>Branch Name</th>

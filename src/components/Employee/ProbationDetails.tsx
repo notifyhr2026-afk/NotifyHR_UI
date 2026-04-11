@@ -115,7 +115,7 @@ const ProbationDetails: React.FC = () => {
   return (
     <>
       {fetchLoading ? (
-        <div className="text-center">
+        <div className="page-container">
           <Spinner animation="border" />
           <p>Loading probation details...</p>
         </div>

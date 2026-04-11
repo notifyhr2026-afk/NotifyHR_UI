@@ -285,7 +285,7 @@ useEffect(() => {
 
       {users.length > 0 ? (
 
-        <Table bordered hover responsive>
+        <Table className="table table-hover table-dark-custom">
 
           <thead>
 

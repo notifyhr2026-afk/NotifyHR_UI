@@ -303,7 +303,7 @@ const ShiftManagement: React.FC = () => {
       {/* ----------------- EMPLOYEE ASSIGNMENTS ----------------- */}
       {activeTab === "employees" && (
         <div className="mt-4">
-          <Table bordered hover>
+          <Table className="table table-hover table-dark-custom">
             <thead>
               <tr>
                 <th>Employee</th>
@@ -385,7 +385,7 @@ const ShiftManagement: React.FC = () => {
           </Card>
 
           <h5 className="fw-bold">Recent Assignments</h5>
-          <Table bordered hover>
+          <Table className="table table-hover table-dark-custom">
             <thead>
               <tr>
                 <th>Employee</th>

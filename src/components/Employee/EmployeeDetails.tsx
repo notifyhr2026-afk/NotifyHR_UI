@@ -128,10 +128,29 @@ const EmployeeDetails: React.FC = () => {
         }
     };
 
-    const handleClear = () => window.location.reload();
+    const handleClear = () => {
+  setFormData(prev => ({
+    ...prev,
+    firstName: '',
+    middleName: '',
+    lastName: '',
+    employeeCode: '',
+    dob: '',
+    gender: '',
+    officialEmail: '',
+    personalEmail: '',
+    personalPhone: '',
+    workPhone: '',
+    dateOfJoining: '',
+    maritalStatus: '',
+    pan: '',
+    aadhar: '',
+    passportNumber: '',
+  }));
+};
 
     return (
-        <>
+        <div className="page-container">
             <ToastContainer position="top-right" autoClose={3000} />
 
             <Form noValidate validated={validated} onSubmit={handleSubmit}>
@@ -147,8 +166,7 @@ const EmployeeDetails: React.FC = () => {
                             border: "2px solid #ccc",
                             display: "flex",
                             alignItems: "center",
-                            justifyContent: "center",
-                            background: "#f5f5f5"
+                            justifyContent: "center",                            
                         }}>
                             <img
                                 src={formData.profilePic || "/default-user.png"}
@@ -306,7 +324,7 @@ const EmployeeDetails: React.FC = () => {
                     </Col>
                 </Row>
             </Form>
-        </>
+        </div>
     );
 };
 

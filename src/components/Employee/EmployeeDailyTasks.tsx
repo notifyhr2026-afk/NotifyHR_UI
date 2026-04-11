@@ -140,7 +140,7 @@ const EmployeeDailyTasks: React.FC = () => {
       </div>
 
       {tasks.length ? (
-        <Table striped bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Employee</th>

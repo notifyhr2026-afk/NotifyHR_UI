@@ -223,7 +223,7 @@ const ManageHolidays: React.FC = () => {
         </Col>
       </Row>
 
-      <Table bordered hover responsive>
+      <Table className="table table-hover table-dark-custom">
         <thead>
           <tr>
             <th>Holiday</th>

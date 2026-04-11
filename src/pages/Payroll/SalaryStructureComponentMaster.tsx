@@ -311,7 +311,7 @@ const handleEdit = (item: SalaryStructureComponent) => {
       {error && <Alert variant="danger">{error}</Alert>}
 
       {!loading && structureComponents.length > 0 ? (
-        <Table striped bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Structure</th>

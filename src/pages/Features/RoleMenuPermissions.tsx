@@ -284,7 +284,7 @@ const saveFeaturePermissions = async (featureID: number) => {
                     No menus mapped to this feature
                   </div>
                 ) : (
-                  <Table bordered hover responsive>
+                  <Table className="table table-hover table-dark-custom">
                     <thead className="table-light">
                       <tr>
                         <th>Menu</th>

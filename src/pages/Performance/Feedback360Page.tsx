@@ -192,7 +192,7 @@ const Feedback360Page: React.FC = () => {
         </div>
 
         <h5>Criteria Feedback</h5>
-        <Table striped bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Criteria</th>

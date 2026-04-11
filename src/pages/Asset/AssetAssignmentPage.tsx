@@ -220,7 +220,7 @@ const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
         </Button>
       </div>
 
-      <Table bordered hover responsive>
+      <Table className="table table-hover table-dark-custom">
         <thead>
           <tr>
             <th>Asset</th>

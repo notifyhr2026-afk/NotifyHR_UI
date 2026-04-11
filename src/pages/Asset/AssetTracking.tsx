@@ -238,7 +238,7 @@ const AssetTracking: React.FC = () => {
           Table of Tracking Records
           ======================= */}
       {trackingList.length > 0 ? (
-        <Table bordered hover responsive>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Asset</th>

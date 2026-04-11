@@ -352,7 +352,7 @@ const deletePolicy = async (id: number) => {
             </Col>
             </Row>
 
-            <Table bordered hover size="sm">
+            <Table className="table table-hover table-dark-custom">
               <thead>
                 <tr>
                   <th>Policy</th>

@@ -195,7 +195,7 @@ const SalaryComponentMaster: React.FC = () => {
       )}
 
       {components.length ? (
-        <Table striped bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Name</th>

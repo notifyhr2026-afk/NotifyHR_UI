@@ -248,7 +248,7 @@ const CandidateApplications: React.FC = () => {
         </Button>
       </div>
 
-      <Table striped bordered hover>
+      <Table className="table table-hover table-dark-custom">
         <thead>
           <tr>
             <th>Job Requisition</th>

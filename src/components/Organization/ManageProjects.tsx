@@ -219,7 +219,7 @@ const handleEdit = (project: Project) => {
 
       </Row>
 
-      <Table striped bordered hover>
+      <Table className="table table-hover table-dark-custom">
 
         <thead>
           <tr>

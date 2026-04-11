@@ -216,7 +216,7 @@ const EmployeeShifts: React.FC = () => {
         <Button variant="success" onClick={handleAdd}>+ Assign Shift</Button>
       </div>
 
-      <Table striped bordered hover>
+      <Table className="table table-hover table-dark-custom">
         <thead>
           <tr>
             <th>Shift</th>

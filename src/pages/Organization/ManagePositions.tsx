@@ -239,7 +239,7 @@ const ManagePositions: React.FC = () => {
       {loading ? (
         <Spinner />
       ) : positions.length > 0 ? (
-        <Table bordered hover responsive>
+        <Table className="table table-hover table-dark-custom">
           <thead className="table-light">
             <tr>
               <th>Code</th>

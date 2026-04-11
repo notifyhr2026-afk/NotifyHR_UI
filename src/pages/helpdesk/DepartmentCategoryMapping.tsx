@@ -267,7 +267,7 @@ const DepartmentCategoryMapping: React.FC = () => {
           {mappings.length === 0 ? (
             <p>No mappings yet</p>
           ) : (
-            <Table bordered hover>
+            <Table className="table table-hover table-dark-custom">
               <thead>
                 <tr>
                   <th>#</th>

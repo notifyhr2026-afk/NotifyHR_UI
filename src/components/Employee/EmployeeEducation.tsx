@@ -94,7 +94,7 @@ const EmployeeEducation: React.FC = () => {
       </div>
 
       {educationRecords.length ? (
-        <Table striped bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Qualification</th>

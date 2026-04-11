@@ -176,7 +176,7 @@ const PayrollReportPage: React.FC = () => {
           </Row>
 
           {/* Table */}
-          <Table bordered hover>
+          <Table className="table table-hover table-dark-custom">
             <thead className="table-dark">
               <tr>
                 <th>Employee</th>

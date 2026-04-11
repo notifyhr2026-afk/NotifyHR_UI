@@ -56,7 +56,7 @@ const LeaveBalanceTab: React.FC = () => {
     <Card className="shadow-sm mb-4">
       <Card.Body>
         <div className="table-responsive">
-          <Table striped bordered hover>
+          <Table className="table table-hover table-dark-custom">
             <thead className="table-dark">
               <tr>
                 <th>Leave Type</th>

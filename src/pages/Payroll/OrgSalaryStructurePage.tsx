@@ -264,7 +264,7 @@ const OrgSalaryStructurePage: React.FC = () => {
       {loadingOrgComponents ? (
         <Spinner animation="border" />
       ) : orgComponents.length > 0 ? (
-        <Table bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Component</th>

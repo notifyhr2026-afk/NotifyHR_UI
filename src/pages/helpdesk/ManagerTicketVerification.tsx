@@ -151,7 +151,7 @@ export default function ManagerTicketVerification() {
       {/* 🔹 Grid / Table */}
       <div className="card">
         <div className="table-responsive">
-          <table className="table table-hover mb-0">
+          <table className="table table-hover table-dark-custom">
             <thead className="table-dark">
               <tr>
                 <th>Ticket #</th>

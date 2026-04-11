@@ -189,7 +189,7 @@ const ManageAssets: React.FC = () => {
       </Row>
 
       {filteredAssets.length > 0 ? (
-        <Table bordered hover responsive>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Category</th>

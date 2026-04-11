@@ -241,7 +241,7 @@ const EmployeeSalaryAssignment: React.FC = () => {
       </Row>
 
       {/* Salary Assignment Table */}
-      <Table bordered hover size="sm">
+      <Table className="table table-hover table-dark-custom">
         <thead className="table-light">
           <tr>
             <th>Employee Name</th> {/* NEW COLUMN */}

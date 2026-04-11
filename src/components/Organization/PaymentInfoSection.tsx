@@ -142,7 +142,7 @@ const PaymentInfoSection: React.FC = () => {
 
       {/* Table */}
       {payments.length > 0 ? (
-        <Table bordered hover size="sm">
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Invoice</th>
