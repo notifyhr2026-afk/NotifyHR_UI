@@ -320,6 +320,7 @@ const saveFeaturePermissions = async (featureID: number) => {
                               >
                                 <Form.Check
                                   type="switch"
+                                  className="form-switch"
                                   checked={permission[field]}
                                   onChange={() =>
                                     togglePermission(menu.menuID, field)

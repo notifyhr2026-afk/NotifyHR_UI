@@ -112,7 +112,7 @@ const AssignedTicketsPage: React.FC = () => {
   };
 
   return (
-    <Container fluid className="mt-5">
+    <Container>
       <h4 className="fw-bold mb-4">📝 My Assigned Tickets</h4>
 
       {/* Dashboard Stats */}
@@ -128,7 +128,7 @@ const AssignedTicketsPage: React.FC = () => {
 
       {/* Tickets Table */}
       {!loading && tickets.length > 0 && (
-        <Table hover responsive className="align-middle bg-white">
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>#</th>

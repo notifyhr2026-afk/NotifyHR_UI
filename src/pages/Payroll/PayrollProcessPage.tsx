@@ -45,29 +45,31 @@ const PayrollProcessPage: React.FC = () => {
     { date: "2026-03-03", status: "Present", in: "09:15", out: "18:10", hours: 8.5 },
   ];
 
-  // Filtering
-  const filteredData = useMemo(() => {
-    return employees.filter((emp) => {
-      const matchSearch =
-        emp.name.toLowerCase().includes(search.toLowerCase()) ||
-        emp.id.toString().includes(search);
+const [filteredData, setFilteredData] = useState(employees);
+const handleGetData = () => {
+  const filtered = employees.filter((emp) => {
+    const matchSearch =
+      emp.name.toLowerCase().includes(search.toLowerCase()) ||
+      emp.id.toString().includes(search);
 
-      const matchStatus =
-        statusFilter === "All" || emp.status === statusFilter;
+    const matchStatus =
+      statusFilter === "All" || emp.status === statusFilter;
 
-      const matchBranch =
-        branchFilter === "All" || emp.branch === branchFilter;
+    const matchBranch =
+      branchFilter === "All" || emp.branch === branchFilter;
 
-      const matchDept =
-        deptFilter === "All" || emp.dept === deptFilter;
+    const matchDept =
+      deptFilter === "All" || emp.dept === deptFilter;
 
-      return matchSearch && matchStatus && matchBranch && matchDept;
-    });
-  }, [search, statusFilter, branchFilter, deptFilter]);
+    return matchSearch && matchStatus && matchBranch && matchDept;
+  });
 
+  setFilteredData(filtered);
+  setCurrentPage(1); // reset pagination
+};
   // Pagination
-  const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
-  const paginatedData = filteredData.slice(
+const totalPages = Math.ceil(filteredData.length / PAGE_SIZE);
+const paginatedData = filteredData.slice(
     (currentPage - 1) * PAGE_SIZE,
     currentPage * PAGE_SIZE
   );
@@ -84,10 +86,22 @@ const PayrollProcessPage: React.FC = () => {
     );
   };
 
-  const toggleSelectAll = () => {
-    const ids = paginatedData.map(e => e.id);
-    setSelected(ids);
-  };
+const toggleSelectAll = () => {
+  const ids = paginatedData.map(e => e.id);
+
+  const allSelected = ids.every(id => selected.includes(id));
+
+  if (allSelected) {
+    // UNCHECK all
+    setSelected(prev => prev.filter(id => !ids.includes(id)));
+  } else {
+    // CHECK all (ES5 safe)
+    setSelected(prev => {
+      const combined = prev.concat(ids);
+      return combined.filter((item, index) => combined.indexOf(item) === index);
+    });
+  }
+};
 
   // Actions
   const handleProcessSelected = () => {
@@ -99,14 +113,14 @@ const PayrollProcessPage: React.FC = () => {
   };
 
   return (
-    <Container className="mt-4">
+    <Container>
       <Card>
         <Card.Body>
           <h3 className="text-center mb-4">Payroll Processing</h3>
 
           {/* First Row Filters */}
           <Row className="mb-3">   
-            <Col md={2}>
+            <Col md={1}>
               <Form.Select value={month} onChange={(e) => setMonth(Number(e.target.value))}>
                 {[...Array(12)].map((_, i) => (
                   <option key={i} value={i + 1}>{i + 1}</option>
@@ -129,11 +143,7 @@ const PayrollProcessPage: React.FC = () => {
                 <option>Processed</option>
               </Form.Select>
             </Col>     
-          </Row>
-
-          {/* Second Row Filters */}
-          <Row className="mb-3">
-<Col md={3}>
+            <Col md={2}>
               <Form.Select value={branchFilter} onChange={(e) => setBranchFilter(e.target.value)}>
                 <option>All</option>
                 <option>Hyderabad</option>
@@ -142,6 +152,11 @@ const PayrollProcessPage: React.FC = () => {
                 <option>Mumbai</option>
               </Form.Select>
             </Col>
+          </Row>
+
+          {/* Second Row Filters */}
+          <Row className="mb-3">
+
             <Col md={3}>
               <Form.Select value={deptFilter} onChange={(e) => setDeptFilter(e.target.value)}>
                 <option>All</option>
@@ -158,6 +173,26 @@ const PayrollProcessPage: React.FC = () => {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </Col>
+            <Col md={3}>
+    <Button variant="primary" onClick={handleGetData}>
+      Get Data
+    </Button>
+
+    <Button
+      variant="secondary"
+      className="ms-2"
+      onClick={() => {
+        setSearch("");
+        setStatusFilter("All");
+        setBranchFilter("All");
+        setDeptFilter("All");
+        setFilteredData(employees);
+        setCurrentPage(1);
+      }}
+    >
+      Clear
+    </Button>
+  </Col>
           </Row>
 
           {/* Summary Cards */}
@@ -174,10 +209,16 @@ const PayrollProcessPage: React.FC = () => {
           </Row>
 
           {/* Table */}
-          <Table className="table table-hover table-dark-custom">
+          <Table hover className="table-dark-custom">
             <thead className="table-dark">
               <tr>
-                <th><Form.Check onChange={toggleSelectAll} /></th>
+                <th><Form.Check
+  checked={
+    paginatedData.length > 0 &&
+    paginatedData.every(e => selected.includes(e.id))
+  }
+  onChange={toggleSelectAll}
+/></th>
                 <th>Name</th>
                 <th>Branch</th>
                 <th>Dept</th>

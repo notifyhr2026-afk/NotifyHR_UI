@@ -121,7 +121,7 @@ const loadFeatures = async (orgID: number) => {
           <Spinner animation="border" />
         </div>
       ) : (
-        <Table bordered hover responsive className="align-middle">
+        <Table className="table table-hover table-dark-custom">
           <thead className="table-light">
             <tr>
               <th>Feature</th>

@@ -236,7 +236,7 @@ const deletePolicy = async (id: number) => {
         <Accordion.Item eventKey="0">
           <Accordion.Header>Leave Types</Accordion.Header>
           <Accordion.Body>
-            <Table bordered size="sm">
+            <Table className="table table-hover table-dark-custom">
               <thead>
                 <tr>
                   <th>Name</th>
@@ -270,7 +270,7 @@ const deletePolicy = async (id: number) => {
         <Accordion.Item eventKey="1">
           <Accordion.Header>Organization Leave Policies</Accordion.Header>
           <Accordion.Body>
-            <Table bordered hover size="sm" className="mt-3">
+            <Table  className="table table-hover table-dark-custom">
               <thead>
                 <tr>
                   <th>Policy</th>

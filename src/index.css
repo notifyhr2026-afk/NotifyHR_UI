@@ -510,9 +510,8 @@ body {
 }
 
 /* Bootstrap override fix */
-.table,
-.table td,
-.table th {
+/* Apply only to body content, NOT header */
+.table tbody td {
   color: var(--text-color) !important;
 }
 
@@ -590,7 +589,7 @@ body.dark-mode .form-check-input:checked {
   border-color: #0d6efd !important;
 
   /* FORCE Bootstrap tick */
-  background-image: var(--bs-form-check-bg-image) !important;
+  /background-image: var(--bs-form-check-bg-image) !important;
 }
 
 /* LIGHT MODE */
@@ -598,4 +597,29 @@ body.light-mode .form-check-input {
   background-color: #fff !important;
   border: 1px solid #ced4da !important;
 }
+/* LIGHT MODE HEADER */
+body.light-mode .table-dark {
+  background-color: #212529 !important;
+  color: #fff !important;
+}
 
+/* DARK MODE HEADER */
+body.dark-mode .table-dark {
+  background-color: #1f1f2e !important;
+  color: #fff !important;
+}
+
+/* Dark mode: Bootstrap Switch fix */
+body.dark-mode .form-check-input[type="checkbox"].form-switch {
+  background-color: #2a2a3d;       /* switch track */
+  border-color: #555;
+}
+
+body.dark-mode .form-check-input[type="checkbox"].form-switch:checked {
+  background-color: #0d6efd;       /* switch thumb when ON */
+  border-color: #0d6efd;
+}
+
+body.dark-mode .form-check-input[type="checkbox"].form-switch:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}

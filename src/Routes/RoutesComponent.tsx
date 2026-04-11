@@ -52,6 +52,7 @@ import EmployeeSalaryAssignment from '../pages/Payroll/EmployeeSalaryAssignment'
 import EmployeeSalaryBackupView from '../pages/Payroll/EmployeeSalaryBackupView';
 import OrgSalaryStructureMaster from '../pages/Payroll/OrgSalaryStructureMaster';
 import EmployeePayslip from '../pages/Payroll/EmployeePayslip'
+import ManualPayrollPage from '../pages/Payroll/ManualPayrollPage';
 import PayrollProcessPage from '../pages/Payroll/PayrollProcessPage';
 import PayrollReportPage from '../pages/Payroll/PayrollReportPage';
 import TaxSectionMaster from '../pages/Payroll/TaxSectionMaster';
@@ -161,6 +162,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="/EmployeeSalaryBackupView" element={<EmployeeSalaryBackupView />} />
         <Route path="/OrgSalaryStructureMaster" element={<OrgSalaryStructureMaster />} />        
         <Route path="/EmployeePayslip" element={<EmployeePayslip />} />
+        <Route path='/RunPayroll' element={<ManualPayrollPage />} />
         <Route path="/PayrollProcessPage" element={<PayrollProcessPage />} />
         <Route path="/PayrollReportPage" element={<PayrollReportPage />} />
         <Route path="/TaxSectionMaster" element={<TaxSectionMaster />} />
