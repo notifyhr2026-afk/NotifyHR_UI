@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
-
+import LoggedInUser from '../../types/LoggedInUser'
 import AssetService from '../../services/AssetService';
 import branchService from '../../services/branchService';
 import departmentService from '../../services/departmentService';
@@ -44,9 +44,6 @@ interface Department {
   DepartmentName: string;
 }
 
-interface LoggedInUser {
-  organizationID: number;
-}
 
 const statuses = [
   { id: 1, name: 'Active' },
@@ -228,7 +225,7 @@ const AssetTracking: React.FC = () => {
   };
 
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Assets Tracking</h3>
 
       <div className="text-end mb-3">
@@ -241,7 +238,7 @@ const AssetTracking: React.FC = () => {
           Table of Tracking Records
           ======================= */}
       {trackingList.length > 0 ? (
-        <Table bordered hover responsive>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Asset</th>

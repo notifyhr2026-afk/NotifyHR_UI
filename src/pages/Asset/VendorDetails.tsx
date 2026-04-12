@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
 import AssetService from '../../services/AssetService';
-
+import LoggedInUser from '../../types/LoggedInUser'
 /* ===========================
    Interfaces
    =========================== */
@@ -15,9 +15,7 @@ interface Vendor {
   Address: string;
 }
 
-interface LoggedInUser {
-  organizationID: number;
-}
+
 
 /* ===========================
    Component
@@ -149,7 +147,7 @@ const loadVendors = async () => {
      Render
      =========================== */
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Vendor Details</h3>
 
       <div className="text-end mb-3">
@@ -159,7 +157,7 @@ const loadVendors = async () => {
       </div>
 
       {vendors.length > 0 ? (
-        <Table bordered hover responsive>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Vendor Name</th>

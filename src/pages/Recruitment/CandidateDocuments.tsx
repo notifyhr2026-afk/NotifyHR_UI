@@ -100,7 +100,7 @@ const CandidateDocuments: React.FC = () => {
 
       {/* Table */}
       {documents.length ? (
-        <Table striped bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Document Type</th>

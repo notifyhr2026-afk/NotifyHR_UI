@@ -250,7 +250,7 @@ const saveFeaturePermissions = async (featureID: number) => {
 
   /* ===================== JSX ===================== */
   return (
-    <div className="container mt-5">
+    <div className="container">
       <h4 className="mb-4">Role Menu Permissions</h4>
 
       {/* SEARCHABLE ROLE SELECT */}
@@ -284,7 +284,7 @@ const saveFeaturePermissions = async (featureID: number) => {
                     No menus mapped to this feature
                   </div>
                 ) : (
-                  <Table bordered hover responsive>
+                  <Table className="table table-hover table-dark-custom">
                     <thead className="table-light">
                       <tr>
                         <th>Menu</th>
@@ -320,6 +320,7 @@ const saveFeaturePermissions = async (featureID: number) => {
                               >
                                 <Form.Check
                                   type="switch"
+                                  className="form-switch"
                                   checked={permission[field]}
                                   onChange={() =>
                                     togglePermission(menu.menuID, field)

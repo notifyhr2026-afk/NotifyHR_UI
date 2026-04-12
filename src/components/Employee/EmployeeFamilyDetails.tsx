@@ -99,7 +99,7 @@ const EmployeeFamilyDetails: React.FC = () => {
       </div>
 
       {familyMembers.length ? (
-        <Table striped bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Full Name</th>

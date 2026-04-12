@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../auth/AuthContext';
 import '../../css/Login.css';
+import changePassword from '../../services/Changepassword';
+import { useNavigate } from 'react-router-dom';
+import Swal from 'sweetalert2';
 
 const ChangePassword: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -10,7 +13,12 @@ const ChangePassword: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
 
-  //const { changePassword, logout } = useAuth();
+  const navigate = useNavigate();
+
+
+const user = JSON.parse(localStorage.getItem("user") || "null");
+console.log(user)
+
 
   const validate = () => {
     const newErrors: typeof errors = {};
@@ -22,24 +30,62 @@ const ChangePassword: React.FC = () => {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setSuccessMessage('');
-    const validationErrors = validate();
-    setErrors(validationErrors);
+  e.preventDefault();
+  setSuccessMessage('');
 
-    if (Object.keys(validationErrors).length === 0) {
-      try {
-        setIsSubmitting(true);
-        //await changePassword(currentPassword, newPassword);
-        setSuccessMessage('✅ Password changed successfully! Logging out for security...');
-        //setTimeout(() => logout(), 2000);
-      } catch (err) {
-        setErrors({ currentPassword: 'Incorrect current password or request failed.' });
-      } finally {
-        setIsSubmitting(false);
-      }
+  const validationErrors = validate();
+  setErrors(validationErrors);
+
+  if (Object.keys(validationErrors).length === 0) {
+    try {
+      setIsSubmitting(true);
+
+      const payload = {
+          userID: user.userID,
+        organizationID: user.organizationID,
+        oldPassword: currentPassword,
+        password: newPassword,
+          modifiedBy: "admin"
+
+      };
+
+      await changePassword(payload);
+
+     await Swal.fire({
+             icon: 'success',
+             title: 'Password updated Successful!',
+             confirmButtonColor: '#3085d6',
+             heightAuto: false, 
+             width: 380,
+             customClass: {
+               popup: "custom-swal-popup"
+             },
+             showConfirmButton: false,   // ❌ remove OK button
+             timer: 2500,                // ⏱ 3 seconds
+             timerProgressBar: true,     // optional progress bar
+             allowOutsideClick: false,
+             allowEscapeKey: false,
+             scrollbarPadding: false,
+             didClose: () => {
+               navigate("/myprofile");  // 🔁 auto redirect
+             }
+           }).then(() => {
+               navigate("/myprofile");
+             });
+           } 
+
+     catch (err) {
+       Swal.fire({
+              icon: 'error',
+              title: 'Password Reset Failed',
+              text: 'Invalid current password or request failed.',
+            });
+    } finally {
+      setIsSubmitting(false);
     }
-  };
+  }
+};
+
 
   return (
     <div className="container-fluid py-5">

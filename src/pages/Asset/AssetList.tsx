@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col, InputGroup } from 'react-bootstrap';
 import AssetService from '../../services/AssetService';
-
+import LoggedInUser from '../../types/LoggedInUser'
 /* ===========================
    Interfaces
    =========================== */
@@ -21,9 +21,6 @@ interface AssetCategory {
   IsActive: boolean;
 }
 
-interface LoggedInUser {
-  organizationID: number;
-}
 
 const ManageAssets: React.FC = () => {
   /* ===========================
@@ -170,7 +167,7 @@ const ManageAssets: React.FC = () => {
      Render
      =========================== */
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Manage Assets</h3>
 
       <Row className="align-items-center mb-3">
@@ -192,7 +189,7 @@ const ManageAssets: React.FC = () => {
       </Row>
 
       {filteredAssets.length > 0 ? (
-        <Table bordered hover responsive>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Category</th>

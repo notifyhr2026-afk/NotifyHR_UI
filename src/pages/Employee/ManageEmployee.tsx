@@ -12,16 +12,18 @@ import ProbationDetails from '../../components/Employee/ProbationDetails';
 import EmployeeAsset from '../../components/Employee/EmployeeAsset';
 import Accordion from 'react-bootstrap/Accordion';
 import EmployeeRoles from '../../components/Employee/EmployeeRoles';
+import EmployeeProjects from '../../components/Employee/EmployeeProjects';
+import EmployeeShifts from '../../components/Employee/EmployeeShifts';
 
 const ManageEmployee: React.FC = () => {
   return (
-    <Container className="mt-5">
+    <Container>
       <h2 className="mb-4">Manage - Employee</h2>
 
       <Accordion defaultActiveKey="0" flush>
         
         <Accordion.Item eventKey="0">
-          <Accordion.Header>Employee Details</Accordion.Header>
+          <Accordion.Header>Details</Accordion.Header>
           <Accordion.Body>
             <EmployeeDetails />
           </Accordion.Body>
@@ -33,12 +35,14 @@ const ManageEmployee: React.FC = () => {
             <ProbationDetails />
           </Accordion.Body>
         </Accordion.Item>
+
          <Accordion.Item eventKey="2">
-            <Accordion.Header>Assigned Assets</Accordion.Header>
-            <Accordion.Body>
-              <EmployeeAsset />
-            </Accordion.Body>
-          </Accordion.Item>
+          <Accordion.Header>Shifts</Accordion.Header>
+          <Accordion.Body>
+            <EmployeeShifts />
+          </Accordion.Body>
+        </Accordion.Item>
+
         <Accordion.Item eventKey="3">
           <Accordion.Header>Position History</Accordion.Header>
           <Accordion.Body>
@@ -46,42 +50,57 @@ const ManageEmployee: React.FC = () => {
           </Accordion.Body>
         </Accordion.Item>
 
-        <Accordion.Item eventKey="4">
+           <Accordion.Item eventKey="4">
+          <Accordion.Header>Assigned Roles</Accordion.Header>
+          <Accordion.Body>
+            <EmployeeRoles />
+          </Accordion.Body>
+        </Accordion.Item>
+
+        <Accordion.Item eventKey="5">
+          <Accordion.Header>Assigned Projects</Accordion.Header>
+          <Accordion.Body>
+            <EmployeeProjects />
+          </Accordion.Body>
+        </Accordion.Item>
+
+         <Accordion.Item eventKey="6">
+            <Accordion.Header>Assigned Assets</Accordion.Header>
+            <Accordion.Body>
+              <EmployeeAsset />
+            </Accordion.Body>
+          </Accordion.Item>
+
+
+        <Accordion.Item eventKey="7">
           <Accordion.Header>Experience</Accordion.Header>
           <Accordion.Body>
             <EmployeeExperience />
           </Accordion.Body>
         </Accordion.Item>
 
-        <Accordion.Item eventKey="5">
+        <Accordion.Item eventKey="8">
           <Accordion.Header>Education</Accordion.Header>
           <Accordion.Body>
             <EmployeeEducation />
           </Accordion.Body>
         </Accordion.Item>
 
-        <Accordion.Item eventKey="6">
+        <Accordion.Item eventKey="9">
           <Accordion.Header>Family Details</Accordion.Header>
           <Accordion.Body>
             <EmployeeFamilyDetails />
           </Accordion.Body>
         </Accordion.Item>
 
-        <Accordion.Item eventKey="7">
+        <Accordion.Item eventKey="10">
           <Accordion.Header>Address</Accordion.Header>
           <Accordion.Body>
             <EmployeeAddress />
           </Accordion.Body>
-        </Accordion.Item>
-
-         <Accordion.Item eventKey="8">
-          <Accordion.Header>Employee Roles</Accordion.Header>
-          <Accordion.Body>
-            <EmployeeRoles />
-          </Accordion.Body>
-        </Accordion.Item>
-
-        <Accordion.Item eventKey="9">
+        </Accordion.Item>   
+        
+        <Accordion.Item eventKey="11">
           <Accordion.Header>Exit Details</Accordion.Header>
           <Accordion.Body>
             <EmployeeExitDetails />

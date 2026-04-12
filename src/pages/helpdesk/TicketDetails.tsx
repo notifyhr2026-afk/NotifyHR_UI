@@ -1,4 +1,3 @@
-// src/pages/helpdesk/TicketDetails.tsx
 import { mockTickets } from '../../data/mockTickets';
 
 export default function TicketDetails() {

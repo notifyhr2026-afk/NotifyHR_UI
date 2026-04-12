@@ -1,5 +1,12 @@
-import React, { useState } from "react";
-import { Card, Row, Col, Form, Badge, Button } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+import { Card, Row, Col, Form, Badge, Button, Spinner } from "react-bootstrap";
+import branchService from "../../services/branchService";
+import payrollService from "../../services/payrollService";
+
+interface Branch {
+  id: number;
+  name: string;
+}
 
 interface PayrollCycle {
   id: number;
@@ -7,112 +14,265 @@ interface PayrollCycle {
   status: "Active" | "Inactive";
 }
 
+interface CycleDates {
+  startDate: string;
+  endDate: string;
+}
+
 const OrgPayrollCyclePage: React.FC = () => {
   const [selectedBranch, setSelectedBranch] = useState("");
   const [selectedCycles, setSelectedCycles] = useState<number[]>([]);
+  const [cycleDates, setCycleDates] = useState<Record<number, CycleDates>>({});
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [payrollCycles, setPayrollCycles] = useState<PayrollCycle[]>([]);
 
-  const branches = [
-    { id: 1, name: "Head Office" },
-    { id: 2, name: "Bangalore Branch" },
-    { id: 3, name: "Mumbai Branch" },
-  ];
+  const [loading, setLoading] = useState(true);
+  const [cyclesLoading, setCyclesLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const payrollCycles: PayrollCycle[] = [
-    { id: 1, cycleName: "Monthly", status: "Active" },
-    { id: 2, cycleName: "Bi-Weekly", status: "Active" },
-    { id: 3, cycleName: "Weekly", status: "Inactive" },
-    { id: 4, cycleName: "Semi-Monthly", status: "Active" },
-  ];
+  const [error, setError] = useState<string | null>(null);
+  const [cyclesError, setCyclesError] = useState<string | null>(null);
 
+  // ================= FETCH BRANCHES =================
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        setLoading(true);
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const organizationID = user.organizationID;
+
+        const branchesData = await branchService.getBranchesAsync(organizationID);
+
+        const branchesArray = Array.isArray(branchesData)
+          ? branchesData
+          : branchesData?.Table || [];
+
+        const mappedBranches = branchesArray.map((branch: any) => ({
+          id: branch.BranchID || branch.id,
+          name: branch.BranchName || branch.name,
+        }));
+
+        setBranches(mappedBranches);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load branches");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBranches();
+  }, []);
+
+  // ================= FETCH TEMPLATES =================
+  useEffect(() => {
+    const fetchCycles = async () => {
+      try {
+        setCyclesLoading(true);
+
+        const data = await payrollService.GetPayrollCycleTemplates();
+
+        const mappedCycles: PayrollCycle[] = data.map((cycle: any) => ({
+          id: cycle.PayrollCycleTemplateID,
+          cycleName: cycle.CycleName,
+          status: cycle.IsActive ? "Active" : "Inactive",
+        }));
+
+        setPayrollCycles(mappedCycles);
+      } catch (err) {
+        console.error(err);
+        setCyclesError("Failed to load payroll cycles");
+      } finally {
+        setCyclesLoading(false);
+      }
+    };
+
+    fetchCycles();
+  }, []);
+
+  // ================= FETCH SAVED DATA =================
+  useEffect(() => {
+    const fetchSavedCycles = async () => {
+      try {
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const organizationID = user.organizationID || 0;
+
+        const data = await payrollService.GetOrgPayrollCycles(
+          organizationID,
+          selectedBranch ? Number(selectedBranch) : 0
+        );
+
+        if (!data || data.length === 0) return;
+
+        const selected: number[] = [];
+        const dates: Record<number, CycleDates> = {};
+
+        data.forEach((item: any) => {
+          if (item.PayrollCycleID) {
+            selected.push(item.PayrollCycleTemplateID);
+
+            dates[item.PayrollCycleTemplateID] = {
+              startDate: item.StartDate?.split("T")[0],
+              endDate: item.EndDate?.split("T")[0],
+            };
+          }
+        });
+
+        setSelectedCycles(selected);
+        setCycleDates(dates);
+      } catch (err) {
+        console.error("Failed to load saved cycles", err);
+      }
+    };
+
+    fetchSavedCycles();
+  }, [selectedBranch]);
+
+  // ================= TOGGLE =================
   const toggleCycle = (id: number) => {
     setSelectedCycles((prev) =>
       prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id]
     );
   };
 
+  // ================= DATE CHANGE =================
+  const handleDateChange = (
+    id: number,
+    field: "startDate" | "endDate",
+    value: string
+  ) => {
+    setCycleDates((prev) => ({
+      ...prev,
+      [id]: {
+        ...prev[id],
+        [field]: value,
+      },
+    }));
+  };
+
+  // ================= SAVE =================
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      const organizationID = user.organizationID || 0;
+
+      for (const cycleId of selectedCycles) {
+        const dates = cycleDates[cycleId];
+
+        if (!dates?.startDate || !dates?.endDate) {
+          alert("Please select dates for all selected cycles");
+          return;
+        }
+
+        const payload = {
+          payrollCycleID: 0,
+          organizationID: organizationID,
+          payrollCycleTemplateID: cycleId,
+          branchID: selectedBranch ? Number(selectedBranch) : 0,
+          cycleName:
+            payrollCycles.find((c) => c.id === cycleId)?.cycleName || "",
+          startDate: new Date(dates.startDate).toISOString(),
+          endDate: new Date(dates.endDate).toISOString(),
+          paymentDate: new Date().toISOString(),
+          status: 1,
+        };
+
+        await payrollService.PostPayrollCycleByAsync(payload);
+      }
+
+      alert("Saved successfully!");
+    } catch (err) {
+      console.error(err);
+      alert("Save failed");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // ================= UI =================
   return (
-    <Card className="p-4 shadow-sm">
+    <Card className="container ">
       <h4 className="mb-4">Organization Payroll Cycles</h4>
 
-      {/* Branch Selection */}
+      {/* Branch */}
       <Form.Group className="mb-4">
-        <Form.Label className="fw-semibold">Select Branch</Form.Label>
-        <Form.Select
-          value={selectedBranch}
-          onChange={(e) => setSelectedBranch(e.target.value)}
-        >
-          <option value="">-- Select Branch --</option>
-          {branches.map((b) => (
-            <option key={b.id} value={b.id}>
-              {b.name}
-            </option>
-          ))}
-        </Form.Select>
+        <Form.Label>Select Branch</Form.Label>
+
+        {loading && <p>Loading branches...</p>}
+        {error && <p className="text-danger">{error}</p>}
+
+        {!loading && (
+          <Form.Select
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(e.target.value)}
+          >
+            <option value="">-- Select Branch --</option>
+            {branches.map((b) => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+              </option>
+            ))}
+          </Form.Select>
+        )}
       </Form.Group>
 
-      {/* Payroll Cycle Cards */}
+      {/* Cycles */}
       <Row>
-        {payrollCycles.map((cycle) => {
-          const isSelected = selectedCycles.includes(cycle.id);
+        {!cyclesLoading &&
+          payrollCycles.map((cycle) => {
+            const isSelected = selectedCycles.includes(cycle.id);
 
-          return (
-            <Col md={6} lg={4} key={cycle.id} className="mb-4">
-             <Card
-  className={`h-100 ${
-    isSelected ? "border-primary shadow" : ""
-  }`}
->
-  <Card.Body>
-    <div className="d-flex justify-content-between align-items-center mb-2">
-      <Card.Title className="mb-0">
-        {cycle.cycleName}
-      </Card.Title>
-      <Badge bg={cycle.status === "Active" ? "success" : "secondary"}>
-        {cycle.status}
-      </Badge>
-    </div>
+            return (
+              <Col md={6} lg={4} key={cycle.id} className="mb-4">
+                <Card className={isSelected ? "border-primary shadow" : ""}>
+                  <Card.Body>
+                    <div className="d-flex justify-content-between">
+                      <Card.Title>{cycle.cycleName}</Card.Title>
+                      <Badge bg={cycle.status === "Active" ? "success" : "secondary"}>
+                        {cycle.status}
+                      </Badge>
+                    </div>
 
-    <Form.Check
-      type="checkbox"
-      label="Enable this payroll cycle"
-      checked={isSelected}
-      onChange={() => toggleCycle(cycle.id)}
-      className="mb-3"
-    />
+                    <Form.Check
+                      type="checkbox"
+                      label="Enable this payroll cycle"
+                      checked={isSelected}
+                      onChange={() => toggleCycle(cycle.id)}
+                      className="mb-3"
+                    />
 
-    {isSelected && (
-      <>
-        <Form.Group className="mb-2">
-          <Form.Label>Start Date</Form.Label>
-          <Form.Control type="date" />
-        </Form.Group>
-
-        <Form.Group className="mb-2">
-          <Form.Label>End Date</Form.Label>
-          <Form.Control type="date" />
-        </Form.Group>
-
-        <Form.Group>
-          <Form.Label>Payment Date</Form.Label>
-          <Form.Control type="date" />
-        </Form.Group>
-      </>
-    )}
-  </Card.Body>
-</Card>
-
-            </Col>
-          );
-        })}
+                    {isSelected && (
+                      <>
+                        <Form.Control
+                          type="date"
+                          value={cycleDates[cycle.id]?.startDate || ""}
+                          onChange={(e) =>
+                            handleDateChange(cycle.id, "startDate", e.target.value)
+                          }
+                          className="mb-2"
+                        />
+                        <Form.Control
+                          type="date"
+                          value={cycleDates[cycle.id]?.endDate || ""}
+                          onChange={(e) =>
+                            handleDateChange(cycle.id, "endDate", e.target.value)
+                          }
+                        />
+                      </>
+                    )}
+                  </Card.Body>
+                </Card>
+              </Col>
+            );
+          })}
       </Row>
 
-      {/* Save Button */}
+      {/* Save */}
       <div className="text-end mt-4">
-        <Button
-          variant="primary"
-          disabled={!selectedBranch || selectedCycles.length === 0}
-        >
-          Save Payroll Cycles
+        <Button onClick={handleSave} disabled={saving}>
+          {saving ? <Spinner size="sm" /> : "Save"}
         </Button>
       </div>
     </Card>

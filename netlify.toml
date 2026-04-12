@@ -1,0 +1,37 @@
+[[redirects]]
+  from = "/api/port22/*"
+  to = "http://115.98.2.37:36522/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/port23/*"
+  to = "http://115.98.2.37:36523/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/port24/*"
+  to = "http://115.98.2.37:36524/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/port25/*"
+  to = "http://115.98.2.37:36525/api/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/port26/*"
+  to = "http://115.98.2.37:36526/api/:splat"
+  status = 200
+  force = true
+
+
+[[redirects]]
+  from = "/api/port27/*"
+  to = "http://115.98.2.37:36527/api/:splat"
+  status = 200
+  force = true
+

@@ -1,5 +1,15 @@
-import React, { useState } from 'react';
-import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import {
+  Button,
+  Table,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Spinner,
+  Alert,
+} from 'react-bootstrap';
+import salaryService from '../../services/salaryService';
 
 interface SalaryComponent {
   id: number;
@@ -11,33 +21,9 @@ interface SalaryComponent {
 }
 
 const SalaryComponentMaster: React.FC = () => {
-  // Sample data
-  const [components, setComponents] = useState<SalaryComponent[]>([
-    {
-      id: 1,
-      componentName: 'Basic Pay',
-      componentCode: 'BASIC',
-      componentType: 'Earning',
-      isStatutory: false,
-      defaultTaxable: true,
-    },
-    {
-      id: 2,
-      componentName: 'House Rent Allowance',
-      componentCode: 'HRA',
-      componentType: 'Earning',
-      isStatutory: false,
-      defaultTaxable: true,
-    },
-    {
-      id: 3,
-      componentName: 'Provident Fund',
-      componentCode: 'PF',
-      componentType: 'Deduction',
-      isStatutory: true,
-      defaultTaxable: false,
-    },
-  ]);
+  const [components, setComponents] = useState<SalaryComponent[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
   const [editComponent, setEditComponent] = useState<SalaryComponent | null>(null);
@@ -52,40 +38,94 @@ const SalaryComponentMaster: React.FC = () => {
     defaultTaxable: false,
   });
 
-  // Input change handler
+  /* ===================== LOAD COMPONENTS ===================== */
+
+  const fetchSalaryComponents = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      const data = await salaryService.GeSalaryComponentMasterAsync();
+
+      const mappedData: SalaryComponent[] = data.map((item: any) => ({
+        id: item.ComponentID,
+        componentName: item.ComponentName,
+        componentCode: item.ComponentCode,
+        componentType: item.ComponentTypeID === 1 ? 'Earning' : 'Deduction',
+        isStatutory: item.IsStatutory,
+        defaultTaxable: item.DefaultTaxable,
+      }));
+
+      setComponents(mappedData);
+    } catch (err) {
+      setError('Failed to load salary components.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSalaryComponents();
+  }, []);
+
+  /* ===================== INPUT CHANGE ===================== */
+
   const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value, type, checked } = e.target;
+
     setFormData((prev) => ({
       ...prev,
       [id]: type === 'checkbox' ? checked : value,
     }));
   };
 
-  // Save Add/Edit
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  /* ===================== SAVE ===================== */
+
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
-    if (form.checkValidity() === false) {
+
+    if (!form.checkValidity()) {
       e.stopPropagation();
       setValidated(true);
       return;
     }
 
-    if (editComponent) {
-      setComponents((prev) =>
-        prev.map((comp) => (comp.id === editComponent.id ? formData : comp))
-      );
-    } else {
-      setComponents((prev) => [...prev, { ...formData, id: Date.now() }]);
-    }
+    try {
+      setLoading(true);
 
-    setValidated(false);
-    setShowModal(false);
+      const payload = {
+        componentID: editComponent ? editComponent.id : 0,
+        componentName: formData.componentName,
+        componentCode: formData.componentCode,
+        componentTypeID: formData.componentType === 'Earning' ? 1 : 2,
+        isStatutory: formData.isStatutory,
+        defaultTaxable: formData.defaultTaxable,
+        isActive: true,
+      };
+
+      const response = await salaryService.PostSalaryStructurecomponentByAsync(payload);
+
+      if (response.value === 1) {
+        await fetchSalaryComponents();
+        setShowModal(false);
+        setValidated(false);
+      } else {
+        setError(response.msg || 'Failed to save component.');
+      }
+
+    } catch {
+      setError('Error saving salary component.');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  /* ===================== ADD ===================== */
 
   const handleAdd = () => {
     setFormData({
-      id: Date.now(),
+      id: 0,
       componentName: '',
       componentCode: '',
       componentType: 'Earning',
@@ -93,31 +133,69 @@ const SalaryComponentMaster: React.FC = () => {
       defaultTaxable: false,
     });
     setEditComponent(null);
+    setValidated(false);
     setShowModal(true);
   };
+
+  /* ===================== EDIT ===================== */
 
   const handleEdit = (component: SalaryComponent) => {
     setEditComponent(component);
     setFormData(component);
+    setValidated(false);
     setShowModal(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this component?')) {
-      setComponents((prev) => prev.filter((c) => c.id !== id));
+  /* ===================== DELETE ===================== */
+
+  const handleDelete = async (id: number) => {
+    if (!window.confirm('Are you sure you want to delete this component?'))
+      return;
+
+    try {
+      setLoading(true);
+
+      const response =
+        await salaryService.DeleteSalaryStructurecomponentByAsync(id);
+
+      if (response[0]?.value === 1) {
+        await fetchSalaryComponents();
+      } else {
+        setError(response[0]?.msg || 'Delete failed.');
+      }
+
+    } catch {
+      setError('Error deleting salary component.');
+    } finally {
+      setLoading(false);
     }
   };
 
+  /* ===================== UI ===================== */
+
   return (
     <div className="salary-component-container mt-5">
+
       <div className="text-end mb-3">
         <Button variant="success" onClick={handleAdd}>
           + Add Component
         </Button>
       </div>
 
+      {loading && (
+        <div className="text-center my-4">
+          <Spinner animation="border" />
+        </div>
+      )}
+
+      {error && (
+        <Alert variant="danger" className="my-3">
+          {error}
+        </Alert>
+      )}
+
       {components.length ? (
-        <Table striped bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Name</th>
@@ -157,10 +235,11 @@ const SalaryComponentMaster: React.FC = () => {
           </tbody>
         </Table>
       ) : (
-        <p>No salary components added yet.</p>
+        !loading && <p>No salary components found.</p>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* ===================== MODAL ===================== */}
+
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -169,6 +248,7 @@ const SalaryComponentMaster: React.FC = () => {
         </Modal.Header>
         <Modal.Body>
           <Form noValidate validated={validated} onSubmit={handleSave}>
+
             <Row className="mb-3">
               <Col md={6}>
                 <Form.Group controlId="componentName">
@@ -184,6 +264,7 @@ const SalaryComponentMaster: React.FC = () => {
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
+
               <Col md={6}>
                 <Form.Group controlId="componentCode">
                   <Form.Label>Component Code</Form.Label>
@@ -205,18 +286,15 @@ const SalaryComponentMaster: React.FC = () => {
                 <Form.Group controlId="componentType">
                   <Form.Label>Component Type</Form.Label>
                   <Form.Select
-                    required
                     value={formData.componentType}
                     onChange={handleInputChange}
                   >
                     <option value="Earning">Earning</option>
                     <option value="Deduction">Deduction</option>
                   </Form.Select>
-                  <Form.Control.Feedback type="invalid">
-                    Please select component type.
-                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
+
               <Col md={3}>
                 <Form.Check
                   id="isStatutory"
@@ -225,6 +303,7 @@ const SalaryComponentMaster: React.FC = () => {
                   onChange={handleInputChange}
                 />
               </Col>
+
               <Col md={3}>
                 <Form.Check
                   id="defaultTaxable"
@@ -243,6 +322,7 @@ const SalaryComponentMaster: React.FC = () => {
                 {editComponent ? 'Update' : 'Save'}
               </Button>
             </Modal.Footer>
+
           </Form>
         </Modal.Body>
       </Modal>

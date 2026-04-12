@@ -1,31 +1,625 @@
+/* ================= BASE ================= */
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+    'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+    'Helvetica Neue', sans-serif;
+
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  transition: all 0.3s ease;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* ================= VARIABLES ================= */
+:root {
+  --brand-primary: #0d6efd;
+
+  /* LIGHT MODE */
+  --bg-main: #f4f7fa;
+  --text-main: #212529;
+  --card-bg: #ffffff;
+  --input-bg: #ffffff;
+  --border-color: #ced4da;
+  --profile-bg: #f5f5f5;
+}
+
+/* ================= DARK MODE ================= */
+body.dark-mode {
+  --bg-main: #1e1e2f;
+  --text-main: #e4e6eb;
+  --card-bg: #2a2a3d;
+  --input-bg: #2a2a3d;
+  --border-color: #3a3a50;
+  --profile-bg: #2a2a3d;
+}
+
+/* ================= GLOBAL ================= */
+body {
+  background-color: var(--bg-main) !important;
+  color: var(--text-main) !important;
+}
+
+/* ================= APP LAYOUT ================= */
+.app-container {
+  min-height: 100vh;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+}
+
+/* ================= TOPBAR ================= */
+.topbar {
+  height: 56px;
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 250px;
+  z-index: 1000;
+  background-color: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+  transition: left 0.3s ease;
+}
+
+.sidebar-collapsed .topbar {
+  left: 60px;
+}
+
+/* ================= SIDEBAR ================= */
+.sidebar {
+  background-color: var(--card-bg) !important;
+  color: var(--text-main);
+}
+
+/* ================= CARDS ================= */
+.card,
+.feature-card {
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color);
+}
+
+body.dark-mode .feature-card:hover {
+  background-color: #2f2f45 !important;
+}
+
+/* ================= BUTTONS ================= */
+.btn-brand {
+  background-color: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: #fff;
+}
+
+.btn-brand:hover {
+  background-color: #0b5ed7;
+}
+
+body.dark-mode .btn-primary {
+  background-color: #375a7f;
+  border-color: #375a7f;
+}
+
+body.dark-mode .btn-secondary {
+  background-color: #444;
+  border-color: #555;
+}
+
+/* ================= FORMS ================= */
+input.form-control,
+textarea.form-control,
+select.form-select {
+  background-color: var(--input-bg) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color) !important;
+}
+
+.form-control:focus,
+.form-select:focus {
+  box-shadow: none;
+  border-color: var(--brand-primary);
+}
+
+.form-label {
+  color: var(--text-main) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #aaa;
+}
+
+input[type="file"] {
+  background-color: var(--input-bg);
+  color: var(--text-main);
+}
+
+/* ================= SWITCH ================= */
+body.dark-mode .form-check-input {
+  background-color: #3a3a50;
+  border-color: #555;
+}
+
+body.dark-mode .form-check-input:checked {
+  background-color: #0d6efd;
+}
+
+/* ================= DROPDOWN ================= */
+.dropdown-menu {
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+  border: 1px solid var(--border-color);
+}
+
+.dropdown-item {
+  color: var(--text-main) !important;
+}
+
+.dropdown-item:hover {
+  background-color: var(--border-color);
+  color: #fff !important;
+}
+
+/* ================= TABLE (FULL FIX) ================= */
+.table {
+  color: var(--text-main) !important;
+}
+
+body.dark-mode .table-dark-custom {
+  background-color: #2a2a3d !important;
+  color: #e4e6eb !important;
+}
+
+body.dark-mode .table-dark-custom thead {
+  background-color: #1f1f2e !important;
+}
+
+body.dark-mode .table-dark-custom th {
+  color: #ffffff !important;
+  border-color: #3a3a50 !important;
+}
+
+body.dark-mode .table-dark-custom td {
+  background-color: #2a2a3d !important;
+  color: #e4e6eb !important;
+  border-color: #3a3a50 !important;
+}
+
+body.dark-mode .table-dark-custom tbody tr:hover {
+  background-color: #32324a !important;
+}
+
+/* REMOVE STRIPES */
+.table-striped > tbody > tr:nth-of-type(odd) {
+  background-color: unset !important;
+}
+
+/* ================= MODAL ================= */
+.modal-content {
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+}
+
+.modal-header,
+.modal-footer {
+  border-color: var(--border-color);
+}
+
+body.dark-mode .btn-close {
+  filter: invert(1);
+}
+
+/* ================= TOOLTIP ================= */
+.tooltip-inner {
+  background-color: #333 !important;
+  color: #fff;
+}
+
+/* ================= ACCORDION ================= */
+.accordion-button,
+.card-header,
+.bg-light {
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+}
+
+body.dark-mode .accordion-button::after {
+  filter: invert(1);
+}
+
+/* ================= CALENDAR ================= */
 .react-calendar {
   width: 100%;
   border: none;
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--card-bg);
+  color: var(--text-main);
 }
 
-.react-calendar__tile {
+.react-calendar__tile--active {
+  background: var(--brand-primary);
+  color: #fff;
+}
+
+/* ================= TOAST ================= */
+.Toastify__toast {
+  background: var(--card-bg);
+  color: var(--text-main);
+}
+
+.Toastify__progress-bar {
+  background: var(--brand-primary);
+}
+
+/* ================= SCROLLBAR ================= */
+.scrollable-menu::-webkit-scrollbar-thumb {
+  background-color: #555;
+}
+
+/* ================= PROFILE ================= */
+.profile-container {
+  background: var(--profile-bg);
+}
+
+/* ================= TRANSITION ================= */
+body,
+.card,
+.navbar,
+.dropdown-menu,
+input,
+textarea,
+select {
+  transition: all 0.3s ease;
+}
+/* ===== FORCE TABLE HEADER DARK (FINAL FIX) ===== */
+
+body.dark-mode .table-dark-custom thead,
+body.dark-mode .table-dark-custom thead tr,
+body.dark-mode .table-dark-custom thead th {
+  background-color: #1f1f2e !important;
+  color: #ffffff !important;
+}
+
+/* OVERRIDE BOOTSTRAP HARD RULE */
+body.dark-mode .table-dark-custom > :not(caption) > * > * {
+  background-color: #2a2a3d !important;
+  color: #e4e6eb !important;
+}
+
+/* BUT KEEP HEADER DARK */
+body.dark-mode .table-dark-custom thead > tr > th {
+  background-color: #1f1f2e !important;
+  color: #ffffff !important;
+}
+
+/* BORDER FIX */
+body.dark-mode .table-dark-custom th,
+body.dark-mode .table-dark-custom td {
+  border-color: #3a3a50 !important;
+}
+/* FORCE GLOBAL BACKGROUND (IMPORTANT FIX) */
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body.light-mode {
+  background-color: #f4f7fa !important;
+  color: #212529 !important;
+}
+
+body.dark-mode {
+  background-color: #1e1e2f !important;
+  color: #e4e6eb !important;
+}
+/* ================= GLOBAL THEME ================= */
+
+html, body, #root {
+  height: 100%;
+  width: 100%;
+}
+
+body.light-mode {
+  background-color: #f4f7fa !important;
+  color: #212529 !important;
+}
+
+body.dark-mode {
+  background-color: #1e1e2f !important;
+  color: #e4e6eb !important;
+}
+
+/* MAIN APP WRAPPER */
+.app-container {
+  min-height: 100vh;
+  width: 100%;
+}
+
+/* TOPBAR */
+.topbar {
+  height: 53px;
+  position: sticky;
+  top: 0;
+  right: 0;
+  left: 250px;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  background-color: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
+  transition: left 0.3s ease;
+}
+
+/* when sidebar collapsed */
+.sidebar-collapsed .topbar {
+  left: 60px;
+}
+
+/* DROPDOWN THEME */
+.theme-dropdown {
+  min-width: 230px;
+  padding: 0.5rem 1rem;
+  background: var(--card-bg);
+  color: var(--text-main);
+}
+
+/* SWITCH */
+.theme-switch {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  cursor: pointer;
+  gap: 10px;
+}
+
+.theme-switch .active {
+  font-weight: bold;
+  color: #0d6efd;
+}
+
+.switch-track {
+  width: 50px;
+  height: 20px;
+  background: #ccc;
+  border-radius: 20px;
   position: relative;
-  padding: 10px 0;
 }
 
-.attendance-dot {
-  width: 8px;
-  height: 8px;
+.switch-thumb {
+  width: 18px;
+  height: 18px;
+  background: #0d6efd;
   border-radius: 50%;
-  display: inline-block;
-  margin-left: 2px;
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  transition: transform 0.3s ease;
+}
+
+/* CONTENT */
+.page-content {
+  padding-top: 70px;
+}
+
+/* SMOOTH TRANSITION */
+body,
+.app-container {
+  transition: all 0.3s ease;
+}
+/* ===== FULL PAGE BACKGROUND FIX ===== */
+
+.page-container {
+  min-height: 100vh;
+  width: 100%;
+  background-color: var(--page-bg);
+  color: var(--text-main);
+  padding: 20px;
+}
+
+/* DARK MODE */
+body.dark-mode {
+  --bs-body-bg: #1e1e2f;
+  --bs-body-color: #e4e6eb;
+
+  --bs-accordion-bg: #2a2a3d;
+  --bs-accordion-color: #e4e6eb;
+}
+
+/* LIGHT MODE */
+body.light-mode {
+  --text-main: #212529;
+}
+/* FORCE FORM BACKGROUND */
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background-color: #2a2a3d !important;
+  color: #fff !important;
+  border: 1px solid #3a3a50 !important;
+}
+
+/* FORCE COL CONTAINERS */
+body.dark-mode .col,
+body.dark-mode .row {
+  background: transparent !important;
+}
+body.dark-mode .accordion,
+body.dark-mode .accordion-item {
+  background-color: #2a2a3d !important;
+  color: #e4e6eb !important;
+  border-color: #3a3a50 !important;
+}
+
+body.dark-mode .accordion-button {
+  background-color: #2a2a3d !important;
+  color: #e4e6eb !important;
+  box-shadow: none !important;
+}
+
+body.dark-mode .accordion-button:not(.collapsed) {
+  background-color: #1f1f2e !important;
+  color: #ffffff !important;
+}
+
+body.dark-mode .accordion-body {
+  background-color: #2a2a3d !important;
+  color: #e4e6eb !important;
+}
+/* ===========================
+   GLOBAL RESET
+=========================== */
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===========================
+   LIGHT THEME (DEFAULT)
+=========================== */
+:root {
+  --bg-color: #f4f7fa;
+  --text-color: #000;
+  --card-bg: #ffffff;
+  --sidebar-bg: #f0f4f8;
+  --topbar-bg: #f0f4f8;
+}
+
+/* ===========================
+   DARK THEME
+=========================== */
+body[data-theme='dark'] {
+  --bg-color: #1e1e2f;
+  --text-color: #ffffff;
+  --card-bg: #2a2a3d;
+  --sidebar-bg: #1f1f2f;
+  --topbar-bg: #2a2a3d;
+}
+
+/* ===========================
+   APPLY GLOBALLY
+=========================== */
+body {
+  background-color: var(--bg-color) !important;
+  color: var(--text-color) !important;
+  transition: all 0.3s ease;
+}
+
+/* Bootstrap override fix */
+/* Apply only to body content, NOT header */
+.table tbody td {
+  color: var(--text-color) !important;
+}
+
+/* Cards */
+.card {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+}
+
+/* Inputs */
+input, select, textarea {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid #444;
+}
+
+/* Accordion fix (your error) */
+.accordion,
+.accordion-item,
+.accordion-button {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+}
+
+/* ===========================
+   SIDEBAR
+=========================== */
+.sidebar,
+nav {
+  background-color: var(--sidebar-bg) !important;
+}
+
+/* Topbar */
+.topbar {
+  background-color: var(--topbar-bg) !important;
+}
+/* ================= LIGHT MODE ================= */
+body.light-mode {
+  --bg-color: #f4f7fa;
+  --text-color: #212529;
+  --card-bg: #ffffff;
+  --sidebar-bg: #f0f4f8;
+  --topbar-bg: #f0f4f8;
+}
+
+/* ================= DARK MODE ================= */
+body.dark-mode {
+  --bg-color: #1e1e2f;
+  --text-color: #e4e6eb;
+  --card-bg: #2a2a3d;
+  --sidebar-bg: #1f1f2f;
+  --topbar-bg: #2a2a3d;
+}
+/* ================= FINAL CHECKBOX FORCE FIX ================= */
+
+.form-check-input {
+  appearance: auto !important;
+  -webkit-appearance: auto !important;
+  -moz-appearance: auto !important;
+
+  width: 1.1em;
+  height: 1.1em;
+  cursor: pointer;
+}
+
+/* DARK MODE */
+body.dark-mode .form-check-input {
+  background-color: #2a2a3d !important;
+  border: 1px solid #666 !important;
+}
+
+/* CHECKED STATE */
+body.dark-mode .form-check-input:checked {
+  background-color: #0d6efd !important;
+  border-color: #0d6efd !important;
+
+  /* FORCE Bootstrap tick */
+  /background-image: var(--bs-form-check-bg-image) !important;
+}
+
+/* LIGHT MODE */
+body.light-mode .form-check-input {
+  background-color: #fff !important;
+  border: 1px solid #ced4da !important;
+}
+/* LIGHT MODE HEADER */
+body.light-mode .table-dark {
+  background-color: #212529 !important;
+  color: #fff !important;
+}
+
+/* DARK MODE HEADER */
+body.dark-mode .table-dark {
+  background-color: #1f1f2e !important;
+  color: #fff !important;
+}
+
+/* Dark mode: Bootstrap Switch fix */
+body.dark-mode .form-check-input[type="checkbox"].form-switch {
+  background-color: #2a2a3d;       /* switch track */
+  border-color: #555;
+}
+
+body.dark-mode .form-check-input[type="checkbox"].form-switch:checked {
+  background-color: #0d6efd;       /* switch thumb when ON */
+  border-color: #0d6efd;
+}
+
+body.dark-mode .form-check-input[type="checkbox"].form-switch:focus {
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }

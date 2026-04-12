@@ -148,7 +148,7 @@ const organizationID: number | undefined = user?.organizationID;
   };
 
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Manage Divisions</h3>
       <div className="text-end mb-3">
         <Button variant="success" onClick={openAddModal}>
@@ -158,7 +158,7 @@ const organizationID: number | undefined = user?.organizationID;
 
       {/* ✅ Division Table */}
       {divisions.length > 0 ? (
-        <Table striped bordered hover responsive className="shadow-sm table-sm">
+        <Table className="table table-hover table-dark-custom">
           <thead className="table-dark">
             <tr>
               <th>Division Code</th>

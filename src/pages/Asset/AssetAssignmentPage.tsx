@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
-
+import LoggedInUser from '../../types/LoggedInUser'
 import AssetService from '../../services/AssetService';
 import branchService from '../../services/branchService';
 import departmentService from '../../services/departmentService';
+import employeeService from '../../services/employeeService';
+import Select from 'react-select';
 
 /* ===========================
    Interfaces
@@ -14,7 +16,7 @@ interface AssetAssignment {
   AssignedToEmployeeID: number;
   AssignedToDepartmentID: number;
   AssignedDate: string;
-  ExpectedReturnDate: string;
+  ExpectedReturnDate: string | null;
   ActualReturnDate: string;
   ConditionOnReturn: string;
   Remarks: string;
@@ -36,18 +38,6 @@ interface Department {
   DepartmentName: string;
 }
 
-interface LoggedInUser {
-  organizationID: number;
-}
-
-/* ===========================
-   Static Employees (TEMP)
-   =========================== */
-const employees = [
-  { id: 1, name: 'Alice', branchId: 1 },
-  { id: 2, name: 'Bob', branchId: 2 },
-];
-
 /* ===========================
    Component
    =========================== */
@@ -63,7 +53,9 @@ const AssetAssignmentPage: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
-
+ const [employees, setEmployees] = useState<any[]>([]);
+// const [filteredEmployees, setFilteredEmployees] = useState<any[]>([]);
+const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [selectedBranchID, setSelectedBranchID] = useState<number>(0);
 
   const [formData, setFormData] = useState<AssetAssignment>({
@@ -72,7 +64,7 @@ const AssetAssignmentPage: React.FC = () => {
     AssignedToEmployeeID: 0,
     AssignedToDepartmentID: 0,
     AssignedDate: '',
-    ExpectedReturnDate: '',
+    ExpectedReturnDate: null,
     ActualReturnDate: '',
     ConditionOnReturn: '',
     Remarks: '',
@@ -97,6 +89,34 @@ const AssetAssignmentPage: React.FC = () => {
     }
   }, [organizationID]);
 
+useEffect(() => {
+  const fetchEmployees = async () => {
+    try {
+      const res = await employeeService.getEmployeesByOrganizationIdAsync(organizationID);
+
+      console.log("Employee API Response:", res);
+
+      const data = res?.Table ?? res ?? [];
+      setEmployees(data);
+    } catch (err) {
+      console.error("Error loading employees", err);
+    }
+  };
+
+  if (organizationID > 0) {
+    fetchEmployees();
+  }
+}, [organizationID]);
+
+// useEffect(() => {
+//   if (selectedBranchID > 0) {
+//     const filtered = employees.filter(e => e.BranchID === selectedBranchID);
+//     setFilteredEmployees(filtered);
+//   } else {
+//     setFilteredEmployees(employees);
+//   }
+// }, [selectedBranchID, employees]);
+
   const loadAssignments = async () => {
     const res = await AssetService.getAssetAssignment(organizationID);
     setAssignments(res?.Table ?? []);
@@ -116,19 +136,23 @@ const AssetAssignmentPage: React.FC = () => {
     const res = await departmentService.getdepartmentesAsync(organizationID);
     setDepartments(res?.Table ?? []);
   };
-
+const employeeOptions = employees.map(emp => ({
+  value: emp.EmployeeID,
+  label: emp.EmployeeName
+}));
   /* ===========================
      Handlers
      =========================== */
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { id, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [id]: Number(value) || value,
-    }));
-  };
+ const handleInputChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+) => {
+  const { id, value } = e.target;
+
+  setFormData(prev => ({
+    ...prev,
+    [id]: value === "" ? null : Number(value) || value,
+  }));
+};
 
   const openAddModal = () => {
     setEditItem(null);
@@ -156,18 +180,24 @@ const AssetAssignmentPage: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (e.currentTarget.checkValidity() === false) {
-      setValidated(true);
-      return;
-    }
+const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
 
-    await AssetService.createAssetAssignment(formData);
-    await loadAssignments();
-    setShowModal(false);
+  if (e.currentTarget.checkValidity() === false) {
+    setValidated(true);
+    return;
+  }
+
+  const payload = {
+    ...formData,
+    ExpectedReturnDate: formData.ExpectedReturnDate || null,
+    ActualReturnDate: formData.ActualReturnDate || null
   };
 
+  await AssetService.createAssetAssignment(payload);
+  await loadAssignments();
+  setShowModal(false);
+};
   const handleDelete = async () => {
     if (!itemToDelete) return;
     await AssetService.deleteAssetAssignment(itemToDelete);
@@ -175,19 +205,13 @@ const AssetAssignmentPage: React.FC = () => {
     setConfirmDelete(false);
   };
 
-  /* ===========================
-     Filter Employees by Branch
-     =========================== */
-  const filteredEmployees =
-    selectedBranchID > 0
-      ? employees.filter(e => e.branchId === selectedBranchID)
-      : employees;
+
 
   /* ===========================
      Render
      =========================== */
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Asset Assignment</h3>
 
       <div className="text-end mb-3">
@@ -196,7 +220,7 @@ const AssetAssignmentPage: React.FC = () => {
         </Button>
       </div>
 
-      <Table bordered hover responsive>
+      <Table className="table table-hover table-dark-custom">
         <thead>
           <tr>
             <th>Asset</th>
@@ -213,7 +237,7 @@ const AssetAssignmentPage: React.FC = () => {
           {assignments.map(a => (
             <tr key={a.AssetAssignmentID}>
               <td>{assets.find(x => x.AssetID === a.AssetID)?.AssetName}</td>
-              <td>{employees.find(x => x.id === a.AssignedToEmployeeID)?.name}</td>
+              <td>{employees.find(x => x.EmployeeID === a.AssignedToEmployeeID)?.EmployeeName}</td>
               <td>{departments.find(x => x.DepartmentID === a.AssignedToDepartmentID)?.DepartmentName}</td>
               <td>{a.AssignedDate}</td>
               <td>{a.ExpectedReturnDate}</td>
@@ -285,20 +309,24 @@ const AssetAssignmentPage: React.FC = () => {
               {/* Employee */}
               <Col md={4}>
                 <Form.Group controlId="AssignedToEmployeeID">
-                  <Form.Label>Employee</Form.Label>
-                  <Form.Select
-                    required
-                    value={formData.AssignedToEmployeeID}
-                    onChange={handleInputChange}
-                  >
-                    <option value={0}>-- Select Employee --</option>
-                    {filteredEmployees.map(e => (
-                      <option key={e.id} value={e.id}>
-                        {e.name}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Form.Group>
+                  <Form.Label>Employee</Form.Label>           
+            <Select
+              options={employeeOptions}
+              value={employeeOptions.find(
+                option => option.value === formData.AssignedToEmployeeID
+              )}
+              onChange={(selected: any) => {
+                setFormData(prev => ({
+                  ...prev,
+                  AssignedToEmployeeID: selected?.value || 0
+                }));
+              }}
+              placeholder="Select Employee"
+              isSearchable
+              isClearable
+            />
+          </Form.Group>
+               
               </Col>
             </Row>
 
@@ -338,7 +366,7 @@ const AssetAssignmentPage: React.FC = () => {
                   <Form.Label>Expected Return</Form.Label>
                   <Form.Control
                     type="date"
-                    value={formData.ExpectedReturnDate}
+                    value={formData.ExpectedReturnDate || ""}
                     onChange={handleInputChange}
                   />
                 </Form.Group>

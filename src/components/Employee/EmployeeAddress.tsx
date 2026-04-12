@@ -1,7 +1,5 @@
 import React, { useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
-import ToggleSection from '../ToggleSection';
-
 interface EmployeeAddress {
   id: number;
   addressType: string;
@@ -91,7 +89,7 @@ const EmployeeAddress: React.FC = () => {
       </div>
 
       {addresses.length ? (
-        <Table striped bordered hover>
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Type</th>

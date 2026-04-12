@@ -1,6 +1,6 @@
 import axiosInstance from '../api/axiosIdentityInstance'; // Import the existing axios instance
 import { Organization } from '../types/organization';
-import { OrganizationTypes } from '../types/OrganizationTypes';
+import { organizationTypes } from '../types/organizationTypes';
 
 // Service to get all organizations
 export const getOrganizations = async (): Promise<Organization[]> => {
@@ -14,9 +14,9 @@ export const getOrganizations = async (): Promise<Organization[]> => {
 };
 
 // Service to get all organization types
-export const getOrganizationTypes = async (): Promise<OrganizationTypes[]> => {
+export const getOrganizationTypes = async (): Promise<organizationTypes[]> => {
     try {
-        const response = await axiosInstance.get<OrganizationTypes[]>('/Organizations/GetAllOrganizationTypes');
+        const response = await axiosInstance.get<organizationTypes[]>('/Organizations/GetAllOrganizationTypes');
         return response.data;
     } catch (error) {
         console.error('Failed to fetch GetAllOrganizationTypes:', error);
@@ -25,13 +25,32 @@ export const getOrganizationTypes = async (): Promise<OrganizationTypes[]> => {
 };
 
 // Service to create a new organization
-export const createOrganization = async (newOrg: Omit<Organization, 'OrganizationID'>): Promise<number> => {
+export const createOrganization = async (
+  newOrg: Omit<Organization, 'OrganizationID'>
+): Promise<any> => {
+  try {
+    const response = await axiosInstance.post('/Organizations', newOrg);
+    return response.data; // return full response
+  } catch (error) {
+    console.error('Failed to create organization:', error);
+    throw error;
+  }
+};
+
+ export const PutActivateLoginsAsync = async (payload: any) => {
+    const res = await axiosInstance.put("Organizations/ActivateLogins", payload);
+    return res.data[0];
+};
+
+
+// Service to update a new organization
+export const updateOrganization = async (newOrg: Omit<Organization, 'OrganizationID'>): Promise<number> => {
     try {
-        const response = await axiosInstance.post<Organization>('/Organizations', newOrg);
+        const response = await axiosInstance.put<Organization>('/Organizations', newOrg);
         // Assuming the response contains the created organization with its ID
         return response.data.OrganizationID; // Return the new OrganizationID
     } catch (error) {
-        console.error('Failed to create organization:', error);
+        console.error('Failed to Update organization:', error);
         throw error;
     }
 };
@@ -51,7 +70,17 @@ export const createOrganization = async (newOrg: Omit<Organization, 'Organizatio
 
 export const  getOrgRolesAsync = async (OrganizationID : number) => {
     try {
-      const { data } = await axiosInstance.get(`Organizations/GetBranchesAsync?OrganizationID=${OrganizationID}`);
+      const { data } = await axiosInstance.get(`Organizations/GetOrgRolesAsync?id=${OrganizationID}`);
+      return data;
+    } catch (error) {
+      console.error('Error fetching branches:', error);
+      throw error;
+    }
+  };
+
+export const  GetOrgPositionsAsync = async (OrganizationID : number) => {
+    try {
+      const { data } = await axiosInstance.get(`Organizations/GetOrgPositionsAsync?id=${OrganizationID}`);
       return data;
     } catch (error) {
       console.error('Error fetching branches:', error);
@@ -75,6 +104,9 @@ export default {
     getOrganizationTypes,
     createOrganization,
     CreateOrgRolesAsync,
+    updateOrganization,
     getOrgRolesAsync,
-    getOrgDetailsAsync // Exporting createOrganization for use
+    getOrgDetailsAsync,
+    GetOrgPositionsAsync,
+    PutActivateLoginsAsync
 };

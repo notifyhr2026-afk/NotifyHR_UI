@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Container, Button, Tabs, Tab } from 'react-bootstrap';
-import { Leave, LeaveTypeOption, EmployeeOption } from  '../../types/Leaves';
+import { Leave, LeaveTypeOption, EmployeeOption } from '../../types/Leaves';
 
-import LeaveHistoryTab   from  './LeaveHistoryTab'
+import LeaveHistoryTab from './LeaveHistoryTab';
 import LeaveBalanceTab from './LeaveBalanceTab';
 import ApproveLeavesTab from './ApproveLeavesTab';
 import EmployeeLeavesTab from './EmployeeLeavesTab';
@@ -10,6 +10,9 @@ import ApplyLeaveModal from './ApplyLeaveModal';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 
 const ApplyLeave: React.FC = () => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID: number | undefined = user?.organizationID;
+  const employeeID: number  = user?.employeeID;
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [activeTab, setActiveTab] = useState('history');
 
@@ -30,6 +33,9 @@ const ApplyLeave: React.FC = () => {
     { value: '2', label: 'Sick Leave', totalLeaves: 10 },
     { value: '3', label: 'Earned Leave', totalLeaves: 15 },
   ];
+
+  // Wrap setEditLeave to match LeaveHistoryTab prop
+  const handleEditLeave = (leave: Leave) => setEditLeave(leave);
 
   const handleSaveLeave = (leave: Leave) => {
     if (editLeave) {
@@ -55,7 +61,7 @@ const ApplyLeave: React.FC = () => {
   };
 
   return (
-    <Container className="mt-5">
+    <Container>
       <div className="d-flex justify-content-between mb-4">
         <h3>My Leaves</h3>
         <Button onClick={() => setShowModal(true)}>+ Apply Leave</Button>
@@ -64,10 +70,9 @@ const ApplyLeave: React.FC = () => {
       <Tabs activeKey={activeTab} onSelect={k => setActiveTab(k || 'history')}>
         <Tab eventKey="history" title="Leave History">
           <LeaveHistoryTab
-            leaves={leaves}
-            employees={employeeOptions}
+           employeeID={employeeID}
             leaveTypes={leaveTypeOptions}
-            onEdit={setEditLeave}
+            onEdit={handleEditLeave} // ✅ wrapped function
             onDelete={(id) => {
               setLeaveToDelete(id);
               setConfirmDelete(true);
@@ -76,23 +81,18 @@ const ApplyLeave: React.FC = () => {
         </Tab>
 
         <Tab eventKey="balance" title="Leave Balance">
-          <LeaveBalanceTab leaves={leaves} leaveTypes={leaveTypeOptions} />
+         <LeaveBalanceTab />
         </Tab>
 
         <Tab eventKey="approve" title="Approve Leaves">
-          <ApproveLeavesTab
-            leaves={leaves}
-            employees={employeeOptions}
-            leaveTypes={leaveTypeOptions}
+         <ApproveLeavesTab
             onApprove={handleApprove}
             onReject={handleReject}
           />
         </Tab>
 
         <Tab eventKey="employee" title="Employee Leaves">
-          <EmployeeLeavesTab
-            leaves={leaves}
-            employees={employeeOptions}
+          <EmployeeLeavesTab  
             leaveTypes={leaveTypeOptions}
           />
         </Tab>
@@ -102,8 +102,9 @@ const ApplyLeave: React.FC = () => {
         show={showModal}
         onHide={() => { setShowModal(false); setEditLeave(null); }}
         editLeave={editLeave}
-        leaveTypes={leaveTypeOptions}
-        onSave={handleSaveLeave}
+        onSave={() => {
+          if (editLeave) handleSaveLeave(editLeave);
+        }}
       />
 
       <DeleteConfirmModal

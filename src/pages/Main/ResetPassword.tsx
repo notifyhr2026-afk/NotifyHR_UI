@@ -3,6 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import '../../css/Login.css';
 import resetImage from '../../assets/ResetPassword.png'; // add a suitable image (or reuse Login.png)
+import { useSearchParams } from "react-router-dom";
+import changePassword from '../../services/Changepassword';
+import Swal from 'sweetalert2';
 
 const ResetPassword: React.FC = () => {
   const [oldPassword, setOldPassword] = useState('');
@@ -13,6 +16,18 @@ const ResetPassword: React.FC = () => {
 
   //const { resetPassword } = useAuth(); // you'll need to add this function in AuthContext
   const navigate = useNavigate();
+const [searchParams] = useSearchParams();
+
+const userID = searchParams.get("userId");
+const organizationID = searchParams.get("orgId");
+
+const parsedUserId = Number(userID);
+const parsedOrgId = Number(organizationID);
+const [successMessage, setSuccessMessage] = useState('');
+
+  const {  logout } = useAuth();
+
+
 
   // --- Validation ---
   const validate = () => {
@@ -29,16 +44,55 @@ const ResetPassword: React.FC = () => {
   // --- Handle Submit ---
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+      setSuccessMessage('');
+
     const validationErrors = validate();
     setErrors(validationErrors);
-
     if (Object.keys(validationErrors).length === 0) {
       try {
         setIsSubmitting(true);
+        const payload = {
+          userID: parsedUserId,
+        organizationID: parsedOrgId,
+        oldPassword: oldPassword,
+        password: newPassword,
+          modifiedBy: "Admin"
+
+      };
+
+      await changePassword(payload);
+
+      await Swal.fire({
+        icon: 'success',
+        title: 'Password Reset Successful!',
+        text: 'Please login again with your new password.',
+        confirmButtonColor: '#3085d6',
+        heightAuto: false, 
+        width: 380,
+        customClass: {
+          popup: "custom-swal-popup"
+        },
+        showConfirmButton: false,   // ❌ remove OK button
+        timer: 2500,                // ⏱ 3 seconds
+        timerProgressBar: true,     // optional progress bar
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        scrollbarPadding: false,
+        didClose: () => {
+                logout()
+          navigate("/login");  // 🔁 auto redirect
+        }
+      }).then(() => {
+              logout()
+          navigate("/login");
+        });
         //await resetPassword(oldPassword, newPassword);
-        navigate('/dashboard'); // redirect after success
       } catch (err) {
-        setErrors({ oldPassword: 'Invalid current password or request failed' });
+      Swal.fire({
+        icon: 'error',
+        title: 'Password Reset Failed',
+        text: 'Invalid current password or request failed.',
+      });
       } finally {
         setIsSubmitting(false);
       }

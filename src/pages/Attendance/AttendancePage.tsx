@@ -1,12 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Select from "react-select";
 import "bootstrap/dist/css/bootstrap.min.css";
+import employeeService from "../../services/employeeService";
+import employeeAttendanceService from "../../services/employeeAttendanceService";
+import LoggedInUser from "../../types/LoggedInUser";
 
 interface Attendance {
   AttendanceID: number;
   EmployeeID: number;
   AttendanceDate: string;
-  AttendanceTypeID: string;
   CheckInTime: string;
   CheckOutTime: string;
   ShiftID: string;
@@ -15,7 +17,6 @@ interface Attendance {
   IsApproved: boolean;
   Source: string;
   Remarks: string;
-  CreatedAt: string;
 }
 
 interface Employee {
@@ -23,148 +24,161 @@ interface Employee {
   label: string;
 }
 
-// Sample Employees
-const employees: Employee[] = [
-  { value: 1, label: "John Doe" },
-  { value: 2, label: "Jane Smith" },
-];
-
-// Sample Attendance Data
-const attendanceData: Attendance[] = [
-  {
-    AttendanceID: 101,
-    EmployeeID: 1,
-    AttendanceDate: "2026-01-05",
-    AttendanceTypeID: "Regular",
-    CheckInTime: "09:02",
-    CheckOutTime: "12:05",
-    ShiftID: "Morning",
-    IsLate: false,
-    IsHalfDay: false,
-    IsApproved: true,
-    Source: "Mobile App",
-    Remarks: "Morning session",
-    CreatedAt: "2026-01-05",
-  },
-  {
-    AttendanceID: 104,
-    EmployeeID: 1,
-    AttendanceDate: "2026-01-05",
-    AttendanceTypeID: "Regular",
-    CheckInTime: "13:02",
-    CheckOutTime: "17:05",
-    ShiftID: "Afternoon",
-    IsLate: false,
-    IsHalfDay: false,
-    IsApproved: true,
-    Source: "Web Portal",
-    Remarks: "Afternoon session",
-    CreatedAt: "2026-01-05",
-  },
-  {
-    AttendanceID: 102,
-    EmployeeID: 1,
-    AttendanceDate: "2026-01-04",
-    AttendanceTypeID: "Regular",
-    CheckInTime: "09:15",
-    CheckOutTime: "17:00",
-    ShiftID: "Morning",
-    IsLate: true,
-    IsHalfDay: false,
-    IsApproved: true,
-    Source: "Web Portal",
-    Remarks: "Late arrival",
-    CreatedAt: "2026-01-04",
-  },
-  {
-    AttendanceID: 103,
-    EmployeeID: 2,
-    AttendanceDate: "2026-01-05",
-    AttendanceTypeID: "Regular",
-    CheckInTime: "08:50",
-    CheckOutTime: "16:50",
-    ShiftID: "Morning",
-    IsLate: false,
-    IsHalfDay: false,
-    IsApproved: true,
-    Source: "Web Portal",
-    Remarks: "Perfect",
-    CreatedAt: "2026-01-05",
-  },
-];
-
-// Helper: Group by date
-const groupByDate = (data: Attendance[]) => {
-  return data.reduce((acc: Record<string, Attendance[]>, item) => {
-    if (!acc[item.AttendanceDate]) acc[item.AttendanceDate] = [];
-    acc[item.AttendanceDate].push(item);
+// Group by date
+const groupByDate = (data: any[]) => {
+  return data.reduce((acc: Record<string, any[]>, item) => {
+    const date = item.AttendanceDate.split("T")[0];
+    if (!acc[date]) acc[date] = [];
+    acc[date].push(item);
     return acc;
   }, {});
 };
 
-// Helper: Calculate total hours
-const calculateTotalHours = (records: Attendance[]) => {
+// Calculate total hours from logs
+const calculateTotalHours = (logs: any[]) => {
   let totalMinutes = 0;
-  records.forEach((r) => {
-    const [inH, inM] = r.CheckInTime.split(":").map(Number);
-    const [outH, outM] = r.CheckOutTime.split(":").map(Number);
-    totalMinutes += outH * 60 + outM - (inH * 60 + inM);
+
+  logs.forEach((log) => {
+    const time = new Date(log.LogTime);
+    if (log.LogTypeID === 1) {
+      log._inTime = time;
+    } else if (log.LogTypeID === 2 && log._inTime) {
+      totalMinutes +=
+        (time.getTime() - log._inTime.getTime()) / (1000 * 60);
+      log._inTime = null;
+    }
   });
+
   const hours = Math.floor(totalMinutes / 60);
-  const minutes = totalMinutes % 60;
+  const minutes = Math.floor(totalMinutes % 60);
+
   return `${hours}h ${minutes}m`;
 };
 
-// Helper: Get unique shifts
-const getShifts = (records: Attendance[]) => {
-  return Array.from(new Set(records.map((r) => r.ShiftID)));
-};
-
-// Main Component
 const AttendancePage: React.FC = () => {
-  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(
-    null
-  );
-  const [fromDate, setFromDate] = useState<string>("");
-  const [toDate, setToDate] = useState<string>("");
-  const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>(
-    {}
-  );
+  const userString = localStorage.getItem("user");
+  const user: LoggedInUser | null = userString
+    ? JSON.parse(userString)
+    : null;
 
-  const toggleExpand = (date: string) => {
-    setExpandedDates((prev) => ({ ...prev, [date]: !prev[date] }));
+  const organizationID = user?.organizationID ?? 0;
+
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [selectedEmployee, setSelectedEmployee] =
+    useState<Employee | null>(null);
+
+  const [attendanceData, setAttendanceData] = useState<any[]>([]);
+  const [attendanceLogs, setAttendanceLogs] = useState<any[]>([]);
+
+  const [loading, setLoading] = useState(false);
+
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+
+  const [expandedDates, setExpandedDates] = useState<
+    Record<string, boolean>
+  >({});
+
+  // 🔹 Load Employees
+  useEffect(() => {
+    const loadEmployees = async () => {
+      try {
+        const res =
+          await employeeService.getEmployeesByOrganizationIdAsync(
+            organizationID
+          );
+
+        const data = res?.Table ?? res ?? [];
+
+        const mapped = data.map((emp: any) => ({
+          value: emp.EmployeeID,
+          label: `${emp.EmployeeName} (${emp.EmployeeCode})`,
+        }));
+
+        setEmployees(mapped);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    if (organizationID > 0) loadEmployees();
+  }, [organizationID]);
+
+  // 🔹 Load Attendance + Logs
+  const loadAttendance = async (empId: number) => {
+    try {
+      setLoading(true);
+
+      const res =
+        await employeeAttendanceService.getEmployeeAttendanceByEmployeeId(
+          empId
+        );
+
+      const summary = res?.Table || [];
+      const logs = res?.Table1 || [];
+
+      setAttendanceLogs(logs);
+
+      setAttendanceData(summary);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Filter attendance by employee and date range
-  const filteredAttendance = selectedEmployee
-    ? attendanceData.filter((att) => {
-        const attDate = att.AttendanceDate;
-        const afterFrom = fromDate ? attDate >= fromDate : true;
-        const beforeTo = toDate ? attDate <= toDate : true;
-        return att.EmployeeID === selectedEmployee.value && afterFrom && beforeTo;
-      })
-    : [];
+  const handleEmployeeChange = (emp: any) => {
+    setSelectedEmployee(emp);
+    if (emp) loadAttendance(emp.value);
+  };
+
+  // 🔹 Filter by date
+  const filteredAttendance = attendanceData.filter((att) => {
+    const date = att.AttendanceDate.split("T")[0];
+    const afterFrom = fromDate ? date >= fromDate : true;
+    const beforeTo = toDate ? date <= toDate : true;
+    return afterFrom && beforeTo;
+  });
 
   const attendanceByDate = groupByDate(filteredAttendance);
 
+  const toggleExpand = (date: string) => {
+    setExpandedDates((prev) => ({
+      ...prev,
+      [date]: !prev[date],
+    }));
+  };
+
+  // 🔹 Get logs for date
+  const getLogsByDate = (date: string) => {
+    return attendanceLogs
+      .filter((log) => log.AttendanceDate.split("T")[0] === date)
+      .sort(
+        (a, b) =>
+          new Date(a.LogTime).getTime() -
+          new Date(b.LogTime).getTime()
+      );
+  };
+
   return (
     <div className="container my-5">
-      <h2 className="mb-4 text-center">Employee Attendance Log</h2>
+      <h2 className="text-center mb-4">
+        Employee Attendance (Logs View)
+      </h2>
 
       {/* Filters */}
-      <div className="row mb-4 align-items-end">
-        <div className="col-md-4 mb-2">
-          <label className="form-label">Select Employee</label>
+      <div className="row mb-4">
+        <div className="col-md-4">
+          <label>Select Employee</label>
           <Select
             options={employees}
             value={selectedEmployee}
-            onChange={(employee) => setSelectedEmployee(employee as Employee)}
-            placeholder="Choose an employee..."
+            onChange={handleEmployeeChange}
           />
         </div>
 
-        <div className="col-md-3 mb-2">
-          <label className="form-label">From Date</label>
+        <div className="col-md-3">
+          <label>From</label>
           <input
             type="date"
             className="form-control"
@@ -173,8 +187,8 @@ const AttendancePage: React.FC = () => {
           />
         </div>
 
-        <div className="col-md-3 mb-2">
-          <label className="form-label">To Date</label>
+        <div className="col-md-3">
+          <label>To</label>
           <input
             type="date"
             className="form-control"
@@ -184,123 +198,83 @@ const AttendancePage: React.FC = () => {
         </div>
       </div>
 
-      {/* Attendance Table */}
-      {selectedEmployee && (
-        <div className="table-responsive">
-          <table className="table table-hover table-bordered align-middle">
-            <thead className="table-dark text-center">
+      {/* Table */}
+      {loading ? (
+        <div className="text-center">Loading...</div>
+      ) : (
+        <table className="table table-bordered">
+          <thead className="table-dark">
+            <tr>
+              <th>Date</th>
+              <th>Summary</th>
+              <th>Total Hours</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {Object.keys(attendanceByDate).length === 0 && (
               <tr>
-                <th>Date</th>
-                <th>Summary</th>
-                <th>Total Hours</th>
+                <td colSpan={3} className="text-center">
+                  No records found
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {Object.keys(attendanceByDate).length === 0 && (
-                <tr>
-                  <td colSpan={3} className="text-center">
-                    No attendance records found.
-                  </td>
-                </tr>
-              )}
+            )}
 
-              {Object.entries(attendanceByDate).map(([date, records]) => {
-                records.sort(
-                  (a, b) =>
-                    parseInt(a.CheckInTime.replace(":", ""), 10) -
-                    parseInt(b.CheckInTime.replace(":", ""), 10)
-                );
+            {Object.entries(attendanceByDate).map(([date, records]) => {
+              const logs = getLogsByDate(date);
 
-                const firstCheckIn = records[0].CheckInTime;
-                const lastCheckOut = records[records.length - 1].CheckOutTime;
-                const totalHours = calculateTotalHours(records);
-                const shifts = getShifts(records);
-                const isLate = records.some((r) => r.IsLate);
-                const isHalfDay = records.some((r) => r.IsHalfDay);
+              const totalHours = calculateTotalHours([...logs]);
 
-                return (
-                  <React.Fragment key={date}>
-                    {/* Summary Row */}
-                    <tr
-                      onClick={() => toggleExpand(date)}
-                      style={{ cursor: "pointer" }}
-                      className="table-primary"
-                    >
-                      <td className="text-center fw-bold">{date}</td>
-                      <td>
-                        <div>
-                          <strong>
-                            {firstCheckIn} - {lastCheckOut}
-                          </strong>
-                        </div>
-                        <div className="mt-1">
-                          {shifts.map((s) => (
-                            <span key={s} className="badge bg-info me-1">
-                              {s}
+              return (
+                <React.Fragment key={date}>
+                  {/* Main Row */}
+                  <tr
+                    className="table-primary"
+                    onClick={() => toggleExpand(date)}
+                    style={{ cursor: "pointer" }}
+                  >
+                    <td>{date}</td>
+                    <td>
+                      Click to view logs ({logs.length})
+                    </td>
+                    <td>{totalHours}</td>
+                  </tr>
+
+                  {/* Logs */}
+                  {expandedDates[date] &&
+                    logs.map((log) => (
+                      <tr key={log.LogID}>
+                        <td></td>
+                        <td colSpan={2}>
+                          <div className="d-flex justify-content-between">
+                            <strong>
+                              {log.LogTypeID === 1
+                                ? "Clock In"
+                                : "Clock Out"}
+                            </strong>
+
+                            <span>
+                              {new Date(
+                                log.LogTime
+                              ).toLocaleTimeString()}
                             </span>
-                          ))}
-                          <span
-                            className={`badge ${
-                              isLate ? "bg-danger" : "bg-success"
-                            } me-1`}
-                          >
-                            Late: {isLate ? "Yes" : "No"}
-                          </span>
-                          <span
-                            className={`badge ${
-                              isHalfDay ? "bg-warning" : "bg-success"
-                            }`}
-                          >
-                            Half Day: {isHalfDay ? "Yes" : "No"}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="text-center fw-bold">{totalHours}</td>
-                    </tr>
 
-                    {/* Expanded Details */}
-                    {expandedDates[date] &&
-                      records.map((r) => (
-                        <tr key={r.AttendanceID} className="table-light">
-                          <td></td>
-                          <td colSpan={2}>
-                            <div className="d-flex flex-wrap gap-3">
-                              <div>
-                                <strong>Check In:</strong> {r.CheckInTime}
-                              </div>
-                              <div>
-                                <strong>Check Out:</strong> {r.CheckOutTime}
-                              </div>
-                              <div>
-                                <strong>Shift:</strong> {r.ShiftID}
-                              </div>
-                              <div>
-                                <strong>Late:</strong> {r.IsLate ? "Yes" : "No"}
-                              </div>
-                              <div>
-                                <strong>Half Day:</strong>{" "}
-                                {r.IsHalfDay ? "Yes" : "No"}
-                              </div>
-                              <div>
-                                <strong>Approved:</strong>{" "}
-                                {r.IsApproved ? "Yes" : "No"}
-                              </div>
-                              <div>
-                                <strong>Source:</strong> {r.Source}
-                              </div>
-                              <div>
-                                <strong>Remarks:</strong> {r.Remarks}
-                              </div>
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                  </React.Fragment>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                            <span>
+                              Device: {log.DeviceName || "-"}
+                            </span>
+
+                            <span>
+                              IP: {log.IPAddress || "-"}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                </React.Fragment>
+              );
+            })}
+          </tbody>
+        </table>
       )}
     </div>
   );

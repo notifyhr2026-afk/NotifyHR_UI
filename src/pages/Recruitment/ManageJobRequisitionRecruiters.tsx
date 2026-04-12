@@ -137,7 +137,7 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
 
   // ======= Render =======
   return (
-    <div className="mt-5">
+    <div className="Container">
       <h3>Manage Job Requisition Recruiters</h3>
       <div className="text-end mb-3">
         <Button variant="success" onClick={openAddModal}>
@@ -146,7 +146,7 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
       </div>
 
       {/* Table */}
-      <Table striped bordered hover responsive className="shadow-sm table-sm">
+      <Table className="table table-hover table-dark-custom">
         <thead className="table-dark">
           <tr>
             <th>ID</th>

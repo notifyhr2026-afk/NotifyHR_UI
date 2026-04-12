@@ -1,15 +1,19 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Home from './pages/Main/Home';
-import LoginPage from './pages/Main/Login';
-import Dashboard from './pages/Main/Dashboard';
-import DashboardLayout from './components/DashboardLayout';
+import { BrowserRouter as Router } from 'react-router-dom';
+import { useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import RoutesComponent from './Routes/RoutesComponent';
 
 function App() {
+
+  // useEffect(() => {
+  //   // ✅ Apply dark mode on app load
+  //   document.body.classList.remove('light-mode');
+  //   document.body.classList.add('dark-mode');
+  // }, []);
+
   return (
-  <Router>
+    <Router>
       <RoutesComponent />
     </Router>
   );

@@ -1,21 +1,41 @@
-/* Main menu style */
+/* =========================
+   MENU BASE STYLES
+========================= */
+
 .main-menu {
-    background-color: #f0f8ff !important; /* Light blue for main menus */
-    font-weight: bold; /* Make the main menu bold */
-  }
-  
-  /* Submenu style */
-  .submenu {
-    background-color: #f9f9f9 !important; /* Light gray for submenus */
-  }
-  
-  /* Optional: Add hover effect to highlight rows */
-  .main-menu:hover,
-  .submenu:hover {
-    background-color: #e0e0e0; /* Change on hover */
-  }
-  
-  /* Additional styling for nested submenus */
-  .submenu td {
-    padding-left: 20px; /* Ensure padding for nested submenus */
-  }
+  background-color: var(--menu-bg);
+  font-weight: bold;
+  color: var(--text-main);
+  transition: all 0.3s ease;
+}
+
+.submenu {
+  background-color: var(--submenu-bg);
+  color: var(--text-main);
+  transition: all 0.3s ease;
+}
+
+/* Hover effect */
+.main-menu:hover,
+.submenu:hover {
+  background-color: var(--menu-hover-bg);
+}
+
+/* Nested submenu padding */
+.submenu td {
+  padding-left: 20px;
+}
+
+/* Optional link styling */
+.main-menu a,
+.submenu a {
+  color: var(--text-main);
+  text-decoration: none;
+}
+
+/* Active row highlight (optional) */
+.main-menu.active,
+.submenu.active {
+  background-color: rgba(13, 110, 253, 0.15);
+  color: var(--text-main);
+}

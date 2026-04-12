@@ -11,7 +11,7 @@ import CandidateOffers from "./CandidateOffers";
 
 const ManageCandidate: React.FC = () => {
   return (
-    <Container className="mt-5">
+    <Container>
       <h2 className="mb-4">Manage - Candidate</h2>
 
       <Accordion defaultActiveKey="0" flush>

@@ -1,5 +1,13 @@
-import React, { useState } from 'react';
-import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import {
+  Button,
+  Table,
+  Modal,
+  Form,
+  Spinner,
+  Alert,
+} from 'react-bootstrap';
+import salaryService from '../../services/salaryService';
 
 interface SalaryStructure {
   StructureID: number;
@@ -8,31 +16,26 @@ interface SalaryStructure {
   IsActive: boolean;
 }
 
+interface LoggedInUser {
+  organizationID: number;
+}
+
 const SalaryStructureMaster: React.FC = () => {
-  // Sample static data
-  const [structures, setStructures] = useState<SalaryStructure[]>([
-    {
-      StructureID: 1,
-      StructureName: 'Standard Salary Structure',
-      Description: 'Default structure for all employees',
-      IsActive: true,
-    },
-    {
-      StructureID: 2,
-      StructureName: 'Contract Employee Structure',
-      Description: 'Structure for contract-based employees',
-      IsActive: false,
-    },
-    {
-      StructureID: 3,
-      StructureName: 'Intern Salary Structure',
-      Description: 'Structure for interns',
-      IsActive: true,
-    },
-  ]);
+  const userString = localStorage.getItem('user');
+  const user: LoggedInUser | null = userString
+    ? JSON.parse(userString)
+    : null;
+
+  const organizationID = user?.organizationID ?? 0;
+
+  const [structures, setStructures] = useState<SalaryStructure[]>([]);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [showModal, setShowModal] = useState(false);
-  const [editStructure, setEditStructure] = useState<SalaryStructure | null>(null);
+  const [editStructure, setEditStructure] =
+    useState<SalaryStructure | null>(null);
   const [validated, setValidated] = useState(false);
 
   const [formData, setFormData] = useState<SalaryStructure>({
@@ -42,7 +45,25 @@ const SalaryStructureMaster: React.FC = () => {
     IsActive: true,
   });
 
-  // Input change handler
+  // ================= FETCH DATA =================
+  const fetchStructures = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await salaryService.getSalaryStructuresAsync(organizationID);
+      setStructures(data);
+    } catch (err) {
+      setError('Failed to load salary structures.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStructures();
+  }, []);
+
+  // ================= INPUT CHANGE =================
   const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -51,31 +72,53 @@ const SalaryStructureMaster: React.FC = () => {
     }));
   };
 
-  // Save Add/Edit
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  // ================= SAVE / UPDATE =================
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
+
     if (form.checkValidity() === false) {
       e.stopPropagation();
       setValidated(true);
       return;
     }
 
-    if (editStructure) {
-      setStructures((prev) =>
-        prev.map((s) => (s.StructureID === editStructure.StructureID ? formData : s))
-      );
-    } else {
-      setStructures((prev) => [...prev, { ...formData, StructureID: Date.now() }]);
-    }
+    try {
+      setLoading(true);
+      setError(null);
 
-    setValidated(false);
-    setShowModal(false);
+      const payload = {
+        structureID: editStructure ? formData.StructureID : 0,
+        structureName: formData.StructureName,
+        description: formData.Description,
+        isActive: formData.IsActive,
+        organizationID: organizationID,
+      };
+
+      const response = await salaryService.PostSalaryStructureByAsync({
+        requestType: 'Salary/SaveOrUpdateSalaryStructure',
+        ...payload,
+      });
+
+      if (response.value === 1) {
+        setSuccessMessage(response.msg);
+        setShowModal(false);
+        setValidated(false);
+        await fetchStructures();
+      } else {
+        setError(response.msg || 'Operation failed.');
+      }
+    } catch (err) {
+      setError('Failed to save salary structure.');
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // ================= ADD =================
   const handleAdd = () => {
     setFormData({
-      StructureID: Date.now(),
+      StructureID: 0,
       StructureName: '',
       Description: '',
       IsActive: true,
@@ -84,28 +127,72 @@ const SalaryStructureMaster: React.FC = () => {
     setShowModal(true);
   };
 
+  // ================= EDIT =================
   const handleEdit = (structure: SalaryStructure) => {
     setEditStructure(structure);
     setFormData(structure);
     setShowModal(true);
   };
 
-  const handleDelete = (id: number) => {
-    if (window.confirm('Are you sure you want to delete this structure?')) {
-      setStructures((prev) => prev.filter((s) => s.StructureID !== id));
+  // ================= DELETE =================
+  const handleDelete = async (structureID: number) => {
+    if (!window.confirm('Are you sure you want to delete this structure?'))
+      return;
+
+    try {
+      setLoading(true);
+      const response =
+        await salaryService.DeleteSalaryStructureByAsync(structureID);
+
+      if (response[0]?.value === 1) {
+        setSuccessMessage(response[0].msg);
+        await fetchStructures();
+      } else {
+        setError(response[0]?.msg || 'Delete failed.');
+      }
+    } catch (err) {
+      setError('Failed to delete salary structure.');
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="salary-structure-container mt-5">
+    <div className="container">
       <div className="text-end mb-3">
         <Button variant="success" onClick={handleAdd}>
           + Add Structure
         </Button>
       </div>
 
-      {structures.length ? (
-        <Table striped bordered hover>
+      {loading && (
+        <div className="text-center my-4">
+          <Spinner animation="border" />
+        </div>
+      )}
+
+      {error && (
+        <Alert
+          variant="danger"
+          onClose={() => setError(null)}
+          dismissible
+        >
+          {error}
+        </Alert>
+      )}
+
+      {successMessage && (
+        <Alert
+          variant="success"
+          onClose={() => setSuccessMessage(null)}
+          dismissible
+        >
+          {successMessage}
+        </Alert>
+      )}
+
+      {!loading && structures.length > 0 && (
+        <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
               <th>Structure Name</th>
@@ -131,7 +218,9 @@ const SalaryStructureMaster: React.FC = () => {
                   <Button
                     size="sm"
                     variant="outline-danger"
-                    onClick={() => handleDelete(s.StructureID)}
+                    onClick={() =>
+                      handleDelete(s.StructureID)
+                    }
                   >
                     Delete
                   </Button>
@@ -140,11 +229,13 @@ const SalaryStructureMaster: React.FC = () => {
             ))}
           </tbody>
         </Table>
-      ) : (
+      )}
+
+      {!loading && structures.length === 0 && (
         <p>No salary structures added yet.</p>
       )}
 
-      {/* Add/Edit Modal */}
+      {/* Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -185,7 +276,10 @@ const SalaryStructureMaster: React.FC = () => {
             />
 
             <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowModal(false)}>
+              <Button
+                variant="secondary"
+                onClick={() => setShowModal(false)}
+              >
                 Cancel
               </Button>
               <Button variant="primary" type="submit">

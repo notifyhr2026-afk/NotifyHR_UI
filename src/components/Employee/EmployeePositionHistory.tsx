@@ -1,18 +1,34 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
-import ToggleSection from '../ToggleSection';
+import branchService from '../../services/branchService';
+import divisionService from '../../services/divisionService';
+import departmentService from '../../services/departmentService';
+import positionService from '../../services/positionService';
 import employeeService from '../../services/employeeService';
-
+import { useParams } from "react-router-dom";
 // 🟢 Interface for list (Table1 data)
 interface ManagerHistory {
   ManagerHistoryID: number;
   EmployeeID: number;
   EmployeeName: string;
   ReportingManagerName: string;
+  ReportingManagerID: number;
   CurrentPosition: string;
   CurrentBranch: string;
   CurrentDivision: string;
+  DepartmentName: string;
+  BranchID: number;
+  DivisionID: number;
+  DepartmentID: number;
+  PositionID: number;
+  EmploymentTypeID: number;
+  EffectiveFrom: string;
+  EffectiveTo: string | null;
+  Reason: string;
+  Notes: string | null;
   IsCurrent: boolean;
+  CreatedAt: string;
+  CreatedBy: string;
 }
 
 // 🟢 Interface for dropdown options
@@ -42,7 +58,7 @@ const EmployeePositionHistory: React.FC = () => {
   const [editRecord, setEditRecord] = useState<ManagerHistory | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-
+ const { employeeID } = useParams<{ employeeID: string }>();
   // 🟢 Modal form state
   const [formData, setFormData] = useState<PositionHistoryForm>({
     branchId: 0,
@@ -65,25 +81,39 @@ const EmployeePositionHistory: React.FC = () => {
   const [positions, setPositions] = useState<DropdownOption[]>([]);
   const [managers, setManagers] = useState<DropdownOption[]>([]);
 const [showToast, setShowToast] = useState(false);
-  // 🟢 Fetch dropdown master data
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  // 🟢 Fetch dropdown master data (org-scoped)
   useEffect(() => {
     const fetchMasters = async () => {
       try {
+        const user = JSON.parse(localStorage.getItem('user') || '{}');
+        const organizationID = user.organizationID;
+
+        if (!organizationID) {
+          throw new Error('Organization ID missing in user context');
+        }
+
         const [b, d, dept, empT, pos, mgr] = await Promise.all([
-          employeeService.getBranches(),
-          employeeService.getDivisions(),
-          employeeService.getDepartments(),
+          branchService.getBranchesAsync(organizationID),
+          divisionService.getdivisionesAsync(organizationID),
+          departmentService.getdepartmentesAsync(organizationID),
           employeeService.getEmploymentTypes(),
-          employeeService.getPositions(),
-          employeeService.getManagers(),
+          positionService.getPositionsAsync(organizationID),
+          employeeService.getEmployeesByOrganizationIdAsync(organizationID),
         ]);
 
-        setBranches(b.map((x: any) => ({ id: x.BranchID, name: x.BranchName })));
-        setDivisions(d.map((x: any) => ({ id: x.DivisionID, name: x.DivisionName })));
-        setDepartments(dept.map((x: any) => ({ id: x.DepartmentID, name: x.DepartmentName })));
+        const branchesList = Array.isArray(b) ? b : b?.Table || [];
+        const divisionsList = Array.isArray(d) ? d : d?.Table || [];
+        const departmentsList = Array.isArray(dept) ? dept : dept?.Table || [];
+        const positionsList = Array.isArray(pos) ? pos : pos?.Table || [];
+
+        setBranches(branchesList.map((x: any) => ({ id: x.BranchID || x.id, name: x.BranchName || x.name })));
+        setDivisions(divisionsList.map((x: any) => ({ id: x.DivisionID || x.id, name: x.DivisionName || x.name })));
+        setDepartments(departmentsList.map((x: any) => ({ id: x.DepartmentID || x.id, name: x.DepartmentName || x.name })));
         setEmploymentTypes(empT.map((x: any) => ({ id: x.EmploymentTypeID, name: x.EmploymentTypeName })));
-        setPositions(pos.map((x: any) => ({ id: x.PositionID, name: x.PositionTitle })));
-        setManagers(mgr.map((x: any) => ({ id: x.EmployeeID, name: x.EmployeeName })));
+        setPositions(positionsList.map((x: any) => ({ id: x.PositionID || x.PositionId || x.id, name: x.PositionTitle || x.PositionName || x.name })));
+        setManagers(mgr.map((x: any) => ({ id: x.EmployeeID || x.id, name: x.EmployeeName || x.EmployeeName || x.name || x.EmployeeName || 'Unknown' })));
       } catch (err) {
         console.error('Error loading master data', err);
       }
@@ -94,9 +124,9 @@ const [showToast, setShowToast] = useState(false);
   // 🟢 Fetch API list (Table1)
   useEffect(() => {
     const fetchManagerHistory = async () => {
-      try {
-        const employeeID = 14; // replace with prop or context if needed
-        const response = await employeeService.GetEmployeeDetialsByEmployeeID(employeeID);
+      try {       
+        if (!employeeID) return;
+        const response = await employeeService.GetEmployeeDetialsByEmployeeID(Number(employeeID!));
         if (response?.Table1) {
           setRecords(response.Table1);
         }
@@ -140,11 +170,12 @@ const [showToast, setShowToast] = useState(false);
     });
     setEditRecord(null);
     setValidated(false);
+    setSaveError(null);
     setShowModal(true);
   };
 
   // 🟢 Save (create/update)
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     if (form.checkValidity() === false) {
@@ -153,27 +184,57 @@ const [showToast, setShowToast] = useState(false);
       return;
     }
 
-    const newRecord: ManagerHistory = {
-      ManagerHistoryID: editRecord ? editRecord.ManagerHistoryID : Date.now(),
-      EmployeeID: 14,
-      EmployeeName: 'Hidden Employee',
-      ReportingManagerName: managers.find(m => m.id === formData.reportingManagerId)?.name || '',
-      CurrentPosition: positions.find(p => p.id === formData.positionId)?.name || '',
-      CurrentBranch: branches.find(b => b.id === formData.branchId)?.name || '',
-      CurrentDivision: divisions.find(d => d.id === formData.divisionId)?.name || '',
-      IsCurrent: formData.isCurrent,
-    };
+    try {
+      setSaving(true);
+      setSaveError(null);
 
-    if (editRecord) {
-      setRecords(prev =>
-        prev.map(r => (r.ManagerHistoryID === editRecord.ManagerHistoryID ? newRecord : r))
-      );
-    } else {
-      setRecords(prev => [...prev, newRecord]);
+      // Prepare payload for API
+      const payload = {
+        ManagerHistoryID: editRecord ? editRecord.ManagerHistoryID : 0,
+        EmployeeID: Number(employeeID),
+        BranchID: formData.branchId,
+        DivisionID: formData.divisionId,
+        DepartmentID: formData.departmentId,
+        EmploymentTypeID: formData.employmentTypeId,
+        PositionID: formData.positionId,
+        ReportingManagerID: formData.reportingManagerId,
+        EffectiveFrom: formData.effectiveFrom,
+        EffectiveTo: formData.effectiveTo || null,
+        IsCurrent: formData.isCurrent,
+        Reason: formData.reason,
+      };
+
+      // Call API
+      const response = await positionService.SaveOrUpdateReportingManagerHistoryAsync(payload);
+
+      if (response) {
+        // Refresh the data after successful save
+        const updatedResponse = await employeeService.GetEmployeeDetialsByEmployeeID(Number(employeeID!));
+        if (updatedResponse?.Table1) {
+          setRecords(updatedResponse.Table1);
+        }
+
+        setShowModal(false);
+        setValidated(false);
+        setFormData({
+          branchId: 0,
+          divisionId: 0,
+          departmentId: 0,
+          employmentTypeId: 0,
+          positionId: 0,
+          reportingManagerId: 0,
+          effectiveFrom: '',
+          effectiveTo: '',
+          isCurrent: false,
+          reason: '',
+        });
+      }
+    } catch (error) {
+      console.error('Error saving manager history:', error);
+      setSaveError('Failed to save manager history. Please try again.');
+    } finally {
+      setSaving(false);
     }
-
-    setShowModal(false);
-    setValidated(false);
   };
 
   // 🟢 Delete record
@@ -250,6 +311,20 @@ const [showToast, setShowToast] = useState(false);
                         size="sm"
                         onClick={() => {
                           setEditRecord(r);
+                          setFormData({
+                            branchId: r.BranchID || 0,
+                            divisionId: r.DivisionID || 0,
+                            departmentId: r.DepartmentID || 0,
+                            employmentTypeId: r.EmploymentTypeID || 0,
+                            positionId: r.PositionID || 0,
+                            reportingManagerId: r.ReportingManagerID || 0,
+                            effectiveFrom: r.EffectiveFrom ? r.EffectiveFrom.split('T')[0] : '',
+                            effectiveTo: r.EffectiveTo ? r.EffectiveTo.split('T')[0] : '',
+                            isCurrent: r.IsCurrent || false,
+                            reason: r.Reason || '',
+                          });
+                          setValidated(false);
+                          setSaveError(null);
                           setShowModal(true);
                         }}
                       >
@@ -395,11 +470,16 @@ const [showToast, setShowToast] = useState(false);
             </Row>
 
             <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowModal(false)}>
+              {saveError && (
+                <div className="alert alert-danger w-100 me-3">
+                  {saveError}
+                </div>
+              )}
+              <Button variant="secondary" onClick={() => setShowModal(false)} disabled={saving}>
                 Cancel
               </Button>
-              <Button variant="primary" type="submit">
-                {editRecord ? 'Update' : 'Save'}
+              <Button variant="primary" type="submit" disabled={saving}>
+                {saving ? 'Saving...' : (editRecord ? 'Update' : 'Save')}
               </Button>
             </Modal.Footer>
           </Form>

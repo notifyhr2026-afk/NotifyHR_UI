@@ -7,6 +7,13 @@ export const GetRolesAsync = async () => {
   return res.data;
 };
 
+/* ===================== GET ROLES ===================== */
+export const GetRolesByorganizationIDAsync = async (organizationID : number) => {
+  const res = await axiosInstance.get(`/Roles/RolesByorganizationID?organizationID=${organizationID}`);
+  return res.data;
+};
+
+
 /* ===================== SAVE FEATURE PERMISSIONS ===================== */
 export const SaveFeaturePermissionsAsync = async (payload: SaveRoleFeaturePermissionsRequest) => {
   const res = await axiosInstance.post("/Roles/save-feature-permissions", payload);
@@ -19,3 +26,28 @@ export const GetRoleMenusAsync = async (roleID: number) => {
   return res.data;
 };
 
+ export const PostRoleByAsync = async (payload: any) => {
+    const res = await axiosInstance.post("/Roles", payload);
+    return res.data[0];
+};
+
+export const DeleteRoleByAsync= async (roleID:number) => {   
+      const { data } = await axiosInstance.delete(`/Roles?roleID=${roleID}`);
+      return data;   
+  };
+
+ export const  AssignRolesByAsync =  async (AssignRoles: any) => {  
+    const { data } = await axiosInstance.post('Roles/AssignOrganizationRoles', AssignRoles);
+    return Array.isArray(data?.Table) ? data.Table : [];
+  };
+
+  export const GetAssignedRolesAsync = async (organizationID : number,userID: number) => {
+  const res = await axiosInstance.get( `/Roles/GetUserRoles?organizationID=${organizationID}&userID=${userID}`);
+  return res.data;
+};
+
+/* ===================== SAVE FEATURE PERMISSIONS ===================== */
+export const AssignOrganizationRolesAsync = async (payload: any) => {
+  const res = await axiosInstance.post("/Roles/AssignOrganizationRoles", payload);
+  return res.data;
+};

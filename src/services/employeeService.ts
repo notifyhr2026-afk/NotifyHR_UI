@@ -1,6 +1,12 @@
 import api from "../api/axiosHRInstance";
+import { ReportingManagerHistory } from "../types/ReportingManagerHistory";
 
 const employeeService = {
+
+  getEmployeesByOrganizationIdAsync: async (organizationID : number) => {    
+      const { data } = await api.get(`Employee?organizationID=${organizationID}`);
+      return data;
+  },
   getEmployees: async () => {
     debugger;
     const { data } = await api.get('Master/employees');
@@ -20,8 +26,12 @@ const employeeService = {
     debugger;
     console.log('Request body:', employee);
     const { data } = await api.post('Employee/CreateEmployee', employee);
-    return data[0]?.EmployeeID || null;
+    return Array.isArray(data?.Table) ? data.Table : [];
   },
+   PostUpdateProbationDetails: async (payload: any) => {
+    const res = await api.post("Employee/UpdateProbationDetails", payload);
+    return res.data[0];
+   },
   getDepartments: async () => {
     const { data } = await api.get('Master/departments');
     return data;
@@ -50,6 +60,19 @@ const employeeService = {
     const { data } = await api.get('Master/positionChangeStatus');
     return data;
   },
+  getEmployeeByOrganizationIdAsync: async (organizationID : number) => {    
+      const { data } = await api.get(`Employee/GetEmployeesForCreateLogins?organizationID=${organizationID}`);
+      return data;
+  },
+  PutUpdateEmployeeUserIdAsync: async (payload: any) => {
+    const res = await api.put("Employee/UpdateEmployeeUserId", payload);
+    return res.data[0];
+   }, 
+    GetReportedEmployeesAsync: async (employeeID : number) => {    
+      const { data } = await api.get(`Employee/GetReportedEmployees?employeeID=${employeeID}`);
+      return data;
+  },
+
 };
 
 export default employeeService;

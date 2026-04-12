@@ -14,4 +14,7 @@ export interface Employee {
   PAN?: string;
   Aadhar?: string;
   PassportNumber?: string;
+  personalPhone?: string;
+  workPhone?: string;
+  personalEmail?: string;
 }

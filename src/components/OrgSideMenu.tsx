@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { GetByUserIDAsync } from '../services/menuService';
-import mainlogo from '../img/MainLogo.jpg';
-import logo from '../img/Logo.jpg';
+import mainlogo from "../img/NotifyHR_Logo1.png";
+import logo from "../img/Favicon.png";
 
 interface MenuItem {
   menuID: number;
@@ -16,27 +16,13 @@ interface MenuItem {
   isActive: boolean;
   featureID: number | null;
   featureName?: string | null;
-  label?: string;
-  icon?: string;
-  link?: string | null;
+  featureIcon?: string | null;
   subMenu?: MenuItem[];
-  featureIcon?: string | null; // ✅ optional
 }
 
 interface SideMenuProps {
   isOpen: boolean;
 }
-
-const colors = {
-  sidebarBg: '#ffffff',
-  headerBg: '#f0f4f8',
-  menuActiveBg: '#e0f2ff',
-  submenuBg: '#f8f9fa',
-  submenuHoverBg: '#d0e9ff',
-  activeText: '#0d6efd',
-  defaultText: '#495057',
-  hoverText: '#0a58ca',
-};
 
 type MenuHoverEvent = React.MouseEvent<HTMLDivElement | HTMLAnchorElement>;
 
@@ -49,6 +35,24 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userID = user?.userID;
 
+  // ✅ detect theme
+  const [isDark, setIsDark] = useState(
+    localStorage.getItem('theme') === 'dark'
+  );
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.body.classList.contains('dark-mode'));
+    });
+
+    observer.observe(document.body, {
+      attributes: true,
+      attributeFilter: ['class'],
+    });
+
+    return () => observer.disconnect();
+  }, []);
+
   const toggleSubMenu = (index: number) => {
     setOpenIndex(prev => (prev === index ? null : index));
   };
@@ -57,7 +61,6 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
     if (isOpen) setHoverIndex(null);
   }, [isOpen]);
 
-  // Build Menu Tree based on FeatureID
   const buildFeatureMenu = (items: MenuItem[]): MenuItem[] => {
     const featureMap = new Map<number, MenuItem>();
     const roots: MenuItem[] = [];
@@ -66,7 +69,6 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
       if (item.featureID == null) return;
 
       if (!featureMap.has(item.featureID)) {
-        // Create root feature menu item
         featureMap.set(item.featureID, {
           menuID: -item.featureID,
           menuName: item.featureName || 'Feature',
@@ -76,11 +78,12 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
           routeUrl: null,
           isActive: true,
           featureID: item.featureID,
-          featureIcon: item.featureIcon ?? null, // only for display
+          featureIcon: item.featureIcon ?? null,
           subMenu: [],
         });
         roots.push(featureMap.get(item.featureID)!);
       }
+
       featureMap.get(item.featureID)?.subMenu?.push(item);
     });
 
@@ -104,49 +107,42 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
         transition: 'width 0.3s ease',
         height: '100vh',
         position: 'fixed',
-        backgroundColor: colors.sidebarBg,
-        borderRight: '1px solid #dee2e6',
+        backgroundColor: isDark ? '#1f1f2f' : '#f0f4f8',
+        color: isDark ? '#e4e6eb' : '#212529',
+        borderRight: isDark ? '1px solid #333' : '1px solid rgba(0,0,0,0.1)',
         overflow: 'hidden',
         zIndex: 1000,
         display: 'flex',
         flexDirection: 'column',
-        fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       }}
     >
-      {/* Logo / Header */}
+      {/* Logo */}
       <div
         style={{
-          height: '60px',
+          height: '57px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: isOpen ? 'flex-start' : 'center',
           padding: '0 1rem',
-          backgroundColor: colors.headerBg,
-          borderBottom: '1px solid #dee2e6',
-          flexShrink: 0,
+          backgroundColor: isDark ? '#1f1f2f' : '#f0f4f8',
+          borderBottom: isDark ? '1px solid #333' : '1px solid rgba(0,0,0,0.1)',
         }}
       >
         <Link to="/dashboard" style={{ textDecoration: 'none' }}>
           {isOpen ? (
-            <img src={mainlogo} alt="Main Logo" style={{ height: '50px', transition: 'all 0.3s' }} />
+            <img src={mainlogo} alt="Main Logo" style={{ height: '50px' }} />
           ) : (
-            <img src={logo} alt="Logo" style={{ height: '40px', transition: 'all 0.3s' }} />
+            <img src={logo} alt="Logo" style={{ height: '40px' }} />
           )}
         </Link>
       </div>
 
-      {/* Scrollable Menu */}
-      <div
-        style={{
-          overflowY: 'auto',
-          height: 'calc(100vh - 60px)',
-          paddingTop: '0.5rem',
-          flexGrow: 1,
-        }}
-      >
+      {/* Menu */}
+      <div style={{ overflowY: 'auto', height: '100%', paddingTop: '0.5rem' }}>
         <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
           {menu.map((item, idx) => {
             const hasSub = Array.isArray(item.subMenu) && item.subMenu.length > 0;
+
             const isActive =
               location.pathname === item.routeUrl ||
               (hasSub && item.subMenu!.some(sub => sub.routeUrl === location.pathname));
@@ -157,7 +153,6 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
             const handleMainClick = (e: MenuHoverEvent) => {
               if (hasSub) {
                 e.preventDefault();
-                e.stopPropagation();
                 toggleSubMenu(idx);
               }
             };
@@ -171,7 +166,7 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
               >
                 <OverlayTrigger
                   placement="right"
-                  overlay={!isOpen ? <Tooltip id={`tip-${idx}`}>{item.menuName}</Tooltip> : <></>}
+                  overlay={!isOpen ? <Tooltip>{item.menuName}</Tooltip> : <></>}
                 >
                   <Wrapper
                     {...wrapperProps}
@@ -181,40 +176,33 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
                       alignItems: 'center',
                       padding: isOpen ? '0.75rem 1rem' : '0.75rem 0',
                       cursor: 'pointer',
-                      backgroundColor: isActive ? colors.menuActiveBg : 'transparent',
-                      color: isActive ? colors.activeText : colors.defaultText,
+                      color: isDark ? '#e4e6eb' : '#212529',
                       textDecoration: 'none',
                       borderRadius: '8px',
                       margin: '4px 6px',
                       transition: 'all 0.2s',
-                    }}
-                    onMouseEnter={(e: MenuHoverEvent) => {
-                      if (!isActive) e.currentTarget.style.backgroundColor = '#f1f5f9';
-                      e.currentTarget.style.color = colors.hoverText;
-                    }}
-                    onMouseLeave={(e: MenuHoverEvent) => {
-                      if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
-                      e.currentTarget.style.color = isActive ? colors.activeText : colors.defaultText;
+                      backgroundColor: isActive
+                        ? isDark
+                          ? 'rgba(255,255,255,0.08)'
+                          : 'rgba(13,110,253,0.15)'
+                        : 'transparent',
                     }}
                   >
-                    {/* ✅ Use featureIcon if available */}
                     <i
-                      className={`bi ${item.featureIcon || item.menuIcon || 'bi-circle-fill'} me-2`}
+                      className={`bi ${item.featureIcon || item.menuIcon || 'bi-circle'} me-2`}
                       style={{
                         fontSize: '1.4rem',
-                        width: isOpen ? 'auto' : '100%',
-                        textAlign: 'center',
                         minWidth: '24px',
+                        textAlign: 'center',
                       }}
                     />
-                    {isOpen && <span style={{ fontWeight: 500 }}>{item.menuName}</span>}
+                    {isOpen && <span>{item.menuName}</span>}
+
                     {hasSub && isOpen && (
                       <i
                         className={`bi bi-chevron-${openIndex === idx ? 'down' : 'right'} ms-auto`}
-                        style={{ fontSize: '1rem', transition: 'transform 0.2s' }}
-                        onClick={(e: MenuHoverEvent) => {
+                        onClick={(e) => {
                           e.preventDefault();
-                          e.stopPropagation();
                           toggleSubMenu(idx);
                         }}
                       />
@@ -222,11 +210,12 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
                   </Wrapper>
                 </OverlayTrigger>
 
-                {/* Expanded Submenu */}
+                {/* Expanded submenu */}
                 {isOpen && hasSub && (openIndex === idx || hoverIndex === idx) && (
-                  <ul style={{ paddingLeft: '1.5rem', listStyle: 'none', margin: 0 }}>
+                  <ul style={{ paddingLeft: '1.5rem', listStyle: 'none' }}>
                     {item.subMenu!.map((sub, sidx) => {
                       const subActive = location.pathname === sub.routeUrl;
+
                       return (
                         <li key={sidx}>
                           <Link
@@ -235,15 +224,17 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
                               display: 'flex',
                               alignItems: 'center',
                               padding: '0.5rem 1rem',
-                              color: subActive ? colors.activeText : colors.defaultText,
-                              backgroundColor: subActive ? colors.menuActiveBg : colors.submenuBg,
+                              color: isDark ? '#e4e6eb' : '#212529',
+                              backgroundColor: subActive
+                                ? isDark
+                                  ? 'rgba(255,255,255,0.08)'
+                                  : 'rgba(13,110,253,0.15)'
+                                : 'transparent',
                               textDecoration: 'none',
                               borderRadius: '6px',
-                              margin: '3px 0',
-                              transition: 'all 0.2s',
                             }}
                           >
-                            <i className={`bi ${sub.menuIcon || 'bi-circle'} me-2`} style={{ fontSize: '1rem' }} />
+                            <i className={`bi ${sub.menuIcon || 'bi-circle'} me-2`} />
                             {sub.menuName}
                           </Link>
                         </li>
@@ -252,26 +243,25 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
                   </ul>
                 )}
 
-                {/* Hover Submenu when Sidebar is Collapsed */}
+                {/* Collapsed hover menu */}
                 {!isOpen && hasSub && hoverIndex === idx && (
                   <ul
                     style={{
                       position: 'fixed',
                       top: 60 + idx * 48,
                       left: 60,
-                      backgroundColor: '#ffffff',
-                      border: '1px solid #dee2e6',
-                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      backgroundColor: isDark ? '#2a2a3d' : '#ffffff',
+                      border: isDark ? '1px solid #333' : '1px solid rgba(0,0,0,0.1)',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
                       borderRadius: '8px',
-                      padding: '0.5rem 0',
+                      padding: '0.5rem',
                       minWidth: '220px',
                       zIndex: 2000,
-                      listStyle: 'none',
-                      margin: 0,
                     }}
                   >
                     {item.subMenu!.map((sub, sidx) => {
                       const subActive = location.pathname === sub.routeUrl;
+
                       return (
                         <li key={sidx}>
                           <Link
@@ -280,23 +270,12 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
                               display: 'flex',
                               alignItems: 'center',
                               padding: '0.5rem 1rem',
-                              color: subActive ? colors.activeText : colors.defaultText,
-                              backgroundColor: subActive ? colors.menuActiveBg : 'transparent',
+                              color: isDark ? '#e4e6eb' : '#212529',
                               textDecoration: 'none',
-                              transition: 'all 0.2s',
                               borderRadius: '6px',
-                              margin: '3px 4px',
-                            }}
-                            onMouseEnter={(e: MenuHoverEvent) => {
-                              if (!subActive) e.currentTarget.style.backgroundColor = colors.submenuHoverBg;
-                              e.currentTarget.style.color = colors.hoverText;
-                            }}
-                            onMouseLeave={(e: MenuHoverEvent) => {
-                              if (!subActive) e.currentTarget.style.backgroundColor = 'transparent';
-                              e.currentTarget.style.color = subActive ? colors.activeText : colors.defaultText;
                             }}
                           >
-                            <i className={`bi ${sub.menuIcon || 'bi-circle'} me-2`} style={{ fontSize: '1rem' }} />
+                            <i className={`bi ${sub.menuIcon || 'bi-circle'} me-2`} />
                             {sub.menuName}
                           </Link>
                         </li>

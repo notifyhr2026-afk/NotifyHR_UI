@@ -1,39 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Table, Button, InputGroup, FormControl, Spinner, Row, Col } from 'react-bootstrap';
+import {
+  Table,
+  Button,
+  InputGroup,
+  FormControl,
+  Spinner,
+  Row,
+  Col,
+  Form
+} from 'react-bootstrap';
+import employeeService from '../../services/employeeService';
+import employeeAttendanceService from '../../services/employeeAttendanceService';
+import LoggedInUser from '../../types/LoggedInUser';
 
-
-// Static mock data for attendance logs (Replace with actual API later)
-const staticLogs = [
-  {
-    employeeID: 'E123',
-    attendanceDate: '2023-10-01',
-    attendanceTypeID: 'Present',
-    checkInTime: '09:00 AM',
-    checkOutTime: '06:00 PM',
-    shiftID: 'Morning',
-    isLate: 'No',
-    isHalfDay: 'No',
-    isApproved: 'Yes',
-    source: 'System',
-    remarks: 'On time',
-  },
-  {
-    employeeID: 'E124',
-    attendanceDate: '2023-10-02',
-    attendanceTypeID: 'Leave',
-    checkInTime: '-',
-    checkOutTime: '-',
-    shiftID: 'Morning',
-    isLate: 'No',
-    isHalfDay: 'No',
-    isApproved: 'Yes',
-    source: 'System',
-    remarks: 'Leave',
-  },
-  // Add more static logs as needed...
-];
-
-// Define the structure for attendance logs
 interface AttendanceLog {
   employeeID: string;
   attendanceDate: string;
@@ -49,28 +28,90 @@ interface AttendanceLog {
 }
 
 const EmployeeAttendanceLogs: React.FC = () => {
-  const [logs, setLogs] = useState<AttendanceLog[]>([]); // Store all logs
-  const [filteredLogs, setFilteredLogs] = useState<AttendanceLog[]>([]); // Store filtered logs
-  const [searchQuery, setSearchQuery] = useState<string>(''); // Search query state
-  const [loading, setLoading] = useState<boolean>(true); // Loading state
+  const userString = localStorage.getItem('user');
+  const user: LoggedInUser | null = userString ? JSON.parse(userString) : null;
+  const organizationID = user?.organizationID ?? 0;
 
+  const [logs, setLogs] = useState<AttendanceLog[]>([]);
+  const [filteredLogs, setFilteredLogs] = useState<AttendanceLog[]>([]);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<number | null>(null);
+
+  // 🔹 Load Employees
   useEffect(() => {
-    setLogs(staticLogs); // Initialize logs with static data
-    setFilteredLogs(staticLogs); // Initialize filtered logs
-    setLoading(false); // Set loading to false when data is ready
-  }, []);
+    const fetchEmployees = async () => {
+      try {
+        const res = await employeeService.getEmployeesByOrganizationIdAsync(organizationID);
+        const data = res?.Table ?? res ?? [];
+        setEmployees(data);
+      } catch (err) {
+        console.error("Error loading employees", err);
+      }
+    };
 
-  // Handle sorting by column (sorts by employee ID, attendance date, etc.)
-  const handleSort = (column: keyof AttendanceLog) => {
-    const sortedLogs = [...filteredLogs].sort((a, b) => {
-      if (a[column] < b[column]) return -1;
-      if (a[column] > b[column]) return 1;
-      return 0;
-    });
-    setFilteredLogs(sortedLogs); // Update filtered logs with sorted data
+    if (organizationID > 0) {
+      fetchEmployees();
+    }
+  }, [organizationID]);
+
+  // 🔹 Load Attendance based on selected employee
+  const loadAttendance = async (empId: number) => {
+    try {
+      setLoading(true);
+
+      const data = await employeeAttendanceService.getEmployeeAttendanceByEmployeeId(empId);
+
+      const summary = data?.Table || [];
+
+      const mapped: AttendanceLog[] = summary.map((item: any) => ({
+        employeeID: item.EmployeeID.toString(),
+        attendanceDate: new Date(item.AttendanceDate).toLocaleDateString(),
+        attendanceTypeID: item.AttendanceTypeID.toString(),
+        checkInTime: item.CheckInTime
+          ? new Date(item.CheckInTime).toLocaleTimeString()
+          : '-',
+        checkOutTime: item.CheckOutTime
+          ? new Date(item.CheckOutTime).toLocaleTimeString()
+          : '-',
+        shiftID: item.ShiftID ? item.ShiftID.toString() : '-',
+        isLate: item.IsLate ? 'Yes' : 'No',
+        isHalfDay: item.IsHalfDay ? 'Yes' : 'No',
+        isApproved: item.IsApproved ? 'Yes' : 'No',
+        source: item.Source || '-',
+        remarks: item.Remarks || '-',
+      }));
+
+      setLogs(mapped);
+      setFilteredLogs(mapped);
+
+    } catch (err) {
+      console.error("Error loading attendance", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Handle search input change (search by employee ID, date, or attendance type)
+  // 🔹 Handle Employee Change
+  const handleEmployeeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const empId = Number(e.target.value);
+    setSelectedEmployeeId(empId);
+    if (empId) {
+      loadAttendance(empId);
+    }
+  };
+
+  // 🔹 Sorting
+  const handleSort = (column: keyof AttendanceLog) => {
+    const sorted = [...filteredLogs].sort((a, b) =>
+      a[column].localeCompare(b[column])
+    );
+    setFilteredLogs(sorted);
+  };
+
+  // 🔹 Search
   const handleSearch = (event: React.ChangeEvent<HTMLInputElement>) => {
     const query = event.target.value.toLowerCase();
     setSearchQuery(query);
@@ -82,25 +123,36 @@ const EmployeeAttendanceLogs: React.FC = () => {
         log.attendanceTypeID.toLowerCase().includes(query)
     );
 
-    setFilteredLogs(filtered); // Update filtered logs based on search query
+    setFilteredLogs(filtered);
   };
 
-  // Handle clearing the search input
   const handleClearSearch = () => {
-    setSearchQuery(''); // Reset search query
-    setFilteredLogs(logs); // Reset filtered logs to show all data
+    setSearchQuery('');
+    setFilteredLogs(logs);
   };
 
   return (
-    <div className="container mt-5">
+    <div className="container">
       <h2 className="text-center mb-4">Employee Attendance Logs</h2>
 
-      {/* Search and Sort Section */}
+      {/* 🔽 Employee Dropdown */}
       <Row className="mb-3">
+        <Col md={4}>
+          <Form.Select value={selectedEmployeeId ?? ''} onChange={handleEmployeeChange}>
+            <option value="">Select Employee</option>
+            {employees.map((emp) => (
+              <option key={emp.EmployeeID} value={emp.EmployeeID}>
+                {emp.EmployeeName} ({emp.EmployeeCode})
+              </option>
+            ))}
+          </Form.Select>
+        </Col>
+
+        {/* 🔍 Search */}
         <Col md={8}>
           <InputGroup>
             <FormControl
-              placeholder="Search by Employee ID, Date, or Attendance Type"
+              placeholder="Search by Employee ID, Date, or Type"
               value={searchQuery}
               onChange={handleSearch}
             />
@@ -109,75 +161,56 @@ const EmployeeAttendanceLogs: React.FC = () => {
             </Button>
           </InputGroup>
         </Col>
-        <Col md={4} className="text-end">
-          <Button variant="primary" className="ms-2">
-            Sort
-          </Button>
-        </Col>
       </Row>
 
-      {/* Table Section */}
+      {/* 📊 Table */}
       <div className="table-responsive">
         {loading ? (
           <div className="text-center">
-            <Spinner animation="border" variant="primary" />
+            <Spinner animation="border" />
           </div>
         ) : (
-          <Table striped bordered hover responsive>
+          <Table className="table table-hover table-dark-custom">
             <thead>
               <tr>
-                {/* Table Headers with Sort Functionality */}
-                <th>
-                  <Button variant="link" onClick={() => handleSort('employeeID')}>
-                    Employee ID 
-                  </Button>
-                </th>
-                <th>
-                  <Button variant="link" onClick={() => handleSort('attendanceDate')}>
-                    Attendance Date 
-                  </Button>
-                </th>
-                <th>
-                  <Button variant="link" onClick={() => handleSort('attendanceTypeID')}>
-                    Attendance Type 
-                  </Button>
-                </th>
-                <th>Check-in Time</th>
-                <th>Check-out Time</th>
+                <th><Button variant="link" onClick={() => handleSort('employeeID')}>Employee</Button></th>
+                <th><Button variant="link" onClick={() => handleSort('attendanceDate')}>Date</Button></th>
+                <th>Type</th>
+                <th>Check In</th>
+                <th>Check Out</th>
                 <th>Shift</th>
                 <th>Late</th>
                 <th>Half Day</th>
                 <th>Approved</th>
                 <th>Source</th>
                 <th>Remarks</th>
-                <th>Actions</th>
               </tr>
             </thead>
+
             <tbody>
-              {/* Render Data Rows */}
-              {filteredLogs.map((log, index) => (
-                <tr key={index}>
-                  <td>{log.employeeID}</td>
-                  <td>{log.attendanceDate}</td>
-                  <td>{log.attendanceTypeID}</td>
-                  <td>{log.checkInTime}</td>
-                  <td>{log.checkOutTime}</td>
-                  <td>{log.shiftID}</td>
-                  <td>{log.isLate}</td>
-                  <td>{log.isHalfDay}</td>
-                  <td>{log.isApproved}</td>
-                  <td>{log.source}</td>
-                  <td>{log.remarks}</td>
-                  <td>
-                    <Button variant="info" size="sm" className="me-2">
-                      View
-                    </Button>
-                    <Button variant="warning" size="sm">
-                      Edit
-                    </Button>
+              {filteredLogs.length === 0 ? (
+                <tr>
+                  <td colSpan={11} className="text-center">
+                    No records found
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredLogs.map((log, index) => (
+                  <tr key={index}>
+                    <td>{log.employeeID}</td>
+                    <td>{log.attendanceDate}</td>
+                    <td>{log.attendanceTypeID}</td>
+                    <td>{log.checkInTime}</td>
+                    <td>{log.checkOutTime}</td>
+                    <td>{log.shiftID}</td>
+                    <td>{log.isLate}</td>
+                    <td>{log.isHalfDay}</td>
+                    <td>{log.isApproved}</td>
+                    <td>{log.source}</td>
+                    <td>{log.remarks}</td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </Table>
         )}

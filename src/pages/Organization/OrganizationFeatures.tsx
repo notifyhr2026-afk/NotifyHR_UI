@@ -95,7 +95,7 @@ const OrganizationFeatures: React.FC = () => {
   };
 
   return (
-    <Container className="mt-5">
+    <Container>
       <h2 className="mb-4">Assign Features</h2>
 
       {/* Searchable Organization Selector */}
