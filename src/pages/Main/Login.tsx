@@ -30,7 +30,26 @@ const Login: React.FC = () => {
       try {
         setIsSubmitting(true);
         await login(username, password);
-        navigate('/myprofile');
+        const rawdata: any = localStorage.getItem('userRoles');
+        var url = '/myprofile';
+        const data = rawdata ? JSON.parse(rawdata) : [];
+
+        console.log('User roles from localStorage:', data);
+        const role = Array.isArray(data) && data.length > 0
+          ? data[0].roleName
+          : null;
+
+        switch (role != undefined && role != null && role) {
+          case "SuperAdmin":
+            url = "/sysdashboard";
+            break;
+          case "OrgAdmin":
+            url = "/dashboard";
+            break;
+          default:
+            url = "/myprofile";
+        }
+        navigate(url);
       } catch (err: any) {
         console.error('Login error:', err);
         setErrors({ general: err.message || 'Invalid username or password' });
@@ -81,9 +100,8 @@ const Login: React.FC = () => {
                   <input
                     type="text"
                     id="username"
-                    className={`form-control ${
-                      errors.username ? 'is-invalid' : username ? 'is-valid' : ''
-                    }`}
+                    className={`form-control ${errors.username ? 'is-invalid' : username ? 'is-valid' : ''
+                      }`}
                     placeholder="Enter your username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
@@ -108,9 +126,8 @@ const Login: React.FC = () => {
                   <input
                     type="password"
                     id="password"
-                    className={`form-control ${
-                      errors.password ? 'is-invalid' : password ? 'is-valid' : ''
-                    }`}
+                    className={`form-control ${errors.password ? 'is-invalid' : password ? 'is-valid' : ''
+                      }`}
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

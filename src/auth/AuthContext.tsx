@@ -31,6 +31,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       localStorage.setItem('token', data.token);
       localStorage.setItem('refreshToken', data.refreshToken || '');
       localStorage.setItem('user', JSON.stringify(data.user));
+      localStorage.setItem('userRoles', JSON.stringify(data.roles));
       setIsAuthenticated(true);
     }
   };
