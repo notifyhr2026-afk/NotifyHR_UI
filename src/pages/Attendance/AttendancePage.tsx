@@ -1,30 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import Select from "react-select";
 import "bootstrap/dist/css/bootstrap.min.css";
 import employeeService from "../../services/employeeService";
 import employeeAttendanceService from "../../services/employeeAttendanceService";
 import LoggedInUser from "../../types/LoggedInUser";
 
-interface Attendance {
-  AttendanceID: number;
-  EmployeeID: number;
-  AttendanceDate: string;
-  CheckInTime: string;
-  CheckOutTime: string;
-  ShiftID: string;
-  IsLate: boolean;
-  IsHalfDay: boolean;
-  IsApproved: boolean;
-  Source: string;
-  Remarks: string;
-}
-
 interface Employee {
   value: number;
   label: string;
 }
 
-// Group by date
+interface AttendanceLog {
+  LogID: number;
+  AttendanceID: number;
+  AttendanceDate: string;
+  LogTypeID: number;
+  LogTime: string;
+  DeviceName: string;
+  IPAddress: string;
+}
+
+// ---------- Helpers ----------
 const groupByDate = (data: any[]) => {
   return data.reduce((acc: Record<string, any[]>, item) => {
     const date = item.AttendanceDate.split("T")[0];
@@ -34,53 +30,27 @@ const groupByDate = (data: any[]) => {
   }, {});
 };
 
-// Calculate total hours from logs
-const calculateTotalHours = (logs: any[]) => {
-  let totalMinutes = 0;
-
-  logs.forEach((log) => {
-    const time = new Date(log.LogTime);
-    if (log.LogTypeID === 1) {
-      log._inTime = time;
-    } else if (log.LogTypeID === 2 && log._inTime) {
-      totalMinutes +=
-        (time.getTime() - log._inTime.getTime()) / (1000 * 60);
-      log._inTime = null;
-    }
-  });
-
-  const hours = Math.floor(totalMinutes / 60);
-  const minutes = Math.floor(totalMinutes % 60);
-
-  return `${hours}h ${minutes}m`;
-};
-
+// ---------- Component ----------
 const AttendancePage: React.FC = () => {
   const userString = localStorage.getItem("user");
-  const user: LoggedInUser | null = userString
-    ? JSON.parse(userString)
-    : null;
+  const user: LoggedInUser | null = userString ? JSON.parse(userString) : null;
 
   const organizationID = user?.organizationID ?? 0;
 
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [selectedEmployee, setSelectedEmployee] =
-    useState<Employee | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<Employee | null>(null);
 
   const [attendanceData, setAttendanceData] = useState<any[]>([]);
-  const [attendanceLogs, setAttendanceLogs] = useState<any[]>([]);
-
-  const [loading, setLoading] = useState(false);
+  const [attendanceLogs, setAttendanceLogs] = useState<AttendanceLog[]>([]);
 
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
-  const [expandedDates, setExpandedDates] = useState<
-    Record<string, boolean>
-  >({});
+  const [loading, setLoading] = useState(false);
+  const [expandedDates, setExpandedDates] = useState<Record<string, boolean>>({});
 
-  // 🔹 Load Employees
-  useEffect(() => {
+  // ---------- Load Employees ----------
+  React.useEffect(() => {
     const loadEmployees = async () => {
       try {
         const res =
@@ -97,50 +67,62 @@ const AttendancePage: React.FC = () => {
 
         setEmployees(mapped);
       } catch (err) {
-        console.error(err);
+        console.error("Employee load error:", err);
       }
     };
 
     if (organizationID > 0) loadEmployees();
   }, [organizationID]);
 
-  // 🔹 Load Attendance + Logs
-  const loadAttendance = async (empId: number) => {
+  // ---------- NEW API CALL ----------
+  const handleGetAttendance = async () => {
+    if (!selectedEmployee) {
+      alert("Please select employee");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      const res =
-        await employeeAttendanceService.getEmployeeAttendanceByEmployeeId(
-          empId
+      const res = await employeeAttendanceService.getEmployeeAttendance({
+        employeeID: selectedEmployee.value,
+        organizationID: organizationID,
+        fromDate: fromDate,
+        toDate: toDate,
+      });
+
+      let summary = res?.Table || [];
+      let logs = res?.Table1 || [];
+
+      // OPTIONAL: frontend filtering (API already supports date range)
+      if (fromDate || toDate) {
+        summary = summary.filter((item: any) => {
+          const d = item.AttendanceDate.split("T")[0];
+          const afterFrom = fromDate ? d >= fromDate : true;
+          const beforeTo = toDate ? d <= toDate : true;
+          return afterFrom && beforeTo;
+        });
+
+        const validDates = new Set(
+          summary.map((x: any) => x.AttendanceDate.split("T")[0])
         );
 
-      const summary = res?.Table || [];
-      const logs = res?.Table1 || [];
-
-      setAttendanceLogs(logs);
+        logs = logs.filter((l: any) =>
+          validDates.has(l.AttendanceDate.split("T")[0])
+        );
+      }
 
       setAttendanceData(summary);
+      setAttendanceLogs(logs);
     } catch (err) {
-      console.error(err);
+      console.error("Attendance load error:", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEmployeeChange = (emp: any) => {
-    setSelectedEmployee(emp);
-    if (emp) loadAttendance(emp.value);
-  };
-
-  // 🔹 Filter by date
-  const filteredAttendance = attendanceData.filter((att) => {
-    const date = att.AttendanceDate.split("T")[0];
-    const afterFrom = fromDate ? date >= fromDate : true;
-    const beforeTo = toDate ? date <= toDate : true;
-    return afterFrom && beforeTo;
-  });
-
-  const attendanceByDate = groupByDate(filteredAttendance);
+  // ---------- GROUP ----------
+  const attendanceByDate = groupByDate(attendanceData);
 
   const toggleExpand = (date: string) => {
     setExpandedDates((prev) => ({
@@ -149,31 +131,51 @@ const AttendancePage: React.FC = () => {
     }));
   };
 
-  // 🔹 Get logs for date
+  // ---------- GET LOGS ----------
   const getLogsByDate = (date: string) => {
     return attendanceLogs
-      .filter((log) => log.AttendanceDate.split("T")[0] === date)
+      .filter((l) => l.AttendanceDate.split("T")[0] === date)
       .sort(
         (a, b) =>
-          new Date(a.LogTime).getTime() -
-          new Date(b.LogTime).getTime()
+          new Date(a.LogTime).getTime() - new Date(b.LogTime).getTime()
       );
   };
 
+  // ---------- CALCULATE HOURS ----------
+  const calculateHours = (logs: AttendanceLog[]) => {
+    let totalMinutes = 0;
+    let inTime: Date | null = null;
+
+    logs.forEach((log) => {
+      const time = new Date(log.LogTime);
+
+      if (log.LogTypeID === 1) {
+        inTime = time;
+      } else if (log.LogTypeID === 2 && inTime) {
+        totalMinutes += (time.getTime() - inTime.getTime()) / 60000;
+        inTime = null;
+      }
+    });
+
+    const h = Math.floor(totalMinutes / 60);
+    const m = Math.floor(totalMinutes % 60);
+
+    return `${h}h ${m}m`;
+  };
+
+  // ---------- UI ----------
   return (
-    <div className="container my-5">
-      <h2 className="text-center mb-4">
-        Employee Attendance (Logs View)
-      </h2>
+    <div className="container">
+      <h3 className="text-center mb-4">Employee Attendance</h3>
 
       {/* Filters */}
-      <div className="row mb-4">
+      <div className="row mb-3">
         <div className="col-md-4">
-          <label>Select Employee</label>
+          <label>Employee</label>
           <Select
             options={employees}
             value={selectedEmployee}
-            onChange={handleEmployeeChange}
+            onChange={setSelectedEmployee}
           />
         </div>
 
@@ -196,6 +198,15 @@ const AttendancePage: React.FC = () => {
             onChange={(e) => setToDate(e.target.value)}
           />
         </div>
+
+        <div className="col-md-2 d-flex align-items-end">
+          <button
+            className="btn btn-primary w-100"
+            onClick={handleGetAttendance}
+          >
+            GET
+          </button>
+        </div>
       </div>
 
       {/* Table */}
@@ -212,67 +223,46 @@ const AttendancePage: React.FC = () => {
           </thead>
 
           <tbody>
-            {Object.keys(attendanceByDate).length === 0 && (
+            {Object.keys(attendanceByDate).length === 0 ? (
               <tr>
                 <td colSpan={3} className="text-center">
                   No records found
                 </td>
               </tr>
-            )}
+            ) : (
+              Object.entries(attendanceByDate).map(([date]) => {
+                const logs = getLogsByDate(date);
+                const hours = calculateHours(logs);
 
-            {Object.entries(attendanceByDate).map(([date, records]) => {
-              const logs = getLogsByDate(date);
+                return (
+                  <React.Fragment key={date}>
+                    <tr
+                      className="table-primary"
+                      style={{ cursor: "pointer" }}
+                      onClick={() => toggleExpand(date)}
+                    >
+                      <td>{date}</td>
+                      <td>Click to view logs ({logs.length})</td>
+                      <td>{hours}</td>
+                    </tr>
 
-              const totalHours = calculateTotalHours([...logs]);
-
-              return (
-                <React.Fragment key={date}>
-                  {/* Main Row */}
-                  <tr
-                    className="table-primary"
-                    onClick={() => toggleExpand(date)}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <td>{date}</td>
-                    <td>
-                      Click to view logs ({logs.length})
-                    </td>
-                    <td>{totalHours}</td>
-                  </tr>
-
-                  {/* Logs */}
-                  {expandedDates[date] &&
-                    logs.map((log) => (
-                      <tr key={log.LogID}>
-                        <td></td>
-                        <td colSpan={2}>
-                          <div className="d-flex justify-content-between">
+                    {expandedDates[date] &&
+                      logs.map((log) => (
+                        <tr key={log.LogID}>
+                          <td></td>
+                          <td colSpan={2}>
                             <strong>
-                              {log.LogTypeID === 1
-                                ? "Clock In"
-                                : "Clock Out"}
-                            </strong>
-
-                            <span>
-                              {new Date(
-                                log.LogTime
-                              ).toLocaleTimeString()}
-                            </span>
-
-                            <span>
-                              Device: {log.DeviceName || "-"}
-                            </span>
-
-                            <span>
-                              IP: {log.IPAddress || "-"}
-                            </span>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                </React.Fragment>
-              );
-            })}
+                              {log.LogTypeID === 1 ? "IN" : "OUT"}
+                            </strong>{" "}
+                            | {new Date(log.LogTime).toLocaleTimeString()} |{" "}
+                            {log.DeviceName} | {log.IPAddress}
+                          </td>
+                        </tr>
+                      ))}
+                  </React.Fragment>
+                );
+              })
+            )}
           </tbody>
         </table>
       )}

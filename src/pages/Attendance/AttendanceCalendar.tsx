@@ -1,28 +1,21 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Calendar from "react-calendar";
 import { OverlayTrigger, Tooltip, Modal, Button, Form } from "react-bootstrap";
 import "react-calendar/dist/Calendar.css";
 import "bootstrap/dist/css/bootstrap.min.css";
-
-interface AttendanceLog {
-  date: string;
-  employee: string;
-  status: "Present" | "Absent" | "Leave";
-}
+import employeeAttendanceService from "../../services/employeeAttendanceService";
 
 interface Holiday {
   date: string;
   name: string;
 }
 
-const attendanceLogs: AttendanceLog[] = [
-  { date: "2026-02-01", employee: "jagadish k", status: "Present" },
-  { date: "2026-02-14", employee: "jagadish k", status: "Absent" },
-  { date: "2026-02-05", employee: "jagadish k", status: "Present" },
-  { date: "2026-02-06", employee: "jagadish k", status: "Leave" },
-  { date: "2026-02-07", employee: "jagadish k", status: "Present" },
-  { date: "2026-01-08", employee: "jagadish k", status: "Absent" },
-];
+interface AttendanceLog {
+  date: string;
+  employee: string;
+  status: "Present" | "Absent" | "Half Day";
+  logs?: any[];
+}
 
 const holidays: Holiday[] = [
   { date: "2026-02-01", name: "All Saints' Day" },
@@ -35,11 +28,95 @@ const AttendanceCalendar: React.FC = () => {
   const [checkedDates, setCheckedDates] = useState<Record<string, boolean>>({});
   const [showModal, setShowModal] = useState(false);
   const [selectedAction, setSelectedAction] = useState<string>("");
+  const [attendanceData, setAttendanceData] = useState<AttendanceLog[]>([]);
 
   const formatDate = (d: Date) => d.toISOString().split("T")[0];
 
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const employeeId = user?.employeeID;
+  const organizationID = user?.organizationID;
+
+  // ✅ month start → end
+  const getMonthRange = () => {
+    const start = new Date(date.getFullYear(), date.getMonth(), 1);
+    const end = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+    return {
+      fromDate: formatDate(start),
+      toDate: formatDate(end),
+    };
+  };
+
+  // ---------------- API CALL ----------------
+  const loadAttendance = async () => {
+    try {
+      const { fromDate, toDate } = getMonthRange();
+
+      const payload = {
+        employeeID: employeeId,
+        organizationID,
+        fromDate,
+        toDate,
+      };
+
+      const res = await employeeAttendanceService.getEmployeeAttendance(payload);
+
+      const raw = res?.Table1 || [];
+
+      const grouped: Record<string, any[]> = {};
+
+      raw.forEach((item: any) => {
+        const d = item.AttendanceDate.split("T")[0];
+        if (!grouped[d]) grouped[d] = [];
+        grouped[d].push(item);
+      });
+
+      const mapped: AttendanceLog[] = Object.keys(grouped).map((day) => {
+        const logs = grouped[day].sort(
+          (a, b) => new Date(a.LogTime).getTime() - new Date(b.LogTime).getTime()
+        );
+
+        let inTime: Date | null = null;
+        let totalMinutes = 0;
+
+        logs.forEach((log) => {
+          const t = new Date(log.LogTime);
+
+          if (log.LogTypeID === 1) inTime = t;
+          else if (log.LogTypeID === 2 && inTime) {
+            totalMinutes += (t.getTime() - inTime.getTime()) / 60000;
+            inTime = null;
+          }
+        });
+
+        const hours = totalMinutes / 60;
+
+        let status: "Present" | "Absent" | "Half Day" = "Absent";
+        if (hours >= 6) status = "Present";
+        else if (hours > 0) status = "Half Day";
+
+        return {
+          date: day,
+          employee: user?.employeeName || "Employee",
+          status,
+          logs,
+        };
+      });
+
+      setAttendanceData(mapped);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    if (employeeId && organizationID) {
+      loadAttendance();
+    }
+  }, [date]);
+
   const getLogsForDay = (day: Date) =>
-    attendanceLogs.filter((log) => log.date === formatDate(day));
+    attendanceData.filter((x) => x.date === formatDate(day));
 
   const getHolidayForDay = (day: Date) =>
     holidays.find((h) => h.date === formatDate(day));
@@ -51,18 +128,11 @@ const AttendanceCalendar: React.FC = () => {
 
   const openModal = (day: Date) => {
     setSelectedDate(day);
-    setSelectedAction(""); // reset dropdown
+    setSelectedAction("");
     setShowModal(true);
   };
 
-  const handleActionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedAction(e.target.value);
-  };
-
-  const handleModalSave = () => {
-    alert(`Action "${selectedAction}" saved for ${formatDate(selectedDate!)}`);
-    setShowModal(false);
-  };
+  const isToday = (d: string) => d === formatDate(new Date());
 
   return (
     <div className="container-fluid p-5">
@@ -73,121 +143,119 @@ const AttendanceCalendar: React.FC = () => {
           <Calendar
             value={date}
             onClickDay={(d) => openModal(d)}
-            calendarType="iso8601"
             tileContent={({ date: tileDate }) => {
               const logs = getLogsForDay(tileDate);
               const holiday = getHolidayForDay(tileDate);
               const key = formatDate(tileDate);
 
               return (
-                <div className="attendance-logs-container">
+                <div className="tile-wrapper">
+                  
+                  {/* ✅ FIXED CHECKBOX (VISIBLE ALWAYS) */}
                   <input
                     type="checkbox"
                     className="tile-checkbox"
                     checked={!!checkedDates[key]}
                     onChange={() => handleCheckboxToggle(tileDate)}
                   />
-                  {holiday && <div className="holiday-log">🎉 {holiday.name}</div>}
+
+                  {holiday && (
+                    <div className="holiday-log">🎉 {holiday.name}</div>
+                  )}
+
+                  {/* ONLY CURRENT DATE LOGS */}
                   {logs.map((log, idx) => (
-                    <OverlayTrigger
-                      key={idx}
-                      placement="top"
-                      overlay={<Tooltip id={`tooltip-${idx}`}>{log.employee}: {log.status}</Tooltip>}
-                    >
-                      <div
-                        className={`attendance-log ${
-                          log.status === "Present"
-                            ? "present"
-                            : log.status === "Absent"
-                            ? "absent"
-                            : "leave"
-                        }`}
+                      <OverlayTrigger
+                        key={idx}
+                        placement="top"
+                        overlay={
+                        <Tooltip>
+                          {log.logs?.length ? (
+                            <>
+                              IN: {log.logs[0]?.LogTime
+                                ? new Date(log.logs[0].LogTime).toLocaleTimeString()
+                                : "-"}
+                              {" | "}
+                              OUT: {log.logs[log.logs.length - 1]?.LogTime
+                                ? new Date(log.logs[log.logs.length - 1].LogTime).toLocaleTimeString()
+                                : "-"}
+                            </>
+                          ) : (
+                            "No logs"
+                          )}
+                        </Tooltip>
+                      }
                       >
-                        {log.status === "Present" && "✓ "}
-                        {log.status === "Absent" && "✗ "}
-                        {log.status === "Leave" && "🏖 "}
-                        {log.employee}
-                      </div>
-                    </OverlayTrigger>
-                  ))}
+                        <div
+                          className={`attendance-log ${
+                            log.status === "Present"
+                              ? "present"
+                              : log.status === "Half Day"
+                              ? "leave"
+                              : "absent"
+                          }`}
+                        >
+                          {log.status === "Present" && "✓ "}
+                          {log.status === "Half Day" && "◐ "}
+                          {log.status === "Absent" && "✗ "}
+                          {log.employee}
+                        </div>
+                      </OverlayTrigger>
+                    ))}
                 </div>
               );
             }}
             tileClassName={({ date: tileDate, view }) => {
               const classes = ["calendar-tile"];
               if (view === "month") {
-                if (tileDate.getMonth() !== date.getMonth()) classes.push("other-month-day");
-                if ([0, 6].includes(tileDate.getDay())) classes.push("weekend-day");
-                if (getHolidayForDay(tileDate)) classes.push("holiday-day");
+                if (tileDate.getMonth() !== date.getMonth())
+                  classes.push("other-month-day");
+                if ([0, 6].includes(tileDate.getDay()))
+                  classes.push("weekend-day");
               }
               return classes.join(" ");
             }}
           />
         </div>
 
-        {/* RIGHT SIDE – DETAILS / ACTIONS */}
+        {/* RIGHT SIDE */}
         <div className="calendar-right">
           <div className="calendar-tile p-3">
-            <h5 className="mb-3">Upcoming Info</h5>
-            <div className="info-section mb-3">
-              <h6 className="mb-2">🎉 Holidays</h6>
-              {holidays.filter(h => new Date(h.date) >= new Date()).map((holiday, idx) => (
-                <div key={idx} className="holiday-log mb-1">
-                  {holiday.date}: {holiday.name}
-                </div>
-              ))}
-            </div>
-
-            <div className="info-section">
-              <h6 className="mb-2">🏖 Upcoming Leaves</h6>
-              {attendanceLogs
-                .filter(log => new Date(log.date) >= new Date() && log.status === "Leave")
-                .sort((a,b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-                .map((log, idx) => (
-                  <div key={idx} className="attendance-log leave mb-1">
-                    {log.date}: {log.employee}
-                  </div>
-              ))}
-            </div>
+            <h5>Upcoming Holidays</h5>
+            {holidays.map((h, i) => (
+              <div key={i}>
+                {h.date} - {h.name}
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* ===== Modal ===== */}
+      {/* MODAL */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
-          <Modal.Title>{selectedDate && formatDate(selectedDate)}</Modal.Title>
+          <Modal.Title>
+            {selectedDate && formatDate(selectedDate)}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form.Group controlId="actionSelect">
-            <Form.Label>Select Action</Form.Label>
-            <Form.Select value={selectedAction} onChange={handleActionChange}>
-              <option value="">-- Choose Action --</option>
-              <option value="WFH">WFH</option>
-              <option value="Leave">Leave</option>
-              <option value="Login Missing">Login Missing</option>
-              <option value="Logout Missing">Logout Missing</option>
-              <option value="Early Logout">Early Logout</option>
-              <option value="Early Login">Early Login</option>
-            </Form.Select>
-          </Form.Group>
-
-          {/* Conditional content based on selection */}
-          {selectedAction === "WFH" && <p className="mt-3">You can apply for Work From Home for this day.</p>}
-          {selectedAction === "Leave" && <p className="mt-3">You can apply for Leave for this day.</p>}
-          {(selectedAction === "Login Missing" || selectedAction === "Logout Missing") && (
-            <p className="mt-3">Please provide the missing time details.</p>
-          )}
-          {(selectedAction === "Early Logout" || selectedAction === "Early Login") && (
-            <p className="mt-3">Please provide the corrected time.</p>
-          )}
+          <Form.Select
+            value={selectedAction}
+            onChange={(e) => setSelectedAction(e.target.value)}
+          >
+            <option value="">-- Choose Action --</option>
+            <option value="WFH">WFH</option>
+            <option value="Leave">Leave</option>
+          </Form.Select>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Cancel</Button>
-          <Button variant="primary" onClick={handleModalSave} disabled={!selectedAction}>Save</Button>
+          <Button onClick={() => setShowModal(false)}>Cancel</Button>
+          <Button disabled={!selectedAction}>Save</Button>
         </Modal.Footer>
       </Modal>
-       <style>{`
+
+      {/* ---------------- CSS FIX ---------------- */}
+        <style>{`
           .react-calendar {
           width: 100%;
           border: none;
