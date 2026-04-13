@@ -40,6 +40,7 @@ import FeatureManagement from  '../pages/Features/FeatureManagement';
 import RoleMenuPermissions from '../pages/Features/RoleMenuPermissions';
 import AssignedRoles from '../pages/Organization/AssignedRoles';
 import AssignedPositions from '../pages/Organization/AssignedPositions';
+import AttendanceSettings from '../pages/Attendance/AttendanceSettings';
 import AttendanceCalendar from '../pages/Attendance/AttendanceCalendar';
 import EmployeeAttendanceLogs from '../pages/Attendance/AttendancePage';
 import SalaryComponentMaster from '../pages/Payroll/SalaryComponentMaster';
@@ -71,7 +72,7 @@ import TicketDetails from '../pages/helpdesk/TicketDetails';
 import ManagerTicketVerification from '../pages/helpdesk/ManagerTicketVerification';
 import EmployeeTickets from '../pages/helpdesk/EmployeeTickets';
 import MyServiceTicket from '../pages/helpdesk/MyServiceTicket';
-
+import ProbationSettings from '../pages/Employee/ProbationSettings';
 import ResetPassword from '../pages/Main/ResetPassword';
 
 import TimesheetEntry from '../pages/Timesheet/TimesheetEntry';
@@ -144,6 +145,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="OrganizationFeatures" element={<OrganizationFeatures />} />
         <Route path="HolidaySettings" element={<HolidaySettings />} />
         <Route path="HolidayList" element={<HolidayList />} />      
+        <Route path="AttendanceSettings" element={<AttendanceSettings />} />
         <Route path="AttendanceCalendar" element={<AttendanceCalendar />} />
         <Route path="plans" element={<PlanList />} />        
         <Route path="RoleMenuPermissions" element={<RoleMenuPermissions />} />
@@ -204,6 +206,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="/EmployeeGroups" element={<EmployeeGroups />} />
         <Route path="/GroupEmployeeMapping" element={<GroupEmployeeMapping />} />
         <Route path="/MyServiceTicket" element={<MyServiceTicket />} />
+        <Route path="/ProbationSettings" element={<ProbationSettings />} />
         <Route path="/sysdashboard" element={<SuperAdminDashboard />} />
 
         <Route path="/DepartmentCategoryMapping" element={<DepartmentCategoryMapping />} />

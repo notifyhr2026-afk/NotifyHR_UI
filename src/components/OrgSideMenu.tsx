@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { GetByUserIDAsync } from '../services/menuService';
-import mainlogo from "../img/NotifyHR_Logo1.png";
+import mainlogo from "../img/Logo-blue.png";
 import logo from "../img/Favicon.png";
+import Faviconwhite from "../img/Favicon-white.png";
+import logowhite from "../img/Logo-white.png";
 
 interface MenuItem {
   menuID: number;
@@ -35,7 +37,7 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const userID = user?.userID;
 
-  // ✅ detect theme
+  // 🌙 detect theme
   const [isDark, setIsDark] = useState(
     localStorage.getItem('theme') === 'dark'
   );
@@ -100,6 +102,15 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
     fetchMenu();
   }, [userID]);
 
+  // ✅ FIX: logo switching logic
+  const currentLogo = isDark
+  ? isOpen
+    ? logowhite
+    : Faviconwhite
+  : isOpen
+  ? mainlogo
+  : logo;
+
   return (
     <nav
       style={{
@@ -129,11 +140,14 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
         }}
       >
         <Link to="/dashboard" style={{ textDecoration: 'none' }}>
-          {isOpen ? (
-            <img src={mainlogo} alt="Main Logo" style={{ height: '50px' }} />
-          ) : (
-            <img src={logo} alt="Logo" style={{ height: '40px' }} />
-          )}
+          <img
+            src={currentLogo}
+            alt="Logo"
+            style={{
+              height: isOpen ? '50px' : '40px',
+              transition: 'opacity 0.3s ease',
+            }}
+          />
         </Link>
       </div>
 
@@ -243,7 +257,7 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
                   </ul>
                 )}
 
-                {/* Collapsed hover menu */}
+                {/* Collapsed hover menu (RESTORED ✅) */}
                 {!isOpen && hasSub && hoverIndex === idx && (
                   <ul
                     style={{
@@ -260,8 +274,6 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
                     }}
                   >
                     {item.subMenu!.map((sub, sidx) => {
-                      const subActive = location.pathname === sub.routeUrl;
-
                       return (
                         <li key={sidx}>
                           <Link

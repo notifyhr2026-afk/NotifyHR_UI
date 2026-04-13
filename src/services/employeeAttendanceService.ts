@@ -16,6 +16,9 @@ const employeeAttendanceService = {
     const res = await axiosInstance.post("EmployeeAttendance/CreateOrUpdateAttendanceCorrectionAsync", payload);
     return res.data;
    },
-   
+    getEmployeeAttendance: async (payload: any) => {
+    const res = await axiosInstance.post("EmployeeAttendance/GetEmployeeAttendance", payload);
+    return res.data;
+   },
 };
 export default employeeAttendanceService;
