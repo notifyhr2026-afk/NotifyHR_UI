@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import '../../css/Login.css';
 import resetImage from '../../assets/ResetPassword.png'; // add a suitable image (or reuse Login.png)
-import { useSearchParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import changePassword from '../../services/Changepassword';
 import Swal from 'sweetalert2';
 
@@ -16,13 +16,9 @@ const ResetPassword: React.FC = () => {
 
   //const { resetPassword } = useAuth(); // you'll need to add this function in AuthContext
   const navigate = useNavigate();
-const [searchParams] = useSearchParams();
-
-const userID = searchParams.get("userId");
-const organizationID = searchParams.get("orgId");
-
-const parsedUserId = Number(userID);
-const parsedOrgId = Number(organizationID);
+const { userId, orgId } = useParams();
+const parsedUserId = Number(userId);
+const parsedOrgId = Number(orgId);
 const [successMessage, setSuccessMessage] = useState('');
 
   const {  logout } = useAuth();

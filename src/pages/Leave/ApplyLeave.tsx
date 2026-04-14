@@ -10,7 +10,12 @@ import ApplyLeaveModal from './ApplyLeaveModal';
 import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 
 const ApplyLeave: React.FC = () => {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const user = JSON.parse(localStorage.getItem("user") || "{}");    
+  const roles = JSON.parse(localStorage.getItem("roles") || "{}");
+  // check if Reporting Manager exists
+  const isReportingManager = roles.some(
+    (r: any) => r.roleName === "Reporting Manager"
+  );
   const organizationID: number | undefined = user?.organizationID;
   const employeeID: number  = user?.employeeID;
   const [leaves, setLeaves] = useState<Leave[]>([]);
@@ -22,17 +27,14 @@ const ApplyLeave: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [leaveToDelete, setLeaveToDelete] = useState<number | null>(null);
 
-  const employeeOptions: EmployeeOption[] = [
-    { value: 'emp1', label: 'Alice Johnson' },
-    { value: 'emp2', label: 'Bob Smith' },
-    { value: 'emp3', label: 'Charlie Brown' },
-  ];
-
+  
   const leaveTypeOptions: LeaveTypeOption[] = [
     { value: '1', label: 'Casual Leave', totalLeaves: 12 },
     { value: '2', label: 'Sick Leave', totalLeaves: 10 },
     { value: '3', label: 'Earned Leave', totalLeaves: 15 },
   ];
+
+
 
   // Wrap setEditLeave to match LeaveHistoryTab prop
   const handleEditLeave = (leave: Leave) => setEditLeave(leave);
@@ -68,35 +70,40 @@ const ApplyLeave: React.FC = () => {
       </div>
 
       <Tabs activeKey={activeTab} onSelect={k => setActiveTab(k || 'history')}>
-        <Tab eventKey="history" title="Leave History">
-          <LeaveHistoryTab
-           employeeID={employeeID}
-            leaveTypes={leaveTypeOptions}
-            onEdit={handleEditLeave} // ✅ wrapped function
-            onDelete={(id) => {
-              setLeaveToDelete(id);
-              setConfirmDelete(true);
-            }}
-          />
-        </Tab>
+  
+  <Tab eventKey="history" title="Leave History">
+    <LeaveHistoryTab
+      employeeID={employeeID}
+      leaveTypes={leaveTypeOptions}
+      onEdit={handleEditLeave}
+      onDelete={(id) => {
+        setLeaveToDelete(id);
+        setConfirmDelete(true);
+      }}
+    />
+  </Tab>
 
-        <Tab eventKey="balance" title="Leave Balance">
-         <LeaveBalanceTab />
-        </Tab>
+  <Tab eventKey="balance" title="Leave Balance">
+    <LeaveBalanceTab />
+  </Tab>
 
-        <Tab eventKey="approve" title="Approve Leaves">
-         <ApproveLeavesTab
-            onApprove={handleApprove}
-            onReject={handleReject}
-          />
-        </Tab>
+  {/* ✅ Show only if Reporting Manager */}
+  {isReportingManager && (
+    <Tab eventKey="approve" title="Approve Leaves">
+      <ApproveLeavesTab
+        onApprove={handleApprove}
+        onReject={handleReject}
+      />
+    </Tab>
+  )}
 
-        <Tab eventKey="employee" title="Employee Leaves">
-          <EmployeeLeavesTab  
-            leaveTypes={leaveTypeOptions}
-          />
-        </Tab>
-      </Tabs>
+  {isReportingManager && (
+    <Tab eventKey="employee" title="Employee Leaves">
+      <EmployeeLeavesTab leaveTypes={leaveTypeOptions} />
+    </Tab>
+  )}
+
+</Tabs>
 
       <ApplyLeaveModal
         show={showModal}
