@@ -99,7 +99,7 @@ import ManageProjects from '../components/Organization/ManageProjects';
 import DepartmentCategoryMapping from '../pages/helpdesk/DepartmentCategoryMapping';
 import EmployeeGroups from '../pages/Employee/EmployeeGroups';
 import GroupEmployeeMapping from '../pages/Employee/GroupEmployeeMapping';
-
+import SuperAdminDashboard from '../pages/Main/SuperAdmin';
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -204,6 +204,8 @@ const RoutesComponent: React.FC = () => {
         <Route path="/GroupEmployeeMapping" element={<GroupEmployeeMapping />} />
         <Route path="/MyServiceTicket" element={<MyServiceTicket />} />
         <Route path="/ProbationSettings" element={<ProbationSettings />} />
+        <Route path="/sysdashboard" element={<SuperAdminDashboard />} />
+
         <Route path="/DepartmentCategoryMapping" element={<DepartmentCategoryMapping />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
