@@ -11,7 +11,7 @@ import DeleteConfirmModal from '../../components/DeleteConfirmModal';
 
 const ApplyLeave: React.FC = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");    
-  const roles = JSON.parse(localStorage.getItem("userroles") || "{}");
+  const roles = JSON.parse(localStorage.getItem("userRoles") || "{}");
   // check if Reporting Manager exists
   const isReportingManager = roles.some(
     (r: any) => r.roleName === "Reporting Manager"

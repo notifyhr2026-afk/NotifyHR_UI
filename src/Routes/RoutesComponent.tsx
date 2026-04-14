@@ -94,6 +94,7 @@ import Feedback360Page from '../pages/Performance/Feedback360Page';
 import ShiftManagement from '../pages/Shift/ManageShifts';
 import ManageShiftPatterns from '../pages/Shift/ManageShiftPatterns';
 import AssignShifts from '../pages/Shift/AssignShifts';
+import ManageClients from '../pages/Organization/ManageClients';
 import ManageProjects from '../components/Organization/ManageProjects';
 
 import DepartmentCategoryMapping from '../pages/helpdesk/DepartmentCategoryMapping';
@@ -199,6 +200,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="/ShiftManagement" element={<ShiftManagement />} />
         <Route path="/Shiftpatterns" element={<ManageShiftPatterns />} />
         <Route path="/assignshifts" element={<AssignShifts />} />
+        <Route path="/ManageClients" element={<ManageClients />} />
         <Route path="/ManageProjects" element={<ManageProjects />} />
         <Route path="/EmployeeGroups" element={<EmployeeGroups />} />
         <Route path="/GroupEmployeeMapping" element={<GroupEmployeeMapping />} />
