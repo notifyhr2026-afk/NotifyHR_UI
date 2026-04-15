@@ -1,9 +1,18 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
+import {
+  Button,
+  Table,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Pagination,
+  Badge,
+  Card
+} from 'react-bootstrap';
 import Select from 'react-select';
 import userService from '../../services/userService';
 import employeeService from '../../services/employeeService';
-import LoggedInUser from '../../types/LoggedInUser';
 
 interface User {
   id: number;
@@ -22,19 +31,35 @@ interface User {
   roles: string[];
 }
 
-interface DropdownOption {
+interface DropdownItem {
   id: number;
   name: string;
 }
 
 const ManageUsers: React.FC = () => {
 
-const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
-const organizationID: number  = userFromStorage?.organizationID ?? 0;
+  const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID: number = userFromStorage?.organizationID ?? 0;
 
   const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [generating, setGenerating] = useState(false);
 
+  // ===== FILTERS =====
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedBranch, setSelectedBranch] = useState<number | ''>('');
+  const [selectedDepartment, setSelectedDepartment] = useState<number | ''>('');
+  const [selectedRole, setSelectedRole] = useState<string>('');
+
+  // ===== PAGINATION =====
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
+
+  // ===== DROPDOWNS =====
+  const [branches, setBranches] = useState<DropdownItem[]>([]);
+  const [departments, setDepartments] = useState<DropdownItem[]>([]);
+
+  // ===== FORM =====
   const [userFormData, setUserFormData] = useState<User>({
     id: 0,
     branchID: null,
@@ -57,21 +82,6 @@ const organizationID: number  = userFromStorage?.organizationID ?? 0;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
 
-  const branches: DropdownOption[] = [
-    { id: 1, name: 'Branch 1' },
-    { id: 2, name: 'Branch 2' },
-  ];
-
-  const divisions: DropdownOption[] = [
-    { id: 1, name: 'Division 1' },
-    { id: 2, name: 'Division 2' },
-  ];
-
-  const departments: DropdownOption[] = [
-    { id: 1, name: 'Department 1' },
-    { id: 2, name: 'Department 2' },
-  ];
-
   const roleOptions = [
     { value: 'Admin', label: 'Admin' },
     { value: 'Manager', label: 'Manager' },
@@ -79,281 +89,293 @@ const organizationID: number  = userFromStorage?.organizationID ?? 0;
     { value: 'Guest', label: 'Guest' },
   ];
 
+  // ================= FETCH =================
   const loadUsers = async () => {
-  try {
+    try {
+      const data = await userService.getUsersByOrganizationIdAsync(organizationID);
 
-    const data = await userService.getUsersByOrganizationIdAsync(organizationID);
+      const mapped: User[] = data.map((u: any) => ({
+        id: u.UserID,
+        branchID: u.BranchID || null,
+        divisionID: u.DivisionID || null,
+        departmentID: u.DepartmentID || null,
+        fullName: u.FullName,
+        email: u.Email,
+        phone: u.Phone,
+        username: u.Username,
+        passwordHash: '',
+        isPasswordReset: u.IsPasswordReset,
+        passwordResetDate: u.PasswordResetDate,
+        isActive: u.IsActive,
+        isCompanyEmail: u.IsCompanyEmail,
+        roles: u.Roles ? u.Roles.split(',').map((r: string) => r.trim()) : []
+      }));
 
-    const mappedUsers: User[] = data.map((u: any) => ({
-      id: u.UserID,
-      branchID: null,
-      divisionID: null,
-      departmentID: null,
-      fullName: u.FullName,
-      email: u.Email,
-      phone: u.Phone,
-      username: u.Username,
-      passwordHash: '',
-      isPasswordReset: u.IsPasswordReset,
-      passwordResetDate: u.PasswordResetDate,
-      isActive: u.IsActive,
-      isCompanyEmail: u.IsCompanyEmail,
-      roles: u.Roles ? u.Roles.split(',').map((r: string) => r.trim()) : []
-    }));
+      setUsers(mapped);
+      setFilteredUsers(mapped);
 
-    setUsers(mappedUsers);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
-  } catch (error) {
-    console.error("Error loading users", error);
-  }
-};
+  useEffect(() => {
+    loadUsers();
 
-useEffect(() => {
-  loadUsers();
-}, [])
+    // mock dropdowns (replace with API if needed)
+    setBranches([
+      { id: 1, name: 'Branch 1' },
+      { id: 2, name: 'Branch 2' },
+    ]);
 
-  // =============================
-  // GENERATE LOGINS
-  // =============================
+    setDepartments([
+      { id: 1, name: 'HR' },
+      { id: 2, name: 'IT' },
+    ]);
+  }, []);
+
+  // ================= FILTER =================
+  useEffect(() => {
+
+    let filtered = users.filter(u => {
+
+      const search =
+        u.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        u.username.toLowerCase().includes(searchTerm.toLowerCase());
+
+      const branch =
+        selectedBranch === '' || u.branchID === selectedBranch;
+
+      const dept =
+        selectedDepartment === '' || u.departmentID === selectedDepartment;
+
+      const role =
+        selectedRole === '' || u.roles.includes(selectedRole);
+
+      return search && branch && dept && role;
+
+    });
+
+    setFilteredUsers(filtered);
+    setCurrentPage(1);
+
+  }, [searchTerm, selectedBranch, selectedDepartment, selectedRole, users]);
+
+  // ================= PAGINATION =================
+  const indexOfLast = currentPage * pageSize;
+  const currentUsers = filteredUsers.slice(indexOfLast - pageSize, indexOfLast);
+  const totalPages = Math.ceil(filteredUsers.length / pageSize);
+
+  // ================= GENERATE =================
   const handleGenerateLogins = async () => {
     try {
-      setGenerating(true);   
+      setGenerating(true);
 
-      const employees =
-        await employeeService.getEmployeeByOrganizationIdAsync(organizationID);
+      const employees = await employeeService.getEmployeeByOrganizationIdAsync(organizationID);
 
-      if (!employees || employees.length === 0) {
-        alert("No employees found");
-        return;
-      }
-
-    const payload = {
+      const res = await userService.PostGenerateLoginsAsync({
         employeeJsonData: JSON.stringify(employees),
         createdBy: "Admin"
-     };
+      });
 
-  const loginResponse =
-    await userService.PostGenerateLoginsAsync(payload);
-    
-
-      if (!loginResponse || loginResponse.length === 0) {
-        alert("No users created");
-        return;
-      }
-   
-        const payload1 = {
-        jsonData: JSON.stringify(loginResponse),
+      await employeeService.PutUpdateEmployeeUserIdAsync({
+        jsonData: JSON.stringify(res),
         createdBy: "Admin"
-      };
+      });
 
-      await employeeService.PutUpdateEmployeeUserIdAsync(payload1);
-      await loadUsers(); // refresh grid
-      alert("Logins generated successfully");
+      await loadUsers();
+      alert("Generated!");
 
-    } catch (error) {
-      console.error("Error generating logins", error);
-      alert("Error generating logins");
+    } catch {
+      alert("Error!");
     } finally {
       setGenerating(false);
     }
   };
 
-  // =============================
-  // INPUT CHANGE
-  // =============================
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
+  // ================= INPUT =================
+  const handleInputChange = (e: any) => {
+    const { id, value, type, checked } = e.target;
 
-    const { id, value, type } = e.target;
-
-    if (type === 'checkbox') {
-      const target = e.target as HTMLInputElement;
-      setUserFormData((prev) => ({
-        ...prev,
-        [id]: target.checked,
-      }));
-    } else {
-      setUserFormData((prev) => ({
-        ...prev,
-        [id]: value,
-      }));
-    }
+    setUserFormData(prev => ({
+      ...prev,
+      [id]: type === 'checkbox' ? checked : value
+    }));
   };
 
-  // =============================
-  // OPEN MODALS
-  // =============================
-  const openAddModal = () => {
-
-    setEditUser(null);
-
-    setUserFormData({
-      id: 0,
-      branchID: null,
-      divisionID: null,
-      departmentID: null,
-      fullName: '',
-      email: '',
-      phone: '',
-      username: '',
-      passwordHash: '',
-      isPasswordReset: false,
-      passwordResetDate: null,
-      isActive: true,
-      isCompanyEmail: false,
-      roles: [],
-    });
-
-    setShowModal(true);
-  };
-
-  const openEditModal = (user: User) => {
-    setEditUser(user);
-    setUserFormData(user);
-    setShowModal(true);
-  };
-
-  // =============================
-  // SAVE / UPDATE
-  // =============================
+  // ================= SAVE =================
   const handleSave = () => {
 
     if (editUser) {
-
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === userFormData.id ? userFormData : u
-        )
+      setUsers(prev =>
+        prev.map(u => u.id === userFormData.id ? userFormData : u)
       );
-
     } else {
-
-      setUsers((prev) => [
-        ...prev,
-        { ...userFormData, id: Date.now() },
-      ]);
-
+      setUsers(prev => [...prev, { ...userFormData, id: Date.now() }]);
     }
 
     setShowModal(false);
   };
 
-  // =============================
-  // DELETE
-  // =============================
-  const confirmDeleteUser = (id: number) => {
-    setUserToDelete(id);
-    setConfirmDelete(true);
-  };
-
+  // ================= DELETE =================
   const handleDelete = () => {
-
     if (userToDelete !== null) {
-
-      setUsers((prev) => prev.filter((u) => u.id !== userToDelete));
-
-      setUserToDelete(null);
-
+      setUsers(prev => prev.filter(u => u.id !== userToDelete));
       setConfirmDelete(false);
     }
   };
 
+  // ================= UI =================
   return (
-    <div className="Container">
+    <div className="container mt-3">
 
-      <h3>Manage Users</h3>
+      <Card className="shadow-sm">
+        <Card.Body>
 
-      <div className="d-flex justify-content-end gap-2 mb-3">
+          <div className="d-flex justify-content-between mb-3">
+            <h4>Manage Users</h4>
 
-        <Button
-          variant="primary"
-          onClick={handleGenerateLogins}
-          disabled={generating}
-        >
-          {generating ? "Generating..." : "Generate Logins"}
-        </Button>
+            <div className="d-flex gap-2">
+              <Button onClick={handleGenerateLogins}>
+                {generating ? "Generating..." : "Generate Logins"}
+              </Button>
 
-        <Button
-          variant="success"
-          onClick={openAddModal}
-        >
-          + Add User
-        </Button>
+              <Button variant="success" onClick={() => {
+                setEditUser(null);
+                setShowModal(true);
+              }}>
+                + Add User
+              </Button>
+            </div>
+          </div>
 
-      </div>
+          {/* ===== FILTERS ===== */}
+          <div className="d-flex align-items-center gap-2 mb-3 flex-nowrap overflow-auto">
 
-      {users.length > 0 ? (
+  <Form.Control
+    placeholder="Search..."
+    value={searchTerm}
+    onChange={(e) => setSearchTerm(e.target.value)}
+    style={{ minWidth: 200, maxWidth: 250 }}
+  />
 
-        <Table className="table table-hover table-dark-custom">
+  <Form.Select
+    value={selectedBranch}
+    onChange={(e) =>
+      setSelectedBranch(e.target.value ? Number(e.target.value) : '')
+    }
+    style={{ minWidth: 160 }}
+  >
+    <option value="">Branch</option>
+    {branches.map(b => (
+      <option key={b.id} value={b.id}>{b.name}</option>
+    ))}
+  </Form.Select>
 
-          <thead>
+  <Form.Select
+    value={selectedDepartment}
+    onChange={(e) =>
+      setSelectedDepartment(e.target.value ? Number(e.target.value) : '')
+    }
+    style={{ minWidth: 160 }}
+  >
+    <option value="">Department</option>
+    {departments.map(d => (
+      <option key={d.id} value={d.id}>{d.name}</option>
+    ))}
+  </Form.Select>
 
-            <tr>
+  <Form.Select
+    value={selectedRole}
+    onChange={(e) => setSelectedRole(e.target.value)}
+    style={{ minWidth: 150 }}
+  >
+    <option value="">Role</option>
+    {roleOptions.map(r => (
+      <option key={r.value} value={r.value}>{r.value}</option>
+    ))}
+  </Form.Select>
 
-              <th>Full Name</th>
-              <th>Email</th>
-              <th>Phone</th>
-              <th>Username</th>
-              <th>Roles</th>
-              <th>Company Email</th>
-              <th>Is Active</th>
-              <th>Actions</th>
+  <Button
+    variant="outline-secondary"
+    onClick={() => {
+      setSearchTerm('');
+      setSelectedBranch('');
+      setSelectedDepartment('');
+      setSelectedRole('');
+    }}
+    style={{ whiteSpace: 'nowrap' }}
+  >
+    Clear
+  </Button>
 
-            </tr>
+</div>
 
-          </thead>
-
-          <tbody>
-
-            {users.map((u) => (
-
-              <tr key={u.id}>
-
-                <td>{u.fullName}</td>
-                <td>{u.email}</td>
-                <td>{u.phone}</td>
-                <td>{u.username}</td>
-                <td>{u.roles.join(', ')}</td>
-                <td>{u.isCompanyEmail ? 'Yes' : 'No'}</td>
-                <td>{u.isActive ? 'Yes' : 'No'}</td>
-
-                <td>
-
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() => openEditModal(u)}
-                    className="me-2"
-                  >
-                    Edit
-                  </Button>
-
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={() => confirmDeleteUser(u.id)}
-                  >
-                    Delete
-                  </Button>
-
-                </td>
-
+          {/* ===== TABLE ===== */}
+          <Table bordered hover responsive>
+            <thead className="table-dark">
+              <tr>
+                <th>Name</th>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Roles</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
+            </thead>
 
+            <tbody>
+              {currentUsers.map(u => (
+                <tr key={u.id}>
+                  <td>{u.fullName}</td>
+                  <td>{u.username}</td>
+                  <td>{u.email}</td>
+                  <td>
+                    {u.roles.map(r => <Badge bg="info" key={r} className="me-1">{r}</Badge>)}
+                  </td>
+                  <td>
+                    <Badge bg={u.isActive ? 'success' : 'danger'}>
+                      {u.isActive ? 'Active' : 'Inactive'}
+                    </Badge>
+                  </td>
+                  <td>
+                    <Button size="sm" onClick={() => {
+                      setEditUser(u);
+                      setUserFormData(u);
+                      setShowModal(true);
+                    }}>Edit</Button>
+
+                    <Button size="sm" variant="danger" className="ms-2"
+                      onClick={() => {
+                        setUserToDelete(u.id);
+                        setConfirmDelete(true);
+                      }}>
+                      Delete
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+
+          {/* PAGINATION */}
+          <Pagination className="justify-content-end">
+            {[...Array(totalPages)].map((_, i) => (
+              <Pagination.Item
+                key={i}
+                active={i + 1 === currentPage}
+                onClick={() => setCurrentPage(i + 1)}
+              >
+                {i + 1}
+              </Pagination.Item>
             ))}
+          </Pagination>
 
-          </tbody>
+        </Card.Body>
+      </Card>
 
-        </Table>
-
-      ) : (
-
-        <p>No users added yet.</p>
-
-      )}
-
-      {/* Add/Edit Modal */}
+            {/* Add/Edit Modal */}
 
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
 
@@ -577,7 +599,6 @@ useEffect(() => {
         </Modal.Footer>
 
       </Modal>
-
     </div>
   );
 };

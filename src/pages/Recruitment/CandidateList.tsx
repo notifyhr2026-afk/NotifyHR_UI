@@ -219,7 +219,7 @@ const CandidateList: React.FC = () => {
       </div>
 
       <div className="table-responsive">
-        <table className="table table-bordered table-hover table-striped">
+        <table className="table table-hover table-dark-custom">
           <thead className="thead-dark">
             <tr>
               <th>Name</th>

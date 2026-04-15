@@ -154,7 +154,7 @@ const RequestDemo: React.FC = () => {
         {`
           .form-control:focus,
           .form-select:focus {
-            border-color: #0d6efd;
+            border-color: rgb(30 115 190);
             box-shadow: 0 0 0 0.15rem rgba(13,110,253,.25);
           }
 

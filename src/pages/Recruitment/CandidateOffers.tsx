@@ -234,13 +234,13 @@ const CandidateOffers: React.FC = () => {
         {`
           .underline-select {
             border: none;
-            border-bottom: 1px solid #0d6efd;
+            border-bottom: 1px solid rgb(30 115 190);
             border-radius: 0;
             padding-left: 0;
           }
           .underline-select:focus {
             box-shadow: none;
-            border-color: #0d6efd;
+            border-color: rgb(30 115 190);
           }
         `}
       </style>

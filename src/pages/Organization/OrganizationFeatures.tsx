@@ -137,7 +137,7 @@ const OrganizationFeatures: React.FC = () => {
                     style={{
                       backgroundColor: active ? "#eef7ff" : "#ffffff",
                       border: active
-                        ? "2px solid #0d6efd"
+                        ? "2px solid rgb(30 115 190)"
                         : "1px solid #dddddd",
                       transition: "0.3s",
                     }}

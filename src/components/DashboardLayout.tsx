@@ -61,7 +61,7 @@ useEffect(() => {
     className="btn btn-link fs-4"
     onClick={toggleSidebar}
     aria-label="Toggle sidebar"
-    style={{ color: isDarkMode ? '#fff' : '#0d6efd' }}
+    style={{ color: isDarkMode ? '#fff' : 'rgb(30 115 190)' }}
   >
     <i className="bi bi-list"></i>
   </button>
@@ -73,7 +73,7 @@ useEffect(() => {
       maxWidth: '400px',
       fontWeight: 1000,
       fontSize: '2rem',
-      color: isDarkMode ? '#fff' : '#0d6efd',
+      color: isDarkMode ? '#fff' : 'rgb(30 115 190)',
       textAlign: 'center',
     }}
     title={organizationName.name}

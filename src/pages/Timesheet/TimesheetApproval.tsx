@@ -382,7 +382,7 @@ const TimesheetApproval: React.FC = () => {
                       </Table>
 
                       <div className="text-end">
-                        <Button
+                        {/* <Button
                           onClick={() =>
                             saveApproval(
                               employee.employeeId,
@@ -391,7 +391,7 @@ const TimesheetApproval: React.FC = () => {
                           }
                         >
                           Save
-                        </Button>
+                        </Button> */}
                       </div>
                     </Card.Body>
                   </Card>

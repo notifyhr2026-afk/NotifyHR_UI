@@ -54,7 +54,7 @@ const AssignedRoles: React.FC = () => {
       <h3 className="mb-4">Assigned Roles</h3>
 
       <Card className="p-3">
-        <Table striped bordered hover responsive className="mt-3 align-middle">
+        <Table className="table table-hover table-dark-custom">
           <thead className="table-primary">
             <tr>
               <th>Role Name</th>

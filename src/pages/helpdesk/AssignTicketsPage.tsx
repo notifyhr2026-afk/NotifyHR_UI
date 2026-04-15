@@ -183,7 +183,7 @@ const AssignTicketsPage: React.FC = () => {
 
       {loading && <Spinner />}
 
-      <Table bordered hover responsive className="mt-3">
+      <Table className="table table-hover table-dark-custom">
         <thead>
           <tr>
             <th>Ticket</th>

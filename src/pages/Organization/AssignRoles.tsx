@@ -220,7 +220,7 @@ const fetchRolesByOrganization = async (organizationID: number) => {
         <Card className="p-3">
           <h5>Roles for {selectedOrg?.OrganizationName}</h5>
 
-          <Table striped bordered hover responsive className="mt-3 align-middle">
+          <Table className="table table-hover table-dark-custom">
             <thead className="table-primary">
               <tr>
                 <th>Role Name</th>

@@ -215,7 +215,7 @@ const CreateTicket: React.FC = () => {
                     disabled={loading}
                     style={{
                       background:
-                        'linear-gradient(135deg, #0d6efd, #4dabf7)',
+                        'linear-gradient(135deg, rgb(30 115 190), #4dabf7)',
                       border: 'none',
                       borderRadius: '10px',
                       fontWeight: '600',

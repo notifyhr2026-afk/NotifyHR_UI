@@ -223,7 +223,7 @@ const Menus: React.FC = () => {
           <Accordion.Item eventKey={idx.toString()} key={featureName}>
             <Accordion.Header>{featureName}</Accordion.Header>
             <Accordion.Body>
-              <Table bordered hover responsive striped>
+              <Table className="table table-hover table-dark-custom">
                 <thead>
                   <tr>
                     <th>Menu Name</th>

@@ -101,6 +101,7 @@ import DepartmentCategoryMapping from '../pages/helpdesk/DepartmentCategoryMappi
 import EmployeeGroups from '../pages/Employee/EmployeeGroups';
 import GroupEmployeeMapping from '../pages/Employee/GroupEmployeeMapping';
 import SuperAdminDashboard from '../pages/Main/SuperAdmin';
+import VerifyEmployeeTasks from '../pages/Timesheet/VerifyEmployeeTasks';
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -194,7 +195,7 @@ const RoutesComponent: React.FC = () => {
         {/* <Route path="/ticket/:id" element={<TicketDetails />} /> */}
         <Route path="/ManagerTicketVerification" element={<ManagerTicketVerification />} />
         <Route path="/EmployeeTickets" element={<EmployeeTickets />} />
-        
+        <Route path="/VerifyEmployeeTasks" element={<VerifyEmployeeTasks />} />
 
         {/* <Route path="ShiftManagement" element={<ShiftManagement />} /> */}
         <Route path="/ShiftManagement" element={<ShiftManagement />} />
