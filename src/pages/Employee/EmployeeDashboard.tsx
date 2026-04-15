@@ -1,249 +1,197 @@
-import React, { useState } from "react";
+import React from "react";
 import {
-  BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer,
+  LineChart, Line,
+  BarChart, Bar,
+  PieChart, Pie, Cell,
+  XAxis, YAxis, CartesianGrid,
+  Tooltip, ResponsiveContainer,
+  RadialBarChart, RadialBar
 } from "recharts";
 
-// Sample data (replace with API)
-const employee = {
-  fullName: "John Doe",
-  employeeCode: "EMP-1024",
-  designation: "Senior Software Engineer",
-  department: "IT Department",
-  email: "john.doe@example.com",
-  phone: "+1 987 654 3210",
-  joinDate: "2021-04-15",
-  status: "Active",
-  profileImage: "",
-};
+const EmployeeDashboard: React.FC = () => {
 
-// Attendance graph (last 7 days)
-const attendanceData = [
-  { day: "Mon", hrs: 8 },
-  { day: "Tue", hrs: 7 },
-  { day: "Wed", hrs: 6 },
-  { day: "Thu", hrs: 8 },
-  { day: "Fri", hrs: 9 },
-];
+  const stats = {
+    attendance: 92,
+    leavesTaken: 6,
+    pendingLeaves: 2,
+    tasksCompleted: 18,
+    performanceScore: 82,
+  };
 
-// Leave distribution
-const leavePie = [
-  { name: "Used", value: 6 },
-  { name: "Remaining", value: 12 },
-];
-const colors = ["#007bff", "#e0e0e0"];
+  const attendanceTrend = [
+    { month: "Jan", value: 90 },
+    { month: "Feb", value: 88 },
+    { month: "Mar", value: 85 },
+    { month: "Apr", value: 91 },
+    { month: "May", value: 89 },
+    { month: "Jun", value: 92 },
+  ];
 
-// Team members
-const team = [
-  { name: "Alice Brown", role: "UI Developer" },
-  { name: "James Lee", role: "Backend Dev" },
-  { name: "Robert Paul", role: "QA Engineer" },
-];
+  const monthlyLeaves = [
+    { month: "Jan", leaves: 1 },
+    { month: "Feb", leaves: 0 },
+    { month: "Mar", leaves: 2 },
+    { month: "Apr", leaves: 1 },
+    { month: "May", leaves: 1 },
+    { month: "Jun", leaves: 1 },
+  ];
 
-// Timeline
-const timeline = [
-  { date: "2024-01-15", title: "Promotion", desc: "Promoted to Senior Engineer" },
-  { date: "2023-11-03", title: "Award", desc: "Employee of the Month" },
-  { date: "2023-08-25", title: "Project", desc: "Completed Project Falcon" },
-];
+  const tasksData = [
+    { name: "Completed", value: 18 },
+    { name: "Pending", value: 6 },
+  ];
 
-const EmployeeDashboard = () => {
-  const [activeTab, setActiveTab] = useState("profile");
+  const workHours = [
+    { day: "Mon", hours: 8 },
+    { day: "Tue", hours: 9 },
+    { day: "Wed", hours: 7 },
+    { day: "Thu", hours: 8 },
+    { day: "Fri", hours: 6 },
+  ];
+
+  const performanceData = [
+    { name: "Score", value: stats.performanceScore, fill: "#6366F1" }
+  ];
+
+  const COLORS = ["#10B981", "#EF4444"];
 
   return (
-    <div className="container py-4">
+    <div className="dashboard-page">
+      <div className="dashboard-container">
 
-      {/* HEADER */}
-      <div className="text-center mb-4">
-        <i className="bi bi-person-circle text-primary" style={{ fontSize: "4rem" }}></i>
-        <h3 className="fw-bold mt-2">{employee.fullName}</h3>
-        <span className="badge bg-success px-3 py-2">{employee.status}</span>
-      </div>
+        <h2>👤 Employee Dashboard</h2>
 
-      {/* TABS */}
-      <ul className="nav nav-tabs mb-4 justify-content-center">
-        {[
-          "profile", "attendance", "leaves", "payroll", "documents",
-          "skills", "projects", "timeline", "settings"
-        ].map((tab) => (
-          <li className="nav-item" key={tab}>
-            <button
-              className={`nav-link ${activeTab === tab ? "active" : ""}`}
-              onClick={() => setActiveTab(tab)}
-            >
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </button>
-          </li>
-        ))}
-      </ul>
+        {/* KPI CARDS */}
+        <div className="dashboard-grid">
+          <Card title="Attendance %" value={`${stats.attendance}%`} />
+          <Card title="Leaves Taken" value={stats.leavesTaken} />
+          <Card title="Pending Leaves" value={stats.pendingLeaves} />
+          <Card title="Tasks Completed" value={stats.tasksCompleted} />
+        </div>
 
-      {/* TAB CONTENT */}
-      <div className="card shadow-sm border-0 rounded-4">
-        <div className="card-body">
+        {/* ROW 1 */}
+        <div className="dashboard-row">
 
-          {/* ========================
-                PROFILE TAB
-          ========================= */}
-          {activeTab === "profile" && (
-            <>
-              <h4 className="mb-3">Employee Details</h4>
-              <div className="row">
+          <Section title="Attendance Trend">
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={attendanceTrend}>
+                <CartesianGrid strokeDasharray="3 3" className="chart-grid" />
+                <XAxis dataKey="month" className="chart-axis" />
+                <YAxis className="chart-axis" />
+                <Tooltip />
+                <Line type="monotone" dataKey="value" stroke="#3B82F6" strokeWidth={3} />
+              </LineChart>
+            </ResponsiveContainer>
+          </Section>
 
-                {/* Block 1 */}
-                <div className="col-md-6 mb-3">
-                  <div className="border rounded p-3 bg-light">
-                    <strong>Employee Code:</strong>
-                    <p>{employee.employeeCode}</p>
-                    <strong>Designation:</strong>
-                    <p>{employee.designation}</p>
-                    <strong>Department:</strong>
-                    <p>{employee.department}</p>
-                  </div>
-                </div>
-
-                {/* Block 2 */}
-                <div className="col-md-6 mb-3">
-                  <div className="border rounded p-3 bg-light">
-                    <strong>Email:</strong>
-                    <p>{employee.email}</p>
-                    <strong>Phone:</strong>
-                    <p>{employee.phone}</p>
-                    <strong>Joining Date:</strong>
-                    <p>{employee.joinDate}</p>
-                  </div>
-                </div>
-
-                {/* Team Block */}
-                <div className="col-12 mt-3">
-                  <h5 className="mb-3">Team Members</h5>
-                  <div className="row">
-                    {team.map((m, i) => (
-                      <div className="col-md-4" key={i}>
-                        <div className="p-3 border rounded text-center">
-                          <i className="bi bi-person-fill" style={{ fontSize: "2rem" }}></i>
-                          <h6 className="mt-2">{m.name}</h6>
-                          <small className="text-muted">{m.role}</small>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-              </div>
-            </>
-          )}
-
-          {/* ========================
-                ATTENDANCE TAB
-          ========================= */}
-          {activeTab === "attendance" && (
-            <>
-              <h4 className="mb-3">Attendance Summary</h4>
-
-              {/* Graph */}
-              <div style={{ height: 250 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={attendanceData}>
-                    <Bar dataKey="hrs" fill="#007bff" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Heatmap */}
-              <h5 className="mt-4">Attendance Heatmap</h5>
-              <p className="text-muted small mb-2">Sample visual only</p>
-
-              <div className="d-flex flex-wrap" style={{ width: "300px" }}>
-                {Array.from({ length: 30 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="m-1"
-                    style={{
-                      width: "20px",
-                      height: "20px",
-                      backgroundColor: ["#d4edda", "#fff3cd", "#f8d7da"][Math.floor(Math.random() * 3)],
-                      borderRadius: "3px",
-                    }}
-                  ></div>
-                ))}
-              </div>
-            </>
-          )}
-
-          {/* ========================
-                LEAVES TAB
-          ========================= */}
-          {activeTab === "leaves" && (
-            <>
-              <h4 className="mb-3">Leave Analytics</h4>
-
-              {/* Donut Chart */}
-              <div style={{ height: 250 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={leavePie}
-                      dataKey="value"
-                      innerRadius={60}
-                      outerRadius={90}
-                      label
-                    >
-                      {leavePie.map((entry, index) => (
-                        <Cell key={index} fill={colors[index]} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-
-              <div className="mt-3">
-                <strong>Total Leaves: 18</strong><br />
-                <strong>Used: 6</strong><br />
-                <strong>Available: 12</strong>
-              </div>
-            </>
-          )}
-
-          {/* ========================
-                TIMELINE TAB
-          ========================= */}
-          {activeTab === "timeline" && (
-            <>
-              <h4 className="mb-3">Career Timeline</h4>
-
-              <ul className="timeline list-unstyled">
-                {timeline.map((t, i) => (
-                  <li key={i} className="mb-3">
-                    <div className="d-flex">
-                      <div className="me-3">
-                        <i className="bi bi-dot" style={{ fontSize: "2rem" }}></i>
-                      </div>
-                      <div>
-                        <strong>{t.date}</strong>
-                        <p className="mb-1">{t.title}</p>
-                        <small className="text-muted">{t.desc}</small>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </>
-          )}
-
-          {/* ========================
-                OTHER TABS (placeholders)
-          ========================= */}
-          {["documents", "skills", "projects", "payroll", "settings"].includes(activeTab) && (
-            <div className="text-center py-5 text-muted">
-              <i className="bi bi-folder2-open" style={{ fontSize: "3rem" }}></i>
-              <h5 className="mt-3">This section will be implemented with real data.</h5>
-            </div>
-          )}
+          <Section title="Task Status">
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie data={tasksData} dataKey="value" innerRadius={50} outerRadius={80}>
+                  {tasksData.map((_, i) => (
+                    <Cell key={i} fill={COLORS[i]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </Section>
 
         </div>
-      </div>
 
+        {/* ROW 2 */}
+        <div className="dashboard-row">
+
+          <Section title="Work Hours This Week">
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={workHours}>
+                <CartesianGrid strokeDasharray="3 3" className="chart-grid" />
+                <XAxis dataKey="day" className="chart-axis" />
+                <YAxis className="chart-axis" />
+                <Tooltip />
+                <Bar dataKey="hours" fill="#10B981" />
+              </BarChart>
+            </ResponsiveContainer>
+          </Section>
+
+          <Section title="Performance Score">
+            <ResponsiveContainer width="100%" height={250}>
+              <RadialBarChart
+                innerRadius="70%"
+                outerRadius="100%"
+                data={performanceData}
+                startAngle={180}
+                endAngle={0}
+              >
+                <RadialBar dataKey="value" background />
+                <Tooltip />
+              </RadialBarChart>
+            </ResponsiveContainer>
+            <div className="score-text">
+              {stats.performanceScore}%
+            </div>
+          </Section>
+
+        </div>
+
+        {/* ROW 3 */}
+        <div className="dashboard-row">
+
+          <Section title="Leave Summary">
+            <div className="section-text">
+              <p>✅ Leaves Taken: {stats.leavesTaken}</p>
+              <p>⏳ Pending Approval: {stats.pendingLeaves}</p>
+              <p>📅 Remaining Balance: 10 days</p>
+            </div>
+          </Section>
+
+          <Section title="Smart Insights">
+            <div className="section-text">
+              <p>📈 Your attendance is above average.</p>
+              <p>⚠ Mid-week productivity dips slightly.</p>
+              <p>🎯 You are close to achieving monthly goals.</p>
+              <p>💡 Try maintaining consistent work hours.</p>
+            </div>
+          </Section>
+
+        </div>
+
+        {/* ROW 4 */}
+        <div className="dashboard-row">
+
+          <Section title="Monthly Leaves">
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={monthlyLeaves}>
+                <CartesianGrid strokeDasharray="3 3" className="chart-grid" />
+                <XAxis dataKey="month" className="chart-axis" />
+                <YAxis className="chart-axis" />
+                <Tooltip />
+                <Bar dataKey="leaves" fill="#F59E0B" label />
+              </BarChart>
+            </ResponsiveContainer>
+          </Section>
+
+        </div>
+
+      </div>
     </div>
   );
 };
+
+/* COMPONENTS */
+
+const Card = ({ title, value }: any) => (
+  <div className="dashboard-card">
+    <div className="card-title">{title}</div>
+    <div className="card-value">{value}</div>
+  </div>
+);
+
+const Section = ({ title, children }: any) => (
+  <div className="dashboard-section">
+    <h3>{title}</h3>
+    {children}
+  </div>
+);
 
 export default EmployeeDashboard;

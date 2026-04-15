@@ -47,7 +47,7 @@ const Login: React.FC = () => {
             url = "/dashboard";
             break;
           default:
-            url = "/myprofile";
+            url = "/employeedashboard";
         }
         navigate(url);
       } catch (err: any) {

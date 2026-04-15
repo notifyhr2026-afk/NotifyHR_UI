@@ -623,3 +623,223 @@ body.dark-mode .form-check-input[type="checkbox"].form-switch:checked {
 body.dark-mode .form-check-input[type="checkbox"].form-switch:focus {
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
+/* PAGE */
+.dashboard-page {
+  padding: 20px;
+  min-height: 100vh;
+}
+
+.dashboard-container {
+  max-width: 1100px;
+  margin: auto;
+}
+
+/* GRID */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.dashboard-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+/* CARDS */
+.dashboard-card {
+  padding: 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.card-title {
+  font-size: 14px;
+  color: #555;
+}
+
+.card-value {
+  font-size: 22px;
+  font-weight: bold;
+}
+
+/* SECTION */
+.dashboard-section {
+  padding: 16px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+}
+
+.section-text {
+  line-height: 1.6;
+}
+
+/* SCORE */
+.score-text {
+  text-align: center;
+  margin-top: -20px;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+/* DARK MODE SUPPORT */
+body.dark-mode .dashboard-card,
+body.dark-mode .dashboard-section {
+  background: #1e293b;
+  color: #f1f5f9;
+}
+
+body.dark-mode .card-title {
+  color: #94a3b8;
+}
+
+/* CHART COLORS */
+.chart-axis {
+  fill: #333;
+}
+
+body.dark-mode .chart-axis {
+  fill: #cbd5f5;
+}
+
+.chart-grid {
+  stroke: #e5e7eb;
+}
+
+body.dark-mode .chart-grid {
+  stroke: #334155;
+}
+/* PAGE */
+.sa-page {
+  padding: 24px;
+}
+
+.sa-container {
+  max-width: 1280px;
+  margin: auto;
+}
+
+/* HEADER */
+.sa-header h1 {
+  font-size: 22px;
+  margin: 0;
+}
+
+.sa-header p {
+  font-size: 13px;
+  color: #777;
+}
+
+/* GRID */
+.sa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+}
+
+.sa-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* CARD */
+.sa-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 18px;
+  border: 1px solid #e8e6df;
+}
+
+.sa-label {
+  font-size: 12px;
+  color: #888;
+}
+
+.sa-value {
+  font-size: 26px;
+  font-weight: bold;
+}
+
+.sa-sub {
+  font-size: 12px;
+  color: #999;
+}
+
+/* SECTION */
+.sa-section {
+  background: #fff;
+  padding: 18px;
+  border-radius: 12px;
+  border: 1px solid #e8e6df;
+}
+
+.sa-section h3 {
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+/* TOOLTIP */
+.sa-tooltip {
+  background: #fff;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  font-size: 12px;
+}
+
+/* BADGE */
+.badge {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.badge-active { background:#e8f7f2; color:#0f6e56; }
+.badge-churned { background:#fceaea; color:#a32d2d; }
+.badge-paid { background:#e6f1fb; color:#185fa5; }
+.badge-pending { background:#fdf3e2; color:#854f0b; }
+
+/* CHART */
+.chart-axis {
+  fill: #444;
+}
+
+.chart-grid {
+  stroke: #e5e7eb;
+}
+
+/* DARK MODE */
+body.dark-mode .sa-card,
+body.dark-mode .sa-section {
+  background: #1e293b;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+body.dark-mode .sa-label,
+body.dark-mode .sa-sub,
+body.dark-mode .sa-header p {
+  color: #94a3b8;
+}
+
+body.dark-mode .chart-axis {
+  fill: #cbd5f5;
+}
+
+body.dark-mode .chart-grid {
+  stroke: #334155;
+}
+
+body.dark-mode .sa-tooltip {
+  background: #1e293b;
+  color: #fff;
+  border-color: #334155;
+}
