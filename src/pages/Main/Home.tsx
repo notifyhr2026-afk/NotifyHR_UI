@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import notifyhr_logo1 from "../../img/NotifyHR_Logo1.png";
+import notifyhr_logo1 from "../../img/Logo-blue.png";
 
 const features = [
   // HR
@@ -52,7 +52,11 @@ const Home: React.FC = () => {
       >
         <div className="container">
           <Link to="/" className="navbar-brand d-flex align-items-center gap-2">
-            <img src={notifyhr_logo1} alt="NotifyHR Logo" className="app-logo" />
+           <img
+  src={notifyhr_logo1}
+  alt="NotifyHR Logo"
+  style={{ height: "40px", width: "auto" }}
+/>
             {/* <span className="fw-bold fs-5 text-white">NotifyHR</span> */}
           </Link>
 
@@ -71,9 +75,9 @@ const Home: React.FC = () => {
         {/* HERO */}
         <section
           className="text-white text-center"
-          style={{
-            background: "linear-gradient(135deg, var(--brand-primary), var(--brand-secondary))"
-          }}
+        style={{
+  background: "linear-gradient(135deg, #1e73be, #0d47a1)"
+}}
         >
           <div className="container py-5">
             <h1 className="fw-bold display-5 mb-3">
