@@ -164,8 +164,8 @@ const organizationID: number | undefined = user?.organizationID;
 
       {/* Department Table */}
       {departments.length > 0 ? (
-        <Table striped bordered hover responsive>
-          <thead className="table-dark">
+        <Table  className="table table-hover table-dark-custom">
+          <thead>
             <tr>
               <th>Code</th>
               <th>Name</th>

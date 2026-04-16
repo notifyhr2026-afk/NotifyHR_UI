@@ -68,7 +68,7 @@ const EmployeeAsset: React.FC = () => {
 
       <div className="table-responsive">
        <table className="table table-hover table-dark-custom">
-          <thead className="table-dark">
+          <thead>
             <tr>
               <th>Asset Name</th>
               <th>Assigned Date</th>

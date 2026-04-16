@@ -152,7 +152,7 @@ const EmployeeLeavesTab: React.FC<Props> = ({ leaveTypes }) => {
         {leaves.length > 0 && (
           <div className="table-responsive mt-3">
             <Table bordered hover striped>
-              <thead className="table-dark">
+              <thead>
                 <tr>
                   <th>Leave Type</th>
                   <th>Dates</th>

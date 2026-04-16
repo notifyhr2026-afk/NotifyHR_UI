@@ -313,8 +313,8 @@ const ManageUsers: React.FC = () => {
 </div>
 
           {/* ===== TABLE ===== */}
-          <Table bordered hover responsive>
-            <thead className="table-dark">
+          <Table className="table table-hover table-dark-custom">
+            <thead>
               <tr>
                 <th>Name</th>
                 <th>Username</th>

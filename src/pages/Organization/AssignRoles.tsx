@@ -42,9 +42,7 @@ interface SelectOption {
 
 const AssignRoles: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
-
-  const [selectedOrg, setSelectedOrg] =
-    useState<SelectOption | null>(null);
+  const [selectedOrg, setSelectedOrg] = useState<SelectOption | null>(null);
 
   const [roles, setRoles] = useState<Role[]>([]);
   const [assignedRoles, setAssignedRoles] = useState<number[]>([]);
@@ -63,7 +61,6 @@ const AssignRoles: React.FC = () => {
   const fetchOrganizations = async () => {
     try {
       const response = await getOrganizations();
-
       setOrganizations(response);
     } catch (error) {
       toast.error("Failed to load organizations");
@@ -71,12 +68,12 @@ const AssignRoles: React.FC = () => {
     }
   };
 
-  /* ================= LOAD ROLES (SIMPLE SNAPSHOT MODEL) ================= */
+  /* ================= LOAD ROLES ================= */
 
   const fetchRolesByOrganization = async (organizationID: number) => {
     try {
       setLoading(true);
-
+     debugger;
       const response = await GetRolesByorganizationIDAsync(organizationID);
 
       const activeRoles = response.filter((r: Role) => r.IsActive);
@@ -101,11 +98,11 @@ const AssignRoles: React.FC = () => {
   const handleOrgChange = (option: SelectOption | null) => {
     setSelectedOrg(option);
 
-    setRoles([]);
-    setAssignedRoles([]);
-
     if (option) {
       fetchRolesByOrganization(option.value);
+    } else {
+      setRoles([]);
+      setAssignedRoles([]);
     }
   };
 
@@ -132,14 +129,14 @@ const AssignRoles: React.FC = () => {
       return;
     }
 
-    const rolesArray = assignedRoles.map((roleID) => ({
-      OrganizationID: selectedOrg.value,
-      RoleID: roleID,
+    const rolesArray = assignedRoles.map((roleID) => ({      
+      RoleID: roleID
     }));
 
     const payload = {
-      CreatedBy: "Admin",
-      RolesJson: JSON.stringify(rolesArray),
+      createdBy: "Admin",
+      roles: assignedRoles.join(","), // ✅ "1,2,3"
+      organizationID: selectedOrg.value,
     };
 
     try {
@@ -190,61 +187,66 @@ const AssignRoles: React.FC = () => {
           onChange={handleOrgChange}
           placeholder="Search and select organization..."
           isClearable
+          menuPortalTarget={document.body} // ✅ fixes overlap
+          styles={{
+            menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+          }}
         />
       </Card>
 
       {/* ROLES TABLE */}
       {selectedOrg && (
         <Card className="p-3">
-          <h5 className="mb-3">
-            Roles for {selectedOrgName}
-          </h5>
+          <h5 className="mb-3">Roles for {selectedOrgName}</h5>
 
-          {loading ? (
-            <div className="text-center py-4">
-              <Spinner animation="border" />
-            </div>
-          ) : (
-            <Table className="table table-hover table-dark-custom">
-              <thead className="table-primary">
-                <tr>
-                  <th>Role Name</th>
-                  <th>Description</th>
-                  <th className="text-center">Assign</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {roles.length ? (
-                  roles.map((role) => (
-                    <tr key={role.RoleID}>
-                      <td>{role.RoleName}</td>
-                      <td>{role.Description || "-"}</td>
-
-                      <td className="text-center">
-                        <Form.Check
-                          type="switch"
-                          id={`role-${role.RoleID}`}
-                          checked={assignedRoles.includes(
-                            role.RoleID
-                          )}
-                          onChange={() =>
-                            handleRoleToggle(role.RoleID)
-                          }
-                        />
-                      </td>
+          {/* FIXED HEIGHT WRAPPER */}
+          <div style={{ minHeight: "320px", transition: "all 0.3s ease" }}>
+            {loading ? (
+              <div className="text-center py-5">
+                <Spinner animation="border" />
+              </div>
+            ) : (
+              <div style={{ maxHeight: "400px", overflowY: "auto" }}>
+                <Table className="table table-hover table-dark-custom">
+                  <thead className="table-primary">
+                    <tr>
+                      <th>Role Name</th>
+                      <th>Description</th>
+                      <th className="text-center">Assign</th>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={3} className="text-center">
-                      No roles available
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </Table>
-          )}
+                  </thead>
+
+                  <tbody>
+                    {roles.length ? (
+                      roles.map((role) => (
+                        <tr key={role.RoleID}>
+                          <td>{role.RoleName}</td>
+                          <td>{role.Description || "-"}</td>
+
+                          <td className="text-center">
+                            <Form.Check
+                              type="switch"
+                              id={`role-${role.RoleID}`}
+                              checked={assignedRoles.includes(role.RoleID)}
+                              onChange={() =>
+                                handleRoleToggle(role.RoleID)
+                              }
+                            />
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={3} className="text-center">
+                          No roles available
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </Table>
+              </div>
+            )}
+          </div>
 
           {/* SAVE BUTTON */}
           <div className="text-end mt-3">

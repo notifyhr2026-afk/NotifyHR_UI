@@ -159,7 +159,7 @@ const organizationID: number | undefined = user?.organizationID;
       {/* ✅ Division Table */}
       {divisions.length > 0 ? (
         <Table className="table table-hover table-dark-custom">
-          <thead className="table-dark">
+          <thead>
             <tr>
               <th>Division Code</th>
               <th>Division Name</th>

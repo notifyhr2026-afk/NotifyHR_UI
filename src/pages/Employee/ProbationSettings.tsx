@@ -186,8 +186,8 @@ const ProbationSettings: React.FC = () => {
           </button>
         </div>
 
-        <table className="table table-hover shadow-sm">
-          <thead className="table-dark">
+        <table className="table table-hover table-dark-custom">
+          <thead>
             <tr>
               <th>Type</th>
               <th>Months</th>
@@ -217,10 +217,10 @@ const ProbationSettings: React.FC = () => {
                   </td>
                   <td>
                     <button className="btn btn-warning btn-sm me-2" onClick={() => edit(d)}>
-                      Edit
+                      <i className="bi bi-pencil-square"></i>
                     </button>
                     <button className="btn btn-danger btn-sm" onClick={() => deleteSetting(d.settingID)}>
-                      Delete
+                      <i className="bi bi-trash"></i>
                     </button>
                   </td>
                 </tr>

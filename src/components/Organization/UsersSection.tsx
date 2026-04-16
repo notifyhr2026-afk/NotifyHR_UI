@@ -123,8 +123,8 @@ const confirmResetPassword = async () => {
   return (
     <>
      
-      <Table bordered hover size="sm" responsive>
-        <thead className="table-light">
+      <Table className="table table-hover table-dark-custom">
+        <thead>
           <tr>
             <th>Full Name</th>
             <th>Email</th>

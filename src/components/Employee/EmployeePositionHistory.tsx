@@ -272,7 +272,7 @@ const [showToast, setShowToast] = useState(false);
       </div>
 
       {records.length > 0 ? (
-        <Table striped bordered hover responsive>
+        <Table striped className="table table-hover table-dark-custom">
           <thead>
             <tr>
               {/* Hidden columns are not rendered */}

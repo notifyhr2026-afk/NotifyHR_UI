@@ -395,8 +395,8 @@ const SubmittedPerformanceReviews: React.FC = () => {
         </div>
 
         {/* GRID */}
-        <table className="table table-bordered table-hover">
-          <thead className="table-dark">
+        <table className="table table-hover table-dark-custom">
+          <thead>
             <tr>
               <th>Employee</th>
               <th>Cycle</th>

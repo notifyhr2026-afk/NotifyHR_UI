@@ -37,8 +37,8 @@ export default function TicketTable({ tickets, onUpdate }: Props) {
   };
 
   return (
-    <table className="table table-striped">
-      <thead className="table-dark">
+    <table className="table table-hover table-dark-custom">
+      <thead>
         <tr>
           <th>Ticket #</th>
           <th>Subject</th>

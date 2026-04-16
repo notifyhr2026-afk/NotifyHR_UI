@@ -167,7 +167,7 @@ const ApproveLeavesTab: React.FC<Props> = ({ onApprove, onReject }) => {
         <Card.Body>
           <div className="table-responsive">
             <Table className="table table-hover table-dark-custom">
-              <thead className="table-dark">
+              <thead>
                 <tr>
                   <th>Employee</th>
                   <th>Leave Type</th>

@@ -177,8 +177,8 @@ const PlanManagement: React.FC = () => {
         </div>
 
         <div className="table-responsive shadow-sm rounded">
-          <table className="table table-striped align-middle mb-0">
-            <thead className="table-dark">
+          <table className="table table-hover table-dark-custom">
+            <thead>
               <tr>
                 <th>Name</th>
                 <th>Price ($)</th>

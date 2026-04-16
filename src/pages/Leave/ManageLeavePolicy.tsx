@@ -213,8 +213,8 @@ const ManageLeavePolicy: React.FC = () => {
         {loading ? (
           <p>Loading leave policies...</p>
         ) : (
-          <table className="table table-bordered">
-            <thead className="table-dark">
+          <table className="table table-hover table-dark-custom">
+            <thead>
               <tr>
                 <th>Policy Name</th>
                 <th>Leave Type</th>

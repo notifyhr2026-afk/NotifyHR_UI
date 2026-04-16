@@ -102,6 +102,7 @@ import EmployeeGroups from '../pages/Employee/EmployeeGroups';
 import GroupEmployeeMapping from '../pages/Employee/GroupEmployeeMapping';
 import SuperAdminDashboard from '../pages/Main/SuperAdmin';
 import VerifyEmployeeTasks from '../pages/Timesheet/VerifyEmployeeTasks';
+import LeavesReportPage from '../pages/Leave/LeavesReportPage';
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -208,6 +209,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="/MyServiceTicket" element={<MyServiceTicket />} />
         <Route path="/ProbationSettings" element={<ProbationSettings />} />
         <Route path="/sysdashboard" element={<SuperAdminDashboard />} />
+        <Route path="/LeavesReportPage" element={<LeavesReportPage />} />
 
         <Route path="/DepartmentCategoryMapping" element={<DepartmentCategoryMapping />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}

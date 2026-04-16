@@ -44,7 +44,7 @@ const UserDetails: React.FC = () => {
         </div>
 
         <div className="tab-pane fade" id="roles" role="tabpanel">
-          <table className="table table-striped">
+          <table className="table table-hover table-dark-custom">
             <thead>
               <tr>
                 <th>Role</th>

@@ -285,7 +285,7 @@ const ManageJobRequisitions: React.FC = () => {
 
           {/* Table */}
           <Table className="table table-hover table-dark-custom">
-            <thead className="table-dark">
+            <thead>
               <tr>
                 <th>No</th>
                 <th>Branch</th>

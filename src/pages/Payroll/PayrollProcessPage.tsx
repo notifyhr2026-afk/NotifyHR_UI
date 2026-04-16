@@ -120,7 +120,7 @@ const toggleSelectAll = () => {
 
           {/* First Row Filters */}
           <Row className="mb-3">   
-            <Col md={1}>
+            <Col md={2}>
               <Form.Select value={month} onChange={(e) => setMonth(Number(e.target.value))}>
                 {[...Array(12)].map((_, i) => (
                   <option key={i} value={i + 1}>{i + 1}</option>
@@ -210,7 +210,7 @@ const toggleSelectAll = () => {
 
           {/* Table */}
           <Table hover className="table-dark-custom">
-            <thead className="table-dark">
+            <thead>
               <tr>
                 <th><Form.Check
   checked={

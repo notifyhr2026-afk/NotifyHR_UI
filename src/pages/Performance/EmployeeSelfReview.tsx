@@ -209,8 +209,8 @@ const EmployeeSelfReview: React.FC = () => {
         </div>
 
         {/* GRID */}
-        <table className="table table-bordered table-hover">
-          <thead className="table-dark">
+        <table className="table table-hover table-dark-custom">
+          <thead>
             <tr>
               <th>Cycle</th>
               <th>Overall Rating</th>

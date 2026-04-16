@@ -36,7 +36,7 @@ const AssignMenuTable: React.FC<Props> = ({
   ];
 
   return (
-    <Table bordered hover responsive size="sm">
+    <Table className="table table-hover table-dark-custom" size="sm">
       <thead>
         <tr>
           <th>Menu Name</th>

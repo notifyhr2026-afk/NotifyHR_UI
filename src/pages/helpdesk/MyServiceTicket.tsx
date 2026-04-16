@@ -206,7 +206,7 @@ const MyServiceTicket: React.FC = () => {
       {/* TABLE */}
       {!loading && filtered.length > 0 && (
         <div style={{ maxHeight: '65vh', overflowY: 'auto' }}>
-          <Table hover responsive className="align-middle bg-white">
+          <Table className="table table-hover table-dark-custom">
             <thead style={{ position: 'sticky', top: 0 }}>
               <tr>
                 <th>#</th>

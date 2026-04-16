@@ -85,7 +85,7 @@ const LeaveHistoryTab: React.FC<Props> = ({ employeeID, leaveTypes, onEdit, onDe
       <Card.Body>
         <div className="table-responsive">
           <Table className="table table-hover table-dark-custom">
-            <thead className="table-dark">
+            <thead>
               <tr>
                 <th>Leave Type</th>
                 <th>Dates</th>

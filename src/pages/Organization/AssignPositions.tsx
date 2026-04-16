@@ -250,7 +250,7 @@ const AssignPositions: React.FC = () => {
                       </Col>
                     </Row>
 
-                    <Table striped bordered hover responsive className="align-middle mb-0">
+                    <Table className="table table-hover table-dark-custom">
                       <thead className="table-light">
                         <tr>
                           <th>Position Name</th>

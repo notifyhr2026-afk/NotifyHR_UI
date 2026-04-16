@@ -106,7 +106,7 @@ const OrgSalaryStructureViewAccordion: React.FC = () => {
 
               <Accordion.Body>
                 {rows.length ? (
-                  <Table bordered hover responsive size="sm">
+                  <Table className="table table-hover table-dark-custom">
                     <thead className="table-light">
                       <tr>
                         <th>Component</th>

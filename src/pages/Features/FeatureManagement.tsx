@@ -226,8 +226,8 @@ useEffect(() => {
           + Create Feature
         </button>
 
-        <table className="table table-bordered table-hover">
-          <thead className="table-dark">
+        <table className="table table-hover table-dark-custom">
+          <thead>
             <tr>
               <th>Feature Name</th>
               <th>Description</th>

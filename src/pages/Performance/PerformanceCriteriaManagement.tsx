@@ -195,8 +195,8 @@ const PerformanceCriteriaManagement: React.FC = () => {
           + Create Criteria
         </button>
 
-        <table className="table table-bordered table-hover">
-          <thead className="table-dark">
+        <table className="table table-hover table-dark-custom">
+          <thead>
             <tr>
               <th>Template</th>
               <th>Criteria Name</th>

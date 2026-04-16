@@ -213,8 +213,8 @@ const AttendancePage: React.FC = () => {
       {loading ? (
         <div className="text-center">Loading...</div>
       ) : (
-        <table className="table table-bordered">
-          <thead className="table-dark">
+        <table className="table table-hover table-dark-custom">
+          <thead>
             <tr>
               <th>Date</th>
               <th>Summary</th>

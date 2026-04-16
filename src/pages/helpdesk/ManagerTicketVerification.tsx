@@ -152,7 +152,7 @@ export default function ManagerTicketVerification() {
       <div className="card">
         <div className="table-responsive">
           <table className="table table-hover table-dark-custom">
-            <thead className="table-dark">
+            <thead>
               <tr>
                 <th>Ticket #</th>
                 <th>Category</th>
