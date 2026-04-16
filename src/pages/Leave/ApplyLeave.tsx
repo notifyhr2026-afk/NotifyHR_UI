@@ -69,9 +69,9 @@ const ApplyLeave: React.FC = () => {
         <Button onClick={() => setShowModal(true)}>+ Apply Leave</Button>
       </div>
 
-      <Tabs activeKey={activeTab} onSelect={k => setActiveTab(k || 'history')}>
+      <Tabs activeKey={activeTab} onSelect={k => setActiveTab(k || 'history')} className="custom-tabs">
   
-  <Tab eventKey="history" title="Leave History">
+  <Tab eventKey="history" title="Leave History" >
     <LeaveHistoryTab
       employeeID={employeeID}
       leaveTypes={leaveTypeOptions}

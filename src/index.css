@@ -589,7 +589,7 @@ body.dark-mode .form-check-input:checked {
   border-color: #0d6efd !important;
 
   /* FORCE Bootstrap tick */
-  /background-image: var(--bs-form-check-bg-image) !important;
+  background-image: var(--bs-form-check-bg-image) !important;
 }
 
 /* LIGHT MODE */
@@ -1156,4 +1156,95 @@ body.dark-mode::-webkit-scrollbar-thumb {
 }
 .react-select-container {
   z-index: 9999;
+}
+.custom-tabs {
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* TAB HEADER BACKGROUND */
+.custom-tabs .nav-link {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  margin-right: 6px;
+  border-radius: 6px 6px 0 0;
+}
+
+/* ACTIVE TAB */
+.custom-tabs .nav-link.active {
+  background-color: var(--brand-primary);
+  color: #fff !important;
+  border-color: var(--brand-primary);
+}
+
+/* HOVER */
+.custom-tabs .nav-link:hover {
+  background-color: rgba(13, 110, 253, 0.15);
+  color: var(--text-color);
+}
+
+/* TAB CONTENT AREA */
+.tab-content {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 8px 8px 8px;
+}
+/* ================= TABS GLOBAL FIX ================= */
+
+.nav-tabs {
+  border-bottom: 1px solid var(--border-color);
+}
+
+/* TAB BUTTON */
+.nav-tabs .nav-link {
+  background-color: var(--card-bg) !important;
+  color: var(--text-color) !important;
+  border: 1px solid var(--border-color) !important;
+  margin-right: 6px;
+  border-radius: 6px 6px 0 0;
+  transition: all 0.2s ease;
+}
+
+/* ACTIVE TAB */
+.nav-tabs .nav-link.active {
+  background-color: var(--brand-primary) !important;
+  color: #fff !important;
+  border-color: var(--brand-primary) !important;
+}
+
+/* HOVER */
+.nav-tabs .nav-link:hover {
+  background-color: rgba(13, 110, 253, 0.15) !important;
+  color: var(--text-color) !important;
+}
+
+/* TAB CONTENT AREA */
+.tab-content {
+  background-color: var(--card-bg);
+  color: var(--text-color);
+  padding: 15px;
+  border: 1px solid var(--border-color);
+  border-top: none;
+  border-radius: 0 8px 8px 8px;
+}
+/* ================= DARK MODE TAB OVERRIDE ================= */
+
+body.dark-mode .nav-tabs .nav-link.active {
+  background-color: #ffffff !important;   /* white tab */
+  color: #000000 !important;              /* black text */
+  border-color: #ffffff !important;
+}
+
+/* keep hover readable in dark mode */
+body.dark-mode .nav-tabs .nav-link:hover {
+  background-color: #e9ecef !important;
+  color: #000 !important;
+}
+body.dark-mode .nav-tabs .nav-link {
+  background-color: #2a2a3d !important;
+  color: #e4e6eb !important;
+  border-color: #3a3a50 !important;
 }

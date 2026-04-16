@@ -76,7 +76,7 @@ const EmployeeTaxDeclaration: React.FC = () => {
           <Tabs
             activeKey={activeKey}
             onSelect={(k) => setActiveKey(k || '')}
-            className="mb-3"
+             className="custom-tabs"
           >
             {taxSections.map((section) => {
               const declaration = getDeclaration(section.TaxSectionID);
