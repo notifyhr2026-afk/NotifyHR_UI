@@ -132,13 +132,14 @@ const EmployeeAttendanceLogs: React.FC = () => {
   };
 
   return (
-    <div className="table table-dark-custom">
+    <div className="container">
       <h2 className="text-center mb-4">Employee Attendance Logs</h2>
 
       {/* 🔽 Employee Dropdown */}
       <Row className="mb-3">
         <Col md={4}>
-          <Form.Select value={selectedEmployeeId ?? ''} onChange={handleEmployeeChange}>
+          <Form.Select
+           value={selectedEmployeeId ?? ''} onChange={handleEmployeeChange}>
             <option value="">Select Employee</option>
             {employees.map((emp) => (
               <option key={emp.EmployeeID} value={emp.EmployeeID}>

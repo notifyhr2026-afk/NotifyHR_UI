@@ -113,7 +113,7 @@ const OrgSalaryStructureMaster: React.FC = () => {
         </p>
       </div>
 
-      <Table bordered hover responsive className="align-middle">
+      <Table className="table table-hover table-dark-custom">
         <thead className="table-light">
           <tr>
             <th>Structure</th>

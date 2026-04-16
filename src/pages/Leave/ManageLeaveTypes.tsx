@@ -225,7 +225,7 @@ const ManageLeaveTypes: React.FC = () => {
 
       {error && <Alert variant="danger">{error}</Alert>}
 
-      <Table bordered hover responsive className="shadow-sm">
+      <Table className="table table-hover table-dark-custom">
         <thead className="table-light">
           <tr>
             <th>Leave Type</th>

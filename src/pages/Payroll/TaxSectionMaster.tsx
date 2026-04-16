@@ -209,7 +209,7 @@ const TaxSectionMaster: React.FC = () => {
       )}
 
       {!loading && taxSections.length > 0 && (
-        <Table bordered hover responsive className="align-middle">
+        <Table className="table table-hover table-dark-custom">
           <thead className="table-light">
             <tr>
               <th>Code</th>

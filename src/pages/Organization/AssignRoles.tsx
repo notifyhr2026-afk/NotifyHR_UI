@@ -183,6 +183,8 @@ const AssignRoles: React.FC = () => {
         <Form.Label>Select Organization</Form.Label>
 
         <Select
+          className="org-select"
+          classNamePrefix="org-select"
           options={orgOptions}
           value={selectedOrg}
           onChange={handleOrgChange}
