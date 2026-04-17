@@ -199,6 +199,8 @@ const AssignPositions: React.FC = () => {
               onChange={option => setSelectedOrgID(option ? option.value : null)}
               placeholder="Search and select organization..."
               isClearable
+               className="org-select"
+          classNamePrefix="org-select"
             />
           )}
         </Form.Group>

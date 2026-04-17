@@ -258,7 +258,7 @@ const saveFeaturePermissions = async (featureID: number) => {
         <Form.Label>Select Role</Form.Label>
         <Select
           className="org-select"
-  classNamePrefix="org-select"
+          classNamePrefix="org-select"
           options={roleOptions}
           placeholder="Search role..."
           isClearable

@@ -86,6 +86,8 @@ interface RoleOption {
           closeMenuOnSelect={false}
           hideSelectedOptions={false}
           placeholder="Select roles..."
+          className="org-select"
+          classNamePrefix="org-select"
         />
 
         <Form.Text className="text-muted">

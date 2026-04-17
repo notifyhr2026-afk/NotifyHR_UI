@@ -135,6 +135,8 @@ const PayrollReportPage: React.FC = () => {
                 onChange={setBranch}
                 placeholder="Select Branch"
                 isClearable
+                 className="org-select"
+          classNamePrefix="org-select"
               />
             </Col>
 
@@ -145,6 +147,8 @@ const PayrollReportPage: React.FC = () => {
                 onChange={setDepartment}
                 placeholder="Select Department"
                 isClearable
+                 className="org-select"
+          classNamePrefix="org-select"
               />
             </Col>
 
@@ -155,6 +159,8 @@ const PayrollReportPage: React.FC = () => {
                 onChange={setDivision}
                 placeholder="Select Division"
                 isClearable
+                 className="org-select"
+          classNamePrefix="org-select"
               />
             </Col>
           </Row>

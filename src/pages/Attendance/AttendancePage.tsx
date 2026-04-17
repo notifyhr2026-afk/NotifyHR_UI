@@ -176,6 +176,8 @@ const AttendancePage: React.FC = () => {
             options={employees}
             value={selectedEmployee}
             onChange={setSelectedEmployee}
+            className="org-select"
+            classNamePrefix="org-select"
           />
         </div>
 

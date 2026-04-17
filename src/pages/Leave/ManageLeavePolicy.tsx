@@ -291,11 +291,11 @@ const ManageLeavePolicy: React.FC = () => {
                 <div className="mb-3">
                   <label className="form-label fw-bold">Leave Type</label>
                   <select
-                    className="form-select"
+                    className="form-select org-select"
                     value={policyData.leaveTypeId}
                     onChange={e =>
                       setPolicyData({ ...policyData, leaveTypeId: Number(e.target.value) })
-                    }
+                    }                   
                   >
                     {leaveTypes.map(type => (
                       <option key={type.id} value={type.id}>

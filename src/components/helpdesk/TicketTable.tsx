@@ -62,7 +62,7 @@ export default function TicketTable({ tickets, onUpdate }: Props) {
               <td>
                 {isEditing ? (
                   <select
-                    className="form-select form-select-sm"
+                    className="form-select org-select"
                     value={editedTicket.status}
                     onChange={e =>
                       setEditedTicket({

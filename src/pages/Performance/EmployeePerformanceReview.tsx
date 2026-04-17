@@ -353,7 +353,7 @@ const SubmittedPerformanceReviews: React.FC = () => {
         <div className="row g-2 mb-3">
           <div className="col-md-3">
             <select
-              className="form-select"
+              className="form-select org-select"
               onChange={e =>
                 setFilters({ ...filters, employee: e.target.value })
               }
@@ -361,7 +361,7 @@ const SubmittedPerformanceReviews: React.FC = () => {
               <option value="">All Employees</option>
               {employees.map(e => (
                 <option key={e.EmployeeID}>{e.EmployeeName}</option>
-              ))}
+              ))}              
             </select>
           </div>
 

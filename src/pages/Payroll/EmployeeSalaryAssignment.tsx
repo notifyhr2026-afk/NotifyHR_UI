@@ -211,6 +211,8 @@ const EmployeeSalaryAssignment: React.FC = () => {
                   value={selectedBranch}
                   onChange={setSelectedBranch}
                   isClearable
+                   className="org-select"
+          classNamePrefix="org-select"
                 />
               }
             </Card.Body>
@@ -227,6 +229,8 @@ const EmployeeSalaryAssignment: React.FC = () => {
                   value={selectedEmployee}
                   onChange={setSelectedEmployee}
                   isClearable
+                   className="org-select"
+          classNamePrefix="org-select"
                 />
               }
             </Card.Body>

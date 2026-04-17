@@ -260,7 +260,7 @@ const PerformanceCriteriaManagement: React.FC = () => {
                 <div className="mb-3">
                   <label className="form-label fw-bold">Template</label>
                   <select
-                    className={`form-select ${
+                    className={`form-select org-select ${
                       valid.TemplateID === false
                         ? "is-invalid"
                         : valid.TemplateID

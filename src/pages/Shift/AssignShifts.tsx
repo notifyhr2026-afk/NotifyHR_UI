@@ -193,11 +193,13 @@ const AssignShifts: React.FC = () => {
               <>
                 <Col md={4}>
                   <Form.Label>Branch</Form.Label>
-                  <Select options={staticBranches} onChange={setSelectedBranch} />
+                  <Select options={staticBranches} onChange={setSelectedBranch} className="org-select"
+          classNamePrefix="org-select"/>
                 </Col>
                 <Col md={4}>
                   <Form.Label>Department</Form.Label>
-                  <Select options={staticDepartments} onChange={setSelectedDepartment} />
+                  <Select options={staticDepartments} onChange={setSelectedDepartment} className="org-select"
+          classNamePrefix="org-select"/>
                 </Col>
                 <Col md={4} className="mt-2">
                   <Form.Label>Employee</Form.Label>
@@ -207,6 +209,8 @@ const AssignShifts: React.FC = () => {
                       label: emp.name,
                     }))}
                     onChange={setSelectedEmployee}
+                    className="org-select"
+                    classNamePrefix="org-select"
                   />
                 </Col>
               </>
@@ -221,6 +225,8 @@ const AssignShifts: React.FC = () => {
                     label: g.name,
                   }))}
                   onChange={setSelectedGroup}
+                  className="org-select"
+          classNamePrefix="org-select"
                 />
               </Col>
             )}
@@ -299,6 +305,8 @@ const AssignShifts: React.FC = () => {
               options={allDays}
               value={allDays.filter(opt => assignData.weekends.includes(opt.value))}
               onChange={handleWeekendSelect}
+              className="org-select"
+          classNamePrefix="org-select"
             />
           </Form.Group>
         </Modal.Body>

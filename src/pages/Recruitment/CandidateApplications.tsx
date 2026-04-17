@@ -309,6 +309,8 @@ const CandidateApplications: React.FC = () => {
                   (o) => o.value === formData.jobRequisition
                 )}
                 onChange={handleJobChange}
+                className="org-select"
+          classNamePrefix="org-select"
               />
             </Form.Group>
 
@@ -416,6 +418,8 @@ const CandidateApplications: React.FC = () => {
                   (o) => o.value === interviewForm.interviewer
                 )}
                 onChange={handleInterviewerChange}
+                className="org-select"
+          classNamePrefix="org-select"
               />
             </Col>
           </Row>
@@ -451,6 +455,8 @@ const CandidateApplications: React.FC = () => {
                 options={roundOptions}
                 value={roundOptions.find((o) => o.value === interviewForm.round)}
                 onChange={handleRoundChange}
+                className="org-select"
+          classNamePrefix="org-select"
               />
             </Col>
           </Row>

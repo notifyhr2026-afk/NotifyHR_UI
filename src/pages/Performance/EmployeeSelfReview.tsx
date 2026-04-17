@@ -185,7 +185,7 @@ const EmployeeSelfReview: React.FC = () => {
         <div className="row g-2 mb-3">
           <div className="col-md-3">
             <select
-              className="form-select"
+              className="form-select org-select"
               onChange={e => setFilters({ ...filters, cycle: e.target.value })}
             >
               <option value="">All Cycles</option>
@@ -197,7 +197,7 @@ const EmployeeSelfReview: React.FC = () => {
 
           <div className="col-md-3">
             <select
-              className="form-select"
+              className="form-select org-select"
               onChange={e => setFilters({ ...filters, status: e.target.value })}
             >
               <option value="">All Status</option>
@@ -264,7 +264,7 @@ const EmployeeSelfReview: React.FC = () => {
                   <div className="col-md-4">
                     <label className="fw-bold">Review Cycle</label>
                     <select
-                      className="form-select"
+                      className="form-select org-select"
                       value={selectedCycle}
                       onChange={e => setSelectedCycle(e.target.value)}
                     >
@@ -287,7 +287,7 @@ const EmployeeSelfReview: React.FC = () => {
                   <div className="col-md-4">
                     <label className="fw-bold">Overall Self Rating</label>
                     <select
-                      className="form-select"
+                      className="form-select org-select"
                       value={overallRating}
                       onChange={e => setOverallRating(Number(e.target.value))}
                     >
@@ -311,7 +311,7 @@ const EmployeeSelfReview: React.FC = () => {
                 <div className="mb-3">
                   <label className="fw-bold">Status</label>
                   <select
-                    className="form-select"
+                    className="form-select org-select"
                     value={status}
                     onChange={e => setStatus(e.target.value as "Draft" | "Submitted")}
                   >
@@ -330,7 +330,7 @@ const EmployeeSelfReview: React.FC = () => {
                     <div className="row mt-2">
                       <div className="col-md-2">
                         <select
-                          className="form-select"
+                          className="form-select org-select"
                           value={c.SelfRating}
                           onChange={e =>
                             setCriteriaRatings(prev =>

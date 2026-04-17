@@ -299,6 +299,8 @@ const EmployeeShifts: React.FC = () => {
                     options={weekdays.map(d => ({ value: d.value, label: d.label }))}
                     value={weekdays.filter(d => formData.weekends.includes(d.label))}
                     onChange={handleWeekendSelect}
+                    className="org-select"
+                    classNamePrefix="org-select"
                   />
                 </Form.Group>
               </Col>

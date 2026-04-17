@@ -95,7 +95,7 @@ export default function ManagerTicketVerification() {
           <div className="col-md-3">
             <label className="form-label">Category</label>
             <select
-              className="form-select"
+              className="form-select org-select"
               value={category}
               onChange={e => setCategory(e.target.value)}
             >
@@ -109,7 +109,7 @@ export default function ManagerTicketVerification() {
           <div className="col-md-3">
             <label className="form-label">Priority</label>
             <select
-              className="form-select"
+              className="form-select org-select"
               value={priority}
               onChange={e => setPriority(e.target.value)}
             >
@@ -123,7 +123,7 @@ export default function ManagerTicketVerification() {
           <div className="col-md-3">
             <label className="form-label">Status</label>
             <select
-              className="form-select"
+              className="form-select org-select"
               value={status}
               onChange={e => setStatus(e.target.value)}
             >
@@ -143,6 +143,8 @@ export default function ManagerTicketVerification() {
               onChange={option =>
                 setEmployee(option ? option.value : null)
               }
+              className="org-select"
+              classNamePrefix="org-select"
             />
           </div>
         </div>

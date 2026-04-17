@@ -147,14 +147,14 @@ const EmployeeTaskMaster: React.FC = () => {
                     variant="outline-primary"
                     onClick={() => handleEdit(task)}
                   >
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </Button>{' '}
                   <Button
                     size="sm"
                     variant="outline-danger"
                     onClick={() => handleDelete(task.id)}
                   >
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </Button>
                 </td>
               </tr>

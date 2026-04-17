@@ -164,6 +164,8 @@ const ApplyLeaveModal: React.FC<Props> = ({
               }))
             }
             placeholder="Select leave type"
+            className="org-select"
+          classNamePrefix="org-select"
           />
         </Form.Group>
 
@@ -196,6 +198,8 @@ const ApplyLeaveModal: React.FC<Props> = ({
                   halfDayType: selected?.value || '',
                 }))
               }
+              className="org-select"
+          classNamePrefix="org-select"
             />
           </Form.Group>
         )}

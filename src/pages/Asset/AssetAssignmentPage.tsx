@@ -324,6 +324,8 @@ const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
               placeholder="Select Employee"
               isSearchable
               isClearable
+              className="org-select"
+              classNamePrefix="org-select"
             />
           </Form.Group>
                
