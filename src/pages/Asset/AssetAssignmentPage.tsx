@@ -245,7 +245,7 @@ const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
               <td>{a.Remarks}</td>
               <td>
                 <Button size="sm" variant="outline-primary" onClick={() => openEditModal(a)}>
-                  Edit
+                  <i className="bi bi-pencil-square"></i>
                 </Button>{' '}
                 <Button
                   size="sm"
@@ -255,7 +255,7 @@ const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
                     setConfirmDelete(true);
                   }}
                 >
-                  Delete
+                  <i className="bi bi-trash"></i>
                 </Button>
               </td>
             </tr>

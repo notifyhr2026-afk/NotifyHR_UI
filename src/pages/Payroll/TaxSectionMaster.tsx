@@ -11,7 +11,7 @@ import {
   Spinner,
   Alert,
 } from 'react-bootstrap';
-import { PencilSquare, Trash, PlusCircle } from 'react-bootstrap-icons';
+import { PlusCircle } from 'react-bootstrap-icons';
 import payrollService from '../../services/payrollService';
 
 interface TaxSection {
@@ -231,20 +231,17 @@ const TaxSectionMaster: React.FC = () => {
                   </Badge>
                 </td>
                 <td className="text-center">
-                  <Button
-                    size="sm"
-                    variant="outline-primary"
-                    className="me-2"
+                  <Button                                  
+                    className="btn btn-warning btn-sm me-2"
                     onClick={() => handleEdit(s)}
                   >
-                    <PencilSquare />
+                    <i className="bi bi-pencil-square"></i>
                   </Button>
                   <Button
-                    size="sm"
-                    variant="outline-danger"
+                    className="btn btn-danger btn-sm"                           
                     onClick={() => handleDelete(s.TaxSectionID)}
                   >
-                    <Trash />
+                    <i className="bi bi-trash"></i>
                   </Button>
                 </td>
               </tr>

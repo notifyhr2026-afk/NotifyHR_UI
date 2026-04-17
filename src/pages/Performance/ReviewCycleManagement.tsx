@@ -207,13 +207,13 @@ const openEditModal = (cycle: ReviewCycle) => {
                     className="btn btn-warning btn-sm me-2"
                     onClick={() => openEditModal(cycle)}
                   >
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={() => openDeleteModal(cycle.ReviewCycleID)}
                   >
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </button>
                 </td>
               </tr>

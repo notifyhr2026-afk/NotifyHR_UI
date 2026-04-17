@@ -197,14 +197,14 @@ const ManageJobRequisitionApprovals: React.FC = () => {
                   className="me-2"
                   onClick={() => openEditModal(a)}
                 >
-                  Edit
+                  <i className="bi bi-pencil-square"></i>
                 </Button>
                 <Button
                   variant="outline-danger"
                   size="sm"
                   onClick={() => confirmDeleteApproval(a.ApprovalID)}
                 >
-                  Delete
+                  <i className="bi bi-trash"></i>
                 </Button>
               </td>
             </tr>

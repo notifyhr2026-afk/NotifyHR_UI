@@ -194,14 +194,14 @@ const organizationID: number | undefined = user?.organizationID;
                     onClick={() => openEditModal(d)}
                     className="me-2"
                   >
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </Button>
                   <Button
                     variant="outline-danger"
                     size="sm"
                     onClick={() => confirmDeleteDepartment(d.DepartmentID)}
                   >
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </Button>
                 </td>
               </tr>

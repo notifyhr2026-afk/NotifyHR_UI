@@ -338,14 +338,14 @@ const ManageJobRequisitions: React.FC = () => {
                   onClick={() => openEditModal(r)}
                   className="me-2"
                 >
-                  Edit
+                  <i className="bi bi-pencil-square"></i>
                 </Button>
                 <Button
                   variant="outline-danger"
                   size="sm"
                   onClick={() => confirmDeleteRequisition(r.JobRequisitionID)}
                 >
-                  Delete
+                  <i className="bi bi-trash"></i>
                 </Button>
               </td>
             </tr>

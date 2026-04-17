@@ -213,7 +213,7 @@ const SalaryStructureMaster: React.FC = () => {
                     variant="outline-primary"
                     onClick={() => handleEdit(s)}
                   >
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </Button>{' '}
                   <Button
                     size="sm"
@@ -222,7 +222,7 @@ const SalaryStructureMaster: React.FC = () => {
                       handleDelete(s.StructureID)
                     }
                   >
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </Button>
                 </td>
               </tr>

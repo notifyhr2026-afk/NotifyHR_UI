@@ -222,7 +222,7 @@ const ManageLeavePolicy: React.FC = () => {
                 <th>Carry Forward</th>
                 <th>Encashable</th>
                 <th>Negative Balance</th>
-                <th>Effective Period</th>
+                {/* <th>Effective Period</th> */}
                 <th>Action</th>
               </tr>
             </thead>
@@ -235,15 +235,15 @@ const ManageLeavePolicy: React.FC = () => {
                   <td>{p.maxCarryForward}</td>
                   <td>{p.encashable ? "Yes" : "No"}</td>
                   <td>{p.allowNegativeBalance ? "Yes" : "No"}</td>
-                  <td>
+                  {/* <td>
                     {p.effectiveFrom || "-"} → {p.effectiveTo || "-"}
-                  </td>
+                  </td> */}
                   <td>
                     <button
                       className="btn btn-warning btn-sm me-2"
                       onClick={() => openEditModal(p)}
                     >
-                      Edit
+                      <i className="bi bi-pencil-square"></i>
                     </button>
                     <button
                       className="btn btn-danger btn-sm"
@@ -252,7 +252,7 @@ const ManageLeavePolicy: React.FC = () => {
                         setShowDeleteModal(true);
                       }}
                     >
-                      Delete
+                      <i className="bi bi-trash"></i>
                     </button>
                   </td>
                 </tr>

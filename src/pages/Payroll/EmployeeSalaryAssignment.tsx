@@ -271,11 +271,11 @@ const EmployeeSalaryAssignment: React.FC = () => {
                   </Button>
                   <Button size="sm" variant="info" className="me-2"
                     onClick={() => handleEdit(row)}>
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </Button>
                   <Button size="sm" variant="danger"
                     onClick={() => handleDelete(row.SalaryAssignmentID)}>
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </Button>
                 </td>
               </tr>

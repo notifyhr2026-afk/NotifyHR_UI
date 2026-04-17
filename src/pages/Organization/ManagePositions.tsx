@@ -269,7 +269,7 @@ const ManagePositions: React.FC = () => {
                       setShowModal(true);
                     }}
                   >
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </Button>
                   <Button
                     size="sm"
@@ -279,7 +279,7 @@ const ManagePositions: React.FC = () => {
                       setConfirmDelete(true);
                     }}
                   >
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </Button>
                 </td>
               </tr>

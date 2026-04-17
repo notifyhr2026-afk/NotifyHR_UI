@@ -221,10 +221,10 @@ useEffect(() => {
 
       <div className="container">
         <h3 className="mb-3">Feature Management</h3>
-
+<div className="text-end mb-3">
         <button className="btn btn-primary mb-3" onClick={openCreateModal}>
           + Create Feature
-        </button>
+        </button></div>
 
         <table className="table table-hover table-dark-custom">
           <thead>
@@ -255,13 +255,13 @@ useEffect(() => {
                     className="btn btn-warning btn-sm me-2"
                     onClick={() => openEditModal(feature)}
                   >
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={() => openDeleteModal(feature.FeatureID)}
                   >
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </button>
                 </td>
               </tr>

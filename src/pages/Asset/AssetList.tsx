@@ -218,14 +218,14 @@ const ManageAssets: React.FC = () => {
                     className="me-2"
                     onClick={() => openEditModal(a)}
                   >
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline-danger"
                     onClick={() => confirmDeleteAsset(a.AssetID)}
                   >
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </Button>
                 </td>
               </tr>

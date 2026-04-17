@@ -183,14 +183,14 @@ const loadVendors = async () => {
                     className="me-2"
                     onClick={() => openEditModal(v)}
                   >
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline-danger"
                     onClick={() => confirmDeleteVendor(v.VendorID)}
                   >
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </Button>
                 </td>
               </tr>

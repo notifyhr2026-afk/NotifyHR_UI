@@ -101,6 +101,8 @@ const OrganizationFeatures: React.FC = () => {
       {/* Searchable Organization Selector */}
       <div className="mb-4">
         <Select
+          className="org-select"
+          classNamePrefix="org-select"
           options={organizations}
           value={selectedOrg}
           onChange={(org) => {
@@ -132,15 +134,10 @@ const OrganizationFeatures: React.FC = () => {
 
               return (
                 <div key={feature.FeatureID} className="col-lg-4 col-md-6 mb-4">
-                  <div
-                    className="shadow-sm rounded-4 p-3 h-100"
-                    style={{
-                      backgroundColor: active ? "#eef7ff" : "#ffffff",
-                      border: active
-                        ? "2px solid rgb(30 115 190)"
-                        : "1px solid #dddddd",
-                      transition: "0.3s",
-                    }}
+                 <div
+                    className={`feature-card shadow-sm rounded-4 p-3 h-100 ${
+                      active ? "active" : ""
+                    }`}
                   >
                     <div className="d-flex align-items-center mb-3">
                       <div
@@ -171,13 +168,11 @@ const OrganizationFeatures: React.FC = () => {
                     <p className="text-muted small mb-3">{feature.Description}</p>
 
                     {/* Toggle Section */}
-                    <div
-                      className="d-flex justify-content-between align-items-center p-2 rounded"
-                      style={{
-                        backgroundColor: active ? "#d1e7dd" : "#f8f9fa",
-                        border: "1px solid #ccc",
-                      }}
-                    >
+                   <div
+                    className={`feature-toggle d-flex justify-content-between align-items-center p-2 rounded ${
+                      active ? "active" : ""
+                    }`}
+                  >
                       <span className="fw-semibold">
                         {active ? "Feature Enabled" : "Enable Feature"}
                       </span>

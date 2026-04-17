@@ -203,6 +203,8 @@ const LeavesReportPage: React.FC = () => {
                 }}
                 placeholder="Branch"
                 isClearable
+                className="org-select"
+                classNamePrefix="org-select"
               />
             </Col>
 
@@ -218,6 +220,8 @@ const LeavesReportPage: React.FC = () => {
                 placeholder="Department"
                 isClearable
                 isDisabled={!branch}
+                className="org-select"
+                classNamePrefix="org-select"
               />
             </Col>
 
@@ -230,6 +234,8 @@ const LeavesReportPage: React.FC = () => {
                 placeholder="Employee"
                 isDisabled={!branch && !department}
                 isClearable
+                className="org-select"
+                classNamePrefix="org-select"
               />
             </Col>
 
@@ -283,7 +289,7 @@ const LeavesReportPage: React.FC = () => {
           {/* Table */}
           {searched && filteredLeaves.length > 0 && (
             <div className="table-responsive mt-4">
-              <Table bordered hover striped>
+              <Table className="table table-hover table-dark-custom">
                 <thead>
                   <tr>
                     <th>Employee</th>

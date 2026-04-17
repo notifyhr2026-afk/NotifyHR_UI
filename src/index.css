@@ -1248,3 +1248,146 @@ body.dark-mode .nav-tabs .nav-link {
   color: #e4e6eb !important;
   border-color: #3a3a50 !important;
 }
+/* ================= SAFE DARK MODE FIX ================= */
+
+/* ===== GLOBAL TEXT & BG ===== */
+body.dark-mode {
+  background-color: #1e1e2f !important;
+  color: #e4e6eb !important;
+}
+
+/* ===== TABLE FIX ===== */
+body.dark-mode .table-dark-custom {
+  background-color: #2a2a3d !important;
+  color: #e4e6eb !important;
+}
+
+body.dark-mode .table-dark-custom thead th {
+  background-color: #1f1f2e !important;
+  color: #ffffff !important;
+}
+
+body.dark-mode .table-dark-custom tbody tr {
+  background-color: #2a2a3d !important;
+}
+
+body.dark-mode .table-dark-custom tbody tr:hover {
+  background-color: #32324a !important;
+}
+
+/* ===== FORM FIX ===== */
+body.dark-mode .form-control,
+body.dark-mode .form-select {
+  background-color: #2a2a3d !important;
+  color: #e4e6eb !important;
+  border: 1px solid #3a3a50 !important;
+}
+
+/* ===== MODAL FIX ===== */
+body.dark-mode .modal-content {
+  background-color: #2a2a3d !important;
+  color: #e4e6eb !important;
+}
+
+body.dark-mode .modal-header,
+body.dark-mode .modal-footer {
+  border-color: #3a3a50 !important;
+}
+
+/* ===== PAGINATION FIX ===== */
+body.dark-mode .page-link {
+  background-color: #2a2a3d !important;
+  color: #e4e6eb !important;
+  border: 1px solid #3a3a50 !important;
+}
+
+body.dark-mode .page-item.active .page-link {
+  background-color: #ffffff !important;
+  color: #000 !important;
+  border-color: #ffffff !important;
+}
+
+/* ===== TABS FINAL FIX ===== */
+body.dark-mode .nav-tabs .nav-link {
+  background-color: #2a2a3d !important;
+  color: #e4e6eb !important;
+  border-color: #3a3a50 !important;
+}
+
+body.dark-mode .nav-tabs .nav-link.active {
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ffffff !important;
+}
+/* ================= BUTTON FIX (DARK MODE) ================= */
+
+body.dark-mode .btn-success {
+  background-color: #3a3a50 !important;  /* dark gray */
+  border-color: #3a3a50 !important;
+  color: #ffffff !important;
+}
+
+body.dark-mode .btn-success:hover {
+  background-color: #4a4a65 !important;
+  border-color: #4a4a65 !important;
+}
+/* FIX: text-success in dark mode */
+body.dark-mode .text-success {
+  color: #4dd4a3 !important; /* softer green, visible on dark */
+}
+/* ================= FEATURE CARDS ================= */
+
+/* default */
+.feature-card {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  transition: all 0.3s ease;
+}
+
+/* active - light mode */
+.feature-card.active {
+  background-color: #eef7ff;
+  border: 2px solid #1e73be;
+}
+
+/* DARK MODE */
+body.dark-mode .feature-card {
+  background-color: #2a2a3d;
+  border: 1px solid #3a3a50;
+}
+
+/* active - dark mode */
+body.dark-mode .feature-card.active {
+  background-color: #1f2a40;
+  border: 2px solid #4dabf7;
+}
+/* toggle base */
+.feature-toggle {
+  background-color: #f8f9fa;
+  border: 1px solid #ccc;
+}
+
+/* active light */
+.feature-toggle.active {
+  background-color: #d1e7dd;
+}
+
+/* dark mode */
+body.dark-mode .feature-toggle {
+  background-color: #2a2a3d;
+  border: 1px solid #3a3a50;
+}
+
+/* active dark */
+body.dark-mode .feature-toggle.active {
+  background-color: #1e3a2f;
+}
+/* ================= TEXT MUTED FIX ================= */
+
+body.dark-mode .text-muted {
+  color: #a0a3bd !important; /* lighter gray for dark bg */
+}
+body.dark-mode small,
+body.dark-mode .small {
+  color: var(--text-muted) !important;
+}

@@ -259,7 +259,7 @@ const handleEdit = (project: Project) => {
                     variant="outline-primary"
                     onClick={() => handleEdit(project)}
                   >
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </Button>{" "}
 
                   <Button
@@ -267,7 +267,7 @@ const handleEdit = (project: Project) => {
                     variant="outline-danger"
                     onClick={() => handleDelete(project.ProjectId)}
                   >
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </Button>
 
                 </td>

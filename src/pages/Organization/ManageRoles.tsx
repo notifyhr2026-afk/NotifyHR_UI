@@ -230,14 +230,14 @@ const ManageRoles: React.FC = () => {
                       onClick={() => handleOpenRoleModal(role)}
                       className="me-2"
                     >
-                      Edit
+                       <i className="bi bi-pencil-square"></i>
                     </Button>
                     <Button
                       size="sm"
                       variant="danger"
                       onClick={() => handleDeleteRole(role.RoleID)}
                     >
-                      Delete
+                      <i className="bi bi-trash"></i>
                     </Button>
                   </td>
                 </tr>

@@ -208,7 +208,7 @@ const AssignRoles: React.FC = () => {
             ) : (
               <div style={{ maxHeight: "400px", overflowY: "auto" }}>
                 <Table className="table table-hover table-dark-custom">
-                  <thead className="table-primary">
+                  <thead>
                     <tr>
                       <th>Role Name</th>
                       <th>Description</th>

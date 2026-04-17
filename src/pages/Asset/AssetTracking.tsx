@@ -244,7 +244,7 @@ const AssetTracking: React.FC = () => {
               <th>Asset</th>
               <th>Vendor</th>
               <th>Branch</th>
-              <th>Department</th>
+              {/* <th>Department</th> */}
               <th>Qty</th>
               <th>Purchase Date</th>
               <th>Warranty Expiry</th>
@@ -261,7 +261,7 @@ const AssetTracking: React.FC = () => {
                 <td>{assets.find(a => a.AssetID === t.AssetID)?.AssetName}</td>
                 <td>{vendors.find(v => v.VendorID === t.VendorID)?.VendorName}</td>
                 <td>{branches.find(b => b.BranchID === t.BranchID)?.BranchName}</td>
-                <td>{departments.find(d => d.DepartmentID === t.DepartmentID)?.DepartmentName}</td>
+                {/* <td>{departments.find(d => d.DepartmentID === t.DepartmentID)?.DepartmentName}</td> */}
                 <td>{t.Quantity}</td>
                 <td>{t.PurchaseDate}</td>
                 <td>{t.WarrantyExpiryDate}</td>
@@ -276,14 +276,14 @@ const AssetTracking: React.FC = () => {
                     className="me-2"
                     onClick={() => openEditModal(t)}
                   >
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline-danger"
                     onClick={() => confirmDeleteItem(t.TrackingID)}
                   >
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </Button>
                 </td>
               </tr>

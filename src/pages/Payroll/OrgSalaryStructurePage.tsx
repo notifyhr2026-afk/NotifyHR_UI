@@ -286,14 +286,14 @@ const OrgSalaryStructurePage: React.FC = () => {
                     className="me-2"
                     onClick={() => handleEdit(c)}
                   >
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </Button>
                   <Button
                     size="sm"
                     variant="outline-danger"
                     onClick={() => handleDelete(c.StructureComponentID)}
                   >
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </Button>
                 </td>
               </tr>

@@ -171,8 +171,8 @@ const ManageClients: React.FC = () => {
               <td>{c.City}</td>
               <td>{c.IsActive ? "Active" : "Inactive"}</td>
               <td>
-                <Button size="sm" onClick={() => handleEdit(c)}>Edit</Button>{" "}
-                <Button size="sm" variant="danger" onClick={() => handleDelete(c.ClientId)}>Delete</Button>
+                <Button size="sm" onClick={() => handleEdit(c)}><i className="bi bi-pencil-square"></i></Button>{" "}
+                <Button size="sm" variant="danger" onClick={() => handleDelete(c.ClientId)}><i className="bi bi-trash"></i></Button>
               </td>
             </tr>
           ))}

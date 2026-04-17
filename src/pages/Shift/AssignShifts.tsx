@@ -229,7 +229,7 @@ const AssignShifts: React.FC = () => {
       </Card>
 
       {/* Table */}
-      <Table bordered>
+      <Table className="table table-hover table-dark-custom">
         <thead>
           <tr>
             <th>Type</th>

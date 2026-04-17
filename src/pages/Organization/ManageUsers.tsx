@@ -344,14 +344,14 @@ const ManageUsers: React.FC = () => {
                       setEditUser(u);
                       setUserFormData(u);
                       setShowModal(true);
-                    }}>Edit</Button>
+                    }}><i className="bi bi-pencil-square"></i></Button>
 
                     <Button size="sm" variant="danger" className="ms-2"
                       onClick={() => {
                         setUserToDelete(u.id);
                         setConfirmDelete(true);
                       }}>
-                      Delete
+                      <i className="bi bi-trash"></i>
                     </Button>
                   </td>
                 </tr>

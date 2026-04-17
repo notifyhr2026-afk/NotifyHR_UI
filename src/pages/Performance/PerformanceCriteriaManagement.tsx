@@ -227,13 +227,13 @@ const PerformanceCriteriaManagement: React.FC = () => {
                     className="btn btn-warning btn-sm me-2"
                     onClick={() => openEditModal(item)}
                   >
-                    Edit
+                    <i className="bi bi-pencil-square"></i>
                   </button>
                   <button
                     className="btn btn-danger btn-sm"
                     onClick={() => openDeleteModal(item.CriteriaID)}
                   >
-                    Delete
+                    <i className="bi bi-trash"></i>
                   </button>
                 </td>
               </tr>

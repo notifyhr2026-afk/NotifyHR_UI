@@ -239,6 +239,8 @@ const ProbationSettings: React.FC = () => {
 
               <label className="fw-bold">Employee Type</label>
               <Select
+                className="org-select"
+                classNamePrefix="org-select"
                 options={employeeOptions}
                 value={employeeOptions.find((x) => x.value === form.employeeType)}
                 onChange={(e) => setForm({ ...form, employeeType: e?.value || 0 })}
@@ -295,6 +297,8 @@ const ProbationSettings: React.FC = () => {
                 <>
                   <label className="fw-bold mt-3">Confirmation Type</label>
                   <Select
+                    className="org-select"
+                    classNamePrefix="org-select"
                     options={confirmationOptions}
                     value={confirmationOptions.find((x) => x.value === form.confirmationType)}
                     onChange={(e) =>
