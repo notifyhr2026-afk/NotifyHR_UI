@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Button, Table, Modal, Form, Row, Col } from "react-bootstrap";
+import { Button, Table, Modal, Form, Row, Col, Spinner } from "react-bootstrap";
 import manageClientsService from "../../services/manageClientsService";
-
-/* ===================== INTERFACE ===================== */
 
 interface Client {
   ClientId: number;
@@ -30,13 +28,16 @@ interface Client {
   IsActive: boolean;
 }
 
-/* ===================== COMPONENT ===================== */
-
 const ManageClients: React.FC = () => {
-
   const [clients, setClients] = useState<Client[]>([]);
+  const [loading, setLoading] = useState(false);
+
   const [showModal, setShowModal] = useState(false);
   const [editItem, setEditItem] = useState<Client | null>(null);
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID = user?.organizationID || 1;
+  const modifiedBy = user?.userID || "0";
 
   /* ===== LOOKUPS ===== */
   const [clientTypes, setClientTypes] = useState<any[]>([]);
@@ -50,7 +51,7 @@ const ManageClients: React.FC = () => {
   /* ===== FORM ===== */
   const [formData, setFormData] = useState<Client>({
     ClientId: 0,
-    OrganizationId: 1,
+    OrganizationId: organizationID,
     ClientCode: "",
     ClientName: "",
     IndustryTypeId: 1,
@@ -71,14 +72,27 @@ const ManageClients: React.FC = () => {
     TaxIdentificationNumber: "",
     AssociationStartDate: "",
     AssociationEndDate: "",
-    IsActive: true
+    IsActive: true,
   });
 
-  /* ===================== LOAD LOOKUPS ===================== */
+  /* ================= LOAD ================= */
 
   useEffect(() => {
+    loadClients();
     loadLookups();
   }, []);
+
+  const loadClients = async () => {
+    try {
+      setLoading(true);
+      const res = await manageClientsService.GetClientsByOrganization(organizationID);
+      setClients(res?.Table || res || []);
+    } catch (err) {
+      console.error("Error loading clients", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const loadLookups = async () => {
     try {
@@ -96,20 +110,24 @@ const ManageClients: React.FC = () => {
     }
   };
 
-  /* ===================== HANDLERS ===================== */
+  /* ================= HANDLERS ================= */
 
   const handleChange = (e: any) => {
     const { id, value, type, checked } = e.target;
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [id]: type === "checkbox" ? checked : Number(value) || value
+      [id]: type === "checkbox" ? checked : Number(value) || value,
     }));
   };
 
   const handleAdd = () => {
     setEditItem(null);
-    setFormData(prev => ({ ...prev, ClientId: 0 }));
+    setFormData({
+      ...formData,
+      ClientId: 0,
+      OrganizationId: organizationID,
+    });
     setShowModal(true);
   };
 
@@ -119,27 +137,67 @@ const ManageClients: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleSave = (e: any) => {
+  const handleSave = async (e: any) => {
     e.preventDefault();
 
-    if (editItem) {
-      setClients(prev => prev.map(c => c.ClientId === editItem.ClientId ? formData : c));
-    } else {
-      setClients(prev => [...prev, { ...formData, ClientId: Date.now() }]);
+    try {
+      setLoading(true);
+
+        const payload = {
+      clientId: formData.ClientId,
+      organizationId: formData.OrganizationId,
+      clientCode: formData.ClientCode,
+      clientName: formData.ClientName,
+      industryTypeId: formData.IndustryTypeId,
+      clientTypeId: formData.ClientTypeId,
+      currencyId: formData.CurrencyId,
+      paymentTermId: formData.PaymentTermId,
+      taxTypeId: formData.TaxTypeId,
+      contactPerson: formData.ContactPerson,
+      email: formData.Email,
+      phone: String(formData.Phone),
+      alternatePhone: String(formData.AlternatePhone || ""),
+      addressLine1: formData.AddressLine1,
+      addressLine2: formData.AddressLine2,
+      stateId: formData.StateId,
+      countryId: formData.CountryId,
+      city: formData.City,
+      postalCode: String(formData.PostalCode),
+      taxIdentificationNumber: String(formData.TaxIdentificationNumber),
+
+      associationStartDate: new Date(formData.AssociationStartDate).toISOString(),
+      associationEndDate: new Date(formData.AssociationEndDate).toISOString(),
+
+      isActive: formData.IsActive,
+      createdBy: "1", // Replace with actual user ID
+    };
+
+      await manageClientsService.PostClientsByAsync(payload);
+
+      await loadClients();
+      setShowModal(false);
+    } catch (err) {
+      console.error("Save failed", err);
+    } finally {
+      setLoading(false);
     }
-
-    setShowModal(false);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (!window.confirm("Delete client?")) return;
-    setClients(prev => prev.filter(c => c.ClientId !== id));
+
+    try {
+      await manageClientsService.DeleteClientsByAsync(id, modifiedBy);
+      await loadClients();
+    } catch (err) {
+      console.error("Delete failed", err);
+    }
   };
 
-  /* ===================== RENDER ===================== */
+  /* ================= UI ================= */
 
   return (
-    <div className="Container">
+    <div className="container">
 
       <Row className="mb-3">
         <Col><h4>Manage Clients</h4></Col>
@@ -147,6 +205,12 @@ const ManageClients: React.FC = () => {
           <Button onClick={handleAdd}>+ Add Client</Button>
         </Col>
       </Row>
+
+      {loading && (
+        <div className="text-center">
+          <Spinner />
+        </div>
+      )}
 
       <Table className="table table-hover table-dark-custom">
         <thead>
@@ -162,7 +226,7 @@ const ManageClients: React.FC = () => {
         </thead>
 
         <tbody>
-          {clients.map(c => (
+          {clients.map((c) => (
             <tr key={c.ClientId}>
               <td>{c.ClientCode}</td>
               <td>{c.ClientName}</td>
@@ -171,15 +235,19 @@ const ManageClients: React.FC = () => {
               <td>{c.City}</td>
               <td>{c.IsActive ? "Active" : "Inactive"}</td>
               <td>
-                <Button size="sm" onClick={() => handleEdit(c)}><i className="bi bi-pencil-square"></i></Button>{" "}
-                <Button size="sm" variant="danger" onClick={() => handleDelete(c.ClientId)}><i className="bi bi-trash"></i></Button>
+                <Button size="sm" onClick={() => handleEdit(c)}>
+                  <i className="bi bi-pencil-square"></i>
+                </Button>{" "}
+                <Button size="sm" variant="danger" onClick={() => handleDelete(c.ClientId)}>
+                  <i className="bi bi-trash"></i>
+                </Button>
               </td>
             </tr>
           ))}
         </tbody>
       </Table>
 
-      {/* ===================== MODAL ===================== */}
+      {/* ================= MODAL ================= */}
 
  <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
 

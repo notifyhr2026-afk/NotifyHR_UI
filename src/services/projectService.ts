@@ -13,6 +13,12 @@ const projectService = {
   DeleteProjectByAsync: async (ProjectID:number) => {   
       const { data } = await axiosInstance.delete(`Project?ProjectID=${ProjectID}`);
       return data;   
-  }
+  },
+   GetProjectsByClientIdAsync: async (clientId: number) => {
+    const res = await axiosInstance.get(
+      `Project/GetProjectsByClientIdAsync?clientId=${clientId}`
+    );
+    return res.data;
+  },
 };
 export default projectService;
