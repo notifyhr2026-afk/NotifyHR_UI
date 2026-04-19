@@ -26,7 +26,7 @@ interface Employee {
 
 const JobApprovalGroups: React.FC = () => {
   const organizationID = 45;
-  const user = "Admin"; // TODO: replace with auth user
+  const user = "Admin"; // TODO: replace with real user
 
   const [groups, setGroups] = useState<ApprovalGroup[]>([]);
   const [members, setMembers] = useState<GroupMember[]>([]);
@@ -45,40 +45,86 @@ const JobApprovalGroups: React.FC = () => {
 
   const [selectedEmployeeID, setSelectedEmployeeID] = useState<number>(0);
 
-  // ================= AUDIT LOGGER (NON-BLOCKING) =================
+  // ================= FIELD-LEVEL AUDIT BUILDER =================
+  const buildAuditChanges = (
+    action: string,
+    entity: string,
+    oldObj: any,
+    newObj: any
+  ) => {
+    const changes: any[] = [];
+
+    // CREATE
+    if (!oldObj && newObj) {
+      Object.keys(newObj).forEach((key) => {
+        changes.push({
+          ActionType: action,
+          EntityName: entity,
+          FieldName: key,
+          OldValue: null,
+          NewValue: newObj[key]?.toString() ?? null,
+        });
+      });
+    }
+
+    // DELETE
+    else if (oldObj && !newObj) {
+      Object.keys(oldObj).forEach((key) => {
+        changes.push({
+          ActionType: action,
+          EntityName: entity,
+          FieldName: key,
+          OldValue: oldObj[key]?.toString() ?? null,
+          NewValue: null,
+        });
+      });
+    }
+
+    // UPDATE
+    else if (oldObj && newObj) {
+      Object.keys(newObj).forEach((key) => {
+        if (oldObj[key] !== newObj[key]) {
+          changes.push({
+            ActionType: action,
+            EntityName: entity,
+            FieldName: key,
+            OldValue: oldObj[key]?.toString() ?? null,
+            NewValue: newObj[key]?.toString() ?? null,
+          });
+        }
+      });
+    }
+
+    return changes;
+  };
+
+  // ================= AUDIT LOGGER =================
   const logAudit = async (
     action: string,
     entity: string,
-    field: string,
     oldValue: any,
     newValue: any
   ) => {
     try {
-      const payload = [
-        {
-          ActionType: action,
-          EntityName: entity,
-          FieldName: field,
-          OldValue: oldValue ? JSON.stringify(oldValue) : null,
-          NewValue: newValue ? JSON.stringify(newValue) : null,
-        },
-      ];
+      const auditArray = buildAuditChanges(action, entity, oldValue, newValue);
+
+      if (auditArray.length === 0) return;
 
       await auditLogsService.PostGenerateLoginsAsync({
-        AuditJson: JSON.stringify(payload),
+        AuditJson: JSON.stringify(auditArray),
         TraceID: crypto.randomUUID(),
-        IPAddress: "0.0.0.0", // replace from backend if possible
+        IPAddress: "0.0.0.0",
         UserAgent: navigator.userAgent,
         OrganizationID: organizationID,
         UpdatedBy: user,
         ScreenName: "JobApprovalGroups",
       });
     } catch (err) {
-      console.error("Audit failed (ignored):", err);
+      console.error("Audit failed:", err);
     }
   };
 
-  // fire-and-forget wrapper
+  // fire-and-forget
   const fireAudit = (...args: Parameters<typeof logAudit>) => {
     void logAudit(...args);
   };
@@ -136,7 +182,6 @@ const JobApprovalGroups: React.FC = () => {
       fireAudit(
         isEdit ? "UPDATE" : "CREATE",
         "ApprovalGroup",
-        "Group",
         oldData,
         groupForm
       );
@@ -157,7 +202,7 @@ const JobApprovalGroups: React.FC = () => {
     try {
       await api.DeleteApprovalGroupsByAsync(groupID);
 
-      fireAudit("DELETE", "ApprovalGroup", "Group", oldData, null);
+      fireAudit("DELETE", "ApprovalGroup", oldData, null);
 
       toast.success("Deleted!");
       loadGroups();
@@ -188,18 +233,10 @@ const JobApprovalGroups: React.FC = () => {
         SequenceOrder: 1,
       });
 
-      fireAudit(
-        "ADD",
-        "ApprovalGroupMember",
-        "Member",
-        null,
-        {
-          GroupID: selectedGroup.GroupID,
-          GroupName: selectedGroup.GroupName,
-          EmployeeID: selectedEmployeeID,
-          EmployeeName: getEmployeeName(selectedEmployeeID),
-        }
-      );
+      fireAudit("ADD", "ApprovalGroupMember", null, {
+        GroupID: selectedGroup.GroupID,
+        EmployeeID: selectedEmployeeID,
+      });
 
       toast.success("Member added!");
       setShowMemberModal(false);
@@ -221,18 +258,10 @@ const JobApprovalGroups: React.FC = () => {
         EmployeeID: employeeID,
       });
 
-      fireAudit(
-        "REMOVE",
-        "ApprovalGroupMember",
-        "Member",
-        {
-          GroupID: selectedGroup.GroupID,
-          GroupName: selectedGroup.GroupName,
-          EmployeeID: employeeID,
-          EmployeeName: getEmployeeName(employeeID),
-        },
-        null
-      );
+      fireAudit("REMOVE", "ApprovalGroupMember", {
+        GroupID: selectedGroup.GroupID,
+        EmployeeID: employeeID,
+      }, null);
 
       toast.success("Member removed!");
       loadMembers(selectedGroup.GroupID);
@@ -317,7 +346,93 @@ const JobApprovalGroups: React.FC = () => {
           </Card>
         </Col>
       </Row>
+  {/* GROUP MODAL */}
+      <Modal show={showGroupModal} onHide={() => setShowGroupModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>{groupForm.GroupID ? "Edit" : "Add"} Group</Modal.Title>
+        </Modal.Header>
 
+        <Form onSubmit={saveGroup}>
+          <Modal.Body>
+            <Form.Control
+              className="mb-2"
+              placeholder="Group Name"
+              required
+              value={groupForm.GroupName}
+              onChange={(e) =>
+                setGroupForm({ ...groupForm, GroupName: e.target.value })
+              }
+            />
+
+            <Form.Select
+              className="mb-2"
+              value={groupForm.ApprovalType}
+              onChange={(e) =>
+                setGroupForm({
+                  ...groupForm,
+                  ApprovalType: e.target.value as "All" | "Any",
+                })
+              }
+            >
+              <option value="All">All Must Approve</option>
+              <option value="Any">Any Can Approve</option>
+            </Form.Select>
+
+            <Form.Control
+              type="number"
+              min={1}
+              value={groupForm.MinApprovalsRequired}
+              onChange={(e) =>
+                setGroupForm({
+                  ...groupForm,
+                  MinApprovalsRequired: Math.max(
+                    1,
+                    parseInt(e.target.value) || 1
+                  ),
+                })
+              }
+            />
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button onClick={() => setShowGroupModal(false)}>Cancel</Button>
+            <Button type="submit">Save</Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
+
+      {/* MEMBER MODAL */}
+      <Modal show={showMemberModal} onHide={() => setShowMemberModal(false)}>
+        <Modal.Header closeButton>
+          <Modal.Title>Add Member</Modal.Title>
+        </Modal.Header>
+
+        <Form onSubmit={addMember}>
+          <Modal.Body>
+            <Form.Select
+              required
+              value={selectedEmployeeID}
+              onChange={(e) =>
+                setSelectedEmployeeID(parseInt(e.target.value))
+              }
+            >
+              <option value={0}>-- Select Employee --</option>
+              {employees.map((emp) => (
+                <option key={emp.EmployeeID} value={emp.EmployeeID}>
+                  {emp.EmployeeName}
+                </option>
+              ))}
+            </Form.Select>
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button onClick={() => setShowMemberModal(false)}>Cancel</Button>
+            <Button type="submit" disabled={!selectedEmployeeID}>
+              Add
+            </Button>
+          </Modal.Footer>
+        </Form>
+      </Modal>
       <ToastContainer />
     </div>
   );

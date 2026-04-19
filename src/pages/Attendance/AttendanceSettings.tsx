@@ -1,6 +1,18 @@
-import React, { useState } from "react";
-import { Container, Row, Col, Card, Form, Button, Badge } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import {
+  Container,
+  Row,
+  Col,
+  Card,
+  Form,
+  Button,
+  Badge,
+  Spinner,
+  Accordion,
+} from "react-bootstrap";
 import { toast } from "react-toastify";
+import attendanceSettingService from "../../services/attendanceSettingService";
+import LoggedInUser from "../../types/LoggedInUser";
 
 // ================= TYPES =================
 
@@ -9,122 +21,60 @@ interface SettingType {
   SettingKey: string;
   Description: string;
   DataType: string;
-  DefaultValue: string;
+
+  Value: string | null;
+  DefaultValue: string | null;
+
+  IsActive: boolean;
+  SettingGroupID: number;
+  GroupName: string;
+  DisplayOrder: number;
+  GroupKey: string;
+
+  OrgAttendanceSettingID: number | null;
+  IsOverridden: number;
 }
-
-// ================= STATIC DATA =================
-
-const settingTypes: SettingType[] = [
-  // Attendance Mode
-  {
-    SettingTypeID: 1,
-    SettingKey: "ATT_CALC_MODE",
-    Description: "Attendance Calculation Mode (1=FirstInLastOut, 2=FixedShift, 3=Duration)",
-    DataType: "INT",
-    DefaultValue: "3",
-  },
-
-  // Check-in/out
-  {
-    SettingTypeID: 2,
-    SettingKey: "REQUIRE_CHECKIN",
-    Description: "Check-in is mandatory",
-    DataType: "BIT",
-    DefaultValue: "1",
-  },
-  {
-    SettingTypeID: 3,
-    SettingKey: "REQUIRE_CHECKOUT",
-    Description: "Check-out is mandatory",
-    DataType: "BIT",
-    DefaultValue: "1",
-  },
-
-  // Working Hours
-  {
-    SettingTypeID: 4,
-    SettingKey: "STANDARD_DAILY_HOURS",
-    Description: "Standard working hours per day",
-    DataType: "DECIMAL",
-    DefaultValue: "8",
-  },
-  {
-    SettingTypeID: 5,
-    SettingKey: "MIN_HOURS_HALF_DAY",
-    Description: "Minimum hours required for half day",
-    DataType: "DECIMAL",
-    DefaultValue: "4",
-  },
-
-  // Late rules
-  {
-    SettingTypeID: 6,
-    SettingKey: "LATE_GRACE_MINUTES",
-    Description: "Grace time allowed before marking late",
-    DataType: "INT",
-    DefaultValue: "10",
-  },
-  {
-    SettingTypeID: 7,
-    SettingKey: "EARLY_EXIT_GRACE_MINUTES",
-    Description: "Grace time allowed for early exit",
-    DataType: "INT",
-    DefaultValue: "10",
-  },
-
-  // Overtime
-  {
-    SettingTypeID: 8,
-    SettingKey: "OVERTIME_ENABLED",
-    Description: "Enable overtime calculation",
-    DataType: "BIT",
-    DefaultValue: "1",
-  },
-  {
-    SettingTypeID: 9,
-    SettingKey: "OVERTIME_MULTIPLIER",
-    Description: "Overtime multiplier (e.g. 1.5x)",
-    DataType: "DECIMAL",
-    DefaultValue: "1.5",
-  },
-
-  // Break
-  {
-    SettingTypeID: 10,
-    SettingKey: "BREAK_DURATION",
-    Description: "Default break duration in minutes",
-    DataType: "INT",
-    DefaultValue: "60",
-  },
-
-  // Advanced
-  {
-    SettingTypeID: 11,
-    SettingKey: "GEOFENCE_ENABLED",
-    Description: "Enable location-based attendance",
-    DataType: "BIT",
-    DefaultValue: "0",
-  },
-];
-
-// ================= GROUPING =================
-
-const getGroup = (key: string) => {
-  if (key.includes("ATT_CALC") || key.includes("CHECK")) return "Attendance Rules";
-  if (key.includes("STANDARD") || key.includes("MIN_HOURS")) return "Working Hours";
-  if (key.includes("LATE") || key.includes("EARLY")) return "Late / Early Rules";
-  if (key.includes("OVERTIME")) return "Overtime Rules";
-  if (key.includes("BREAK")) return "Break Rules";
-  if (key.includes("GEO")) return "Advanced";
-  return "General";
-};
 
 // ================= COMPONENT =================
 
 const AttendanceSettings: React.FC = () => {
+  const [settings, setSettings] = useState<SettingType[]>([]);
   const [values, setValues] = useState<Record<number, string>>({});
   const [search, setSearch] = useState("");
   const [showModifiedOnly, setShowModifiedOnly] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [savingGroup, setSavingGroup] = useState<string | null>(null);
+
+  const userString = localStorage.getItem("user");
+  const user: LoggedInUser | null = userString
+    ? JSON.parse(userString)
+    : null;
+
+  const organizationID = user?.organizationID ?? 0;
+
+  // ================= LOAD =================
+
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      setLoading(true);
+
+      const res =
+        await attendanceSettingService.getAttendanceSettings(
+          organizationID
+        );
+
+      const active = res.filter((s: SettingType) => s.IsActive);
+      setSettings(active);
+    } catch (err) {
+      toast.error("Failed to load settings");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // ================= HANDLE CHANGE =================
 
@@ -135,16 +85,9 @@ const AttendanceSettings: React.FC = () => {
     }));
   };
 
-  // ================= SAVE (STATIC) =================
-
-  const handleSave = () => {
-    console.log("Saved Settings:", values);
-    toast.success("Settings saved successfully (mock)");
-  };
-
   // ================= FILTER =================
 
-  const filtered = settingTypes.filter((s) =>
+  const filtered = settings.filter((s) =>
     s.SettingKey.toLowerCase().includes(search.toLowerCase())
   );
 
@@ -153,15 +96,86 @@ const AttendanceSettings: React.FC = () => {
   const grouped: Record<string, SettingType[]> = {};
 
   filtered.forEach((s) => {
-    const group = getGroup(s.SettingKey);
+    const group = s.GroupName || "General";
     if (!grouped[group]) grouped[group] = [];
     grouped[group].push(s);
   });
 
-  // ================= RENDER INPUT =================
+  // ================= SORT =================
+
+  Object.keys(grouped).forEach((group) => {
+    grouped[group].sort((a, b) => a.DisplayOrder - b.DisplayOrder);
+  });
+
+  // ================= SAVE API =================
+
+  const handleSaveGroup = async (groupName: string) => {
+    try {
+      setSavingGroup(groupName);
+
+      const groupSettings = grouped[groupName];
+
+      const payload = groupSettings
+        .map((s) => {
+          const current =
+            values[s.SettingTypeID] ?? s.Value ?? "";
+
+          const isModified =
+            current !== (s.Value ?? "");
+
+          if (!isModified) return null;
+
+          return {
+            OrgAttendanceSettingID:
+              s.OrgAttendanceSettingID ?? 0,
+
+            SettingTypeID: s.SettingTypeID,
+
+            Value: current,
+          };
+        })
+        .filter(Boolean);
+
+      if (payload.length === 0) {
+        toast.info("No changes to save");
+        return;
+      }
+
+      // ================= FINAL API PAYLOAD =================
+
+      const apiPayload = {
+        organizationID: organizationID,
+        jsonData: JSON.stringify(payload),
+        createdBy: "Admin",
+      };
+
+      console.log("Final API Payload:", apiPayload);
+
+      const res =
+        await attendanceSettingService.PostOrgAttendanceSettingsByAsync(
+          apiPayload
+        );
+
+      if (res?.success !== false) {
+        toast.success(`${groupName} saved successfully`);
+        loadSettings(); // refresh after save
+      } else {
+        toast.error(res?.message || "Save failed");
+      }
+    } catch (err) {
+      toast.error("Failed to save settings");
+    } finally {
+      setSavingGroup(null);
+    }
+  };
+
+  // ================= INPUT =================
 
   const renderInput = (setting: SettingType) => {
-    const value = values[setting.SettingTypeID] ?? setting.DefaultValue;
+    const value =
+      values[setting.SettingTypeID] ??
+      setting.Value ??
+      "";
 
     switch (setting.DataType) {
       case "BIT":
@@ -170,7 +184,10 @@ const AttendanceSettings: React.FC = () => {
             type="switch"
             checked={value === "1"}
             onChange={(e) =>
-              handleChange(setting.SettingTypeID, e.target.checked ? "1" : "0")
+              handleChange(
+                setting.SettingTypeID,
+                e.target.checked ? "1" : "0"
+              )
             }
           />
         );
@@ -181,7 +198,20 @@ const AttendanceSettings: React.FC = () => {
           <Form.Control
             type="number"
             value={value}
-            onChange={(e) => handleChange(setting.SettingTypeID, e.target.value)}
+            onChange={(e) =>
+              handleChange(setting.SettingTypeID, e.target.value)
+            }
+          />
+        );
+
+      case "TIME":
+        return (
+          <Form.Control
+            type="time"
+            value={value}
+            onChange={(e) =>
+              handleChange(setting.SettingTypeID, e.target.value)
+            }
           />
         );
 
@@ -190,7 +220,9 @@ const AttendanceSettings: React.FC = () => {
           <Form.Control
             type="text"
             value={value}
-            onChange={(e) => handleChange(setting.SettingTypeID, e.target.value)}
+            onChange={(e) =>
+              handleChange(setting.SettingTypeID, e.target.value)
+            }
           />
         );
     }
@@ -217,50 +249,94 @@ const AttendanceSettings: React.FC = () => {
             type="switch"
             label="Show Only Modified"
             checked={showModifiedOnly}
-            onChange={(e) => setShowModifiedOnly(e.target.checked)}
+            onChange={(e) =>
+              setShowModifiedOnly(e.target.checked)
+            }
           />
         </Col>
-
-        <Col className="text-end">
-          <Button onClick={handleSave}>Save Settings</Button>
-        </Col>
       </Row>
 
-      {/* SETTINGS GRID */}
-      <Row>
-        {Object.keys(grouped).map((group) => (
-          <Col md={6} key={group} className="mb-4">
-            <Card>
-              <Card.Header>
+      {/* LOADING */}
+      {loading ? (
+        <div className="text-center mt-5">
+          <Spinner animation="border" />
+        </div>
+      ) : (
+        <Accordion defaultActiveKey="0">
+          {Object.keys(grouped).map((group, index) => (
+            <Accordion.Item eventKey={String(index)} key={group}>
+              <Accordion.Header>
                 <strong>{group}</strong>
-              </Card.Header>
+              </Accordion.Header>
 
-              <Card.Body>
-                {grouped[group].map((setting) => {
-                  const val = values[setting.SettingTypeID];
+              <Accordion.Body>
+                <Row className="g-3">
+                  {grouped[group].map((setting) => {
+                    const val =
+                      values[setting.SettingTypeID];
 
-                  if (showModifiedOnly && !val) return null;
+                    const current =
+                      val ?? setting.Value ?? "";
 
-                  return (
-                    <div key={setting.SettingTypeID} className="mb-3">
-                      <Form.Label>
-                        {setting.SettingKey}{" "}
-                        <Badge bg="secondary">{setting.DataType}</Badge>
-                      </Form.Label>
+                    const isModified =
+                      current !== (setting.Value ?? "");
 
-                      {renderInput(setting)}
+                    if (showModifiedOnly && !isModified)
+                      return null;
 
-                      <div className="text-muted small">
-                        {setting.Description}
-                      </div>
-                    </div>
-                  );
-                })}
-              </Card.Body>
-            </Card>
-          </Col>
-        ))}
-      </Row>
+                    return (
+                      <Col md={6} key={setting.SettingTypeID}>
+                        <Card className="shadow-sm h-100">
+                          <Card.Body>
+                            <Form.Label>
+                              <strong>
+                                {setting.SettingKey}
+                              </strong>{" "}
+                              <Badge bg="secondary">
+                                {setting.DataType}
+                              </Badge>{" "}
+                              {isModified && (
+                                <Badge bg="warning" text="dark">
+                                  Modified
+                                </Badge>
+                              )}
+                              {setting.IsOverridden === 1 && (
+                                <Badge bg="info">
+                                  Override
+                                </Badge>
+                              )}
+                            </Form.Label>
+
+                            {renderInput(setting)}
+
+                            <div className="text-muted small mt-1">
+                              {setting.Description}
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    );
+                  })}
+                </Row>
+
+                {/* SAVE BUTTON */}
+                <div className="text-end mt-3">
+                  <Button
+                    onClick={() =>
+                      handleSaveGroup(group)
+                    }
+                    disabled={savingGroup === group}
+                  >
+                    {savingGroup === group
+                      ? "Saving..."
+                      : `Save ${group}`}
+                  </Button>
+                </div>
+              </Accordion.Body>
+            </Accordion.Item>
+          ))}
+        </Accordion>
+      )}
     </Container>
   );
 };

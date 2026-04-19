@@ -3,6 +3,7 @@ import Select from "react-select";
 import ToastMessage, { ToastProvider } from "../../components/ToastMessage";
 import probationSettingsService from "../../services/probationSettingsService";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { Modal, Button, Form } from "react-bootstrap";
 
 interface ProbationSetting {
   settingID: number;
@@ -17,15 +18,19 @@ interface ProbationSetting {
 }
 
 const employeeOptions = [
-  { value: 1, label: "Full Time" },
-  { value: 2, label: "Intern" },
-  { value: 3, label: "Contract" },
+  { value: 1, label: "Full-Time" },
+  { value: 2, label: "Part-Time" },
+  { value: 3, label: "Intern" },
+  { value: 4, label: "Contract" },
+  { value: 5, label: "Consultant" },
 ];
 
 const confirmationOptions = [
   { value: "1", label: "Manager Approval" },
   { value: "2", label: "HR Approval" },
-  { value: "3", label: "Performance Based" },
+  { value: "3", label: "Manager + HR Approval" },
+  { value: "4", label: "Performance Based Evaluation" },
+  { value: "5", label: "Auto Confirmation" },
 ];
 
 const ProbationSettings: React.FC = () => {
@@ -231,95 +236,106 @@ const ProbationSettings: React.FC = () => {
       </div>
 
       {/* MODAL */}
-       {showModal && (
-        <div className="modal d-block">
-          <div className="modal-dialog modal-lg">
-            <div className="modal-content p-4">
-              <h5>{form.settingID === 0 ? "Add" : "Edit"} Setting</h5>
+     <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg">
+  <Modal.Header closeButton>
+    <Modal.Title>
+      {form.settingID === 0 ? "Add Setting" : "Edit Setting"}
+    </Modal.Title>
+  </Modal.Header>
 
-              <label className="fw-bold">Employee Type</label>
-              <Select
-                className="org-select"
-                classNamePrefix="org-select"
-                options={employeeOptions}
-                value={employeeOptions.find((x) => x.value === form.employeeType)}
-                onChange={(e) => setForm({ ...form, employeeType: e?.value || 0 })}
-              />
+  <Modal.Body>
 
-              <label className="fw-bold mt-3">Probation Months</label>
-              <input
-                type="number"
-                className="form-control"
-                value={form.probationMonths}
-                onChange={(e) =>
-                  setForm({ ...form, probationMonths: parseInt(e.target.value) || 0 })
-                }
-              />
+    <Form>
+      <Form.Group className="mb-3">
+        <Form.Label>Employee Type</Form.Label>
+        <Select
+           className="org-select"
+          classNamePrefix="org-select"
+          options={employeeOptions}
+          value={employeeOptions.find((x) => x.value === form.employeeType)}
+          onChange={(e) =>
+            setForm({ ...form, employeeType: e?.value || 0 })
+          }
+        />
+      </Form.Group>
 
-              <div className="form-check mt-3">
-                <input
-                  type="checkbox"
-                  checked={form.allowExtension}
-                  onChange={(e) =>
-                    setForm({ ...form, allowExtension: e.target.checked })
-                  }
-                />
-                <label className="ms-2">Allow Extension</label>
-              </div>
+      <Form.Group className="mb-3">
+        <Form.Label>Probation Months</Form.Label>
+        <Form.Control
+          type="number"
+          value={form.probationMonths}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              probationMonths: parseInt(e.target.value) || 0,
+            })
+          }
+        />
+      </Form.Group>
 
-              {form.allowExtension && (
-                <input
-                  type="number"
-                  className="form-control mt-2"
-                  placeholder="Max Extension Months"
-                  value={form.maxExtensionMonths}
-                  onChange={(e) =>
-                    setForm({
-                      ...form,
-                      maxExtensionMonths: parseInt(e.target.value) || 0,
-                    })
-                  }
-                />
-              )}
+      <Form.Check
+        type="checkbox"
+        label="Allow Extension"
+        checked={form.allowExtension}
+        onChange={(e) =>
+          setForm({ ...form, allowExtension: e.target.checked })
+        }
+      />
 
-              <div className="form-check mt-3">
-                <input
-                  type="checkbox"
-                  checked={form.autoConfirmation}
-                  onChange={(e) =>
-                    setForm({ ...form, autoConfirmation: e.target.checked })
-                  }
-                />
-                <label className="ms-2">Auto Confirmation</label>
-              </div>
-
-              {!form.autoConfirmation && (
-                <>
-                  <label className="fw-bold mt-3">Confirmation Type</label>
-                  <Select
-                    className="org-select"
-                    classNamePrefix="org-select"
-                    options={confirmationOptions}
-                    value={confirmationOptions.find((x) => x.value === form.confirmationType)}
-                    onChange={(e) =>
-                      setForm({ ...form, confirmationType: e?.value || "" })
-                    }
-                  />
-                </>
-              )}
-
-              <div className="mt-4 text-end">
-                <button className="btn btn-secondary me-2" onClick={() => setShowModal(false)}>
-                  Cancel
-                </button>
-                <button className="btn btn-primary" onClick={save}>
-                  Save
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      {form.allowExtension && (
+        <Form.Control
+          className="mt-2"
+          type="number"
+          placeholder="Max Extension Months"
+          value={form.maxExtensionMonths}
+          onChange={(e) =>
+            setForm({
+              ...form,
+              maxExtensionMonths: parseInt(e.target.value) || 0,
+            })
+          }
+        />
       )}
+
+      <Form.Check
+        className="mt-3"
+        type="checkbox"
+        label="Auto Confirmation"
+        checked={form.autoConfirmation}
+        onChange={(e) =>
+          setForm({ ...form, autoConfirmation: e.target.checked })
+        }
+      />
+
+      {!form.autoConfirmation && (
+        <Form.Group className="mt-3">
+          <Form.Label>Confirmation Type</Form.Label>
+          <Select
+             className="org-select"
+          classNamePrefix="org-select"
+            options={confirmationOptions}
+            value={confirmationOptions.find(
+              (x) => x.value === form.confirmationType
+            )}
+            onChange={(e) =>
+              setForm({ ...form, confirmationType: e?.value || "" })
+            }
+          />
+        </Form.Group>
+      )}
+    </Form>
+
+  </Modal.Body>
+
+  <Modal.Footer>
+    <Button variant="secondary" onClick={() => setShowModal(false)}>
+      Cancel
+    </Button>
+    <Button variant="primary" onClick={save}>
+      Save
+    </Button>
+  </Modal.Footer>
+</Modal>
     </>
   );
 };
