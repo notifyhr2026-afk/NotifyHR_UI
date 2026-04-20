@@ -144,7 +144,7 @@ const ApplyLeaveModal: React.FC<Props> = ({
       backdrop="static"
       contentClassName="rounded-4 shadow-lg"
     >
-      <Modal.Header closeButton className="border-0 pb-0">
+      <Modal.Header closeButton className="border-bottom">
         <Modal.Title className="fw-bold">
           {editLeave ? 'Edit Leave Request' : 'Apply for Leave'}
         </Modal.Title>

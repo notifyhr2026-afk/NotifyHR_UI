@@ -73,14 +73,13 @@ const ApplyLeave: React.FC = () => {
   
   <Tab eventKey="history" title="Leave History" >
     <LeaveHistoryTab
-      employeeID={employeeID}
-      leaveTypes={leaveTypeOptions}
-      onEdit={handleEditLeave}
-      onDelete={(id) => {
-        setLeaveToDelete(id);
-        setConfirmDelete(true);
-      }}
-    />
+  employeeID={employeeID}
+  leaveTypes={leaveTypeOptions}
+  onDelete={(id) => {
+    setLeaveToDelete(id);
+    setConfirmDelete(true);
+  }}
+/>
   </Tab>
 
   <Tab eventKey="balance" title="Leave Balance">
@@ -90,11 +89,8 @@ const ApplyLeave: React.FC = () => {
   {/* ✅ Show only if Reporting Manager */}
   {isReportingManager && (
     <Tab eventKey="approve" title="Approve Leaves">
-      <ApproveLeavesTab
-        onApprove={handleApprove}
-        onReject={handleReject}
-      />
-    </Tab>
+  <ApproveLeavesTab />
+</Tab>
   )}
 
   {isReportingManager && (

@@ -50,18 +50,13 @@ type LeaveAPI = {
   IsHalfDay: boolean;
 };
 
-// -------------------- Props --------------------
-interface Props {
-  onApprove: (leaveID: number) => void;
-  onReject: (leaveID: number, comment: string) => void; // ✅ updated
-}
-
 // -------------------- Component --------------------
-const ApproveLeavesTab: React.FC<Props> = ({ onApprove, onReject }) => {
+const ApproveLeavesTab: React.FC = () => {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
+  const [actionLoading, setActionLoading] = useState<number | null>(null);
 
   // 🔹 Reject Modal State
   const [showModal, setShowModal] = useState(false);
@@ -71,6 +66,7 @@ const ApproveLeavesTab: React.FC<Props> = ({ onApprove, onReject }) => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const employeeID: number | undefined = user?.employeeID;
 
+  // -------------------- Fetch Data --------------------
   useEffect(() => {
     if (!employeeID) {
       setError('User information not found.');
@@ -106,12 +102,16 @@ const ApproveLeavesTab: React.FC<Props> = ({ onApprove, onReject }) => {
             startDate: l.StartDate,
             endDate: l.EndDate,
             numberOfDays: l.NumberOfDays,
-            status: l.LeaveStatusID === 0 ? 'Pending' : 'Approved',
+            status:
+              l.LeaveStatusID === 0
+                ? 'Pending'
+                : l.LeaveStatusID === 1
+                ? 'Approved'
+                : 'Rejected',
             reason: l.Reason,
             isHalfDay: l.IsHalfDay,
           }))
         );
-
       } catch (err: any) {
         console.error(err);
         setError(err?.message || 'Failed to load leave requests.');
@@ -123,7 +123,38 @@ const ApproveLeavesTab: React.FC<Props> = ({ onApprove, onReject }) => {
     fetchData();
   }, [employeeID]);
 
+  // -------------------- API Call --------------------
+  const updateLeaveStatus = async (
+    leaveID: number,
+    statusID: number,
+    rejectReason: string = ''
+  ) => {
+    try {
+      setActionLoading(leaveID);
+
+      const payload = {
+        employeeLeaveID: leaveID,
+        leaveStatusID: statusID,
+        approvedBy: employeeID,
+        rejectReason: rejectReason || ''
+      };
+
+      await leaveService.ApproveOrRejectEmployeeLeaveAsync(payload);
+
+      // 🔥 Remove from UI after action
+      setLeaves((prev) => prev.filter((l) => l.id !== leaveID));
+    } catch (err: any) {
+      alert(err?.message || 'Action failed');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   // -------------------- Handlers --------------------
+  const handleApprove = (leaveID: number) => {
+    updateLeaveStatus(leaveID, 1);
+  };
+
   const handleOpenRejectModal = (leaveID: number) => {
     setSelectedLeaveID(leaveID);
     setRejectComment('');
@@ -137,7 +168,7 @@ const ApproveLeavesTab: React.FC<Props> = ({ onApprove, onReject }) => {
     }
 
     if (selectedLeaveID !== null) {
-      onReject(selectedLeaveID, rejectComment);
+      updateLeaveStatus(selectedLeaveID, 2, rejectComment);
     }
 
     setShowModal(false);
@@ -163,7 +194,7 @@ const ApproveLeavesTab: React.FC<Props> = ({ onApprove, onReject }) => {
   // -------------------- UI --------------------
   return (
     <>
-      <Card className="shadow-sm mb-4">  
+      <Card className="shadow-sm mb-4">
         <Card.Body>
           <div className="table-responsive">
             <Table className="table table-hover table-dark-custom">
@@ -208,14 +239,16 @@ const ApproveLeavesTab: React.FC<Props> = ({ onApprove, onReject }) => {
                         size="sm"
                         variant="success"
                         className="me-2"
-                        onClick={() => onApprove(l.id)}
+                        disabled={actionLoading === l.id}
+                        onClick={() => handleApprove(l.id)}
                       >
-                        Approve
+                        {actionLoading === l.id ? 'Processing...' : 'Approve'}
                       </Button>
 
                       <Button
                         size="sm"
                         variant="danger"
+                        disabled={actionLoading === l.id}
                         onClick={() => handleOpenRejectModal(l.id)}
                       >
                         Reject

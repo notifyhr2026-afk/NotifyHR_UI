@@ -21,5 +21,9 @@ const leaveService = {
   );
   return res.data;
 },
+ApproveOrRejectEmployeeLeaveAsync: async (payload: any) => {
+    const res = await axiosInstance.put("EmployeeLeave/ApproveOrRejectEmployeeLeaveAsync", payload);
+    return res.data[0];
+  },
 };
 export default leaveService;
