@@ -3,6 +3,7 @@ import { Form, Table } from 'react-bootstrap';
 import Select from 'react-select';
 import { GetAssignedRolesAsync,AssignOrganizationRolesAsync } from '../../services/roleService';
 import { useParams } from 'react-router-dom';
+import { fireAudit } from '../../utils/auditUtils';
 
 interface RoleOption {
   value: string;
@@ -14,6 +15,7 @@ interface RoleOption {
   const [roleOptions, setRoleOptions] = useState<RoleOption[]>([]);
   const [allRoles, setAllRoles] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [oldRoles, setOldRoles] = useState<string[]>([]);
   const { employeeID } = useParams<{ employeeID: string }>();
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const organizationID = user.organizationID;   
@@ -40,6 +42,7 @@ interface RoleOption {
           .filter((role: any) => role.IsAssigned === 1)
           .map((role: any) => role.RoleID.toString());
         setRoles(assignedRoles);
+        setOldRoles(assignedRoles);
       } catch (error) {
         console.error('Error fetching roles:', error);
       } finally {
@@ -61,6 +64,7 @@ interface RoleOption {
       };
       await AssignOrganizationRolesAsync(payload);
       alert('Roles assigned successfully!');
+      fireAudit("UPDATE", "EmployeeRoleAssignment", { employeeID: userIDNum, roles: oldRoles.join(',') }, { employeeID: userIDNum, roles: roles.join(',') }, organizationID, user?.name || "Admin", "EmployeeRoles");
     } catch (error) {
       console.error('Error assigning roles:', error);
       alert('Failed to assign roles.');

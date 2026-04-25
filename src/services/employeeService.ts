@@ -1,6 +1,9 @@
 import api from "../api/axiosHRInstance";
 import { ReportingManagerHistory } from "../types/ReportingManagerHistory";
 
+// Simple in-memory cache for employee details
+const employeeCache = new Map<number, any>();
+
 const employeeService = {
 
   getEmployeesByOrganizationIdAsync: async (organizationID : number) => {    
@@ -14,8 +17,18 @@ const employeeService = {
   }, 
   GetEmployeeDetialsByEmployeeID: async (EmployeeID: number) => {
     try {
-      console.log();
+      // Check cache first
+      if (employeeCache.has(EmployeeID)) {
+        console.log(`Returning cached data for EmployeeID: ${EmployeeID}`);
+        return employeeCache.get(EmployeeID);
+      }
+
+      console.log(`Fetching data for EmployeeID: ${EmployeeID}`);
       const { data } = await api.get(`Employee/GetEmployeeDetialsByEmployeeID?EmployeeID=${EmployeeID}`);
+      
+      // Cache the data
+      employeeCache.set(EmployeeID, data);
+      
       return data;
     } catch (error) {
       console.error('Error fetching employee details:', error);
@@ -26,6 +39,12 @@ const employeeService = {
     debugger;
     console.log('Request body:', employee);
     const { data } = await api.post('Employee/CreateEmployee', employee);
+    
+    // Invalidate cache for this employee if it exists
+    if (employee.employeeID) {
+      employeeCache.delete(employee.employeeID);
+    }
+    
     return Array.isArray(data?.Table) ? data.Table : [];
   },
    PostUpdateProbationDetails: async (payload: any) => {

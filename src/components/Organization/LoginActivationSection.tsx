@@ -1,19 +1,53 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Form, Row, Col, Card, Spinner } from "react-bootstrap";
 import { useParams } from "react-router-dom";
-import { PutActivateLoginsAsync } from "../../services/organizationService";
+import { PutActivateLoginsAsync, getOrgDetailsAsync } from "../../services/organizationService";
+import { fireAudit } from '../../utils/auditUtils';
 
 
 const LoginActivationSection: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
+  const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID = id ? Number(id) : userFromStorage?.organizationID || 0;
 
   const [isLoginActivate, setIsLoginActivate] = useState<boolean>(false);
   const [loginRemarks, setLoginRemarks] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
+  const [fetchLoading, setFetchLoading] = useState<boolean>(true);
+  const [oldIsLoginActivate, setOldIsLoginActivate] = useState<boolean>(false);
+  const [oldLoginRemarks, setOldLoginRemarks] = useState<string>("");
+
+  // Fetch organization details on component mount
+  useEffect(() => {
+    if (organizationID) {
+      fetchOrganizationDetails(organizationID);
+    }
+  }, [organizationID]);
+
+  const fetchOrganizationDetails = async (orgId: number) => {
+    try {
+      setFetchLoading(true);
+      const data = await getOrgDetailsAsync(orgId);
+      if (data?.length) {
+        const org = data[0];
+        const isLoginActivateValue = org.IsLoginActivate || false;
+        const loginRemarksValue = org.LoginRemarks || "";
+        
+        setIsLoginActivate(isLoginActivateValue);
+        setLoginRemarks(loginRemarksValue);
+        setOldIsLoginActivate(isLoginActivateValue); // Store old values for audit
+        setOldLoginRemarks(loginRemarksValue);
+      }
+    } catch (error) {
+      console.error("Error fetching organization details:", error);
+    } finally {
+      setFetchLoading(false);
+    }
+  };
 
 const handleActivateLogin = async () => {
-  if (!id) {
-    alert("Organization ID not found in URL.");
+  if (!organizationID) {
+    alert("Organization ID not found in URL or local storage.");
     return;
   }
 
@@ -21,7 +55,7 @@ const handleActivateLogin = async () => {
     setLoading(true);
 
     const payload = {
-      organizationID: Number(id),
+      organizationID,
       isLoginActivated: isLoginActivate,
       loginRemarks: loginRemarks.trim(),
       modifiedBy: "Admin",
@@ -34,6 +68,21 @@ const handleActivateLogin = async () => {
 
     if (result?.value === 1) {
       alert(result.MSG || "Success");
+      
+      // Audit logging
+      const oldData = {
+        IsLoginActivate: oldIsLoginActivate,
+        LoginRemarks: oldLoginRemarks
+      };
+      const newData = {
+        IsLoginActivate: isLoginActivate,
+        LoginRemarks: loginRemarks.trim()
+      };
+      fireAudit("UPDATE", "LoginActivation", oldData, newData, Number(id), userFromStorage?.name || "Admin", "LoginActivationSection");
+      
+      // Update old values for future audits
+      setOldIsLoginActivate(isLoginActivate);
+      setOldLoginRemarks(loginRemarks.trim());
     } else {
       alert(result?.MSG || "Operation failed.");
     }
@@ -58,6 +107,7 @@ const handleActivateLogin = async () => {
               label="Is Login Activated"
               checked={isLoginActivate}
               onChange={(e) => setIsLoginActivate(e.target.checked)}
+              disabled={fetchLoading}
             />
           </Col>
 
@@ -67,6 +117,7 @@ const handleActivateLogin = async () => {
               placeholder="Login remarks"
               value={loginRemarks}
               onChange={(e) => setLoginRemarks(e.target.value)}
+              disabled={fetchLoading}
             />
           </Col>
 
@@ -74,12 +125,17 @@ const handleActivateLogin = async () => {
             <Button
               variant="success"
               onClick={handleActivateLogin}
-              disabled={!loginRemarks.trim() || loading}
+              disabled={!loginRemarks.trim() || loading || fetchLoading}
             >
               {loading ? (
                 <>
                   <Spinner size="sm" animation="border" className="me-2" />
                   Processing...
+                </>
+              ) : fetchLoading ? (
+                <>
+                  <Spinner size="sm" animation="border" className="me-2" />
+                  Loading...
                 </>
               ) : (
                 "Activate & Deactivate Logins"

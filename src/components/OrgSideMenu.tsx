@@ -144,7 +144,7 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
             src={currentLogo}
             alt="Logo"
             style={{
-              height: isOpen ? '50px' : '40px',
+              height: isOpen ? '56px' : '56px',
               transition: 'opacity 0.3s ease',
             }}
           />

@@ -104,6 +104,9 @@ import SuperAdminDashboard from '../pages/Main/SuperAdmin';
 import VerifyEmployeeTasks from '../pages/Timesheet/VerifyEmployeeTasks';
 import LeavesReportPage from '../pages/Leave/LeavesReportPage';
 import JobApprovalGroups from '../pages/Recruitment/JobApprovalGroups';
+import ReportsDashboard from '../pages/Reports/ReportsDashboard';
+import ManageOrgHierarchy from '../pages/Organization/ManageOrgHierarchy';
+import ViewOrgTree from '../pages/Organization/ViewOrgTree';
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -212,7 +215,9 @@ const RoutesComponent: React.FC = () => {
         <Route path="/sysdashboard" element={<SuperAdminDashboard />} />
         <Route path="/LeavesReportPage" element={<LeavesReportPage />} />
         <Route path="/JobApprovalGroups" element={<JobApprovalGroups />} />
-
+        <Route path="/ReportsDashboard" element={<ReportsDashboard />} />
+        <Route path="/ManageOrgHierarchy" element={<ManageOrgHierarchy />} />
+        <Route path="/ViewOrgTree" element={<ViewOrgTree />} />
         <Route path="/DepartmentCategoryMapping" element={<DepartmentCategoryMapping />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 

@@ -1,6 +1,5 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useState } from 'react';
 import employeeService from '../services/employeeService';
-import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 
 interface EmployeeData {
@@ -11,48 +10,52 @@ interface EmployeeData {
 }
 
 interface EmployeeContextType {
-  data: EmployeeData | null;
-  reload: () => void;
-  loading: boolean;
+  getEmployeeDetails: (employeeID: number) => Promise<EmployeeData | null>;
+  clearCache: (employeeID?: number) => void;
 }
 
 const EmployeeContext = createContext<EmployeeContextType>({
-  data: null,
-  reload: () => { },
-  loading: false,
+  getEmployeeDetails: async () => null,
+  clearCache: () => {},
 });
 
 export const useEmployee = () => useContext(EmployeeContext);
 
 export const EmployeeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { employeeID } = useParams<{ employeeID: string }>();
-  const [data, setData] = useState<EmployeeData | null>(null);
-  const [loading, setLoading] = useState(false);
-  interface EmployeeProviderProps {
-    employeeID: number;
-    children: React.ReactNode;
-  }
-  const fetchData = async () => {
-    if (!employeeID) return;
-    setLoading(true);
+  const [cache, setCache] = useState<Map<number, EmployeeData>>(new Map());
+
+  const getEmployeeDetails = async (employeeID: number): Promise<EmployeeData | null> => {
+    // Check cache first
+    if (cache.has(employeeID)) {
+      return cache.get(employeeID)!;
+    }
+
     try {
-      alert(`EmployeeID from URL: ${employeeID}`); // ✅ This will now work
-      const res = await employeeService.GetEmployeeDetialsByEmployeeID(parseInt(employeeID));
-      setData(res);
+      const res = await employeeService.GetEmployeeDetialsByEmployeeID(employeeID);
+      // Update cache
+      setCache(prev => new Map(prev).set(employeeID, res));
+      return res;
     } catch (error) {
       console.error('Error fetching employee details:', error);
       toast.error('Failed to load employee data');
-    } finally {
-      setLoading(false);
+      return null;
     }
   };
 
-  useEffect(() => {
-    fetchData();
-  }, [employeeID]);
+  const clearCache = (employeeID?: number) => {
+    if (employeeID) {
+      setCache(prev => {
+        const newCache = new Map(prev);
+        newCache.delete(employeeID);
+        return newCache;
+      });
+    } else {
+      setCache(new Map());
+    }
+  };
 
   return (
-    <EmployeeContext.Provider value={{ data, reload: fetchData, loading }}>
+    <EmployeeContext.Provider value={{ getEmployeeDetails, clearCache }}>
       {children}
     </EmployeeContext.Provider>
   );

@@ -20,6 +20,15 @@ const positionService = {
     const res = await api.post("Employee/SaveOrUpdateReportingManagerHistory", payload);
     return res.data;
    },
+   
+  SaveOrganizationPositionHierarchyAsync: async (payload: any) => {    
+    const { data } = await api.post('Position/SaveOrganizationPositionHierarchyAsync', payload);
+    return data;   // ✅ FIXED (removed .Table)
+  },
+  GetOrganizationPositionHierarchyAsync: async (organizationID: number) => {
+    const { data } = await api.get(`Position/GetOrganizationPositionHierarchyAsync?OrganizationID=${organizationID}`);
+    return data;   // this is correct
+  },
 };
 
 export default positionService;

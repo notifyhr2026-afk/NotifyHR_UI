@@ -3,6 +3,7 @@ import ToastMessage, { ToastProvider } from "../../components/ToastMessage";
 import { ValidationMessage } from "../../components/ValidationMessage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import leavePolicyService from "../../services/leavePolicyService";
+import leaveTypesService from "../../services/leaveTypesService";
 
 /* =========================
    INTERFACES
@@ -25,20 +26,12 @@ interface LeaveType {
 }
 
 /* =========================
-   STATIC LEAVE TYPES
-========================= */
-const leaveTypes: LeaveType[] = [
-  { id: 1, name: "Annual Leave" },
-  { id: 2, name: "Sick Leave" },
-  { id: 3, name: "Casual Leave" },
-];
-
-/* =========================
    COMPONENT
 ========================= */
 const ManageLeavePolicy: React.FC = () => {
   const [policies, setPolicies] = useState<LeavePolicy[]>([]);
   const [loading, setLoading] = useState(false);
+  const [leaveTypes, setLeaveTypes] = useState<LeaveType[]>([]);
 
   const [showModal, setShowModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -92,8 +85,22 @@ const ManageLeavePolicy: React.FC = () => {
     }
   };
 
+  const fetchLeaveTypes = async () => {
+    try {
+      const data = await leaveTypesService.getLeaveLeaveTypes();
+      const mappedLeaveTypes = data.map((item: any) => ({
+        id: item.LeaveTypeID || item.id,
+        name: item.LeaveTypeName || item.name,
+      }));
+      setLeaveTypes(mappedLeaveTypes);
+    } catch (error) {
+      ToastMessage.show("Failed to load leave types", "error");
+    }
+  };
+
   useEffect(() => {
     fetchLeavePolicies();
+    fetchLeaveTypes();
   }, []);
 
   /* =========================

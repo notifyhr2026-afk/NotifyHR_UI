@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Row, Col, Form, Button, Table, Modal } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
 import ToggleSection from '../ToggleSection';
-import employeeService from '../../services/employeeService';
+import { useEmployee } from '../../context/EmployeeContext';
 
 interface Experience {
   id: number;
@@ -19,6 +19,7 @@ interface Experience {
 
 const EmployeeExperience: React.FC = () => {
   const { employeeID } = useParams<{ employeeID: string }>();
+  const { getEmployeeDetails } = useEmployee();
   const [validated, setValidated] = useState(false);
 
   const [formData, setFormData] = useState({
@@ -61,7 +62,7 @@ const EmployeeExperience: React.FC = () => {
       const id = parseInt(employeeID);
       setFormData((prev) => ({ ...prev, employeeID: id }));
 
-      employeeService.GetEmployeeDetialsByEmployeeID(id)
+      getEmployeeDetails(id)
         .then((res) => {
           // Personal details
           if (res?.Table && res.Table.length > 0) {

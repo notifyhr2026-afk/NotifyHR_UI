@@ -451,9 +451,9 @@ const EmployeeList: React.FC = () => {
                     onChange={(e) => setNewEmp({ ...newEmp, Gender: e.target.value })}
                   >
                     <option value="">Select Gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="other">Other</option>
                   </Form.Select>
                   <Form.Control.Feedback type="invalid">
                     Please select gender
@@ -469,9 +469,9 @@ const EmployeeList: React.FC = () => {
                     onChange={(e) => setNewEmp({ ...newEmp, MaritalStatus: e.target.value })}
                   >
                     <option value="">Select Status</option>
-                    <option value="Single">Single</option>
-                    <option value="Married">Married</option>
-                    <option value="Divorced">Divorced</option>
+                    <option value="single">Single</option>
+                    <option value="married">Married</option>
+                    <option value="divorced">Divorced</option>
                   </Form.Select>
                   <Form.Control.Feedback type="invalid">
                     Please select marital status

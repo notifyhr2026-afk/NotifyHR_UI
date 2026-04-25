@@ -7,6 +7,7 @@ import employeeService from '../../services/employeeService';
 import branchService from '../../services/branchService';
 import salaryService from '../../services/salaryService';
 import employeeSalaryAssignment from '../../services/employeeSalaryAssignment';
+import { fireAudit } from '../../utils/auditUtils';
 
 const changeStatuses = [
   { ChangeStatusID: 5, Status: 'Initial Salary' },
@@ -91,7 +92,7 @@ const EmployeeSalaryAssignment: React.FC = () => {
   /* ---------------- Fetch Salary Assignments ---------------- */
   const fetchSalaryAssignments = async (employeeId: number) => {
     try {
-      const res = await employeeSalaryAssignment.GetEmployeeSalaryAssignmentByEmployeeID(employeeId);
+      const res = await employeeSalaryAssignment.GetEmployeeSalaryAssignmentByEmployeeID(employeeId,organizationID);
       setSalaryData(res || []);
     } catch {
       toast.error("Failed to fetch salary assignments");
@@ -138,6 +139,8 @@ const EmployeeSalaryAssignment: React.FC = () => {
     try {
       const res = await employeeSalaryAssignment.DeleteEmployeeSalaryAssignmentAsync(id);
       toast.success(res.message);
+      const oldData = salaryData.find(s => s.SalaryAssignmentID === id);
+      fireAudit("DELETE", "EmployeeSalaryAssignment", oldData, null, organizationID, user?.name || "Admin", "EmployeeSalaryAssignment");
       fetchSalaryAssignments(selectedEmployee.value);
     } catch {
       toast.error("Delete failed");
@@ -170,6 +173,9 @@ const EmployeeSalaryAssignment: React.FC = () => {
       };
       const res = await employeeSalaryAssignment.PostEmployeeSalaryAssignmentAsync(payload);
       toast.success(res.message);
+      const isEdit = payload.salaryAssignmentID !== 0;
+      const oldData = isEdit ? salaryData.find(s => s.SalaryAssignmentID === payload.salaryAssignmentID) : null;
+      fireAudit(isEdit ? "UPDATE" : "CREATE", "EmployeeSalaryAssignment", oldData, payload, organizationID, user?.name || "Admin", "EmployeeSalaryAssignment");
       setShowModal(false);
       fetchSalaryAssignments(selectedEmployee?.value || 0);
     } catch (error) {
@@ -211,8 +217,11 @@ const EmployeeSalaryAssignment: React.FC = () => {
                   value={selectedBranch}
                   onChange={setSelectedBranch}
                   isClearable
-                   className="org-select"
-          classNamePrefix="org-select"
+                  className="org-select"
+                  classNamePrefix="org-select"
+                  styles={{
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
                 />
               }
             </Card.Body>

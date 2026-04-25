@@ -13,6 +13,7 @@ import {
 import { toast } from "react-toastify";
 import attendanceSettingService from "../../services/attendanceSettingService";
 import LoggedInUser from "../../types/LoggedInUser";
+import { fireAudit } from "../../utils/auditUtils";
 
 // ================= TYPES =================
 
@@ -158,6 +159,7 @@ const AttendanceSettings: React.FC = () => {
 
       if (res?.success !== false) {
         toast.success(`${groupName} saved successfully`);
+        fireAudit("UPDATE", "AttendanceSetting", null, payload, organizationID, "Admin", "AttendanceSettings");
         loadSettings(); // refresh after save
       } else {
         toast.error(res?.message || "Save failed");

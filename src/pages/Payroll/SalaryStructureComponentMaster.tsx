@@ -11,6 +11,7 @@ import {
 } from 'react-bootstrap';
 import salaryService from '../../services/salaryService';
 import LoggedInUser from '../../types/LoggedInUser';
+import { fireAudit } from '../../utils/auditUtils';
 
 /* ===================== INTERFACES ===================== */
 
@@ -77,7 +78,7 @@ const [loadingComponents, setLoadingComponents] = useState(false);
   const [calculationTypes] = useState<CalculationType[]>([
     { CalculationTypeID: 1, CalculationName: 'Fixed' },
     { CalculationTypeID: 2, CalculationName: '% of Basic' },
-    { CalculationTypeID: 3, CalculationName: '% of Gross' },
+    { CalculationTypeID: 3, CalculationName: '% of CTC' },
   ]);
 
   /* ---------- API state ---------- */
@@ -255,6 +256,9 @@ const handleEdit = (item: SalaryStructureComponent) => {
       const exists = prev.some(
         p => p.StructureComponentID === displayItem.StructureComponentID
       );
+      const isUpdate = exists;
+      const oldData = isUpdate ? prev.find(p => p.StructureComponentID === displayItem.StructureComponentID) : null;
+      fireAudit(isUpdate ? "UPDATE" : "CREATE", "SalaryStructureComponent", oldData, displayItem, organizationID, "Admin", "SalaryStructureComponentMaster");
       return exists
         ? prev.map(p =>
             p.StructureComponentID === displayItem.StructureComponentID
@@ -270,6 +274,8 @@ const handleEdit = (item: SalaryStructureComponent) => {
 
   const handleDelete = (id: number) => {
     if (window.confirm('Are you sure you want to delete this structure component?')) {
+      const oldData = structureComponents.find(s => s.StructureComponentID === id);
+      fireAudit("DELETE", "SalaryStructureComponent", oldData, null, organizationID, "Admin", "SalaryStructureComponentMaster");
       setStructureComponents(prev =>
         prev.filter(s => s.StructureComponentID !== id)
       );

@@ -4,6 +4,7 @@ import departmentService from '../../services/departmentService';
 import branchService from '../../services/branchService';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { fireAudit } from '../../utils/auditUtils';
 
 interface Department {
   DepartmentID: number;
@@ -97,10 +98,12 @@ const organizationID: number | undefined = user?.organizationID;
           prev.map((d) => (d.DepartmentID === departmentFormData.DepartmentID ? departmentFormData : d))
         );
         toast.success('Department updated successfully!');
+        fireAudit("UPDATE", "Department", editDepartment, departmentFormData, organizationID || 0, user?.name || user?.username || "Admin", "ManageDepartments");
       } else {
         const newId = saved?.[0]?.departmentID || Date.now();
         setDepartments((prev) => [...prev, { ...departmentFormData, DepartmentID: newId }]);
         toast.success('Department added successfully!');
+        fireAudit("CREATE", "Department", null, departmentFormData, organizationID || 0, user?.name || user?.username || "Admin", "ManageDepartments");
       }
       setShowModal(false);
       setValidated(false);
@@ -139,10 +142,12 @@ const organizationID: number | undefined = user?.organizationID;
 
   const handleDelete = async () => {
     if (departmentToDelete !== null) {
+      const oldData = departments.find(d => d.DepartmentID === departmentToDelete);
       try {
         await departmentService.deletedepartmentAsync(departmentToDelete);
         setDepartments((prev) => prev.filter((d) => d.DepartmentID !== departmentToDelete));
         toast.success('Department deleted successfully!');
+        fireAudit("DELETE", "Department", oldData, null, organizationID || 0, user?.name || user?.username || "Admin", "ManageDepartments");
       } catch (error) {
         console.error('Error deleting department:', error);
         toast.error('Failed to delete department.');

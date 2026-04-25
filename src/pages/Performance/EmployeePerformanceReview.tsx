@@ -309,7 +309,7 @@ const SubmittedPerformanceReviews: React.FC = () => {
     <>
       <ToastProvider />
 
-      <div className="container mt-4">
+      <div className="container">
         <h3 className="mb-3">Submitted Performance Reviews</h3>
 
         {/* ERROR MESSAGE */}

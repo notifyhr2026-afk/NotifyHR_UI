@@ -3,6 +3,7 @@ import ToastMessage, { ToastProvider } from "../../components/ToastMessage";
 import { ValidationMessage } from "../../components/ValidationMessage";
 import "bootstrap/dist/css/bootstrap.min.css";
 import performanceService from "../../services/performanceService";
+import { fireAudit } from "../../utils/auditUtils";
 
 /* ================= TYPES ================= */
 
@@ -113,6 +114,9 @@ const organizationID: number | undefined = user?.organizationID;
 
       if (res.value === 1) {
         ToastMessage.show(res.message, "success");
+        const isEdit = templateData.TemplateID !== 0;
+        const oldData = templates.find(t => t.TemplateID === templateData.TemplateID);
+        fireAudit(isEdit ? "UPDATE" : "CREATE", "PerformanceTemplate", oldData, templateData, organizationID || 0, user?.name || "Admin", "PerformanceTemplateManagement");
         fetchTemplates(); // Refresh list from API
       } else {
         ToastMessage.show("Failed to save template.", "error");
@@ -135,6 +139,8 @@ const organizationID: number | undefined = user?.organizationID;
 
     if (res[0]?.value === 1) {
       ToastMessage.show(res[0].message, "success");
+      const oldData = templates.find(t => t.TemplateID === deleteId);
+      fireAudit("DELETE", "PerformanceTemplate", oldData, null, organizationID || 0, user?.name || "Admin", "PerformanceTemplateManagement");
       fetchTemplates(); // Refresh list
     } else {
       ToastMessage.show("Failed to delete template.", "error");

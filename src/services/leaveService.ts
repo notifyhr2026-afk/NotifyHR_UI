@@ -25,5 +25,25 @@ ApproveOrRejectEmployeeLeaveAsync: async (payload: any) => {
     const res = await axiosInstance.put("EmployeeLeave/ApproveOrRejectEmployeeLeaveAsync", payload);
     return res.data[0];
   },
+  GetEmployeeLeavesReportAsync: async (
+  organizationID: number,
+  employeeID?: number,
+  fromDate?: string,
+  toDate?: string
+) => {
+  const { data } = await axiosInstance.get(
+    `EmployeeLeave/GetEmployeeLeavesReportAsync`,
+    {
+      params: {
+        organizationID,
+        employeeID,
+        fromDate,
+        toDate
+      }
+    }
+  );
+
+  return data;
+},
 };
 export default leaveService;

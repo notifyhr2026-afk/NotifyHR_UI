@@ -10,6 +10,7 @@ import { Organization } from "../../types/organization";
 import { organizationTypes } from "../../types/organizationTypes";
 import { toast, ToastContainer } from "react-toastify";
 import 'react-toastify/dist/ReactToastify.css';
+import { fireAudit } from '../../utils/auditUtils';
 
 interface OrganizationForm {
   OrganizationName: string;
@@ -18,7 +19,7 @@ interface OrganizationForm {
   Website: string;
   Industry: string;
   OrganizationTypeID: string;
-  CreatedBy: "Admin";
+  CreatedBy: string;
 }
 
 const OrganizationDetails: React.FC = () => {
@@ -44,6 +45,7 @@ const OrganizationDetails: React.FC = () => {
   const [orgTypes, setOrgTypes] = useState<organizationTypes[]>([]);
   const [validated, setValidated] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [oldOrgData, setOldOrgData] = useState<OrganizationForm | null>(null);
 
   /* ==========================
      Load Organization Details
@@ -60,7 +62,7 @@ const OrganizationDetails: React.FC = () => {
       const data = await getOrgDetailsAsync(orgId);
       if (data?.length) {
         const org = data[0];
-        setFormData({
+        const fetchedData = {
           OrganizationName: org.OrganizationName || "",
           Email: org.Email || "",
           Phone: org.Phone || "",
@@ -68,7 +70,9 @@ const OrganizationDetails: React.FC = () => {
           Industry: org.Industry || "",
           OrganizationTypeID: org.OrganizationTypeID?.toString() || "",
           CreatedBy: "Admin"
-        });
+        };
+        setFormData(fetchedData);
+        setOldOrgData(fetchedData); // Store old data for audit
         //toast.success("Organization details loaded successfully");
       } else {
         toast.warning("Organization details not found");
@@ -143,6 +147,7 @@ const OrganizationDetails: React.FC = () => {
       //toast.info("Saving organization...");
       await updateOrganization(payload);
       toast.success("Organization updated successfully");
+      fireAudit("UPDATE", "Organization", oldOrgData, formData, organizationID!, userFromStorage?.name || "Admin", "OrganizationDetails");
     } catch (error) {
       console.error("Failed to update organization", error);
       toast.error("Failed to update organization");
@@ -244,7 +249,7 @@ const OrganizationDetails: React.FC = () => {
         <Row className="mb-3">
           <Col md={6}>
             <Form.Group>
-              <Form.Label>Industry</Form.Label>
+              <Form.Label>Entity</Form.Label>
               <Form.Select
                 required
                 name="Industry"
@@ -252,10 +257,16 @@ const OrganizationDetails: React.FC = () => {
                 onChange={handleChange}
                 disabled={loading}
               >
-                <option value="">Select Industry</option>
-                <option value="IT">IT</option>
-                <option value="Healthcare">Healthcare</option>
-                <option value="Finance">Finance</option>
+                <option value="">Select Entity Type</option>
+                <option value="Pvt Ltd">Private Limited Company (Pvt Ltd)</option>
+                <option value="Public Ltd">Public Limited Company</option>
+                <option value="LLP">Limited Liability Partnership (LLP)</option>
+                <option value="OPC">One Person Company (OPC)</option>
+                <option value="Sole Proprietorship">Sole Proprietorship</option>
+                <option value="Partnership">Partnership Firm</option>
+                <option value="Government">Government / Public Sector Undertaking</option>
+                <option value="NGO">Non-Profit Organization / Section 8 Company</option>
+                <option value="Trust">Trust / Society</option>
               </Form.Select>
               <Form.Control.Feedback type="invalid">
                 Industry is required

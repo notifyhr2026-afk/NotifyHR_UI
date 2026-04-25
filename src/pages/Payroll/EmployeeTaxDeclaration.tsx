@@ -63,8 +63,8 @@ const EmployeeTaxDeclaration: React.FC = () => {
     declarations.find((d) => d.TaxSectionID === sectionID);
 
   return (
-    <div className="container mt-4">
-      <Card className="shadow-sm border-0">
+    <div className="container">
+      <Card>
         <Card.Body>
           <h4 className="mb-1">Employee Tax Declaration</h4>
           <p className="text-muted mb-4">

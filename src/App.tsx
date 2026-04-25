@@ -3,18 +3,23 @@ import { useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import RoutesComponent from './Routes/RoutesComponent';
+import { EmployeeProvider } from './context/EmployeeContext';
 
 function App() {
-
-  // useEffect(() => {
-  //   // ✅ Apply dark mode on app load
-  //   document.body.classList.remove('light-mode');
-  //   document.body.classList.add('dark-mode');
-  // }, []);
+  useEffect(() => {
+    const theme = localStorage.getItem('theme');
+    if (theme === 'dark' || theme === 'light') {
+      document.body.classList.remove('dark-mode', 'light-mode');
+      document.body.classList.add(theme === 'dark' ? 'dark-mode' : 'light-mode');
+      document.body.dataset.theme = theme;
+    }
+  }, []);
 
   return (
     <Router>
-      <RoutesComponent />
+      <EmployeeProvider>
+        <RoutesComponent />
+      </EmployeeProvider>
     </Router>
   );
 }

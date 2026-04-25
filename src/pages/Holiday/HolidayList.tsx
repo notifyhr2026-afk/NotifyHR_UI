@@ -37,7 +37,8 @@ const HolidayList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(false);
 
   // Example organization ID (replace with dynamic ID if needed)
-  const organizationID = 45;
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID = user?.organizationID ?? 0;
 
   // Fetch holidays whenever organizationID or selectedYear changes
   useEffect(() => {

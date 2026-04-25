@@ -4,6 +4,7 @@ import ToastMessage, { ToastProvider } from "../../components/ToastMessage";
 import probationSettingsService from "../../services/probationSettingsService";
 import "bootstrap/dist/css/bootstrap.min.css";
 import { Modal, Button, Form } from "react-bootstrap";
+import { fireAudit } from "../../utils/auditUtils";
 
 interface ProbationSetting {
   settingID: number;
@@ -117,6 +118,8 @@ const ProbationSettings: React.FC = () => {
 
       if (parsed[0]?.Value === 1) {
         ToastMessage.show(parsed[0].Message, "success");
+        const oldData = form.settingID ? data.find(d => d.settingID === form.settingID) : null;
+        fireAudit(form.settingID ? "UPDATE" : "CREATE", "ProbationSetting", oldData, form, organizationID, createdBy, "ProbationSettings");
         setShowModal(false);
         loadData(); // 🔥 reload properly
       } else {
@@ -144,6 +147,8 @@ const ProbationSettings: React.FC = () => {
 
       if (parsed[0]?.Value === 1) {
         ToastMessage.show("Deleted successfully", "success");
+        const oldData = data.find(d => d.settingID === id);
+        fireAudit("DELETE", "ProbationSetting", oldData, null, organizationID, createdBy, "ProbationSettings");
         loadData();
       } else {
         ToastMessage.show(parsed[0]?.Message, "warning");

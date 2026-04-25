@@ -4,6 +4,7 @@ import LoggedInUser from '../../types/LoggedInUser'
 import AssetService from '../../services/AssetService';
 import branchService from '../../services/branchService';
 import departmentService from '../../services/departmentService';
+import { fireAudit } from '../../utils/auditUtils';
 
 /* ===========================
    Interfaces
@@ -188,7 +189,11 @@ const AssetTracking: React.FC = () => {
 
   const openEditModal = (item: AssetTracking) => {
     setEditItem(item);
-    setFormData(item);
+    setFormData({
+      ...item,
+      PurchaseDate: item.PurchaseDate ? item.PurchaseDate.split('T')[0] : '',
+      WarrantyExpiryDate: item.WarrantyExpiryDate ? item.WarrantyExpiryDate.split('T')[0] : '',
+    });
     setValidated(false);
     setShowModal(true);
   };
@@ -201,6 +206,7 @@ const AssetTracking: React.FC = () => {
     }
     try {
       await AssetService.createAssetsTracking(formData);
+      fireAudit(editItem ? "UPDATE" : "CREATE", "AssetTracking", editItem, formData, organizationID, "Admin", "AssetTracking");
       await loadTracking();
       setShowModal(false);
     } catch (error) {
@@ -216,7 +222,9 @@ const AssetTracking: React.FC = () => {
   const handleDelete = async () => {
     if (!itemToDelete) return;
     try {
+      const oldData = trackingList.find(t => t.TrackingID === itemToDelete);
       await AssetService.deleteAssetsTracking(itemToDelete);
+      fireAudit("DELETE", "AssetTracking", oldData, null, organizationID, "Admin", "AssetTracking");
       await loadTracking();
       setConfirmDelete(false);
     } catch (error) {

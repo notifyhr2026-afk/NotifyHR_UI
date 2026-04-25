@@ -10,6 +10,7 @@ import {
   Spinner,
 } from 'react-bootstrap';
 import ticketService from '../../services/ticketService';
+import { fireAudit } from '../../utils/auditUtils';
 
 const CreateTicket: React.FC = () => {
   const [form, setForm] = useState({
@@ -86,6 +87,8 @@ const CreateTicket: React.FC = () => {
       };
 
       await ticketService.PostCreateSupportTicketByAsync(payload);
+
+      fireAudit("CREATE", "SupportTicket", null, payload, organizationID || 0, user?.name || "Admin", "CreateTicket");
 
       setMessage('✅ Ticket created successfully!');
 

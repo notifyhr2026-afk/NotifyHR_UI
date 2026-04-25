@@ -3,7 +3,7 @@ import { Button, Table, Modal, Form, Row, Col, Card } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import api from "../../services/jobRequisitionService";
 import employeeApi from "../../services/employeeService";
-import auditLogsService from "../../services/auditLogsService";
+import { fireAudit } from "../../utils/auditUtils";
 
 // ===== TYPES =====
 interface ApprovalGroup {
@@ -44,90 +44,6 @@ const JobApprovalGroups: React.FC = () => {
   });
 
   const [selectedEmployeeID, setSelectedEmployeeID] = useState<number>(0);
-
-  // ================= FIELD-LEVEL AUDIT BUILDER =================
-  const buildAuditChanges = (
-    action: string,
-    entity: string,
-    oldObj: any,
-    newObj: any
-  ) => {
-    const changes: any[] = [];
-
-    // CREATE
-    if (!oldObj && newObj) {
-      Object.keys(newObj).forEach((key) => {
-        changes.push({
-          ActionType: action,
-          EntityName: entity,
-          FieldName: key,
-          OldValue: null,
-          NewValue: newObj[key]?.toString() ?? null,
-        });
-      });
-    }
-
-    // DELETE
-    else if (oldObj && !newObj) {
-      Object.keys(oldObj).forEach((key) => {
-        changes.push({
-          ActionType: action,
-          EntityName: entity,
-          FieldName: key,
-          OldValue: oldObj[key]?.toString() ?? null,
-          NewValue: null,
-        });
-      });
-    }
-
-    // UPDATE
-    else if (oldObj && newObj) {
-      Object.keys(newObj).forEach((key) => {
-        if (oldObj[key] !== newObj[key]) {
-          changes.push({
-            ActionType: action,
-            EntityName: entity,
-            FieldName: key,
-            OldValue: oldObj[key]?.toString() ?? null,
-            NewValue: newObj[key]?.toString() ?? null,
-          });
-        }
-      });
-    }
-
-    return changes;
-  };
-
-  // ================= AUDIT LOGGER =================
-  const logAudit = async (
-    action: string,
-    entity: string,
-    oldValue: any,
-    newValue: any
-  ) => {
-    try {
-      const auditArray = buildAuditChanges(action, entity, oldValue, newValue);
-
-      if (auditArray.length === 0) return;
-
-      await auditLogsService.PostGenerateLoginsAsync({
-        AuditJson: JSON.stringify(auditArray),
-        TraceID: crypto.randomUUID(),
-        IPAddress: "0.0.0.0",
-        UserAgent: navigator.userAgent,
-        OrganizationID: organizationID,
-        UpdatedBy: user,
-        ScreenName: "JobApprovalGroups",
-      });
-    } catch (err) {
-      console.error("Audit failed:", err);
-    }
-  };
-
-  // fire-and-forget
-  const fireAudit = (...args: Parameters<typeof logAudit>) => {
-    void logAudit(...args);
-  };
 
   // ================= HELPERS =================
   const getEmployeeName = (id: number) =>
@@ -183,7 +99,10 @@ const JobApprovalGroups: React.FC = () => {
         isEdit ? "UPDATE" : "CREATE",
         "ApprovalGroup",
         oldData,
-        groupForm
+        groupForm,
+        organizationID,
+        user,
+        "JobApprovalGroups"
       );
 
       toast.success("Group saved!");
@@ -202,7 +121,7 @@ const JobApprovalGroups: React.FC = () => {
     try {
       await api.DeleteApprovalGroupsByAsync(groupID);
 
-      fireAudit("DELETE", "ApprovalGroup", oldData, null);
+      fireAudit("DELETE", "ApprovalGroup", oldData, null, organizationID, user, "JobApprovalGroups");
 
       toast.success("Deleted!");
       loadGroups();
@@ -236,7 +155,7 @@ const JobApprovalGroups: React.FC = () => {
       fireAudit("ADD", "ApprovalGroupMember", null, {
         GroupID: selectedGroup.GroupID,
         EmployeeID: selectedEmployeeID,
-      });
+      }, organizationID, user, "JobApprovalGroups");
 
       toast.success("Member added!");
       setShowMemberModal(false);
@@ -261,7 +180,7 @@ const JobApprovalGroups: React.FC = () => {
       fireAudit("REMOVE", "ApprovalGroupMember", {
         GroupID: selectedGroup.GroupID,
         EmployeeID: employeeID,
-      }, null);
+      }, null, organizationID, user, "JobApprovalGroups");
 
       toast.success("Member removed!");
       loadMembers(selectedGroup.GroupID);

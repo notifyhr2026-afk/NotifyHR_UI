@@ -133,13 +133,18 @@ const ManageClients: React.FC = () => {
 
   const handleEdit = (c: Client) => {
     setEditItem(c);
-    setFormData(c);
+    setFormData({
+      ...c,
+      AssociationStartDate: c.AssociationStartDate ? c.AssociationStartDate.split("T")[0] : "",
+      AssociationEndDate: c.AssociationEndDate ? c.AssociationEndDate.split("T")[0] : "",
+    });
     setShowModal(true);
   };
 
   const handleSave = async (e: any) => {
     e.preventDefault();
 
+   
     try {
       setLoading(true);
 

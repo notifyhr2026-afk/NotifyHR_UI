@@ -15,6 +15,7 @@ import {
 import Select from 'react-select';
 import { toast } from 'react-toastify';
 import { getOrganizations } from '../../services/organizationService';
+import { fireAudit } from '../../utils/auditUtils';
 
 /* ================= STATIC POSITIONS ================= */
 
@@ -172,6 +173,9 @@ const AssignPositions: React.FC = () => {
       OrganizationID: selectedOrgID,
       Positions: assignedPositions,
     });
+
+    const oldData = organizations.find(org => org.OrganizationID === selectedOrgID);
+    fireAudit("UPDATE", "OrganizationPositions", oldData, { OrganizationID: selectedOrgID, assignedPositions }, selectedOrgID || 0, "Admin", "AssignPositions");
 
     setSuccessMessage('Positions assigned successfully!');
     setIsDirty(false);

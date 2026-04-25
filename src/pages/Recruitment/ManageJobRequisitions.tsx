@@ -8,6 +8,7 @@ import branchService from "../../services/branchService";
 import positionService from "../../services/positionService";
 import departmentService from "../../services/departmentService";
 import employeeService from "../../services/employeeService";
+import { fireAudit } from "../../utils/auditUtils";
 
 // ================= TYPES =================
 interface JobRequisition {
@@ -225,6 +226,8 @@ const handleInputChange = (e: any) => {
           : "Updated successfully"
       );
 
+      fireAudit(formData.jobRequisitionID === 0 ? "CREATE" : "UPDATE", "JobRequisition", editRequisition, formData, organizationID, user?.name || user?.username || "Admin", "ManageJobRequisitions");
+
       setShowModal(false);
       setFormData(initialForm);
       setEditRequisition(null);
@@ -243,9 +246,11 @@ const handleInputChange = (e: any) => {
 
   // ================= DELETE =================
   const handleDelete = async (id: number) => {
+    const oldData = requisitions.find(r => r.jobRequisitionID === id);
     try {
       await jobRequisitionService.DeleteJobRequisitionByAsync(id);
       toast.success("Deleted successfully");
+      fireAudit("DELETE", "JobRequisition", oldData, null, organizationID, user?.name || user?.username || "Admin", "ManageJobRequisitions");
       fetchAll();
     } catch {
       toast.error("Delete failed");

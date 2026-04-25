@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import notifyhr_logo1 from "../../img/NotifyHR_Logo1.png";
+import notifyhr_logo1 from "../../img/Logo-blue.png";
 
 const RequestDemo: React.FC = () => {
   return (
@@ -12,7 +12,10 @@ const RequestDemo: React.FC = () => {
       >
         <div className="container">
           <Link to="/" className="navbar-brand d-flex align-items-center gap-2">
-            <img src={notifyhr_logo1} alt="NotifyHR Logo" className="app-logo" />
+            <img src={notifyhr_logo1} alt="NotifyHR Logo" className="app-logo" style={{
+              height:  '56px',
+              transition: 'opacity 0.3s ease',
+            }} />
             {/* <span className="fw-bold fs-5 text-white">NotifyHR</span> */}
           </Link>
 

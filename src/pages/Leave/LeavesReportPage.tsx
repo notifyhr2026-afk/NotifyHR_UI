@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Select from "react-select";
 import {
   Card,
@@ -9,92 +9,44 @@ import {
   Alert,
   Form,
   Button,
+  Spinner,
 } from "react-bootstrap";
 
+import employeeService from "../../services/employeeService";
+import branchService from "../../services/branchService";
+import departmentService from "../../services/departmentService";
+import leaveService from '../../services/leaveService';
+
 // -------------------- Types --------------------
+
 type Option = {
   value: number;
   label: string;
 };
 
-type Employee = {
-  id: number;
-  name: string;
-  branchId: number;
-  departmentId: number;
-};
-
 type Leave = {
-  id: number;
-  employeeId: number;
+  employeeLeaveID: number;
+  employeeID: number;
   employeeName: string;
   leaveType: string;
   startDate: string;
   endDate: string;
-  days: number;
+  numberOfDays: number;
   reason: string;
-  status: "Approved" | "Rejected" | "Pending";
+  leaveStatus: string;
 };
 
-// -------------------- Static Filters --------------------
-const branches: Option[] = [
-  { value: 1, label: "Hyderabad" },
-  { value: 2, label: "Bangalore" },
-];
-
-const departments: Option[] = [
-  { value: 1, label: "Engineering" },
-  { value: 2, label: "HR" },
-  { value: 3, label: "Finance" },
-];
-
-// -------------------- Static Employees --------------------
-const employees: Employee[] = [
-  { id: 1, name: "Arjun Reddy", branchId: 1, departmentId: 1 },
-  { id: 2, name: "Priya Sharma", branchId: 1, departmentId: 2 },
-  { id: 3, name: "Vikram Rao", branchId: 2, departmentId: 1 },
-  { id: 4, name: "Sneha Iyer", branchId: 2, departmentId: 3 },
-];
-
-// -------------------- Static Leaves --------------------
-const allLeaves: Leave[] = [
-  {
-    id: 1,
-    employeeId: 1,
-    employeeName: "Arjun Reddy",
-    leaveType: "Casual Leave",
-    startDate: "2026-04-01",
-    endDate: "2026-04-02",
-    days: 2,
-    reason: "Family function",
-    status: "Approved",
-  },
-  {
-    id: 2,
-    employeeId: 2,
-    employeeName: "Priya Sharma",
-    leaveType: "Sick Leave",
-    startDate: "2026-04-05",
-    endDate: "2026-04-06",
-    days: 2,
-    reason: "Fever",
-    status: "Pending",
-  },
-  {
-    id: 3,
-    employeeId: 3,
-    employeeName: "Vikram Rao",
-    leaveType: "Earned Leave",
-    startDate: "2026-04-08",
-    endDate: "2026-04-10",
-    days: 3,
-    reason: "Vacation",
-    status: "Rejected",
-  },
-];
-
 // -------------------- Component --------------------
+
 const LeavesReportPage: React.FC = () => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID = user?.organizationID || 0;
+
+  const [branches, setBranches] = useState<Option[]>([]);
+  const [departments, setDepartments] = useState<Option[]>([]);
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [employeeOptions, setEmployeeOptions] = useState<Option[]>([]);
+
   const [branch, setBranch] = useState<Option | null>(null);
   const [department, setDepartment] = useState<Option | null>(null);
   const [employee, setEmployee] = useState<Option | null>(null);
@@ -102,75 +54,137 @@ const LeavesReportPage: React.FC = () => {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
 
-  const [employeeOptions, setEmployeeOptions] = useState<Option[]>([]);
-  const [filteredLeaves, setFilteredLeaves] = useState<Leave[]>([]);
+  const [leaves, setLeaves] = useState<Leave[]>([]);
+  const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
-  // -------------------- Build Employees Dropdown --------------------
-  React.useEffect(() => {
+  // -------------------- Load Master Data --------------------
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const [empRes, branchRes, deptRes] = await Promise.all([
+        employeeService.getEmployeesByOrganizationIdAsync(organizationID),
+        branchService.getBranchesAsync(organizationID),
+        departmentService.getdepartmentesAsync(organizationID),
+      ]);
+
+      const empData = empRes?.Table || empRes || [];
+      const branchData = branchRes?.Table || branchRes || [];
+      const deptData = deptRes?.Table || deptRes || [];
+
+      setEmployees(empData);
+
+      setBranches(
+        branchData.map((b: any) => ({
+          value: b.BranchID,
+          label: b.BranchName,
+        }))
+      );
+
+      setDepartments(
+        deptData.map((d: any) => ({
+          value: d.DepartmentID,
+          label: d.DepartmentName,
+        }))
+      );
+    } catch (err) {
+      console.error("Load error", err);
+    }
+  };
+
+  // -------------------- Filter Employees --------------------
+
+  useEffect(() => {
     let filtered = [...employees];
 
     if (branch) {
-      filtered = filtered.filter((e) => e.branchId === branch.value);
+      filtered = filtered.filter((e) => e.BranchID === branch.value);
     }
 
     if (department) {
       filtered = filtered.filter(
-        (e) => e.departmentId === department.value
+        (e) => e.DepartmentID === department.value
       );
     }
 
     setEmployeeOptions(
-      filtered.map((e) => ({
-        value: e.id,
-        label: e.name,
+      filtered.map((e: any) => ({
+        value: e.EmployeeID,
+        label:
+          e.EmployeeName ||
+          `${e.FirstName || ""} ${e.LastName || ""}`.trim(),
       }))
     );
 
     setEmployee(null);
-  }, [branch, department]);
+  }, [branch, department, employees]);
 
-  // -------------------- Fetch (on button click) --------------------
-  const handleFetch = () => {
-    let data = [...allLeaves];
+  // -------------------- Fetch Leaves --------------------
 
-    // filter by branch
-    if (branch) {
-      const empIds = employees
-        .filter((e) => e.branchId === branch.value)
-        .map((e) => e.id);
+  const handleFetch = async () => {
+    try {
+      setLoading(true);
+      setSearched(true);
 
-      data = data.filter((l) => empIds.includes(l.employeeId));
+      const data =
+        await leaveService.GetEmployeeLeavesReportAsync(
+          organizationID,
+          employee?.value,
+          fromDate || undefined,
+          toDate || undefined
+        );
+
+      const result = data?.Table || data || [];
+
+      setLeaves(
+        result.map((l: any) => ({
+          employeeLeaveID: l.EmployeeLeaveID,
+          employeeID: l.EmployeeID,
+          employeeName: l.EmployeeName,
+          leaveType: l.LeaveTypeName,
+          startDate: l.StartDate,
+          endDate: l.EndDate,
+          numberOfDays: l.NumberOfDays,
+          reason: l.Reason,
+          leaveStatus: l.LeaveStatusName,
+        }))
+      );
+    } catch (err) {
+      console.error(err);
+      alert("Failed to fetch leaves");
+    } finally {
+      setLoading(false);
     }
-
-    // filter by department
-    if (department) {
-      const empIds = employees
-        .filter((e) => e.departmentId === department.value)
-        .map((e) => e.id);
-
-      data = data.filter((l) => empIds.includes(l.employeeId));
-    }
-
-    // filter by employee
-    if (employee) {
-      data = data.filter((l) => l.employeeId === employee.value);
-    }
-
-    // filter by date range
-    if (fromDate) {
-      data = data.filter((l) => l.startDate >= fromDate);
-    }
-
-    if (toDate) {
-      data = data.filter((l) => l.endDate <= toDate);
-    }
-
-    setFilteredLeaves(data);
-    setSearched(true);
   };
 
-  // -------------------- Helpers --------------------
+  // -------------------- Approve / Reject --------------------
+
+  const handleAction = async (
+    leaveId: number,
+    status: "Approved" | "Rejected"
+  ) => {
+    try {
+      await leaveService.ApproveOrRejectEmployeeLeaveAsync({
+        EmployeeLeaveID: leaveId,
+        Status: status,
+        ActionBy: user?.username || "admin",
+      });
+
+      alert(`Leave ${status}`);
+
+      handleFetch();
+    } catch (err) {
+      console.error(err);
+      alert("Action failed");
+    }
+  };
+
+  // -------------------- Badge --------------------
+
   const getBadge = (status: string) => {
     switch (status) {
       case "Approved":
@@ -182,9 +196,10 @@ const LeavesReportPage: React.FC = () => {
     }
   };
 
-  // -------------------- Render --------------------
+  // -------------------- UI --------------------
+
   return (
-    <div className="container mt-4">
+    <div className="p-3 mt-3">
       <Card className="shadow-sm border-0">
         <Card.Body>
           <h4 className="mb-3">Leaves Report</h4>
@@ -196,12 +211,10 @@ const LeavesReportPage: React.FC = () => {
               <Select
                 options={branches}
                 value={branch}
-                onChange={(val) => {
-                  setBranch(val);
+                onChange={(v) => {
+                  setBranch(v);
                   setDepartment(null);
-                  setEmployee(null);
                 }}
-                placeholder="Branch"
                 isClearable
                 className="org-select"
                 classNamePrefix="org-select"
@@ -213,13 +226,9 @@ const LeavesReportPage: React.FC = () => {
               <Select
                 options={departments}
                 value={department}
-                onChange={(val) => {
-                  setDepartment(val);
-                  setEmployee(null);
-                }}
-                placeholder="Department"
-                isClearable
+                onChange={(v) => setDepartment(v)}
                 isDisabled={!branch}
+                isClearable
                 className="org-select"
                 classNamePrefix="org-select"
               />
@@ -230,9 +239,7 @@ const LeavesReportPage: React.FC = () => {
               <Select
                 options={employeeOptions}
                 value={employee}
-                onChange={(val) => setEmployee(val)}
-                placeholder="Employee"
-                isDisabled={!branch && !department}
+                onChange={(v) => setEmployee(v)}
                 isClearable
                 className="org-select"
                 classNamePrefix="org-select"
@@ -241,18 +248,14 @@ const LeavesReportPage: React.FC = () => {
 
             <Col md={3}>
               <Form.Label>Action</Form.Label>
-              <Button
-                className="w-100"
-                variant="primary"
-                onClick={handleFetch}
-              >
+              <Button className="w-100" onClick={handleFetch}>
                 Fetch Report
               </Button>
             </Col>
           </Row>
 
           {/* Dates */}
-          <Row className="g-3 mt-1">
+          <Row className="g-3 mt-2">
             <Col md={6}>
               <Form.Label>From Date</Form.Label>
               <Form.Control
@@ -272,22 +275,20 @@ const LeavesReportPage: React.FC = () => {
             </Col>
           </Row>
 
-          {/* Default message */}
-          {!searched && (
-            <Alert variant="secondary" className="mt-4 text-center">
-              Select filters and click <b>Fetch Report</b> to view data
-            </Alert>
+          {/* Loading */}
+          {loading && (
+            <div className="text-center mt-4">
+              <Spinner />
+            </div>
           )}
 
-          {/* No results */}
-          {searched && filteredLeaves.length === 0 && (
-            <Alert variant="info" className="mt-4">
-              No leaves found for selected filters.
-            </Alert>
+          {/* Empty */}
+          {searched && !loading && leaves.length === 0 && (
+            <Alert className="mt-4">No data found</Alert>
           )}
 
           {/* Table */}
-          {searched && filteredLeaves.length > 0 && (
+          {!loading && leaves.length > 0 && (
             <div className="table-responsive mt-4">
               <Table className="table table-hover table-dark-custom">
                 <thead>
@@ -298,28 +299,54 @@ const LeavesReportPage: React.FC = () => {
                     <th>Days</th>
                     <th>Reason</th>
                     <th>Status</th>
+                    <th>Action</th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {filteredLeaves.map((l) => (
-                    <tr key={l.id}>
-                      <td>
-                        {
-                          employees.find((e) => e.id === l.employeeId)
-                            ?.name
-                        }
-                      </td>
+                  {leaves.map((l) => (
+                    <tr key={l.employeeLeaveID}>
+                      <td>{l.employeeName}</td>
                       <td>{l.leaveType}</td>
                       <td>
                         {l.startDate} → {l.endDate}
                       </td>
-                      <td>{l.days}</td>
+                      <td>{l.numberOfDays}</td>
                       <td>{l.reason}</td>
                       <td>
-                        <Badge bg={getBadge(l.status)}>
-                          {l.status}
+                        <Badge bg={getBadge(l.leaveStatus)}>
+                          {l.leaveStatus}
                         </Badge>
+                      </td>
+                      <td>
+                        {l.leaveStatus === "Pending" && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="success"
+                              onClick={() =>
+                                handleAction(
+                                  l.employeeLeaveID,
+                                  "Approved"
+                                )
+                              }
+                            >
+                              Approve
+                            </Button>{" "}
+                            <Button
+                              size="sm"
+                              variant="danger"
+                              onClick={() =>
+                                handleAction(
+                                  l.employeeLeaveID,
+                                  "Rejected"
+                                )
+                              }
+                            >
+                              Reject
+                            </Button>
+                          </>
+                        )}
                       </td>
                     </tr>
                   ))}

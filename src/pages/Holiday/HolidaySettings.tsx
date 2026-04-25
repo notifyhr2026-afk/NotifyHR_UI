@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Card, Form, Row, Col, Button, Spinner } from "react-bootstrap";
 import holidayService from "../../services/holidayService";
+import { fireAudit } from "../../utils/auditUtils";
 
 interface SettingType {
   orgHolidaySettingID:  number;
@@ -68,7 +69,7 @@ const saveSingle = async (setting: SettingType, index: number) => {
     };
 
     await holidayService.saveOrgHolidaySettingAsync(payload);
-
+    fireAudit("UPDATE", "HolidaySetting", setting, payload, organizationID, user?.userName || "system", "HolidaySettings");
     loadSettings();
   } catch (error) {
     console.error("Save failed", error);

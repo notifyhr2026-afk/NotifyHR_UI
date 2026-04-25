@@ -7,6 +7,7 @@ import {
   UpdateOrgFeatureAsync,
 } from "../../services/featureService";
 import { getOrganizations } from "../../services/organizationService";
+import { fireAudit } from "../../utils/auditUtils";
 
 interface Feature {
   FeatureID: number;
@@ -75,17 +76,50 @@ const OrganizationFeatures: React.FC = () => {
     if (!selectedOrg) return;
     setUpdating(featureID);
 
-    await UpdateOrgFeatureAsync({
-      organizationID: selectedOrg.value,
-      featureID,
-      isActive,
-    });
+    try {
+      // Get old data for audit
+      const oldFeatureState = orgFeatures.find(f => Number(f.featureID) === Number(featureID)) || { featureID, isActive: false };
+      const newFeatureState = { featureID, isActive };
 
-    await loadFeatures(selectedOrg.value);
+      // Update API
+      await UpdateOrgFeatureAsync({
+        organizationID: selectedOrg.value,
+        featureID,
+        isActive,
+      });
 
-    setSuccessMessage("Feature updated successfully!");
-    setTimeout(() => setSuccessMessage(""), 2000);
-    setUpdating(null);
+      // Update local state directly - no refresh needed
+      setOrgFeatures((prev) => {
+        const existing = prev.find(f => Number(f.featureID) === Number(featureID));
+        if (existing) {
+          return prev.map(f => Number(f.featureID) === Number(featureID) ? { ...f, isActive } : f);
+        }
+        return [...prev, { featureID, isActive }];
+      });
+
+      // Add audit log
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const organizationID = selectedOrg.value;
+      const feature = features.find(f => f.FeatureID === featureID);
+      
+      fireAudit(
+        "UPDATE",
+        "OrgFeature",
+        oldFeatureState,
+        newFeatureState,
+        organizationID,
+        user?.name || "Admin",
+        "OrganizationFeatures"
+      );
+
+      setSuccessMessage("Feature updated successfully!");
+      setTimeout(() => setSuccessMessage(""), 2000);
+    } catch (error) {
+      console.error('Error updating feature:', error);
+      setSuccessMessage("");
+    } finally {
+      setUpdating(null);
+    }
   };
 
   const isFeatureActive = (featureID: number): boolean => {

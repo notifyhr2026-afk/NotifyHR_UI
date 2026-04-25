@@ -2,9 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Row, Col, Form, Button, Alert, Spinner } from 'react-bootstrap';
 import { useParams } from 'react-router-dom';
 import employeeService from '../../services/employeeService';
+import { fireAudit } from '../../utils/auditUtils';
+import { useEmployee } from '../../context/EmployeeContext';
 
 const ProbationDetails: React.FC = () => {
   const { employeeID } = useParams<{ employeeID: string }>();
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const organizationID = user?.organizationID || 0;
+  const { getEmployeeDetails, clearCache } = useEmployee();
   const [validated, setValidated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
@@ -22,6 +27,7 @@ const ProbationDetails: React.FC = () => {
   };
 
   const [probationData, setProbationData] = useState(defaultProbationData);
+  const [oldProbationData, setOldProbationData] = useState(defaultProbationData);
 
   useEffect(() => {
     const fetchProbationDetails = async () => {
@@ -29,18 +35,20 @@ const ProbationDetails: React.FC = () => {
 
       try {
         const id = parseInt(employeeID);
-        const res = await employeeService.GetEmployeeDetialsByEmployeeID(id);
+        const res = await getEmployeeDetails(id);
 
         if (res?.Table4?.length) {
           const probation = res.Table4[0];
-          setProbationData({
+          const fetchedData = {
             joiningDate: probation.JoiningDate ? probation.JoiningDate.split('T')[0] : '',
             initialProbationEndDate: probation.InitialProbationEndDate ? probation.InitialProbationEndDate.split('T')[0] : '',
             extendedProbationEndDate: probation.ExtendedProbationEndDate ? probation.ExtendedProbationEndDate.split('T')[0] : '',
             confirmationDate: probation.ConfirmationDate ? probation.ConfirmationDate.split('T')[0] : '',
             status: probation.Status || '',
             remarks: probation.Remarks || '',
-          });
+          };
+          setProbationData(fetchedData);
+          setOldProbationData(fetchedData);
         }
       } catch (error) {
         console.error('Error fetching probation details:', error);
@@ -86,6 +94,8 @@ const ProbationDetails: React.FC = () => {
       
       if (response) {
         setSuccessMessage('Probation details updated successfully!');
+        fireAudit("UPDATE", "ProbationDetails", oldProbationData, probationData, organizationID, user?.name || "Admin", "ProbationDetails");
+        clearCache(parseInt(employeeID!));
         setTimeout(() => setSuccessMessage(null), 5000);
       }
     } catch (error) {

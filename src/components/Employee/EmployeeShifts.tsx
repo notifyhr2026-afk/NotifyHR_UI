@@ -4,6 +4,7 @@ import Select from 'react-select';
 import { useParams } from 'react-router-dom';
 import employeeshiftService from '../../services/employeeshiftService';
 import shiftService from '../../services/shiftService';
+import { fireAudit } from '../../utils/auditUtils';
 
 interface EmployeeShift {
   id: number;
@@ -174,6 +175,7 @@ const EmployeeShifts: React.FC = () => {
     try {
       const res = await employeeshiftService.PostEmployeeShiftAsync(payload);
       alert(res.message);
+      fireAudit(editRecord ? "UPDATE" : "CREATE", "EmployeeShift", editRecord, payload, organizationID, userFromStorage?.name || "Admin", "EmployeeShifts");
       setShowModal(false);
       fetchEmployeeShifts();
     } catch (err) {
@@ -199,8 +201,10 @@ const EmployeeShifts: React.FC = () => {
   const confirmDeleteAction = async () => {
     if (deleteId !== null) {
       try {
+        const oldData = records.find(r => r.id === deleteId);
         const res = await employeeshiftService.DeleteEmployeeShiftAsync(deleteId);
         alert(res.message);
+        fireAudit("DELETE", "EmployeeShift", oldData, null, organizationID, userFromStorage?.name || "Admin", "EmployeeShifts");
         fetchEmployeeShifts();
       } catch (err) {
         console.error('Error deleting shift', err);

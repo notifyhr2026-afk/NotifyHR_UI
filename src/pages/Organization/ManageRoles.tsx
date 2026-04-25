@@ -3,6 +3,7 @@ import { Button, Modal, Form, Table, Row, Col, Pagination } from 'react-bootstra
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {GetRolesAsync, PostRoleByAsync, DeleteRoleByAsync } from '../../services/roleService';
+import { fireAudit } from '../../utils/auditUtils';
 
 interface Role {
   RoleID: number;
@@ -14,6 +15,8 @@ interface Role {
 }
 
 const ManageRoles: React.FC = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const organizationID = user?.organizationID || 0;
   const [roles, setRoles] = useState<Role[]>([]);
   const [filteredRoles, setFilteredRoles] = useState<Role[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -119,6 +122,7 @@ const ManageRoles: React.FC = () => {
 
     if (normalizedResult?.value === 1) {
       toast.success(normalizedResult.message || 'Role saved successfully!');
+      fireAudit(editRole ? "UPDATE" : "CREATE", "Role", editRole, newRole, organizationID, user?.name || user?.username || "Admin", "ManageRoles");
       fetchRoles();
       handleCloseRoleModal();
     } else {
@@ -139,7 +143,9 @@ const ManageRoles: React.FC = () => {
       const result = await DeleteRoleByAsync(roleID);
       
       if (result[0]?.value === 1) {
+        const oldData = roles.find(r => r.RoleID === roleID);
         toast.success(result[0].Message);
+        fireAudit("DELETE", "Role", oldData, null, organizationID, user?.name || user?.username || "Admin", "ManageRoles");
         fetchRoles();
       } else {
         toast.warning(result[0]?.Message || 'Failed to delete role');

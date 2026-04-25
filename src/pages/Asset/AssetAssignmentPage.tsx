@@ -6,6 +6,7 @@ import branchService from '../../services/branchService';
 import departmentService from '../../services/departmentService';
 import employeeService from '../../services/employeeService';
 import Select from 'react-select';
+import { fireAudit } from '../../utils/auditUtils';
 
 /* ===========================
    Interfaces
@@ -43,7 +44,7 @@ interface Department {
    =========================== */
 const AssetAssignmentPage: React.FC = () => {
   const userString = localStorage.getItem('user');
-  const user: LoggedInUser | null = userString ? JSON.parse(userString) : null;
+  const user = userString ? JSON.parse(userString) : null;
   const organizationID = user?.organizationID ?? 0;
 
   /* ===========================
@@ -175,7 +176,12 @@ const employeeOptions = employees.map(emp => ({
 
   const openEditModal = (item: AssetAssignment) => {
     setEditItem(item);
-    setFormData(item);
+    setFormData({
+      ...item,
+      AssignedDate: item.AssignedDate ? item.AssignedDate.split('T')[0] : '',
+      ExpectedReturnDate: item.ExpectedReturnDate ? item.ExpectedReturnDate.split('T')[0] : null,
+      ActualReturnDate: item.ActualReturnDate ? item.ActualReturnDate.split('T')[0] : '',
+    });
     setValidated(false);
     setShowModal(true);
   };
@@ -195,12 +201,15 @@ const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
   };
 
   await AssetService.createAssetAssignment(payload);
+  fireAudit(editItem ? "UPDATE" : "CREATE", "AssetAssignment", editItem, formData, organizationID, "Admin", "AssetAssignmentPage");
   await loadAssignments();
   setShowModal(false);
 };
   const handleDelete = async () => {
     if (!itemToDelete) return;
+    const oldData = assignments.find(a => a.AssetAssignmentID === itemToDelete);
     await AssetService.deleteAssetAssignment(itemToDelete);
+    fireAudit("DELETE", "AssetAssignment", oldData, null, organizationID, "Admin", "AssetAssignmentPage");
     await loadAssignments();
     setConfirmDelete(false);
   };

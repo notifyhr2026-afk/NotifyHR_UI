@@ -110,7 +110,7 @@ const EmployeeTaskMaster: React.FC = () => {
   };
 
   return (
-    <div className="employee-task-container mt-5">
+    <div className="container">
       <div className="text-end mb-3">
         <Button variant="success" onClick={handleAdd}>
           + Add Task

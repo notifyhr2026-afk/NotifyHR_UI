@@ -12,6 +12,7 @@ import {
 } from 'react-bootstrap';
 import employeeService from '../../services/employeeService';
 import leaveService from '../../services/leaveService';
+import { fireAudit } from '../../utils/auditUtils';
 
 // -------------------- Types --------------------
 type EmployeeOption = {
@@ -21,6 +22,7 @@ type EmployeeOption = {
 
 type Leave = {
   id: number;
+  organizationID: number;
   employeeID: number;
   leaveTypeID: number;
   leaveTypeName: string;
@@ -38,6 +40,7 @@ type ReportedEmployee = {
 };
 
 type LeaveAPI = {
+  OrganizationID: number;
   EmployeeLeaveID: number;
   EmployeeID: number;
   LeaveTypeID: number;
@@ -52,8 +55,11 @@ type LeaveAPI = {
 
 // -------------------- Component --------------------
 const ApproveLeavesTab: React.FC = () => {
-  const [leaves, setLeaves] = useState<Leave[]>([]);
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID: number | undefined = user?.organizationID; 
+  const employeeID : number | undefined = user?.employeeID; 
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
+  const [leaves, setLeaves] = useState<Leave[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string>('');
   const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -62,9 +68,6 @@ const ApproveLeavesTab: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [selectedLeaveID, setSelectedLeaveID] = useState<number | null>(null);
   const [rejectComment, setRejectComment] = useState('');
-
-  const user = JSON.parse(localStorage.getItem('user') || '{}');
-  const employeeID: number | undefined = user?.employeeID;
 
   // -------------------- Fetch Data --------------------
   useEffect(() => {
@@ -96,6 +99,7 @@ const ApproveLeavesTab: React.FC = () => {
         setLeaves(
           leavesData.map((l) => ({
             id: l.EmployeeLeaveID,
+            organizationID: l.OrganizationID,
             employeeID: l.EmployeeID,
             leaveTypeID: l.LeaveTypeID,
             leaveTypeName: l.LeaveTypeName,
@@ -133,6 +137,7 @@ const ApproveLeavesTab: React.FC = () => {
       setActionLoading(leaveID);
 
       const payload = {
+        organizationID: organizationID,
         employeeLeaveID: leaveID,
         leaveStatusID: statusID,
         approvedBy: employeeID,
@@ -143,6 +148,11 @@ const ApproveLeavesTab: React.FC = () => {
 
       // 🔥 Remove from UI after action
       setLeaves((prev) => prev.filter((l) => l.id !== leaveID));
+
+      const oldLeave = leaves.find(l => l.id === leaveID);
+      const newStatus = statusID === 1 ? 'Approved' : 'Rejected';
+      const newLeave = oldLeave ? { ...oldLeave, status: newStatus, rejectReason: rejectReason || '' } : null;
+      fireAudit("UPDATE", "Leave", oldLeave, newLeave, organizationID || 0, user?.name || user?.username || "Admin", "ApproveLeavesTab");
     } catch (err: any) {
       alert(err?.message || 'Action failed');
     } finally {

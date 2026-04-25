@@ -4,15 +4,20 @@ import { useParams } from 'react-router-dom';
 import employeeService from '../../services/employeeService';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { fireAudit } from '../../utils/auditUtils';
+import { useEmployee } from '../../context/EmployeeContext';
 
 const EmployeeDetails: React.FC = () => {
     const { employeeID } = useParams<{ employeeID: string }>();
     const [validated, setValidated] = useState(false);
     const data: any = localStorage.getItem('user');
+    const user = JSON.parse(data || '{}');
+    const organizationID = user?.organizationID || 0;
+    const { getEmployeeDetails, clearCache } = useEmployee();
 
     const [formData, setFormData] = useState({
         employeeID: 0,
-        organizationID: JSON.parse(data)?.organizationID || 0,
+        organizationID: organizationID,
         firstName: '',
         middleName: '',
         lastName: '',
@@ -32,6 +37,8 @@ const EmployeeDetails: React.FC = () => {
         profilePic: ''
     });
 
+    const [oldEmployeeData, setOldEmployeeData] = useState<any>(null);
+
     useEffect(() => {
         toast.info('Toast system ready ✅');
     }, []);
@@ -42,7 +49,7 @@ const EmployeeDetails: React.FC = () => {
 
         const id = parseInt(employeeID);
 
-        employeeService.GetEmployeeDetialsByEmployeeID(id)
+        getEmployeeDetails(id)
             .then((res) => {
                 if (res?.Table?.length) {
                     const emp = res.Table[0];
@@ -68,12 +75,33 @@ const EmployeeDetails: React.FC = () => {
                         passportNumber: emp.PassportNumber || '',
                         profilePic: emp.ProfilePic || ''
                     });
+                    setOldEmployeeData({
+                        employeeID: id,
+                        organizationID: emp.OrganizationID || 0,
+                        firstName: emp.FirstName || '',
+                        middleName: emp.MiddleName || '',
+                        lastName: emp.LastName || '',
+                        employeeCode: emp.EmployeeCode || '',
+                        dob: emp.DOB ? emp.DOB.split('T')[0] : '',
+                        gender: emp.Gender || '',
+                        officialEmail: emp.OfficialEmail || '',
+                        personalEmail: emp.PersonalEmail || '',   // ✅ NEW
+                        personalPhone: emp.PersonalPhone || '',   // ✅ NEW
+                        workPhone: emp.WorkPhone || '',           // ✅ NEW
+                        dateOfJoining: emp.DateOfJoining ? emp.DateOfJoining.split('T')[0] : '',
+                        maritalStatus: emp.MaritalStatus || '',
+                        createdBy: 'admin',
+                        pan: emp.PAN || '',
+                        aadhar: emp.Aadhar || '',
+                        passportNumber: emp.PassportNumber || '',
+                        profilePic: emp.ProfilePic || ''
+                    });
                 } else {
                     toast.info('No employee data found.');
                 }
             })
             .catch(() => toast.error('Failed to load employee data'));
-    }, [employeeID]);
+    }, [employeeID, getEmployeeDetails]);
 
     const handleChange = (e: React.ChangeEvent<any>) => {
         const { id, value } = e.target;
@@ -113,9 +141,12 @@ const EmployeeDetails: React.FC = () => {
                 toast.error('No response from server');
                 return;
             }
-
+            debugger;
             if (Number(finalResult.value) === 1) {
                 toast.success(finalResult.msg);
+                fireAudit("UPDATE", "Employee", oldEmployeeData, formData, organizationID, user?.name || user?.username || "Admin", "EmployeeDetails");
+                setOldEmployeeData(formData); // Update old data for next change
+                clearCache(formData.employeeID); // Clear cache to ensure fresh data on next load
             } else {
                 toast.error(finalResult.msg || 'Operation failed');
             }

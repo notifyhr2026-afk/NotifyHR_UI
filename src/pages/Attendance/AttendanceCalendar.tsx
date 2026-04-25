@@ -135,7 +135,7 @@ const AttendanceCalendar: React.FC = () => {
   const isToday = (d: string) => d === formatDate(new Date());
 
   return (
-    <div className="container-fluid p-5">
+    <div className="container-fluid">
       <h2 className="fw-bold mb-4 text-center">Attendance Calendar</h2>
 
       <div className="calendar-layout">

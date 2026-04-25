@@ -13,6 +13,7 @@ import { useParams } from "react-router-dom";
 import employeeProjectService from "../../services/employeeProjectService";
 import projectService from "../../services/projectService";
 import manageClientsService from "../../services/manageClientsService";
+import { fireAudit } from "../../utils/auditUtils";
 
 /* ================= TYPES ================= */
 
@@ -153,9 +154,24 @@ const EmployeeProjects: React.FC = () => {
     }));
   };
 
+  /* ================= VALIDATION ================= */
+
+  const hasFullTimeProjectWithoutEndDate = (): boolean => {
+    return records.some(record =>
+      record.isActive &&
+      record.allocationPercentage === 100 &&
+      (!record.toDate || record.toDate === null || record.toDate === "")
+    );
+  };
+
   /* ================= ADD ================= */
 
   const handleAdd = () => {
+    if (hasFullTimeProjectWithoutEndDate()) {
+      alert("Cannot add new project. Employee has a 100% allocation project with no end date.");
+      return;
+    }
+
     setFormData({
       EmployeeProjectId: 0,
       employeeId: empId,
@@ -232,6 +248,8 @@ const EmployeeProjects: React.FC = () => {
 
       alert(res?.message || "Saved successfully");
 
+      fireAudit(editRecord ? "UPDATE" : "CREATE", "EmployeeProject", editRecord, payload, organizationID, userFromStorage?.name || "Admin", "EmployeeProjects");
+
       setShowModal(false);
       loadEmployeeProjects();
 
@@ -252,7 +270,9 @@ const EmployeeProjects: React.FC = () => {
     if (!deleteId) return;
 
     try {
+      const oldData = records.find(p => p.EmployeeProjectId === deleteId);
       await employeeProjectService.DeleteEmployeeProjectByAsync(deleteId);
+      fireAudit("DELETE", "EmployeeProject", oldData, null, organizationID, userFromStorage?.name || "Admin", "EmployeeProjects");
       setConfirmDelete(false);
       loadEmployeeProjects();
     } catch (error) {
@@ -266,9 +286,18 @@ const EmployeeProjects: React.FC = () => {
     <div className="p-3 mt-4">
 
       <div className="text-end mb-4">
-        <Button variant="success" onClick={handleAdd}>
+        <Button
+          variant="success"
+          onClick={handleAdd}
+          disabled={hasFullTimeProjectWithoutEndDate()}
+        >
           + Add Project Allocation
         </Button>
+        {hasFullTimeProjectWithoutEndDate() && (
+          <div className="text-muted small mt-1">
+            Cannot add projects - Employee has 100% allocation with no end date
+          </div>
+        )}
       </div>
 
       {/* ================= TABLE ================= */}

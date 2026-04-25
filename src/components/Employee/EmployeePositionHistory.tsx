@@ -6,6 +6,8 @@ import departmentService from '../../services/departmentService';
 import positionService from '../../services/positionService';
 import employeeService from '../../services/employeeService';
 import { useParams } from "react-router-dom";
+import { fireAudit } from '../../utils/auditUtils';
+import { useEmployee } from '../../context/EmployeeContext';
 // 🟢 Interface for list (Table1 data)
 interface ManagerHistory {
   ManagerHistoryID: number;
@@ -52,6 +54,8 @@ interface PositionHistoryForm {
 }
 
 const EmployeePositionHistory: React.FC = () => {
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const organizationID = user?.organizationID || 0;
   const [records, setRecords] = useState<ManagerHistory[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [validated, setValidated] = useState(false);
@@ -59,6 +63,7 @@ const EmployeePositionHistory: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
  const { employeeID } = useParams<{ employeeID: string }>();
+  const { getEmployeeDetails, clearCache } = useEmployee();
   // 🟢 Modal form state
   const [formData, setFormData] = useState<PositionHistoryForm>({
     branchId: 0,
@@ -126,7 +131,7 @@ const [showToast, setShowToast] = useState(false);
     const fetchManagerHistory = async () => {
       try {       
         if (!employeeID) return;
-        const response = await employeeService.GetEmployeeDetialsByEmployeeID(Number(employeeID!));
+        const response = await getEmployeeDetails(Number(employeeID!));
         if (response?.Table1) {
           setRecords(response.Table1);
         }
@@ -209,10 +214,13 @@ const [showToast, setShowToast] = useState(false);
 
       if (response) {
         // Refresh the data after successful save
-        const updatedResponse = await employeeService.GetEmployeeDetialsByEmployeeID(Number(employeeID!));
+        const updatedResponse = await getEmployeeDetails(Number(employeeID!));
         if (updatedResponse?.Table1) {
           setRecords(updatedResponse.Table1);
         }
+
+        fireAudit(editRecord ? "UPDATE" : "CREATE", "ManagerHistory", editRecord, payload, organizationID, user?.name || "Admin", "EmployeePositionHistory");
+        clearCache(Number(employeeID!)); // Clear cache after update
 
         setShowModal(false);
         setValidated(false);

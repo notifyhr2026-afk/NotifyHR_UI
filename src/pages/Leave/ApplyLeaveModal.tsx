@@ -6,6 +6,7 @@ import leaveTypesService from '../../services/leaveTypesService';
 import leaveService from '../../services/leaveService';
 import OrgleaveTypesService from '../../services/OrgleaveTypesService';
 import LeaveType from '../../types/LeaveType';
+import { fireAudit } from '../../utils/auditUtils';
 
 interface Props {
   show: boolean;
@@ -108,6 +109,7 @@ const ApplyLeaveModal: React.FC<Props> = ({
       setLoading(true);
 
       const payload = {
+        OrganizationID: organizationID,
         EmployeeLeaveID: editLeave?.id ?? 0,
         EmployeeID: employeeID,
         LeaveTypeID: Number(data.leaveTypeID),
@@ -125,6 +127,7 @@ const ApplyLeaveModal: React.FC<Props> = ({
         const leaveToSave: Leave = { ...data }; // send back to parent
         onSave(leaveToSave);
         onHide();
+        fireAudit(editLeave ? "UPDATE" : "CREATE", "Leave", editLeave, data, organizationID || 0, user?.name || user?.username || "Admin", "ApplyLeaveModal");
       } else {
         alert(res?.message || 'Failed to submit leave');
       }

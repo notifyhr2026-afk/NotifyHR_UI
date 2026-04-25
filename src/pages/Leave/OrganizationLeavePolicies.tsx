@@ -15,6 +15,7 @@ import leavePolicyService from "../../services/leavePolicyService";
 import OrgLeaveType from "../../types/LeaveType";
 import LeavePolicy from "../../types/LeavePolicy";
 import OrgLeavePolicy from "../../types/OrgLeavePolicy";
+import { fireAudit } from "../../utils/auditUtils";
 
 // ------------------------------------------------------
 
@@ -202,6 +203,8 @@ const handleToggleStatus = async (lt: OrgLeaveType) => {
       setOrgPolicies((prev) => [...prev, response]);
     }
 
+    const oldData = editID ? orgPolicies.find(p => p.OrgLeavePolicyID === editID) : null;
+    fireAudit(editID ? "UPDATE" : "CREATE", "OrgLeavePolicy", oldData, record, organizationID || 0, "Admin", "OrganizationLeavePolicies");
     closeModal();
   } catch (error) {
     console.error("Error saving leave policy:", error);
@@ -213,7 +216,9 @@ const deletePolicy = async (id: number) => {
   if (!window.confirm("Delete this policy?")) return;
 
   try {
+    const oldData = orgPolicies.find(p => p.OrgLeavePolicyID === id);
     await leavePolicyService.DeleteOrgLeavePolicyByAsync(id);
+    fireAudit("DELETE", "OrgLeavePolicy", oldData, null, organizationID || 0, "Admin", "OrganizationLeavePolicies");
 
     setOrgPolicies((prev) =>
       prev.filter((p) => p.OrgLeavePolicyID !== id)

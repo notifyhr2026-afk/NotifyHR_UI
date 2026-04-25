@@ -2,8 +2,8 @@ import axiosInstance from '../api/axiosPayrollInstance';
 
 const employeeSalaryAssignment = {
   
-  GetEmployeeSalaryAssignmentByEmployeeID: async (employeeID: number) => {
-    const response = await axiosInstance.get(`EmployeeSalaryAssignment?employeeID=${employeeID}`);
+  GetEmployeeSalaryAssignmentByEmployeeID: async (employeeID: number,organizationID: number) => {
+    const response = await axiosInstance.get(`EmployeeSalaryAssignment?employeeID=${employeeID}&organizationID=${organizationID}`);
     return response.data;
   },
   PostEmployeeSalaryAssignmentAsync: async (payload: any) => {

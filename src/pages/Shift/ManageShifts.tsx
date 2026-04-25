@@ -19,9 +19,15 @@ const ManageShifts: React.FC = () => {
     desc: "",
   });
 
-  const organizationID = 45; // Replace with dynamic context
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID = user?.organizationID || 0;
 
   const fetchShifts = async () => {
+    if (!organizationID) {
+      console.warn("Organization ID not found. Skipping shift fetch.");
+      return;
+    }
+
     try {
       const data = await shiftService.GetShiftsByOrganization(organizationID);
       setShifts(

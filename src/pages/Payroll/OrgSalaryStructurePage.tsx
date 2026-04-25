@@ -82,7 +82,7 @@ const OrgSalaryStructurePage: React.FC = () => {
   const calculationTypes: CalculationType[] = [
     { CalculationTypeID: 1, CalculationName: 'Fixed' },
     { CalculationTypeID: 2, CalculationName: '% of Basic' },
-    { CalculationTypeID: 3, CalculationName: '% of Gross' },
+    { CalculationTypeID: 3, CalculationName: '% of CTC' },
   ];
 
   /* ================= LOAD STRUCTURES FROM API ================= */

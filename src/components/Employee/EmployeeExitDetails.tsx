@@ -1,9 +1,24 @@
 import React, { useState } from 'react';
 import { Row, Col, Form, Button } from 'react-bootstrap';
 import ToggleSection from '../ToggleSection';
+import { fireAudit } from '../../utils/auditUtils';
 
 const EmployeeExitDetails: React.FC = () => {
     const [validated, setValidated] = useState(false);
+    const user = JSON.parse(localStorage.getItem('user') || '{}');
+    const organizationID = user?.organizationID || 0;
+
+    const [formData, setFormData] = useState({
+        exitTypeID: '',
+        exitReason: '',
+        lastWorkingDay: '',
+        exitInterviewNotes: ''
+    });
+
+    const handleChange = (e: React.ChangeEvent<any>) => {
+        const { id, value } = e.target;
+        setFormData(prev => ({ ...prev, [id]: value }));
+    };
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         const form = event.currentTarget;
@@ -12,7 +27,8 @@ const EmployeeExitDetails: React.FC = () => {
 
         if (form.checkValidity()) {
             // Submit form data here
-            console.log('Exit details submitted');
+            console.log('Exit details submitted', formData);
+            fireAudit("CREATE", "EmployeeExit", null, formData, organizationID, user?.name || user?.username || "Admin", "EmployeeExitDetails");
         }
 
         setValidated(true);
@@ -20,7 +36,12 @@ const EmployeeExitDetails: React.FC = () => {
 
     const handleClear = () => {
         setValidated(false);
-        // Optionally, reset form fields here
+        setFormData({
+            exitTypeID: '',
+            exitReason: '',
+            lastWorkingDay: '',
+            exitInterviewNotes: ''
+        });
     };
 
     return (
@@ -30,7 +51,7 @@ const EmployeeExitDetails: React.FC = () => {
                     <Col>
                         <Form.Group controlId="exitTypeID">
                             <Form.Label>Exit Type</Form.Label>
-                            <Form.Select required>
+                            <Form.Select required value={formData.exitTypeID} onChange={handleChange}>
                                 <option value="">Select Exit Type</option>
                                 <option value="Resignation">Resignation</option>
                                 <option value="Termination">Termination</option>
@@ -45,7 +66,7 @@ const EmployeeExitDetails: React.FC = () => {
                     <Col>
                         <Form.Group controlId="exitReason">
                             <Form.Label>Exit Reason</Form.Label>
-                            <Form.Control type="text" required />
+                            <Form.Control type="text" required value={formData.exitReason} onChange={handleChange} />
                             <Form.Control.Feedback type="invalid">
                                 Exit reason is required.
                             </Form.Control.Feedback>
@@ -54,7 +75,7 @@ const EmployeeExitDetails: React.FC = () => {
                      <Col>
                         <Form.Group controlId="lastWorkingDay">
                             <Form.Label>Last Working Day</Form.Label>
-                            <Form.Control type="date" required />
+                            <Form.Control type="date" required value={formData.lastWorkingDay} onChange={handleChange} />
                             <Form.Control.Feedback type="invalid">
                                 Last working day is required.
                             </Form.Control.Feedback>
@@ -66,7 +87,7 @@ const EmployeeExitDetails: React.FC = () => {
                     <Col>
                         <Form.Group controlId="exitInterviewNotes">
                             <Form.Label>Exit Interview Notes</Form.Label>
-                            <Form.Control as="textarea" rows={3} />
+                            <Form.Control as="textarea" rows={3} value={formData.exitInterviewNotes} onChange={handleChange} />
                         </Form.Group>
                     </Col>
                 </Row>
