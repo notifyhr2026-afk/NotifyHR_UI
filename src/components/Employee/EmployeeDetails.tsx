@@ -181,14 +181,14 @@ const EmployeeDetails: React.FC = () => {
 };
 
     return (
-        <div className="page-container">
+        <div>
             <ToastContainer position="top-right" autoClose={3000} />
 
             <Form noValidate validated={validated} onSubmit={handleSubmit}>
-                <Row className="mb-4">
+                <Row>
 
                     {/* PROFILE PIC */}
-                    <Col md={3}>
+                     <Col md={3}>
                         <div style={{
                             width: "150px",
                             height: "150px",
@@ -226,7 +226,7 @@ const EmployeeDetails: React.FC = () => {
                                 }}
                             />
                         </Form.Group>
-                    </Col>
+                    </Col> 
 
                     {/* FORM */}
                     <Col md={9}>
@@ -347,7 +347,7 @@ const EmployeeDetails: React.FC = () => {
                             </Col>
                         </Row>
 
-                        <div className="text-end mt-4">
+                        <div className="text-end">
                             <Button type="submit" className="me-2">Update</Button>
                             <Button variant="secondary" onClick={handleClear}>Clear</Button>
                         </div>

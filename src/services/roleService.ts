@@ -51,3 +51,9 @@ export const AssignOrganizationRolesAsync = async (payload: any) => {
   const res = await axiosInstance.post("/Roles/AssignOrganizationRoles", payload);
   return res.data;
 };
+
+/* ===================== SAVE FEATURE PERMISSIONS ===================== */
+export const AssignUserRolesAsync = async (payload: any) => {
+  const res = await axiosInstance.post("/Roles/AssignUserRoles", payload);
+  return res.data;
+};

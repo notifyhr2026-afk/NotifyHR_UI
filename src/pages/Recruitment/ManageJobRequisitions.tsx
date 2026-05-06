@@ -273,7 +273,7 @@ const handleInputChange = (e: any) => {
       + New Job Requisitions
     </Button> </div>
 
-      <Table className="mt-3" bordered>
+      <Table className="table table-hover table-dark-custom">
         <thead>
           <tr>
             <th>No</th>

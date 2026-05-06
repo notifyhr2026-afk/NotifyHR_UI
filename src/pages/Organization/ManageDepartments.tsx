@@ -9,7 +9,7 @@ import { fireAudit } from '../../utils/auditUtils';
 interface Department {
   DepartmentID: number;
   OrganizationID: number;
-  BranchID: number;
+  BranchID: number | null;
   DepartmentCode: string;
   DepartmentName: string;
   Description: string;
@@ -31,7 +31,7 @@ const organizationID: number | undefined = user?.organizationID;
   const [departmentFormData, setDepartmentFormData] = useState<Department>({
     DepartmentID: 0,
     OrganizationID: organizationID || 0,
-    BranchID: 0,
+    BranchID: null,
     DepartmentCode: '',
     DepartmentName: '',
     Description: '',
@@ -77,7 +77,9 @@ const organizationID: number | undefined = user?.organizationID;
     const { id, value, type, checked } = e.target as HTMLInputElement;
     setDepartmentFormData((prev) => ({
       ...prev,
-      [id]: type === 'checkbox' ? checked : id === 'BranchID' ? Number(value) : value,
+      [id]: type === 'checkbox' 
+      ? checked 
+      : (id === 'BranchID' ? (value === "" ? null : Number(value)) : value),
     }));
   };
 
@@ -119,7 +121,7 @@ const organizationID: number | undefined = user?.organizationID;
     setDepartmentFormData({
       DepartmentID: 0,
       OrganizationID: organizationID || 0,
-      BranchID: 0,
+      BranchID: null,
       DepartmentCode: '',
       DepartmentName: '',
       Description: '',
@@ -174,7 +176,7 @@ const organizationID: number | undefined = user?.organizationID;
             <tr>
               <th>Code</th>
               <th>Name</th>
-              <th>Branch</th>
+              {/* <th>Branch</th> */}
               <th>Status</th>
               <th>Actions</th>
             </tr>
@@ -184,7 +186,7 @@ const organizationID: number | undefined = user?.organizationID;
               <tr key={d.DepartmentID}>
                 <td>{d.DepartmentCode}</td>
                 <td>{d.DepartmentName}</td>
-                <td>{branches.find((b) => b.BranchID === d.BranchID)?.BranchName || 'N/A'}</td>
+                {/* <td>{branches.find((b) => b.BranchID === d.BranchID)?.BranchName || 'N/A'}</td> */}
                 <td>
                   {d.IsActive ? (
                     <span className="badge bg-primary">Active</span>
@@ -257,12 +259,11 @@ const organizationID: number | undefined = user?.organizationID;
             </Row>
 
             <Row className="mb-3">
-              <Col md={6}>
+              {/* <Col md={6}>
                 <Form.Group controlId="BranchID">
                   <Form.Label>Branch</Form.Label>
-                  <Form.Select
-                    required
-                    value={departmentFormData.BranchID || ''}
+                  <Form.Select                    
+                    value={departmentFormData.BranchID || ""}
                     onChange={handleInputChange}
                   >
                     <option value="">-- Select Branch --</option>
@@ -272,11 +273,11 @@ const organizationID: number | undefined = user?.organizationID;
                       </option>
                     ))}
                   </Form.Select>
-                  <Form.Control.Feedback type="invalid">
+                   <Form.Control.Feedback type="invalid">
                     Please select a branch.
-                  </Form.Control.Feedback>
+                  </Form.Control.Feedback> 
                 </Form.Group>
-              </Col>
+              </Col> */}
 
               <Col md={6} className="d-flex align-items-center">
                 <Form.Check

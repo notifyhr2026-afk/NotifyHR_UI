@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Table } from 'react-bootstrap';
 import Select from 'react-select';
-import { GetAssignedRolesAsync,AssignOrganizationRolesAsync } from '../../services/roleService';
+import { GetAssignedRolesAsync,AssignOrganizationRolesAsync, AssignUserRolesAsync } from '../../services/roleService';
 import { useParams } from 'react-router-dom';
 import { fireAudit } from '../../utils/auditUtils';
 
@@ -20,6 +20,7 @@ interface RoleOption {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const organizationID = user.organizationID;   
   const userIDNum = Number(employeeID!);
+  const userID = user.userID;
   useEffect(() => {
     const fetchRoles = async () => {
       try {          
@@ -55,14 +56,13 @@ interface RoleOption {
 
   const handleAssignRoles = async () => {
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
-      const userID = user.userID;
+     
       const payload = {
         createdBy: "Admin",
         roles: roles.join(','),
         userID: userIDNum
       };
-      await AssignOrganizationRolesAsync(payload);
+      await AssignUserRolesAsync(payload);
       alert('Roles assigned successfully!');
       fireAudit("UPDATE", "EmployeeRoleAssignment", { employeeID: userIDNum, roles: oldRoles.join(',') }, { employeeID: userIDNum, roles: roles.join(',') }, organizationID, user?.name || "Admin", "EmployeeRoles");
     } catch (error) {

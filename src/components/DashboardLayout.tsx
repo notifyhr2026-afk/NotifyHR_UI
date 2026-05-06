@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import SideMenu from './OrgSideMenu';
 import { useAuth } from '../auth/AuthContext';
-import { Dropdown } from 'react-bootstrap';
+import { Dropdown, Badge } from 'react-bootstrap';
 
 const DashboardLayout: React.FC = () => {
   const [isSidebarOpen, setSidebarOpen] = useState(true);
@@ -25,6 +25,13 @@ const DashboardLayout: React.FC = () => {
     localStorage.getItem('theme') === 'dark'
   );
 
+  // 🔔 Notifications (dummy for now)
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: 'New user registered' },
+    { id: 2, text: 'Server backup completed' },
+    { id: 3, text: 'Password changed successfully' },
+  ]);
+
   useEffect(() => {
     document.body.classList.toggle('dark-mode', isDarkMode);
     document.body.classList.toggle('light-mode', !isDarkMode);
@@ -45,7 +52,7 @@ const DashboardLayout: React.FC = () => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
-  // ✅ Avatar initials
+  // Avatar initials
   const getInitials = (name: string) => {
     if (!name) return 'U';
     return name
@@ -111,11 +118,50 @@ const DashboardLayout: React.FC = () => {
 
             <span className="fw-semibold">{user?.name || 'User'}</span>
 
+            {/* 🔔 NOTIFICATIONS */}
+            <Dropdown align="end">
+              {/* <Dropdown.Toggle className="notification-toggle">
+
+                <div className="notification-icon">
+                  <i className="bi bi-bell fs-5"></i>
+
+                  {notifications.length > 0 && (
+                    <Badge bg="danger" className="notification-badge">
+                      {notifications.length}
+                    </Badge>
+                  )}
+                </div>
+
+              </Dropdown.Toggle> */}
+
+              <Dropdown.Menu className="custom-dropdown">
+
+                <div className="px-3 py-2 fw-bold">
+                  Notifications
+                </div>
+
+                <Dropdown.Divider />
+
+                {notifications.length === 0 ? (
+                  <div className="px-3 py-2 text-muted">
+                    No notifications
+                  </div>
+                ) : (
+                  notifications.map(n => (
+                    <Dropdown.Item key={n.id}>
+                      {n.text}
+                    </Dropdown.Item>
+                  ))
+                )}
+
+              </Dropdown.Menu>
+            </Dropdown>
+
             {/* DROPDOWN */}
             <Dropdown align="end">
               <Dropdown.Toggle className="avatar-toggle">
 
-                {/* ✅ Avatar Initial */}
+                {/* Avatar Initial */}
                 <div className="avatar-circle">
                   {getInitials(user?.name)}
                 </div>
@@ -221,9 +267,8 @@ const DashboardLayout: React.FC = () => {
         </main>
       </div>
 
-      {/* 🎨 STYLES */}
+      {/* STYLES */}
       <style>{`
-        /* REMOVE DROPDOWN ARROW */
         .avatar-toggle::after {
           display: none !important;
         }
@@ -234,7 +279,31 @@ const DashboardLayout: React.FC = () => {
           padding: 0;
         }
 
-        /* AVATAR */
+        .notification-toggle::after {
+          display: none !important;
+        }
+
+        .notification-toggle {
+          border: none !important;
+          background: transparent !important;
+          padding: 0;
+        }
+
+        .notification-icon {
+          position: relative;
+          cursor: pointer;
+          color: inherit;
+        }
+
+        .notification-badge {
+          position: absolute;
+          top: -6px;
+          right: -8px;
+          font-size: 10px;
+          padding: 3px 6px;
+          border-radius: 50%;
+        }
+
         .avatar-circle {
           width: 40px;
           height: 40px;
@@ -257,7 +326,6 @@ const DashboardLayout: React.FC = () => {
           background: linear-gradient(135deg, #6366f1, #8b5cf6);
         }
 
-        /* DROPDOWN */
         .custom-dropdown {
           min-width: 340px;
           border-radius: 12px;
@@ -281,7 +349,6 @@ const DashboardLayout: React.FC = () => {
           opacity: 0.7;
         }
 
-        /* ROLE ITEM */
         .role-item {
           display: flex;
           align-items: center;
@@ -304,7 +371,6 @@ const DashboardLayout: React.FC = () => {
           font-weight: 600;
         }
 
-        /* THEME SWITCH */
         .theme-switch {
           display: flex;
           align-items: center;

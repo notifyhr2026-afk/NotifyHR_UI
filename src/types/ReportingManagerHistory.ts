@@ -1,4 +1,5 @@
 export interface ReportingManagerHistory {
+  organizationID: number;
   managerHistoryID: number; // 0 = Insert, >0 = Update
   employeeID: number;
   positionID: number;

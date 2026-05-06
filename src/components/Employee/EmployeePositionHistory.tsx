@@ -195,6 +195,7 @@ const [showToast, setShowToast] = useState(false);
 
       // Prepare payload for API
       const payload = {
+        OrganizationID: organizationID,
         ManagerHistoryID: editRecord ? editRecord.ManagerHistoryID : 0,
         EmployeeID: Number(employeeID),
         BranchID: formData.branchId,

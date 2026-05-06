@@ -87,11 +87,14 @@ const employeeService = {
     const res = await api.put("Employee/UpdateEmployeeUserId", payload);
     return res.data[0];
    }, 
-    GetReportedEmployeesAsync: async (employeeID : number) => {    
+  GetReportedEmployeesAsync: async (employeeID : number) => {    
       const { data } = await api.get(`Employee/GetReportedEmployees?employeeID=${employeeID}`);
       return data;
   },
-
+  GetEmployeeFiltersDataAsync: async (organizationID : number) => {    
+      const { data } = await api.get(`Employee/GetEmployeeFiltersData?organizationID=${organizationID}`);
+      return data;
+  },
 };
 
 export default employeeService;
