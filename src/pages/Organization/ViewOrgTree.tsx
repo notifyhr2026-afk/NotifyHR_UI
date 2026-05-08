@@ -159,34 +159,37 @@ const ViewOrgTree: React.FC = () => {
 
   // ---------------- Node UI ----------------
 
-  const renderNode = ({ nodeDatum, toggleNode }: any) => {
-    const isRoot = nodeDatum.name?.toLowerCase().includes("ceo");
+const renderNode = ({ nodeDatum, toggleNode }: any) => {
+  return (
+    <g
+      onClick={toggleNode}
+      style={{ cursor: "pointer" }}
+    >
+      <rect
+        width={190}
+        height={65}
+        x={-95}
+        y={-32}
+        rx={12}
+        fill={isDark ? "#1e293b" : "#3b82f6"}
+        stroke={isDark ? "#94a3b8" : "#1e40af"}
+        strokeWidth={1.5}
+      />
 
-    return (
-      <g onClick={toggleNode} style={{ cursor: "pointer" }}>
-        <rect
-          width="190"
-          height="65"
-          x="-95"
-          y="-32"
-          rx="12"
-          fill={isRoot ? "#0d6efd" : "#3b82f6"}
-          stroke="#1e40af"
-          strokeWidth="1.2"
-        />
-
-        <text
-          x="0"
-          y="-2"
-          textAnchor="middle"
-          fill="#ffffff !important"
-          style={{ fontSize: "14px", fontWeight: 600 }}
-        >
-          {nodeDatum.name}
-        </text>
-      </g>
-    );
-  };
+      <text
+        x={0}
+        y={0}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fill="#ffffff"
+        fontSize={14}
+        fontWeight={600}
+      >
+        {nodeDatum.name}
+      </text>
+    </g>
+  );
+};
 
   // ---------------- UI ----------------
 
@@ -197,14 +200,15 @@ const ViewOrgTree: React.FC = () => {
     >
       <h5 className="fw-bold mb-3">Organization Tree</h5>
 
-      <style>
+        <style>
         {`
           .rd3t-link {
-            stroke: ${isDark ? "#9ca3af" : "#6b7280"} !important;
-            stroke-width: 1.5px !important;
+            stroke: #6b7280;
+            stroke-width: 1.5px;
+            fill: none;
           }
         `}
-      </style>
+        </style>
 
       {treeData.length === 0 ? (
         <p>Loading hierarchy...</p>

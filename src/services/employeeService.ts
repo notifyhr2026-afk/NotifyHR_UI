@@ -95,6 +95,10 @@ const employeeService = {
       const { data } = await api.get(`Employee/GetEmployeeFiltersData?organizationID=${organizationID}`);
       return data;
   },
+   ImportEmployeesAsync: async (payload: any) => {
+    const res = await api.put("Employee/ImportEmployeesAsync", payload);
+    return res.data[0];
+   }, 
 };
 
 export default employeeService;
