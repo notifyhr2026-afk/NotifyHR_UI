@@ -22,6 +22,10 @@ const timesheetService = {
   );
   return res.data;
 },
+ ApproveTimesheetEntries: async (TimesheetEntries: any) => {
+    const { data } = await axiosInstance.put('TimesheetEntry/ApproveTimesheetEntries', TimesheetEntries);
+    return Array.isArray(data?.Table) ? data.Table : [];
+  },
 };
 
 export default timesheetService;

@@ -110,6 +110,9 @@ import ViewOrgTree from '../pages/Organization/ViewOrgTree';
 import EmployeeImport from '../pages/Employee/EmployeeImport';
 import AttendanceApprovalPage from '../pages/Attendance/AttendanceApprovalPage';
 import ManagerDashboard from '../pages/Employee/ManagerDashboard';
+import OnboardProcess from '../pages/Recruitment/OnboardProcess';
+import CandidateOfferList from '../pages/Recruitment/CandidateOfferList';
+import EmployeeIdRulesPage from '../pages/Organization/EmployeeIdRulesPage';
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -225,6 +228,10 @@ const RoutesComponent: React.FC = () => {
         <Route path="/employees/import" element={<EmployeeImport />} />
         <Route path="/AttendanceApprovalPage" element={<AttendanceApprovalPage />} />
         <Route path="/ManagerDashboard" element={<ManagerDashboard />} />
+         <Route path="/candidate-offers" element={<CandidateOfferList />} />
+        <Route path="/onboard-process/:id" element={<OnboardProcess />} /> 
+      <Route path="/employee-id-rules" element={<EmployeeIdRulesPage />}/>
+
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
           path="Employees/manageEmployee/:employeeID"

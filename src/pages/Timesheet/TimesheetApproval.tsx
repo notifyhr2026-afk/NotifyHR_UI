@@ -211,6 +211,17 @@ const TimesheetApproval: React.FC = () => {
     }));
   };
 
+  const [savingProject, setSavingProject] = useState<string | null>(null);
+
+  const statusToId = (status: Status): number =>
+    status === "APPROVED"
+      ? 1
+      : status === "REJECTED"
+      ? 2
+      : status === "RESUBMIT"
+      ? 3
+      : 0;
+
   /* ===== UPDATE STATUS ===== */
   const updateProjectStatus = (
     employeeId: number,
@@ -237,6 +248,51 @@ const TimesheetApproval: React.FC = () => {
             }
       )
     );
+  };
+
+  const handleProjectApproval = async (
+    employeeId: number,
+    projectId: number,
+    newStatus: Status
+  ) => {
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const approvedBy = "0";
+    const statusID = statusToId(newStatus);
+    const projectKey = `${employeeId}_${projectId}_${statusID}`;
+
+    const project = timesheets
+      .find((emp) => emp.employeeId === employeeId)
+      ?.projects.find((proj) => proj.projectId === projectId);
+
+    if (!project) return;
+
+    const payload = {
+      statusID,
+      employeeID: employeeId,
+      projectID: projectId,
+      approvedBy,
+    };
+
+    try {
+      setSavingProject(projectKey);
+      const response = await timesheetService.ApproveTimesheetEntries(payload);
+      console.log("ApproveTimesheetEntries response:", response);
+      updateProjectStatus(employeeId, projectId, newStatus);
+      alert(
+        `${
+          newStatus === "APPROVED"
+            ? "Timesheet approved"
+            : newStatus === "REJECTED"
+            ? "Timesheet rejected"
+            : "Resubmit requested"
+        } successfully!`
+      );
+    } catch (error) {
+      console.error("Error approving timesheet entries:", error);
+      alert("Failed to update timesheet approval. Please try again.");
+    } finally {
+      setSavingProject(null);
+    }
   };
 
   /* ===== SAVE ===== */
@@ -302,8 +358,14 @@ const TimesheetApproval: React.FC = () => {
                           <Button
                             size="sm"
                             variant="success"
+                            disabled={
+                              savingProject ===
+                              `${employee.employeeId}_${project.projectId}_${statusToId(
+                                "APPROVED"
+                              )}`
+                            }
                             onClick={() =>
-                              updateProjectStatus(
+                              handleProjectApproval(
                                 employee.employeeId,
                                 project.projectId,
                                 "APPROVED"
@@ -315,8 +377,14 @@ const TimesheetApproval: React.FC = () => {
                           <Button
                             size="sm"
                             variant="danger"
+                            disabled={
+                              savingProject ===
+                              `${employee.employeeId}_${project.projectId}_${statusToId(
+                                "REJECTED"
+                              )}`
+                            }
                             onClick={() =>
-                              updateProjectStatus(
+                              handleProjectApproval(
                                 employee.employeeId,
                                 project.projectId,
                                 "REJECTED"
@@ -328,8 +396,14 @@ const TimesheetApproval: React.FC = () => {
                           <Button
                             size="sm"
                             variant="warning"
+                            disabled={
+                              savingProject ===
+                              `${employee.employeeId}_${project.projectId}_${statusToId(
+                                "RESUBMIT"
+                              )}`
+                            }
                             onClick={() =>
-                              updateProjectStatus(
+                              handleProjectApproval(
                                 employee.employeeId,
                                 project.projectId,
                                 "RESUBMIT"

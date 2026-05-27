@@ -93,6 +93,7 @@ const EmployeeLeavesTab: React.FC<Props> = ({ leaveTypes }) => {
           reason: l.Reason,
           isHalfDay: l.IsHalfDay,
           halfDayType: l.HalfDayType,
+          leaveTypeName : l.LeaveTypeName,
         }));
 
         setLeaves(mapped);
@@ -166,8 +167,7 @@ const EmployeeLeavesTab: React.FC<Props> = ({ leaveTypes }) => {
                 {leaves.map((l) => (
                   <tr key={l.id}>
                     <td>
-                      {leaveTypes.find((t) => t.value === l.leaveTypeID)?.label ||
-                        "N/A"}
+                      {l.leaveTypeName}
                     </td>
 
                     <td>

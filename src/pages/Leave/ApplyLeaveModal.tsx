@@ -31,6 +31,7 @@ const ApplyLeaveModal: React.FC<Props> = ({
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID: number | undefined = user?.organizationID;
   const employeeID: number | undefined = user?.employeeID;
+  const employeeName: number | undefined = user?.fullName;
   const [data, setData] = useState<any>({
     id: 0,
     employeeID: employeeID, // Static employee ID for now
@@ -42,6 +43,7 @@ const ApplyLeaveModal: React.FC<Props> = ({
     reason: '',
     isHalfDay: false,
     halfDayType: '',
+    employeeName:employeeName
   });
 
   const [dropdownLeaveTypes, setDropdownLeaveTypes] = useState<LeaveType[]>([]);
@@ -119,6 +121,7 @@ const ApplyLeaveModal: React.FC<Props> = ({
         Reason: data.reason,
         IsHalfDay: data.isHalfDay,
         HalfDayType: data.isHalfDay ? data.halfDayType : null,
+        EmployeeName:employeeName,
       };
 
       const res = await leaveService.PostApplyLeaveByAsync(payload);

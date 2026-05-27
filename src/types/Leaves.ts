@@ -9,6 +9,7 @@ export interface Leave {
   reason: string;
   isHalfDay?: boolean;      // ✅ optional
   halfDayType?: string;     // ✅ optional
+  leaveTypeName?:string;
 }
 export interface LeaveTypeOption {
   value: string;
