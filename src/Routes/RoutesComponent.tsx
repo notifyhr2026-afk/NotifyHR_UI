@@ -113,6 +113,7 @@ import ManagerDashboard from '../pages/Employee/ManagerDashboard';
 import OnboardProcess from '../pages/Recruitment/OnboardProcess';
 import CandidateOfferList from '../pages/Recruitment/CandidateOfferList';
 import EmployeeIdRulesPage from '../pages/Organization/EmployeeIdRulesPage';
+import EmployeeConnect from '../pages/Main/EmployeeConnect';
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -231,6 +232,7 @@ const RoutesComponent: React.FC = () => {
          <Route path="/candidate-offers" element={<CandidateOfferList />} />
         <Route path="/onboard-process/:id" element={<OnboardProcess />} /> 
       <Route path="/employee-id-rules" element={<EmployeeIdRulesPage />}/>
+      <Route path="/employee-connect" element={<EmployeeConnect />} />
 
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
