@@ -243,7 +243,8 @@ const EmployeeTaskMaster: React.FC = () => {
                 onChange={handleInputChange}
               />
             </Form.Group>
-
+            <Row className="mb-3">
+              <Col md={6}>
             <Form.Group controlId="noOfHours" className="mb-3">
               <Form.Label>Hours Spent</Form.Label>
               <Form.Control
@@ -257,7 +258,8 @@ const EmployeeTaskMaster: React.FC = () => {
                 Enter hours spent
               </Form.Control.Feedback>
             </Form.Group>
-
+          </Col>
+          <Col md={6}>
             <Form.Group controlId="status" className="mb-3">
               <Form.Label>Status</Form.Label>
               <Form.Select
@@ -269,7 +271,8 @@ const EmployeeTaskMaster: React.FC = () => {
                 <option value="Rejected">Rejected</option>
               </Form.Select>
             </Form.Group>
-
+            </Col>
+            </Row>
             <Modal.Footer>
               <Button variant="secondary" onClick={() => setShowModal(false)}>
                 Cancel

@@ -71,7 +71,7 @@ const EmployeeIdRulesPage: React.FC = () => {
     includeDepartmentCode: true,
     sequenceLength: 4,
     separator: "-",
-    departmentCode: "IT",
+    departmentCode: "",
     status: "Active",
   });
 
@@ -125,28 +125,34 @@ const EmployeeIdRulesPage: React.FC = () => {
   // GENERATE PREVIEW
   // ======================================================
   const generatePreview = () => {
-    const parts: string[] = [];
+  const parts: string[] = [];
 
-    if (formData.prefix) {
-      parts.push(formData.prefix);
-    }
+  if (formData.prefix) {
+    parts.push(formData.prefix);
+  }
 
-    if (formData.includeDepartmentCode) {
-      parts.push(formData.departmentCode);
-    }
+  if (
+    formData.includeDepartmentCode &&
+    formData.departmentCode
+  ) {
+    parts.push(formData.departmentCode);
+  }
 
-    if (formData.includeYear) {
-      parts.push(new Date().getFullYear().toString());
-    }
+  if (formData.includeYear) {
+    parts.push(new Date().getFullYear().toString());
+  }
 
-    parts.push(
-      "1".padStart(Number(formData.sequenceLength), "0")
-    );
+  parts.push(
+    "1".padStart(
+      Number(formData.sequenceLength),
+      "0"
+    )
+  );
 
-    return formData.separator
-      ? parts.join(formData.separator)
-      : parts.join("");
-  };
+  return formData.separator
+    ? parts.join(formData.separator)
+    : parts.join("");
+};
 
   // ======================================================
   // RESET FORM
@@ -159,7 +165,7 @@ const EmployeeIdRulesPage: React.FC = () => {
       includeDepartmentCode: true,
       sequenceLength: 4,
       separator: "-",
-      departmentCode: "IT",
+      departmentCode: "",
       status: "Active",
     });
 
@@ -239,7 +245,7 @@ const EmployeeIdRulesPage: React.FC = () => {
       sequenceLength: rule.sequenceLength,
       separator: rule.separator || "",
       departmentCode:
-        rule.departmentCode || "IT",
+        rule.departmentCode || "",
       status: rule.status,
     });
 
@@ -420,22 +426,25 @@ const EmployeeIdRulesPage: React.FC = () => {
 
             {/* Department */}
             <Col md={4} className="mb-3">
-              <Form.Label>
-                Department Code
-              </Form.Label>
+            <Form.Label>Department Code</Form.Label>
 
-              <Form.Select
-                name="departmentCode"
-                value={formData.departmentCode}
-                onChange={handleChange}
-              >
-                {departmentOptions.map((dept) => (
-                  <option key={dept}>
-                    {dept}
-                  </option>
-                ))}
-              </Form.Select>
-            </Col>
+            <Form.Select
+              name="departmentCode"
+              value={formData.departmentCode}
+              onChange={handleChange}
+              disabled={!formData.includeDepartmentCode}
+            >
+              <option value="">
+                Select Department
+              </option>
+
+              {departmentOptions.map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
+              ))}
+            </Form.Select>
+          </Col>
           </Row>
 
           {/* CHECKBOXES */}
