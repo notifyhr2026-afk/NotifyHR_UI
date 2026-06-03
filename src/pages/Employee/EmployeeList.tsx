@@ -308,12 +308,12 @@ const handleSaveEmployee = async (e: React.FormEvent<HTMLFormElement>) => {
           + Add Employee
         </Button>
         
-        <Button
+        {/* <Button
         variant="warning"
         onClick={() => window.open('/employees/import', '_blank')}
-      >
+      > 
         Import Employees
-      </Button>
+      </Button>*/}
       </div>
 
       {/* TABLE (UNCHANGED) */}

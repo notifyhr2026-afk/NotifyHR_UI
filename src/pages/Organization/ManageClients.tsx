@@ -170,8 +170,13 @@ const ManageClients: React.FC = () => {
       postalCode: String(formData.PostalCode),
       taxIdentificationNumber: String(formData.TaxIdentificationNumber),
 
-      associationStartDate: new Date(formData.AssociationStartDate).toISOString(),
-      associationEndDate: new Date(formData.AssociationEndDate).toISOString(),
+      associationStartDate: formData.AssociationStartDate
+    ? new Date(formData.AssociationStartDate).toISOString()
+    : null,
+
+      associationEndDate: formData.AssociationEndDate
+    ? new Date(formData.AssociationEndDate).toISOString()
+    : null,
 
       isActive: formData.IsActive,
       createdBy: "1", // Replace with actual user ID

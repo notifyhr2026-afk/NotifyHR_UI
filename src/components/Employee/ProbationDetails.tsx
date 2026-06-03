@@ -205,8 +205,9 @@ const ProbationDetails: React.FC = () => {
           <Form.Group controlId="status">
             <Form.Label>Status</Form.Label>
             <Form.Select required name="status" value={probationData.status} onChange={handleChange}>
-              <option value="Confirmed">Confirmed</option>
+              
               <option value="Not Confirmed">Not Confirmed</option>
+              <option value="Confirmed">Confirmed</option>
             </Form.Select>
             <Form.Control.Feedback type="invalid">
               Please select a status.

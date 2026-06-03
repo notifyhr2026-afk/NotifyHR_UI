@@ -85,24 +85,43 @@ const EmployeeIdRulesPage: React.FC = () => {
   // ======================================================
   // GET RULES
   // ======================================================
-  const getEmployeeIdRules = async () => {
-    try {
-      setLoading(true);
+const getEmployeeIdRules = async () => {
+  try {
+    setLoading(true);
 
-      const response =
-        await employeeIdRuleService.GetEmployeeIdRules(
-          organizationID
-        );
+    const response =
+      await employeeIdRuleService.GetEmployeeIdRules(
+        organizationID
+      );
 
-      setRules(response || []);
-    } catch (error) {
-      console.error(error);
+    const mappedRules: EmployeeIdRule[] = (
+      response || []
+    ).map((item: any) => ({
+      id: item.Id,
+      organizationID: item.OrganizationID,
+      ruleName: item.RuleName,
+      prefix: item.Prefix,
+      includeYear: item.IncludeYear,
+      includeDepartmentCode:
+        item.IncludeDepartmentCode,
+      sequenceLength: item.SequenceLength,
+      separator: item.Separator ?? "",
+      departmentCode:
+        item.DepartmentCode ?? "",
+      preview: item.Preview ?? "",
+      status: item.Status ?? "Active",
+      createdBy: item.CreatedBy,
+      updatedBy: item.UpdatedBy,
+    }));
 
-      toast.error("Failed to load rules");
-    } finally {
-      setLoading(false);
-    }
-  };
+    setRules(mappedRules);
+  } catch (error) {
+    console.error(error);
+    toast.error("Failed to load rules");
+  } finally {
+    setLoading(false);
+  }
+};
 
   // ======================================================
   // HANDLE CHANGE
@@ -233,27 +252,27 @@ const EmployeeIdRulesPage: React.FC = () => {
   // ======================================================
   // EDIT
   // ======================================================
-  const handleEdit = (rule: EmployeeIdRule) => {
-    setEditId(rule.id);
+const handleEdit = (rule: EmployeeIdRule) => {
+  setEditId(rule.id);
 
-    setFormData({
-      ruleName: rule.ruleName,
-      prefix: rule.prefix,
-      includeYear: rule.includeYear,
-      includeDepartmentCode:
-        rule.includeDepartmentCode,
-      sequenceLength: rule.sequenceLength,
-      separator: rule.separator || "",
-      departmentCode:
-        rule.departmentCode || "",
-      status: rule.status,
-    });
+  setFormData({
+    ruleName: rule.ruleName || "",
+    prefix: rule.prefix || "",
+    includeYear: rule.includeYear,
+    includeDepartmentCode:
+      rule.includeDepartmentCode,
+    sequenceLength: rule.sequenceLength,
+    separator: rule.separator || "",
+    departmentCode:
+      rule.departmentCode || "",
+    status: rule.status || "Active",
+  });
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    });
-  };
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth",
+  });
+};
 
   // ======================================================
   // OPEN DELETE
@@ -580,7 +599,7 @@ const EmployeeIdRulesPage: React.FC = () => {
 
                         <td>
                           {rule.includeDepartmentCode
-                            ? "Yes"
+                            ? rule.departmentCode || "-"
                             : "No"}
                         </td>
 
@@ -612,7 +631,7 @@ const EmployeeIdRulesPage: React.FC = () => {
 
                         <td>
                           <span className="fw-bold text-primary">
-                            {rule.preview}
+                            {rule.preview || "-"}
                           </span>
                         </td>
 
