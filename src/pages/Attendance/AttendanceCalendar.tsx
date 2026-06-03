@@ -11,6 +11,8 @@ import {
 } from "react-bootstrap";
 import "react-calendar/dist/Calendar.css";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import employeeAttendanceService from "../../services/employeeAttendanceService";
 import holidayService from "../../services/holidayService";
 import  "../../css/AttendanceCalendar.css";
@@ -55,7 +57,19 @@ const AttendanceCalendar: React.FC = () => {
     SelectedDateData[]
   >([]);
 
+  const [rawAttendance, setRawAttendance] = useState<any[]>([]);
+
   const formatDate = (d: Date) => d.toISOString().split("T")[0];
+
+  const correctionTypeMap: Record<string, number> = {
+    WFH: 1,
+    WFONSITE: 2,
+    CORRECTION: 3,
+    "MISSED PUNCH": 4,
+    "LATE LOGIN": 5,
+    "EARLY LOGOUT": 6,
+    "MANUAL REGULARIZATION": 7,
+  };
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
@@ -91,6 +105,8 @@ const AttendanceCalendar: React.FC = () => {
         await employeeAttendanceService.getEmployeeAttendance(payload);
 
       const raw = res?.Table1 || [];
+
+      setRawAttendance(raw);
 
       const grouped: Record<string, any[]> = {};
 
@@ -212,26 +228,84 @@ const AttendanceCalendar: React.FC = () => {
   // ---------------- SAVE ----------------
   const handleSave = async () => {
     try {
-      const payload = {
-        employeeID: employeeId,
-        organizationID,
-        requestType: selectedAction,
-        dates: selectedDatesData,
+      if (!selectedAction) {
+        toast.warn("Please select a request type.");
+        return;
+      }
+
+      for (const row of selectedDatesData) {
+        if (!row.startTime || !row.endTime) {
+          toast.warn(`Please enter both start and end time for ${row.date}.`);
+          return;
+        }
+      }
+
+      const getAttendanceInfo = (dateStr: string) => {
+        const logs = rawAttendance.filter((item: any) =>
+          item.AttendanceDate?.startsWith(dateStr)
+        );
+        if (logs.length === 0) {
+          return { attendanceID: null, oldCheckInTime: null, oldCheckOutTime: null };
+        }
+        const sorted = [...logs].sort(
+          (a: any, b: any) =>
+            new Date(a.LogTime).getTime() - new Date(b.LogTime).getTime()
+        );
+        const attendanceID = logs[0].AttendanceID || null;
+        const checkIn = sorted.find((l: any) => l.LogTypeID === 1);
+        const checkOut = [...sorted].reverse().find((l: any) => l.LogTypeID === 2);
+        return {
+          attendanceID,
+          oldCheckInTime: checkIn?.LogTime || null,
+          oldCheckOutTime: checkOut?.LogTime || null,
+        };
       };
 
-      console.log("SAVE PAYLOAD => ", payload);
+      const formatDateTime = (dateStr: string, timeStr: string) =>
+        `${dateStr}T${timeStr}:00.000Z`;
 
-      // API CALL HERE
+      for (const row of selectedDatesData) {
+        const { attendanceID, oldCheckInTime, oldCheckOutTime } =
+          getAttendanceInfo(row.date);
+
+        const payload = {
+          organizationID,
+          attendanceID,
+          correctionID: 0,
+          correctionTypeID: correctionTypeMap[selectedAction] || null,
+          oldCheckInTime: oldCheckInTime || formatDateTime(row.date, "00:00"),
+          oldCheckOutTime: oldCheckOutTime || formatDateTime(row.date, "00:00"),
+          newCheckInTime: formatDateTime(row.date, row.startTime),
+          newCheckOutTime: formatDateTime(row.date, row.endTime),
+          reason: `${selectedAction} request for ${row.date}`,
+          remarks: "",
+          statusID: 1,
+          createdBy: user?.userID || 0,
+        };
+
+        const res = await employeeAttendanceService.submitAttendanceCorrection(payload);
+        const result = Array.isArray(res) ? res[0] : res;
+        if (result?.Message !== "Success") {
+          throw new Error(result?.ErrorMessage || "Submission failed");
+        }
+      }
+
+      toast.success(
+        `Attendance ${selectedAction} request${selectedDatesData.length > 1 ? "s" : ""} submitted successfully!`
+      );
 
       setShowModal(false);
-
       setCheckedDates({});
-
       setSelectedDatesData([]);
-
       setSelectedAction("");
-    } catch (err) {
-      console.error(err);
+
+      loadAttendance();
+    } catch (err: any) {
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to submit attendance request.";
+      toast.error(msg);
     }
   };
 
@@ -412,6 +486,22 @@ const AttendanceCalendar: React.FC = () => {
               <option value="CORRECTION">
                 CORRECTION
               </option>
+
+              <option value="MISSED PUNCH">
+                MISSED PUNCH
+              </option>
+
+              <option value="LATE LOGIN">
+                LATE LOGIN
+              </option>
+
+              <option value="EARLY LOGOUT">
+                EARLY LOGOUT
+              </option>
+
+              <option value="MANUAL REGULARIZATION">
+                MANUAL REGULARIZATION
+              </option>
             </Form.Select>
           </div>
 
@@ -489,6 +579,8 @@ const AttendanceCalendar: React.FC = () => {
           </Button>
         </Modal.Footer>
       </Modal>
+
+      <ToastContainer position="top-right" autoClose={3000} />
   
     </div>
   );

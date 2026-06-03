@@ -2,211 +2,198 @@ import React, { useEffect, useMemo, useState } from "react";
 import {
   Table,
   Button,
-  Badge,
   Modal,
   Form,
-  Row,
-  Col,
-  Card,
+  Spinner,
+  OverlayTrigger,
+  Tooltip,
 } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import employeeAttendanceService from "../../services/employeeAttendanceService";
 
 interface AttendanceRequest {
-  requestID: number;
-  employeeName: string;
-  employeeID: number;
-  requestType: string;
-  requestDate: string;
-  startTime: string;
-  endTime: string;
-  reason?: string;
-  status: "Pending" | "Approved" | "Rejected";
+  CorrectionID: number;
+  RequestedBy: number;
+  RequestedAt: string;
+  NewCheckInTime: string;
+  NewCheckOutTime: string;
+  Reason: string;
+  StatusID: number;
+  CorrectionTypeName: string;
+  StatusName: string;
+  Remarks: string;
 }
+
+const displayVal = (val: any) =>
+  val === null || val === undefined || val === "" ? "-" : val;
 
 const AttendanceApprovalPage: React.FC = () => {
   const [requests, setRequests] = useState<AttendanceRequest[]>([]);
-
-  const [filteredRequests, setFilteredRequests] = useState<
-    AttendanceRequest[]
-  >([]);
-
-  const [selectedRequest, setSelectedRequest] =
-    useState<AttendanceRequest | null>(null);
-
+  const [filteredRequests, setFilteredRequests] = useState<AttendanceRequest[]>([]);
+  const [selectedRequest, setSelectedRequest] = useState<AttendanceRequest | null>(null);
   const [showModal, setShowModal] = useState(false);
-
-const [actionType, setActionType] = useState<
-  "Approved" | "Rejected"
->("Approved");
-
   const [remarks, setRemarks] = useState("");
-
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  // ---------------- MOCK API ----------------
-
-  useEffect(() => {
-    loadRequests();
-  }, []);
-
   const loadRequests = async () => {
+    setLoading(true);
     try {
-      // 🔥 Replace with API
-
-      const mockData: AttendanceRequest[] = [
-        {
-          requestID: 1001,
-          employeeName: "John Doe",
-          employeeID: 101,
-          requestType: "WFH",
-          requestDate: "2026-05-07",
-          startTime: "09:00",
-          endTime: "18:00",
-          reason: "Internet issue",
-          status: "Pending",
-        },
-        {
-          requestID: 1002,
-          employeeName: "Ravi Kumar",
-          employeeID: 102,
-          requestType: "CORRECTION",
-          requestDate: "2026-05-06",
-          startTime: "10:00",
-          endTime: "19:00",
-          reason: "Missed punch",
-          status: "Pending",
-        },
-        {
-          requestID: 1003,
-          employeeName: "Priya",
-          employeeID: 103,
-          requestType: "WFONSITE",
-          requestDate: "2026-05-04",
-          startTime: "08:30",
-          endTime: "17:30",
-          reason: "Client Visit",
-          status: "Approved",
-        },
-      ];
-
-      setRequests(mockData);
-      setFilteredRequests(mockData);
-    } catch (err) {
-      console.error(err);
+      const payload = {
+        organizationID: user?.organizationID,
+        statusID: statusFilter,
+        employeeIDs: "",
+      };
+      const res = await employeeAttendanceService.getAttendanceCorrectionRequests(payload);
+      const data = Array.isArray(res) ? res : [];
+      setRequests(data);
+      setFilteredRequests(data);
+    } catch (err: any) {
+      toast.error("Failed to fetch attendance correction requests.");
+    } finally {
+      setLoading(false);
     }
   };
 
-  // ---------------- SEARCH ----------------
+  useEffect(() => {
+    if (user?.organizationID) {
+      loadRequests();
+    }
+  }, [statusFilter]);
 
   useEffect(() => {
     const lower = search.toLowerCase();
-
     const filtered = requests.filter(
       (x) =>
-        x.employeeName.toLowerCase().includes(lower) ||
-        x.requestType.toLowerCase().includes(lower) ||
-        x.status.toLowerCase().includes(lower)
+        (x.RequestedBy?.toString() || "").toLowerCase().includes(lower) ||
+        (x.CorrectionTypeName || "").toLowerCase().includes(lower) ||
+        (x.StatusName || "").toLowerCase().includes(lower)
     );
-
     setFilteredRequests(filtered);
   }, [search, requests]);
 
-  // ---------------- OPEN MODAL ----------------
+  const handleApprove = async (req: AttendanceRequest) => {
+    try {
+      const payload = {
+        correctionID: req.CorrectionID,
+        remarks: "",
+        statusID: 2,
+        createdBy: user?.userID || 0,
+      };
+      const res = await employeeAttendanceService.approveRejectAttendanceCorrection(payload);
+      const result = Array.isArray(res) ? res[0] : res;
+      if (result?.Success !== 1) {
+        throw new Error(result?.Message || "Approval failed");
+      }
+      toast.success("Request approved successfully.");
+      loadRequests();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to approve request.";
+      toast.error(msg);
+    }
+  };
 
-  const openModal = (
-    request: AttendanceRequest,
-    action: "Approved" | "Rejected"
-  ) => {
-    setSelectedRequest(request);
-    setActionType(action);
+  const openRejectModal = (req: AttendanceRequest) => {
+    setSelectedRequest(req);
     setRemarks("");
     setShowModal(true);
   };
 
-  // ---------------- SAVE ----------------
-
-  const handleSubmit = async () => {
+  const handleReject = async () => {
+    if (!selectedRequest) return;
+    if (!remarks.trim()) {
+      toast.warn("Remarks are required for rejection.");
+      return;
+    }
     try {
-      if (!selectedRequest) return;
-
-      // 🔥 API PAYLOAD
       const payload = {
-        requestID: selectedRequest.requestID,
-        employeeID: selectedRequest.employeeID,
-        action: actionType,
-        remarks,
-        approvedBy: user?.employeeID,
+        correctionID: selectedRequest.CorrectionID,
+        remarks: remarks.trim(),
+        statusID: 3,
+        createdBy: user?.userID || 0,
       };
-
-      console.log("APPROVAL PAYLOAD => ", payload);
-
-      // 🔥 Replace with API call
-
-const updated: AttendanceRequest[] = requests.map((req) =>
-  req.requestID === selectedRequest.requestID
-    ? {
-        ...req,
-        status: actionType as "Approved" | "Rejected",
+      const res = await employeeAttendanceService.approveRejectAttendanceCorrection(payload);
+      const result = Array.isArray(res) ? res[0] : res;
+      if (result?.Success !== 1) {
+        throw new Error(result?.Message || "Rejection failed");
       }
-    : req
-);
-
-      setRequests(updated);
-
+      toast.success("Request rejected successfully.");
       setShowModal(false);
-    } catch (err) {
-      console.error(err);
+      loadRequests();
+    } catch (err: any) {
+      const msg = err?.response?.data?.message || err?.message || "Failed to reject request.";
+      toast.error(msg);
     }
   };
 
-  // ---------------- STATUS BADGE ----------------
-
-  const renderStatus = (status: string) => {
-    switch (status) {
-      case "Approved":
-        return <Badge bg="success">Approved</Badge>;
-
-      case "Rejected":
-        return <Badge bg="danger">Rejected</Badge>;
-
+  const renderStatus = (statusID: number) => {
+    const base = "d-inline-flex align-items-center gap-1 px-3 py-1 rounded-3 fw-semibold";
+    switch (statusID) {
+      case 2:
+        return <span className={`${base} bg-success bg-opacity-10 text-success`}>Approved</span>;
+      case 3:
+        return <span className={`${base} bg-danger bg-opacity-10 text-danger`}>Rejected</span>;
       default:
-        return <Badge bg="warning">Pending</Badge>;
+        return <span className={`${base} bg-warning bg-opacity-10 text-warning-emphasis`}>Pending</span>;
     }
   };
-
-  // ---------------- COUNTS ----------------
 
   const counts = useMemo(() => {
     return {
       total: requests.length,
-      pending: requests.filter((x) => x.status === "Pending")
-        .length,
-      approved: requests.filter((x) => x.status === "Approved")
-        .length,
-      rejected: requests.filter((x) => x.status === "Rejected")
-        .length,
+      pending: requests.filter((x) => x.StatusID === 1).length,
+      approved: requests.filter((x) => x.StatusID === 2).length,
+      rejected: requests.filter((x) => x.StatusID === 3).length,
     };
   }, [requests]);
 
+  const formatToTime = (dateStr: string) => {
+    try {
+      return new Date(dateStr).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
+    } catch {
+      return "-";
+    }
+  };
+
+  const formatToDate = (dateStr: string) => {
+    try {
+      return dateStr.split("T")[0];
+    } catch {
+      return "-";
+    }
+  };
+
   return (
     <div className="container-fluid py-3">
-      {/* HEADER */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h3 className="fw-bold">
           Attendance Request Approval
         </h3>
-
-        <Form.Control
-          placeholder="Search..."
-          style={{ width: 260 }}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="d-flex gap-2">
+          <Form.Select
+            style={{ width: 160 }}
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(Number(e.target.value))}
+          >
+            <option value={0}>All</option>
+            <option value={1}>Pending</option>
+            <option value={2}>Approved</option>
+            <option value={3}>Rejected</option>
+          </Form.Select>
+          <Form.Control
+            placeholder="Search..."
+            style={{ width: 260 }}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+        </div>
       </div>
-  
-      {/* TABLE */}
+
       <div className="table-responsive">
         <Table
           bordered
@@ -226,9 +213,14 @@ const updated: AttendanceRequest[] = requests.map((req) =>
               <th>Action</th>
             </tr>
           </thead>
-
           <tbody>
-            {filteredRequests.length === 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={9} className="text-center py-4">
+                  <Spinner animation="border" />
+                </td>
+              </tr>
+            ) : filteredRequests.length === 0 ? (
               <tr>
                 <td colSpan={9} className="text-center py-4">
                   No requests found
@@ -236,50 +228,54 @@ const updated: AttendanceRequest[] = requests.map((req) =>
               </tr>
             ) : (
               filteredRequests.map((req) => (
-                <tr key={req.requestID}>
-                  <td>{req.requestID}</td>
-
-                  <td>{req.employeeName}</td>
-
-                  <td>{req.requestType}</td>
-
-                  <td>{req.requestDate}</td>
-
-                  <td>{req.startTime}</td>
-
-                  <td>{req.endTime}</td>
-
-                  <td>{req.reason}</td>
-
-                  <td>{renderStatus(req.status)}</td>
-
+                <tr key={req.CorrectionID}>
+                  <td>{displayVal(req.CorrectionID)}</td>
+                  <td>{displayVal(req.RequestedBy)}</td>
+                  <td>{displayVal(req.CorrectionTypeName)}</td>
+                  <td>{displayVal(formatToDate(req.RequestedAt))}</td>
+                  <td>{displayVal(formatToTime(req.NewCheckInTime))}</td>
+                  <td>{displayVal(formatToTime(req.NewCheckOutTime))}</td>
+                  <td>{displayVal(req.Reason)}</td>
+                  <td>{renderStatus(req.StatusID)}</td>
                   <td>
-                    {req.status === "Pending" ? (
+                    {req.StatusID === 1 ? (
                       <div className="d-flex gap-2">
                         <Button
                           size="sm"
                           variant="success"
-                          onClick={() =>
-                            openModal(req, "Approved")
-                          }
+                          onClick={() => handleApprove(req)}
                         >
                           Approve
                         </Button>
-
                         <Button
                           size="sm"
                           variant="danger"
-                          onClick={() =>
-                            openModal(req, "Rejected")
-                          }
+                          onClick={() => openRejectModal(req)}
                         >
                           Reject
                         </Button>
                       </div>
                     ) : (
-                      <span className="text-muted">
-                        Completed
-                      </span>
+                      <OverlayTrigger
+                        placement="top"
+                        overlay={
+                          <Tooltip>
+                            {req.StatusID === 3 ? displayVal(req.Remarks) : "Approved"}
+                          </Tooltip>
+                        }
+                      >
+                        {req.StatusID === 2 ? (
+                          <span className="d-inline-flex align-items-center gap-1 px-3 py-1 rounded-3 bg-success bg-opacity-10 text-success fw-semibold">
+                            <span>✓</span>
+                            <span>Completed</span>
+                          </span>
+                        ) : (
+                          <span className="d-inline-flex align-items-center gap-1 px-3 py-1 rounded-3 bg-danger bg-opacity-10 text-danger fw-semibold">
+                            <span>✗</span>
+                            <span>Completed</span>
+                          </span>
+                        )}
+                      </OverlayTrigger>
                     )}
                   </td>
                 </tr>
@@ -289,7 +285,6 @@ const updated: AttendanceRequest[] = requests.map((req) =>
         </Table>
       </div>
 
-      {/* MODAL */}
       <Modal
         show={showModal}
         onHide={() => setShowModal(false)}
@@ -297,35 +292,32 @@ const updated: AttendanceRequest[] = requests.map((req) =>
       >
         <Modal.Header closeButton>
           <Modal.Title>
-            {actionType} Request
+            Reject Request
           </Modal.Title>
         </Modal.Header>
-
         <Modal.Body>
           {selectedRequest && (
             <>
               <div className="mb-3">
                 <strong>Employee:</strong>{" "}
-                {selectedRequest.employeeName}
+                {selectedRequest.RequestedBy}
               </div>
-
               <div className="mb-3">
                 <strong>Request Type:</strong>{" "}
-                {selectedRequest.requestType}
+                {selectedRequest.CorrectionTypeName}
               </div>
-
               <div className="mb-3">
                 <strong>Date:</strong>{" "}
-                {selectedRequest.requestDate}
+                {formatToDate(selectedRequest.RequestedAt)}
               </div>
-
               <Form.Group>
-                <Form.Label>Remarks</Form.Label>
-
+                <Form.Label>
+                  Remarks <span className="text-danger">*</span>
+                </Form.Label>
                 <Form.Control
                   as="textarea"
                   rows={4}
-                  placeholder="Enter remarks..."
+                  placeholder="Enter rejection reason..."
                   value={remarks}
                   onChange={(e) =>
                     setRemarks(e.target.value)
@@ -335,7 +327,6 @@ const updated: AttendanceRequest[] = requests.map((req) =>
             </>
           )}
         </Modal.Body>
-
         <Modal.Footer>
           <Button
             variant="secondary"
@@ -343,20 +334,16 @@ const updated: AttendanceRequest[] = requests.map((req) =>
           >
             Cancel
           </Button>
-
           <Button
-            variant={
-              actionType === "Approved"
-                ? "success"
-                : "danger"
-            }
-            onClick={handleSubmit}
+            variant="danger"
+            onClick={handleReject}
           >
-            Confirm {actionType}
+            Confirm Reject
           </Button>
         </Modal.Footer>
       </Modal>
 
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 };
