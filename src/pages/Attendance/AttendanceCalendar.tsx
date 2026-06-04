@@ -16,6 +16,7 @@ import "react-toastify/dist/ReactToastify.css";
 import employeeAttendanceService from "../../services/employeeAttendanceService";
 import holidayService from "../../services/holidayService";
 import  "../../css/AttendanceCalendar.css";
+
 interface Holiday {
   date: string;
   name: string;
@@ -40,6 +41,9 @@ const holidays: Holiday[] = [
 ];
 
 const AttendanceCalendar: React.FC = () => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");  
+  const employeeId = user?.employeeID;
+  const organizationID = user?.organizationID;  
   const [date, setDate] = useState<Date>(new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
@@ -59,7 +63,13 @@ const AttendanceCalendar: React.FC = () => {
 
   const [rawAttendance, setRawAttendance] = useState<any[]>([]);
 
-  const formatDate = (d: Date) => d.toISOString().split("T")[0];
+  const formatDate = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+};
 
   const correctionTypeMap: Record<string, number> = {
     WFH: 1,
@@ -71,11 +81,6 @@ const AttendanceCalendar: React.FC = () => {
     "MANUAL REGULARIZATION": 7,
   };
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-
-  const employeeId = user?.employeeID;
-
-  const organizationID = user?.organizationID;
 
   // ✅ month start → end
   const getMonthRange = () => {
@@ -199,18 +204,20 @@ const AttendanceCalendar: React.FC = () => {
   }, [checkedDates]);
 
   const handleApply = () => {
-    const rows: SelectedDateData[] = selectedDates.map((d) => ({
-      date: d,
-      startTime: "",
-      endTime: "",
-    }));
+  console.log("checkedDates", checkedDates);
 
-    setSelectedDatesData(rows);
+  const rows: SelectedDateData[] = selectedDates.map((d) => ({
+    date: d,
+    startTime: "",
+    endTime: "",
+  }));
 
-    setSelectedAction("");
+  console.log("rows", rows);
 
-    setShowModal(true);
-  };
+  setSelectedDatesData(rows);
+  setSelectedAction("");
+  setShowModal(true);
+};
 
   // ---------------- UPDATE TIME ----------------
   const handleTimeChange = (
@@ -261,8 +268,8 @@ const AttendanceCalendar: React.FC = () => {
         };
       };
 
-      const formatDateTime = (dateStr: string, timeStr: string) =>
-        `${dateStr}T${timeStr}:00.000Z`;
+    const formatDateTime = (dateStr: string, timeStr: string) =>
+      `${dateStr}T${timeStr}:00`;
 
       for (const row of selectedDatesData) {
         const { attendanceID, oldCheckInTime, oldCheckOutTime } =
@@ -280,7 +287,7 @@ const AttendanceCalendar: React.FC = () => {
           reason: `${selectedAction} request for ${row.date}`,
           remarks: "",
           statusID: 1,
-          createdBy: user?.userID || 0,
+          createdBy: employeeId,
         };
 
         const res = await employeeAttendanceService.submitAttendanceCorrection(payload);
