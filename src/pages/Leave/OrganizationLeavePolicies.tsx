@@ -265,8 +265,8 @@ const deletePolicy = async (id: number) => {
               </thead>
 
               <tbody>
-                {orgLeaveTypes
-                  .filter((lt) => showAllLeaveTypes || !!!lt.IsActive)
+               {orgLeaveTypes
+                  .filter((lt) => showAllLeaveTypes || lt.IsActive)
                   .map((lt) => (
                   <tr key={lt.LeaveTypeID}>
                     <td>{lt.LeaveTypeName}</td>

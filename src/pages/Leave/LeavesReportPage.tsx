@@ -299,7 +299,7 @@ const LeavesReportPage: React.FC = () => {
                     <th>Days</th>
                     <th>Reason</th>
                     <th>Status</th>
-                    <th>Action</th>
+                    {/* <th>Action</th> */}
                   </tr>
                 </thead>
 
@@ -318,7 +318,7 @@ const LeavesReportPage: React.FC = () => {
                           {l.leaveStatus}
                         </Badge>
                       </td>
-                      <td>
+                      {/* <td>
                         {l.leaveStatus === "Pending" && (
                           <>
                             <Button
@@ -347,7 +347,7 @@ const LeavesReportPage: React.FC = () => {
                             </Button>
                           </>
                         )}
-                      </td>
+                      </td> */}
                     </tr>
                   ))}
                 </tbody>

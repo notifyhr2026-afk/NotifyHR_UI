@@ -26,6 +26,10 @@ const timesheetService = {
     const { data } = await axiosInstance.put('TimesheetEntry/ApproveTimesheetEntries', TimesheetEntries);
     return Array.isArray(data?.Table) ? data.Table : [];
   },
+ GetTimesheetSummaryReport: async (employeeID: number, month: number) => {
+    const response = await axiosInstance.get(`TimesheetEntry/GetTimesheetSummaryReport?employeeID=${employeeID}&month=${month}`);
+    return response.data;
+    },
 };
 
 export default timesheetService;

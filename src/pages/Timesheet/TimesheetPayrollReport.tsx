@@ -1,19 +1,24 @@
-import React, { useState, useEffect } from "react";
-import { Card, Table, Form, Button, Col, Row, Badge } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import { Card, Table, Form, Button, Col, Row, Badge, Spinner } from "react-bootstrap";
+import timesheetService from "../../services/timesheetService";
+import employeeService from "../../services/employeeService";
+import branchService from "../../services/branchService";
+import departmentService from "../../services/departmentService";
 
-interface Employee {
-  id: number;
-  name: string;
-  branch: string;
-  department: string;
+interface Option {
+  value: number;
+  label: string;
 }
 
-interface TimesheetEntry {
-  employeeId: number;
-  date: string;
-  activity: "PRESENT" | "LEAVE" | "HOLIDAY" | "UNPAID_LEAVE";
-  hours: number;
-  status: "PENDING" | "APPROVED";
+interface EmployeeData {
+  EmployeeID?: number;
+  EmployeeName?: string;
+  FirstName?: string;
+  LastName?: string;
+  BranchID?: number;
+  DepartmentID?: number;
+  id?: number;
+  name?: string;
 }
 
 interface PayrollSummary {
@@ -27,154 +32,148 @@ interface PayrollSummary {
   status: string;
 }
 
-/* MOCK EMPLOYEE DATA */
-const employees: Employee[] = [
-  { id: 1, name: "John Doe", branch: "New York", department: "Sales" },
-  { id: 2, name: "Jane Smith", branch: "New York", department: "HR" },
-  { id: 3, name: "Alice Brown", branch: "Chicago", department: "Sales" },
-];
-
-/* MOCK TIMESHEET DATA */
-const timesheetData: TimesheetEntry[] = [
-  {
-    employeeId: 1,
-    date: "2026-01-01",
-    activity: "HOLIDAY",
-    hours: 0,
-    status: "APPROVED",
-  },
-  {
-    employeeId: 1,
-    date: "2026-01-02",
-    activity: "PRESENT",
-    hours: 8,
-    status: "APPROVED",
-  },
-  {
-    employeeId: 1,
-    date: "2026-01-03",
-    activity: "LEAVE",
-    hours: 0,
-    status: "PENDING",
-  },
-  {
-    employeeId: 2,
-    date: "2026-01-01",
-    activity: "HOLIDAY",
-    hours: 0,
-    status: "APPROVED",
-  },
-  {
-    employeeId: 2,
-    date: "2026-01-02",
-    activity: "PRESENT",
-    hours: 9,
-    status: "APPROVED",
-  },
-  {
-    employeeId: 2,
-    date: "2026-01-03",
-    activity: "UNPAID_LEAVE",
-    hours: 0,
-    status: "PENDING",
-  },
-  {
-    employeeId: 3,
-    date: "2026-01-02",
-    activity: "PRESENT",
-    hours: 7,
-    status: "APPROVED",
-  },
-];
-
 const TimesheetPayrollReport: React.FC = () => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID = user?.organizationID || 0;
+
   const [month, setMonth] = useState("2026-01");
-  const [branch, setBranch] = useState("All");
-  const [department, setDepartment] = useState("All");
-  const [employee, setEmployee] = useState("All");
+  const [branch, setBranch] = useState<number | "All">("All");
+  const [department, setDepartment] = useState<number | "All">("All");
+  const [employee, setEmployee] = useState<number | "All">("All");
+  const [branches, setBranches] = useState<Option[]>([]);
+  const [departments, setDepartments] = useState<Option[]>([]);
+  const [employees, setEmployees] = useState<EmployeeData[]>([]);
+  const [employeeOptions, setEmployeeOptions] = useState<Option[]>([]);
   const [report, setReport] = useState<PayrollSummary[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    generateReport();
-  }, [month, branch, department, employee]);
+    loadData();
+  }, []);
 
-  const generateReport = () => {
-    /* FILTER EMPLOYEES */
-    const filteredEmployees = employees.filter(
-      (emp) =>
-        (branch === "All" || emp.branch === branch) &&
-        (department === "All" || emp.department === department) &&
-        (employee === "All" || emp.id === Number(employee))
-    );
+  useEffect(() => {
+    updateEmployeeOptions();
+  }, [branch, department, employees]);
 
-    /* FETCH TIMESHEET DATA BASED ON SELECTED EMPLOYEE */
-    const summaries: PayrollSummary[] = filteredEmployees.map((emp) => {
-      const empEntries = timesheetData.filter(
-        (e) => e.employeeId === emp.id && e.date.startsWith(month)
+  useEffect(() => {
+    if (employees.length > 0) {
+      generateReport();
+    }
+  }, [month, branch, department, employee, employees]);
+
+  const loadData = async () => {
+    try {
+      const [empRes, branchRes, deptRes] = await Promise.all([
+        employeeService.getEmployeesByOrganizationIdAsync(organizationID),
+        branchService.getBranchesAsync(organizationID),
+        departmentService.getdepartmentesAsync(organizationID),
+      ]);
+
+      const employeeList = empRes?.Table || empRes || [];
+      const branchList = branchRes?.Table || branchRes || [];
+      const departmentList = deptRes?.Table || deptRes || [];
+
+      setEmployees(employeeList);
+      setBranches(
+        branchList.map((b: any) => ({
+          value: b.BranchID,
+          label: b.BranchName,
+        }))
       );
-
-      const summary = empEntries.reduce(
-        (acc, entry) => {
-          switch (entry.activity) {
-            case "PRESENT":
-              acc.workingDays += 1;
-              acc.totalHours += entry.hours;
-              break;
-
-            case "LEAVE":
-              acc.leaveDays += 1;
-              break;
-
-            case "UNPAID_LEAVE":
-              acc.unpaidLeaveDays += 1;
-              break;
-
-            case "HOLIDAY":
-              acc.holidays += 1;
-              break;
-          }
-
-          /* STATUS LOGIC */
-          if (entry.status === "PENDING") {
-            acc.status = "PENDING";
-          }
-
-          return acc;
-        },
-        {
-          employeeId: emp.id,
-          employeeName: emp.name,
-          workingDays: 0,
-          leaveDays: 0,
-          unpaidLeaveDays: 0,
-          holidays: 0,
-          totalHours: 0,
-          status: "APPROVED",
-        } as PayrollSummary
+      setDepartments(
+        departmentList.map((d: any) => ({
+          value: d.DepartmentID,
+          label: d.DepartmentName,
+        }))
       );
-
-      return summary;
-    });
-
-    setReport(summaries);
+    } catch (error) {
+      console.error("Failed to load filter data", error);
+    }
   };
 
-  /* DROPDOWNS */
-  const branches = [
-    "All",
-    ...Array.from(new Set(employees.map((e) => e.branch))),
-  ];
+  const updateEmployeeOptions = () => {
+    const filtered = employees.filter((emp) => {
+      const branchMatch = branch === "All" || emp.BranchID === branch;
+      const departmentMatch = department === "All" || emp.DepartmentID === department;
+      return branchMatch && departmentMatch;
+    });
 
-  const departments = [
-    "All",
-    ...Array.from(new Set(employees.map((e) => e.department))),
-  ];
+    setEmployeeOptions(
+      filtered.map((emp) => ({
+        value: emp.EmployeeID || emp.id || 0,
+        label:
+          emp.EmployeeName ||
+          `${emp.FirstName || ""} ${emp.LastName || ""}`.trim() ||
+          emp.name ||
+          "Unknown",
+      }))
+    );
 
-  const filteredEmployeeList = employees.filter(
-    (emp) =>
-      (branch === "All" || emp.branch === branch) &&
-      (department === "All" || emp.department === department)
-  );
+    if (
+      employee !== "All" &&
+      !filtered.some((emp) => (emp.EmployeeID || emp.id) === employee)
+    ) {
+      setEmployee("All");
+    }
+  };
+
+  const generateReport = async () => {
+    try {
+      setLoading(true);
+
+      const filteredEmployees = employees.filter((emp) => {
+        const branchMatch = branch === "All" || emp.BranchID === branch;
+        const departmentMatch = department === "All" || emp.DepartmentID === department;
+        const employeeMatch = employee === "All" || (emp.EmployeeID || emp.id) === employee;
+        return branchMatch && departmentMatch && employeeMatch;
+      });
+
+      if (filteredEmployees.length === 0) {
+        setReport([]);
+        return;
+      }
+
+      const monthNumber = Number(month.split("-")[1] || 0);
+
+      const summaries = await Promise.all(
+        filteredEmployees.map(async (emp) => {
+          const employeeID = emp.EmployeeID || emp.id || 0;
+          if (!employeeID) {
+            return null;
+          }
+
+          const data = await timesheetService.GetTimesheetSummaryReport(
+            employeeID,
+            monthNumber
+          );
+
+          const row = data?.Table?.[0] || data?.[0] || data || {};
+
+          return {
+            employeeId: employeeID,
+            employeeName:
+              emp.EmployeeName ||
+              `${emp.FirstName || ""} ${emp.LastName || ""}`.trim() ||
+              emp.name ||
+              `Employee ${employeeID}`,
+            workingDays: Number(row.WorkingDays ?? row.WorkingDayCount ?? 0),
+            leaveDays: Number(row.LeaveDays ?? row.Leaves ?? 0),
+            unpaidLeaveDays: Number(row.UnpaidLeaveDays ?? row.UnpaidLeaves ?? 0),
+            holidays: Number(row.Holidays ?? 0),
+            totalHours: Number(row.TotalHours ?? row.Hours ?? 0),
+            status: row.StatusName || row.Status || "APPROVED",
+          } as PayrollSummary;
+        })
+      );
+
+      setReport(summaries.filter(Boolean) as PayrollSummary[]);
+    } catch (error) {
+      console.error("Error fetching timesheet summary report", error);
+      setReport([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Card className="p-4 shadow-sm border-0 rounded-4">
@@ -182,7 +181,6 @@ const TimesheetPayrollReport: React.FC = () => {
         <h4 className="mb-0">Timesheet Payroll Report</h4>
       </div>
 
-      {/* FILTERS */}
       <Row className="g-3 mb-4">
         <Col md={3}>
           <Form.Group>
@@ -201,13 +199,15 @@ const TimesheetPayrollReport: React.FC = () => {
             <Form.Select
               value={branch}
               onChange={(e) => {
-                setBranch(e.target.value);
+                const selected = e.target.value;
+                setBranch(selected === "All" ? "All" : Number(selected));
                 setEmployee("All");
               }}
             >
+              <option value="All">All Branches</option>
               {branches.map((b) => (
-                <option key={b} value={b}>
-                  {b}
+                <option key={b.value} value={b.value}>
+                  {b.label}
                 </option>
               ))}
             </Form.Select>
@@ -220,13 +220,15 @@ const TimesheetPayrollReport: React.FC = () => {
             <Form.Select
               value={department}
               onChange={(e) => {
-                setDepartment(e.target.value);
+                const selected = e.target.value;
+                setDepartment(selected === "All" ? "All" : Number(selected));
                 setEmployee("All");
               }}
             >
+              <option value="All">All Departments</option>
               {departments.map((d) => (
-                <option key={d} value={d}>
-                  {d}
+                <option key={d.value} value={d.value}>
+                  {d.label}
                 </option>
               ))}
             </Form.Select>
@@ -238,13 +240,15 @@ const TimesheetPayrollReport: React.FC = () => {
             <Form.Label>Employee</Form.Label>
             <Form.Select
               value={employee}
-              onChange={(e) => setEmployee(e.target.value)}
+              onChange={(e) => {
+                const selected = e.target.value;
+                setEmployee(selected === "All" ? "All" : Number(selected));
+              }}
             >
               <option value="All">All Employees</option>
-
-              {filteredEmployeeList.map((emp) => (
-                <option key={emp.id} value={emp.id}>
-                  {emp.name}
+              {employeeOptions.map((emp) => (
+                <option key={emp.value} value={emp.value}>
+                  {emp.label}
                 </option>
               ))}
             </Form.Select>
@@ -252,14 +256,19 @@ const TimesheetPayrollReport: React.FC = () => {
         </Col>
       </Row>
 
-      {/* ACTION BUTTON */}
       <div className="mb-3">
-        <Button variant="primary" onClick={generateReport}>
-          Generate Report
+        <Button variant="primary" onClick={generateReport} disabled={loading}>
+          {loading ? (
+            <>
+              <Spinner animation="border" size="sm" className="me-2" />
+              Loading...
+            </>
+          ) : (
+            "Generate Report"
+          )}
         </Button>
       </div>
 
-      {/* REPORT TABLE */}
       <Table
         responsive
         bordered
