@@ -4,7 +4,8 @@ const employeeshiftService = {
   
  GetEmployeeShiftByEmployeeID: async (employeeID: number) => {
     const response = await axiosInstance.get(`EmployeeShift?employeeID=${employeeID}`);
-    return response.data;
+    const data = response.data;
+    return Array.isArray(data?.Table) ? data.Table : data || [];
   },
   PostEmployeeShiftAsync: async (payload: any) => {
     const res = await axiosInstance.post("EmployeeShift", payload);
