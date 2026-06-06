@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from "react";
-import { Button, Form, Row, Col, Card, Spinner } from "react-bootstrap";
+import {
+  Button,
+  Form,
+  Row,
+  Col,
+  Card,
+  Spinner,
+} from "react-bootstrap";
 import { useParams } from "react-router-dom";
-// import {
-//   PutApiKeyActivationAsync,
-//   getOrgDetailsAsync,
-// } from "../../services/organizationService";
+import {
+  GetApiKeyInfoAsync,
+  SaveApiKeyInfo,
+} from "../../services/organizationService";
 import { fireAudit } from "../../utils/auditUtils";
 
 const ApiKeyActivationSection: React.FC = () => {
@@ -21,16 +28,19 @@ const ApiKeyActivationSection: React.FC = () => {
     useState<boolean>(false);
 
   const [apiKey, setApiKey] = useState<string>("");
+  const [domain, setDomain] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [fetchLoading, setFetchLoading] = useState<boolean>(true);
+  const [fetchLoading, setFetchLoading] =
+    useState<boolean>(true);
 
   // Old values for audit
   const [oldIsApiKeyActivated, setOldIsApiKeyActivated] =
     useState<boolean>(false);
 
   const [oldApiKey, setOldApiKey] = useState<string>("");
+  const [oldDomain, setOldDomain] = useState<string>("");
   const [oldRemarks, setOldRemarks] = useState<string>("");
 
   useEffect(() => {
@@ -39,29 +49,38 @@ const ApiKeyActivationSection: React.FC = () => {
     }
   }, [organizationID]);
 
-  const fetchOrganizationDetails = async (orgId: number) => {
+  const fetchOrganizationDetails = async (
+    orgId: number
+  ) => {
     try {
       setFetchLoading(true);
 
-    //   const data = await getOrgDetailsAsync(orgId);
+      const data = await GetApiKeyInfoAsync(orgId);
 
-    //   if (data?.length) {
-    //     const org = data[0];
+      if (data && data.length > 0) {
+        const apiInfo = data[0];
 
-    //     const isActive = org.IsApiKeyActivated || false;
-    //     const apiKeyValue = org.ApiKey || "";
-    //     const remarksValue = org.ApiKeyRemarks || "";
+        const apiKeyValue = apiInfo.APIKey || "";
+        const domainValue = apiInfo.Domain || "";
+        const isActive = apiInfo.IsActive || false;
 
-        // setIsApiKeyActivated(isActive);
-        // setApiKey(apiKeyValue);
-        // setRemarks(remarksValue);
+        setApiKey(apiKeyValue);
+        setDomain(domainValue);
+        setIsApiKeyActivated(isActive);
 
-        // setOldIsApiKeyActivated(isActive);
-        // setOldApiKey(apiKeyValue);
-        // setOldRemarks(remarksValue);
-      //}
+        setOldApiKey(apiKeyValue);
+        setOldDomain(domainValue);
+        setOldIsApiKeyActivated(isActive);
+
+        // remarks are local only (not in DB/SP)
+        setRemarks("");
+        setOldRemarks("");
+      }
     } catch (error) {
-      console.error("Error fetching organization details:", error);
+      console.error(
+        "Error fetching API key details:",
+        error
+      );
     } finally {
       setFetchLoading(false);
     }
@@ -77,34 +96,38 @@ const ApiKeyActivationSection: React.FC = () => {
       setLoading(true);
 
       const payload = {
-        organizationID,
-        isApiKeyActivated: isApiKeyActivated,
-        apiKey: apiKey.trim(),
-        remarks: remarks.trim(),
-        modifiedBy: userFromStorage?.name || "Admin",
+        OrganizationId: organizationID,
+        APIKey: apiKey.trim(),
+        Domain: domain.trim(),
+        CreatedBy:
+          userFromStorage?.name || "Admin",
       };
 
-      //const response = await PutApiKeyActivationAsync(payload);
+      const response = await SaveApiKeyInfo(payload);
 
-    //   console.log("API Response:", response);
+      if (
+        response?.value === 1 ||
+        response?.Value === 1 ||
+        response?.success ||
+        response
+      ) {
+        alert(
+          response?.MSG ||
+            response?.message ||
+            "API Key information saved successfully."
+        );
 
-    //   const result = Array.isArray(response)
-    //     ? response[0]
-    //     : response;
-
-    //   if (result?.value === 1) {
-    //     alert(result.MSG || "API Key updated successfully.");
-
-        // Audit Logging
         const oldData = {
           IsApiKeyActivated: oldIsApiKeyActivated,
           ApiKey: oldApiKey,
+          Domain: oldDomain,
           Remarks: oldRemarks,
         };
 
         const newData = {
           IsApiKeyActivated: isApiKeyActivated,
           ApiKey: apiKey.trim(),
+          Domain: domain.trim(),
           Remarks: remarks.trim(),
         };
 
@@ -113,20 +136,32 @@ const ApiKeyActivationSection: React.FC = () => {
           "ApiKeyActivation",
           oldData,
           newData,
-          Number(id),
+          organizationID,
           userFromStorage?.name || "Admin",
           "ApiKeyActivationSection"
         );
 
-    //     setOldIsApiKeyActivated(isApiKeyActivated);
-    //     setOldApiKey(apiKey.trim());
-    //     setOldRemarks(remarks.trim());
-    //   } else {
-    //     alert(result?.MSG || "Operation failed.");
-    //  }
+        setOldApiKey(apiKey.trim());
+        setOldDomain(domain.trim());
+        setOldRemarks(remarks.trim());
+        setOldIsApiKeyActivated(
+          isApiKeyActivated
+        );
+      } else {
+        alert(
+          response?.MSG ||
+            response?.message ||
+            "Operation failed."
+        );
+      }
     } catch (error) {
-      console.error("Error updating API key:", error);
-      alert("Something went wrong while updating API Key.");
+      console.error(
+        "Error updating API key:",
+        error
+      );
+      alert(
+        "Something went wrong while saving API Key information."
+      );
     } finally {
       setLoading(false);
     }
@@ -135,27 +170,21 @@ const ApiKeyActivationSection: React.FC = () => {
   return (
     <Card className="mb-3">
       <Card.Body>
-        <h6 className="mb-3">API Key Activation</h6>
+        <h6 className="mb-3">
+          API Key Activation
+        </h6>
 
         <Row className="g-3 align-items-center">
-          <Col md={3}>
+          <Col md={2}>
             <Form.Check
               type="checkbox"
               label="Activate API Key"
               checked={isApiKeyActivated}
               onChange={(e) =>
-                setIsApiKeyActivated(e.target.checked)
+                setIsApiKeyActivated(
+                  e.target.checked
+                )
               }
-              disabled={fetchLoading}
-            />
-          </Col>
-
-          <Col md={4}>
-            <Form.Control
-              type="text"
-              placeholder="Enter API Key"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
               disabled={fetchLoading}
             />
           </Col>
@@ -163,9 +192,35 @@ const ApiKeyActivationSection: React.FC = () => {
           <Col md={3}>
             <Form.Control
               type="text"
+              placeholder="Enter API Key"
+              value={apiKey}
+              onChange={(e) =>
+                setApiKey(e.target.value)
+              }
+              disabled={fetchLoading}
+            />
+          </Col>
+
+          <Col md={3}>
+            <Form.Control
+              type="text"
+              placeholder="Enter Domain"
+              value={domain}
+              onChange={(e) =>
+                setDomain(e.target.value)
+              }
+              disabled={fetchLoading}
+            />
+          </Col>
+
+          <Col md={2}>
+            <Form.Control
+              type="text"
               placeholder="Remarks"
               value={remarks}
-              onChange={(e) => setRemarks(e.target.value)}
+              onChange={(e) =>
+                setRemarks(e.target.value)
+              }
               disabled={fetchLoading}
             />
           </Col>
@@ -176,6 +231,7 @@ const ApiKeyActivationSection: React.FC = () => {
               onClick={handleSaveApiKey}
               disabled={
                 !apiKey.trim() ||
+                !domain.trim() ||
                 !remarks.trim() ||
                 loading ||
                 fetchLoading

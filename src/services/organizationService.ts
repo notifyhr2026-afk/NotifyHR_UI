@@ -98,6 +98,16 @@ export const  getOrgDetailsAsync = async (OrganizationID : number) => {
     }
   };
 
+  export const  GetApiKeyInfoAsync = async (OrganizationID : number) => {   
+      const { data } = await axiosInstance.get(`Organizations/GetApiKeyInfoAsync?OrganizationID=${OrganizationID}`);
+      return data;
+  };
+export const SaveApiKeyInfo = async (payload: any) => {
+    const res = await axiosInstance.post("Organizations/SaveApiKeyInfo", payload);
+    return res.data[0];
+};
+
+
 // Exporting the functions for use in components
 export default {
     getOrganizations,
@@ -108,5 +118,7 @@ export default {
     getOrgRolesAsync,
     getOrgDetailsAsync,
     GetOrgPositionsAsync,
-    PutActivateLoginsAsync
+    PutActivateLoginsAsync,
+    GetApiKeyInfoAsync,
+    SaveApiKeyInfo
 };
