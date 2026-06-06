@@ -2,11 +2,11 @@
 import React from 'react';
 import { Container } from 'react-bootstrap';
 import EmployeeDetails from '../../components/Employee/EmployeeDetails';
-import EmployeeExperience from '../../components/Employee/EmployeeExperience';
 import EmployeePositionHistory from '../../components/Employee/EmployeePositionHistory';
-import EmployeeEducation from '../../components/Employee/EmployeeEducation';
-import EmployeeFamilyDetails from '../../components/Employee/EmployeeFamilyDetails';
-import EmployeeAddress from '../../components/Employee/EmployeeAddress';
+// import EmployeeEducation from '../../components/Employee/EmployeeEducation';
+// import EmployeeFamilyDetails from '../../components/Employee/EmployeeFamilyDetails';
+// import EmployeeAddress from '../../components/Employee/EmployeeAddress';
+//import EmployeeExperience from '../../components/Employee/EmployeeExperience';
 import EmployeeExitDetails from '../../components/Employee/EmployeeExitDetails';
 import ProbationDetails from '../../components/Employee/ProbationDetails';
 import EmployeeAsset from '../../components/Employee/EmployeeAsset';
@@ -14,6 +14,7 @@ import Accordion from 'react-bootstrap/Accordion';
 import EmployeeRoles from '../../components/Employee/EmployeeRoles';
 import EmployeeProjects from '../../components/Employee/EmployeeProjects';
 import EmployeeShifts from '../../components/Employee/EmployeeShifts';
+import EmployeeProfileView from '../../components/Employee/EmployeeProfileView';
 
 const ManageEmployee: React.FC = () => {
   return (
@@ -72,7 +73,7 @@ const ManageEmployee: React.FC = () => {
           </Accordion.Item>
 
 
-        <Accordion.Item eventKey="7">
+        {/* <Accordion.Item eventKey="7">
           <Accordion.Header>Experience</Accordion.Header>
           <Accordion.Body>
             <EmployeeExperience />
@@ -98,7 +99,7 @@ const ManageEmployee: React.FC = () => {
           <Accordion.Body>
             <EmployeeAddress />
           </Accordion.Body>
-        </Accordion.Item>   
+        </Accordion.Item>    */}
         
         <Accordion.Item eventKey="11">
           <Accordion.Header>Exit Details</Accordion.Header>
@@ -106,6 +107,13 @@ const ManageEmployee: React.FC = () => {
             <EmployeeExitDetails />
           </Accordion.Body>
         </Accordion.Item>
+
+          <Accordion.Item eventKey="12">
+              <Accordion.Header>Personal and Professional Details</Accordion.Header>
+              <Accordion.Body>
+                <EmployeeProfileView />
+              </Accordion.Body>
+            </Accordion.Item>
 
       </Accordion>
     </Container>

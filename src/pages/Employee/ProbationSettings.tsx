@@ -36,13 +36,17 @@ const confirmationOptions = [
 
 const ProbationSettings: React.FC = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
+
   const organizationID: number = user?.organizationID;
   const createdBy: string = user?.userName || "Admin";
 
   const [data, setData] = useState<ProbationSetting[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const [form, setForm] = useState<ProbationSetting>({
+  const [errors, setErrors] = useState<any>({});
+
+  const defaultForm: ProbationSetting = {
     settingID: 0,
     organizationID,
     employeeType: 0,
@@ -52,20 +56,17 @@ const ProbationSettings: React.FC = () => {
     autoConfirmation: false,
     confirmationType: "1",
     isActive: true,
-  });
+  };
 
-  // =========================
-  // MAP API RESPONSE 🔥
-  // =========================
+  const [form, setForm] = useState<ProbationSetting>(defaultForm);
+
   const mapData = (res: any): ProbationSetting[] => {
     let parsed = res;
 
-    // if API returns string → parse
     if (typeof res === "string") {
       parsed = JSON.parse(res);
     }
 
-    // handle .Table format
     if (parsed?.Table) {
       parsed = parsed.Table;
     }
@@ -83,12 +84,13 @@ const ProbationSettings: React.FC = () => {
     }));
   };
 
-  // =========================
-  // LOAD DATA
-  // =========================
   const loadData = async () => {
     try {
-      const res = await probationSettingsService.getProbationSettingsAsync(organizationID);
+      const res =
+        await probationSettingsService.getProbationSettingsAsync(
+          organizationID
+        );
+
       const mapped = mapData(res);
       setData(mapped);
     } catch {
@@ -100,84 +102,187 @@ const ProbationSettings: React.FC = () => {
     loadData();
   }, []);
 
-  // =========================
-  // SAVE
-  // =========================
+  const validateForm = () => {
+    const newErrors: any = {};
+
+    if (!form.employeeType) {
+      newErrors.employeeType = "Employee Type is required";
+    }
+
+    if (!form.probationMonths) {
+      newErrors.probationMonths = "Probation Months is required";
+    } else if (
+      form.probationMonths < 1 ||
+      form.probationMonths > 24
+    ) {
+      newErrors.probationMonths =
+        "Probation Months must be between 1 and 24";
+    }
+
+    if (form.allowExtension) {
+      if (
+        !form.maxExtensionMonths ||
+        form.maxExtensionMonths <= 0
+      ) {
+        newErrors.maxExtensionMonths =
+          "Max Extension Months is required";
+      }
+
+      if (
+        form.maxExtensionMonths &&
+        form.maxExtensionMonths > form.probationMonths
+      ) {
+        newErrors.maxExtensionMonths =
+          "Extension Months cannot exceed Probation Months";
+      }
+    }
+
+    if (!form.autoConfirmation && !form.confirmationType) {
+      newErrors.confirmationType =
+        "Confirmation Type is required";
+    }
+
+    const duplicate = data.find(
+      (x) =>
+        x.employeeType === form.employeeType &&
+        x.settingID !== form.settingID
+    );
+
+    if (duplicate) {
+      newErrors.employeeType =
+        "Setting already exists for this Employee Type";
+    }
+
+    setErrors(newErrors);
+
+    return Object.keys(newErrors).length === 0;
+  };
+
   const save = async () => {
+    if (!validateForm()) return;
+
     try {
+      setSaving(true);
+
       const payload = {
         ...form,
         organizationID,
         createdBy,
-        maxExtensionMonths: form.allowExtension ? form.maxExtensionMonths : null,
-        confirmationType: form.autoConfirmation ? null : form.confirmationType,
+        maxExtensionMonths: form.allowExtension
+          ? form.maxExtensionMonths
+          : null,
+        confirmationType: form.autoConfirmation
+          ? null
+          : form.confirmationType,
       };
 
-      const res = await probationSettingsService.createOrUpdateProbationSettingAsync(payload);
-      const parsed = typeof res === "string" ? JSON.parse(res) : res;
+      const res =
+        await probationSettingsService.createOrUpdateProbationSettingAsync(
+          payload
+        );
+
+      const parsed =
+        typeof res === "string" ? JSON.parse(res) : res;
 
       if (parsed[0]?.Value === 1) {
         ToastMessage.show(parsed[0].Message, "success");
-        const oldData = form.settingID ? data.find(d => d.settingID === form.settingID) : null;
-        fireAudit(form.settingID ? "UPDATE" : "CREATE", "ProbationSetting", oldData, form, organizationID, createdBy, "ProbationSettings");
+
+        const oldData = form.settingID
+          ? data.find(
+              (d) => d.settingID === form.settingID
+            )
+          : null;
+
+        fireAudit(
+          form.settingID ? "UPDATE" : "CREATE",
+          "ProbationSetting",
+          oldData,
+          form,
+          organizationID,
+          createdBy,
+          "ProbationSettings"
+        );
+
         setShowModal(false);
-        loadData(); // 🔥 reload properly
+        setErrors({});
+        loadData();
       } else {
-        ToastMessage.show(parsed[0]?.Message || "Failed", "warning");
+        ToastMessage.show(
+          parsed[0]?.Message || "Failed",
+          "warning"
+        );
       }
     } catch {
       ToastMessage.show("Save failed", "error");
+    } finally {
+      setSaving(false);
     }
   };
 
-  // =========================
-  // DELETE
-  // =========================
   const deleteSetting = async (id: number) => {
     if (!id) {
       ToastMessage.show("Invalid ID", "error");
       return;
     }
 
-    if (!window.confirm("Are you sure you want to delete this setting?")) return;
+    if (
+      !window.confirm(
+        "Are you sure you want to delete this setting?"
+      )
+    )
+      return;
 
     try {
-      const res = await probationSettingsService.deleteProbationSettingAsync(id, createdBy);
-      const parsed = typeof res === "string" ? JSON.parse(res) : res;
+      const res =
+        await probationSettingsService.deleteProbationSettingAsync(
+          id,
+          createdBy
+        );
+
+      const parsed =
+        typeof res === "string" ? JSON.parse(res) : res;
 
       if (parsed[0]?.Value === 1) {
-        ToastMessage.show("Deleted successfully", "success");
-        const oldData = data.find(d => d.settingID === id);
-        fireAudit("DELETE", "ProbationSetting", oldData, null, organizationID, createdBy, "ProbationSettings");
+        ToastMessage.show(
+          "Deleted successfully",
+          "success"
+        );
+
+        const oldData = data.find(
+          (d) => d.settingID === id
+        );
+
+        fireAudit(
+          "DELETE",
+          "ProbationSetting",
+          oldData,
+          null,
+          organizationID,
+          createdBy,
+          "ProbationSettings"
+        );
+
         loadData();
       } else {
-        ToastMessage.show(parsed[0]?.Message, "warning");
+        ToastMessage.show(
+          parsed[0]?.Message,
+          "warning"
+        );
       }
     } catch {
       ToastMessage.show("Delete failed", "error");
     }
   };
 
-  // =========================
-  // EDIT
-  // =========================
   const edit = (item: ProbationSetting) => {
+    setErrors({});
     setForm(item);
     setShowModal(true);
   };
 
   const openCreate = () => {
-    setForm({
-      settingID: 0,
-      organizationID,
-      employeeType: 0,
-      probationMonths: 3,
-      allowExtension: false,
-      maxExtensionMonths: 0,
-      autoConfirmation: false,
-      confirmationType: "1",
-      isActive: true,
-    });
+    setErrors({});
+    setForm(defaultForm);
     setShowModal(true);
   };
 
@@ -189,9 +294,13 @@ const ProbationSettings: React.FC = () => {
       <ToastProvider />
 
       <div className="container mt-3">
-        <div className="d-flex justify-content-between mb-3">
+        <div className="d-flex justify-content-between align-items-center mb-3">
           <h4>Probation Settings</h4>
-          <button className="btn btn-primary" onClick={openCreate}>
+
+          <button
+            className="btn btn-primary"
+            onClick={openCreate}
+          >
             + Add
           </button>
         </div>
@@ -211,25 +320,62 @@ const ProbationSettings: React.FC = () => {
           <tbody>
             {data.length === 0 ? (
               <tr>
-                <td colSpan={6} className="text-center">No data found</td>
+                <td
+                  colSpan={6}
+                  className="text-center"
+                >
+                  No data found
+                </td>
               </tr>
             ) : (
               data.map((d) => (
                 <tr key={d.settingID}>
-                  <td>{getEmployeeLabel(d.employeeType)}</td>
-                  <td>{d.probationMonths}</td>
-                  <td>{d.allowExtension ? `Yes (${d.maxExtensionMonths})` : "No"}</td>
-                  <td>{d.autoConfirmation ? "Auto" : "Manual"}</td>
                   <td>
-                    <span className={`badge ${d.isActive ? "bg-success" : "bg-secondary"}`}>
-                      {d.isActive ? "Active" : "Inactive"}
+                    {getEmployeeLabel(d.employeeType)}
+                  </td>
+
+                  <td>{d.probationMonths}</td>
+
+                  <td>
+                    {d.allowExtension
+                      ? `Yes (${d.maxExtensionMonths})`
+                      : "No"}
+                  </td>
+
+                  <td>
+                    {d.autoConfirmation
+                      ? "Auto"
+                      : "Manual"}
+                  </td>
+
+                  <td>
+                    <span
+                      className={`badge ${
+                        d.isActive
+                          ? "bg-success"
+                          : "bg-secondary"
+                      }`}
+                    >
+                      {d.isActive
+                        ? "Active"
+                        : "Inactive"}
                     </span>
                   </td>
+
                   <td>
-                    <button className="btn btn-warning btn-sm me-2" onClick={() => edit(d)}>
+                    <button
+                      className="btn btn-warning btn-sm me-2"
+                      onClick={() => edit(d)}
+                    >
                       <i className="bi bi-pencil-square"></i>
                     </button>
-                    <button className="btn btn-danger btn-sm" onClick={() => deleteSetting(d.settingID)}>
+
+                    <button
+                      className="btn btn-danger btn-sm"
+                      onClick={() =>
+                        deleteSetting(d.settingID)
+                      }
+                    >
                       <i className="bi bi-trash"></i>
                     </button>
                   </td>
@@ -240,107 +386,206 @@ const ProbationSettings: React.FC = () => {
         </table>
       </div>
 
-      {/* MODAL */}
-     <Modal show={showModal} onHide={() => setShowModal(false)} centered size="lg">
-  <Modal.Header closeButton>
-    <Modal.Title>
-      {form.settingID === 0 ? "Add Setting" : "Edit Setting"}
-    </Modal.Title>
-  </Modal.Header>
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        centered
+        size="lg"
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {form.settingID === 0
+              ? "Add Setting"
+              : "Edit Setting"}
+          </Modal.Title>
+        </Modal.Header>
 
-  <Modal.Body>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-3">
+              <Form.Label>
+                Employee Type{" "}
+                <span className="text-danger">*</span>
+              </Form.Label>
 
-    <Form>
-      <Form.Group className="mb-3">
-        <Form.Label>Employee Type</Form.Label>
-        <Select
-           className="org-select"
-          classNamePrefix="org-select"
-          options={employeeOptions}
-          value={employeeOptions.find((x) => x.value === form.employeeType)}
-          onChange={(e) =>
-            setForm({ ...form, employeeType: e?.value || 0 })
-          }
-        />
-      </Form.Group>
+              <Select
+                className="org-select"
+                classNamePrefix="org-select"
+                options={employeeOptions}
+                value={employeeOptions.find(
+                  (x) =>
+                    x.value === form.employeeType
+                )}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    employeeType:
+                      e?.value || 0,
+                  })
+                }
+              />
 
-      <Form.Group className="mb-3">
-        <Form.Label>Probation Months</Form.Label>
-        <Form.Control
-          type="number"
-          value={form.probationMonths}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              probationMonths: parseInt(e.target.value) || 0,
-            })
-          }
-        />
-      </Form.Group>
+              {errors.employeeType && (
+                <small className="text-danger">
+                  {errors.employeeType}
+                </small>
+              )}
+            </Form.Group>
 
-      <Form.Check
-        type="checkbox"
-        label="Allow Extension"
-        checked={form.allowExtension}
-        onChange={(e) =>
-          setForm({ ...form, allowExtension: e.target.checked })
-        }
-      />
+            <Form.Group className="mb-3">
+              <Form.Label>
+                Probation Months{" "}
+                <span className="text-danger">*</span>
+              </Form.Label>
 
-      {form.allowExtension && (
-        <Form.Control
-          className="mt-2"
-          type="number"
-          placeholder="Max Extension Months"
-          value={form.maxExtensionMonths}
-          onChange={(e) =>
-            setForm({
-              ...form,
-              maxExtensionMonths: parseInt(e.target.value) || 0,
-            })
-          }
-        />
-      )}
+              <Form.Control
+                type="number"
+                min={1}
+                max={24}
+                value={form.probationMonths}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    probationMonths:
+                      parseInt(
+                        e.target.value
+                      ) || 0,
+                  })
+                }
+              />
 
-      <Form.Check
-        className="mt-3"
-        type="checkbox"
-        label="Auto Confirmation"
-        checked={form.autoConfirmation}
-        onChange={(e) =>
-          setForm({ ...form, autoConfirmation: e.target.checked })
-        }
-      />
+              {errors.probationMonths && (
+                <small className="text-danger">
+                  {errors.probationMonths}
+                </small>
+              )}
+            </Form.Group>
 
-      {!form.autoConfirmation && (
-        <Form.Group className="mt-3">
-          <Form.Label>Confirmation Type</Form.Label>
-          <Select
-             className="org-select"
-          classNamePrefix="org-select"
-            options={confirmationOptions}
-            value={confirmationOptions.find(
-              (x) => x.value === form.confirmationType
+            <Form.Check
+              type="checkbox"
+              label="Allow Extension"
+              checked={form.allowExtension}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  allowExtension:
+                    e.target.checked,
+                })
+              }
+            />
+
+            {form.allowExtension && (
+              <>
+                <Form.Control
+                  className="mt-2"
+                  type="number"
+                  min={1}
+                  value={
+                    form.maxExtensionMonths
+                  }
+                  placeholder="Max Extension Months"
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      maxExtensionMonths:
+                        parseInt(
+                          e.target.value
+                        ) || 0,
+                    })
+                  }
+                />
+
+                {errors.maxExtensionMonths && (
+                  <small className="text-danger">
+                    {
+                      errors.maxExtensionMonths
+                    }
+                  </small>
+                )}
+              </>
             )}
-            onChange={(e) =>
-              setForm({ ...form, confirmationType: e?.value || "" })
+
+            <Form.Check
+              className="mt-3"
+              type="checkbox"
+              label="Auto Confirmation"
+              checked={form.autoConfirmation}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  autoConfirmation:
+                    e.target.checked,
+                })
+              }
+            />
+
+            {!form.autoConfirmation && (
+              <Form.Group className="mt-3">
+                <Form.Label>
+                  Confirmation Type{" "}
+                  <span className="text-danger">
+                    *
+                  </span>
+                </Form.Label>
+
+                <Select
+                  className="org-select"
+                  classNamePrefix="org-select"
+                  options={
+                    confirmationOptions
+                  }
+                  value={confirmationOptions.find(
+                    (x) =>
+                      x.value ===
+                      form.confirmationType
+                  )}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      confirmationType:
+                        e?.value || "",
+                    })
+                  }
+                />
+
+                {errors.confirmationType && (
+                  <small className="text-danger">
+                    {
+                      errors.confirmationType
+                    }
+                  </small>
+                )}
+              </Form.Group>
+            )}
+          </Form>
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() =>
+              setShowModal(false)
             }
-          />
-        </Form.Group>
-      )}
-    </Form>
+          >
+            Cancel
+          </Button>
 
-  </Modal.Body>
-
-  <Modal.Footer>
-    <Button variant="secondary" onClick={() => setShowModal(false)}>
-      Cancel
-    </Button>
-    <Button variant="primary" onClick={save}>
-      Save
-    </Button>
-  </Modal.Footer>
-</Modal>
+          <Button
+            variant="primary"
+            onClick={save}
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" />
+                Saving...
+              </>
+            ) : (
+              "Save"
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </>
   );
 };

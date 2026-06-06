@@ -188,7 +188,7 @@ const EmployeeDetails: React.FC = () => {
                 <Row>
 
                     {/* PROFILE PIC */}
-                     <Col md={3}>
+                     {/* <Col md={3}>
                         <div style={{
                             width: "150px",
                             height: "150px",
@@ -226,10 +226,10 @@ const EmployeeDetails: React.FC = () => {
                                 }}
                             />
                         </Form.Group>
-                    </Col> 
+                    </Col>  */}
 
                     {/* FORM */}
-                    <Col md={9}>
+                    <Col md={12}>
 
                         {/* NAME */}
                         <Row className="mb-3">

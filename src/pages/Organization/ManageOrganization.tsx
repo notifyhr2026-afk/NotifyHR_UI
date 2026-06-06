@@ -13,6 +13,7 @@ import PaymentInfoSection from "../../components/Organization/PaymentInfoSection
 import AssignMenu from "../../components/Organization/AssignMenu";
 import LoginActivationSection from "../../components/Organization/LoginActivationSection";
 import OrganizationSetup from "../../components/Organization/OrganizationLogoSetup";
+import ApiKeyActivationSection from "../../components/Organization/ApiKeyActivationSection";
 
 const ManageOrganization: React.FC = () => {
   
@@ -27,7 +28,8 @@ const ManageOrganization: React.FC = () => {
     // { key: "6", title: "Invoice Info", component: <InvoiceInfoSection /> },
     // { key: "7", title: "Payment Info", component: <PaymentInfoSection /> },
     { key: "8", title: "Onboarding & Login Activation", component: <LoginActivationSection /> },
-    { key: "9", title: "Organization Setup", component: <OrganizationSetup /> },
+    // { key: "9", title: "Organization Setup", component: <OrganizationSetup /> },
+    { key: "10", title: "API Key Activation", component: <ApiKeyActivationSection /> },
   ];
 
   return (
