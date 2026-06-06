@@ -36,5 +36,9 @@ const ticketService = {
         const res = await axiosInstance.post("HelpDesk/UpdateAssignTicket", payload);
         return res.data;
     },
+    GetTicketReportAsync: async (payload: any) => {
+       const res = await axiosInstance.post("HelpDesk/GetTicketReport", payload);
+      return res.data;
+    },
 };
 export default ticketService;

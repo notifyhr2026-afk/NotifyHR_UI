@@ -1,159 +1,286 @@
-// src/pages/helpdesk/ManagerTicketVerification.tsx
 import { useEffect, useMemo, useState } from 'react';
 import Select from 'react-select';
-import { Ticket } from '../../types/helpdesk';
+import ticketService from '../../services/ticketService';
+import employeeService from '../../services/employeeService';
 
-const CATEGORY_OPTIONS = ['IT', 'HR', 'Payroll'];
-
-const PRIORITY_OPTIONS: Ticket['priority'][] = [
-  'Low',
-  'Medium',
-  'High',
-  'Critical',
+const PRIORITY_OPTIONS = [
+  { id: 1, name: 'Low' },
+  { id: 2, name: 'Medium' },
+  { id: 3, name: 'High' },
+  { id: 4, name: 'Critical' },
 ];
 
-const STATUS_OPTIONS: Ticket['status'][] = [
-  'Open',
-  'In Progress',
-  'Resolved',
-  'Closed',
+const STATUS_OPTIONS = [
+  { id: 1, name: 'Open' },
+  { id: 2, name: 'In Progress' },
+  { id: 3, name: 'On Hold' },
+  { id: 4, name: 'Resolved' },
+  { id: 5, name: 'Closed' },
 ];
 
 export default function ManagerTicketVerification() {
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [tickets, setTickets] = useState<any[]>([]);
+  const [categories, setCategories] = useState<
+    { CategoryId: number; CategoryName: string }[]
+  >([]);
 
-  const [category, setCategory] = useState<string>('All');
-  const [priority, setPriority] = useState<string>('All');
-  const [status, setStatus] = useState<string>('All');
-  const [employee, setEmployee] = useState<string | null>(null);
+  const [category, setCategory] = useState<number | null>(null);
+  const [priority, setPriority] = useState<number | null>(null);
+  const [status, setStatus] = useState<number | null>(null);
+  const [employee, setEmployee] = useState<number | null>(null);
 
-  // 🔹 Mock data (replace with API)
+  const [employeeOptions, setEmployeeOptions] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const organizationID = user?.organizationID || 0;
+
+  // Current Week Dates
+  const getCurrentWeekDates = () => {
+    const today = new Date();
+
+    const day = today.getDay(); // 0 = Sunday
+    const diffToMonday = day === 0 ? -6 : 1 - day;
+
+    const start = new Date(today);
+    start.setDate(today.getDate() + diffToMonday);
+    start.setHours(0, 0, 0, 0);
+
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    end.setHours(23, 59, 59, 999);
+
+    return {
+      start: start.toISOString().split('T')[0],
+      end: end.toISOString().split('T')[0],
+    };
+  };
+
+  const weekDates = getCurrentWeekDates();
+
+  const [fromDate, setFromDate] = useState(weekDates.start);
+  const [toDate, setToDate] = useState(weekDates.end);
+
   useEffect(() => {
-    setTickets([
-      {
-        ticketId: 1,
-        ticketNumber: 'TCK-1001',
-        subject: 'Laptop issue',
-        description: '',
-        category: 'IT',
-        priority: 'High',
-        status: 'Open',
-        assignedTo: 'John',
-        createdAt: new Date().toISOString(),
-      },
-      {
-        ticketId: 2,
-        ticketNumber: 'TCK-1002',
-        subject: 'Payroll mismatch',
-        description: '',
-        category: 'Payroll',
-        priority: 'Critical',
-        status: 'In Progress',
-        assignedTo: 'Sarah',
-        createdAt: new Date().toISOString(),
-      },
-      {
-        ticketId: 3,
-        ticketNumber: 'TCK-1003',
-        subject: 'VPN issue',
-        description: '',
-        category: 'IT',
-        priority: 'Medium',
-        status: 'Resolved',
-        assignedTo: 'Michael',
-        createdAt: new Date().toISOString(),
-      },
-    ]);
+    loadMasters();
   }, []);
 
-  // 🔹 Employee options for react-select
-  const employeeOptions = useMemo(() => {
-    return Array.from(
-      new Set(tickets.map(t => t.assignedTo).filter(Boolean))
-    ).map(emp => ({
-      label: emp as string,
-      value: emp as string,
-    }));
-  }, [tickets]);
+  const loadMasters = async () => {
+    try {
+      const [catRes, empRes] = await Promise.all([
+        ticketService.GetSupportCategoryByOrganization(organizationID),
+        employeeService.getEmployeesByOrganizationIdAsync(organizationID),
+      ]);
 
-  const filteredTickets = useMemo(() => {
-    return tickets.filter(t =>
-      (category === 'All' || t.category === category) &&
-      (priority === 'All' || t.priority === priority) &&
-      (status === 'All' || t.status === status) &&
-      (!employee || t.assignedTo === employee)
-    );
-  }, [tickets, category, priority, status, employee]);
+      const catData = catRes?.Table || catRes || [];
+      const empData = empRes?.Table || empRes || [];
+
+      setCategories(catData);
+
+      setEmployeeOptions(
+        empData.map((e: any) => ({
+          value: e.EmployeeID || e.EmployeeId || e.id,
+          label:
+            e.EmployeeName ||
+            `${e.FirstName || ''} ${e.LastName || ''}`.trim(),
+        }))
+      );
+
+      fetchReport();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const fetchReport = async () => {
+    try {
+      setLoading(true);
+
+      const payload = {
+        organizationId: organizationID,
+        categoryId: category || null,
+        categoryName: categories.find(c => c.CategoryId === category)?.CategoryName || null,
+        statusId: status || null,
+        priorityId: priority || null,
+        assignedToUserId: employee || null,
+        fromDate: fromDate
+          ? new Date(fromDate).toISOString()
+          : null,
+        toDate: toDate
+          ? new Date(toDate + 'T23:59:59').toISOString()
+          : null,
+      };
+
+      const response = await ticketService.GetTicketReportAsync(payload);
+
+      const reportData = response?.Table || response || [];
+
+      const normalized = reportData.map((t: any) => ({
+        ticketId: t.TicketId,
+        ticketNumber: t.TicketNumber,
+        subject: t.Subject,
+        description: t.Description,
+        categoryId: t.CategoryId,
+        categoryName: t.CategoryName || categories.find(c => c.CategoryId === t.CategoryId)?.CategoryName || null,
+        priorityId: t.PriorityId,
+        statusId: t.StatusId,
+        assignedToUserId: t.AssignedToUserId,
+        createdAt: t.CreatedAt,
+
+        category:
+          categories.find(c => c.CategoryId === t.CategoryId)
+            ?.CategoryName || '-',
+
+        priority:
+          PRIORITY_OPTIONS.find(p => p.id === t.PriorityId)?.name ||
+          '-',
+
+        status:
+          STATUS_OPTIONS.find(s => s.id === t.StatusId)?.name ||
+          '-',
+
+        assignedTo:
+          employeeOptions.find(
+            e => e.value === t.AssignedToUserId
+          )?.label || 'Unassigned',
+      }));
+
+      setTickets(normalized);
+    } catch (error) {
+      console.error('Failed to fetch report', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredTickets = useMemo(() => tickets, [tickets]);
 
   return (
     <div className="container mt-4">
       <h3 className="mb-3">Manager Ticket Verification</h3>
 
-      {/* 🔹 Filters */}
       <div className="card p-3 mb-4">
-        <div className="row g-3 align-items-end">
-          <div className="col-md-3">
+        <div className="row g-3">
+
+          {/* Category */}
+          <div className="col-md-2">
             <label className="form-label">Category</label>
             <select
-              className="form-select org-select"
-              value={category}
-              onChange={e => setCategory(e.target.value)}
+              className="form-select"
+              value={category ?? ''}
+              onChange={(e) =>
+                setCategory(
+                  e.target.value ? Number(e.target.value) : null
+                )
+              }
             >
-              <option>All</option>
-              {CATEGORY_OPTIONS.map(c => (
-                <option key={c}>{c}</option>
+              <option value="">All</option>
+              {categories.map((c) => (
+                <option
+                  key={c.CategoryId}
+                  value={c.CategoryId}
+                >
+                  {c.CategoryName}
+                </option>
               ))}
             </select>
           </div>
 
-          <div className="col-md-3">
+          {/* Priority */}
+          <div className="col-md-2">
             <label className="form-label">Priority</label>
             <select
-              className="form-select org-select"
-              value={priority}
-              onChange={e => setPriority(e.target.value)}
+              className="form-select"
+              value={priority ?? ''}
+              onChange={(e) =>
+                setPriority(
+                  e.target.value ? Number(e.target.value) : null
+                )
+              }
             >
-              <option>All</option>
-              {PRIORITY_OPTIONS.map(p => (
-                <option key={p}>{p}</option>
+              <option value="">All</option>
+
+              {PRIORITY_OPTIONS.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
               ))}
             </select>
           </div>
 
-          <div className="col-md-3">
+          {/* Status */}
+          <div className="col-md-2">
             <label className="form-label">Status</label>
             <select
-              className="form-select org-select"
-              value={status}
-              onChange={e => setStatus(e.target.value)}
+              className="form-select"
+              value={status ?? ''}
+              onChange={(e) =>
+                setStatus(
+                  e.target.value ? Number(e.target.value) : null
+                )
+              }
             >
-              <option>All</option>
-              {STATUS_OPTIONS.map(s => (
-                <option key={s}>{s}</option>
+              <option value="">All</option>
+
+              {STATUS_OPTIONS.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
               ))}
             </select>
           </div>
 
-          <div className="col-md-3">
+          {/* Employee */}
+          <div className="col-md-2">
             <label className="form-label">Employee</label>
             <Select
               options={employeeOptions}
               isClearable
-              placeholder="Search employee..."
-              onChange={option =>
+              placeholder="Select Employee"
+              onChange={(option) =>
                 setEmployee(option ? option.value : null)
               }
-              className="org-select"
-              classNamePrefix="org-select"
             />
+          </div>
+
+          {/* From Date */}
+          <div className="col-md-2">
+            <label className="form-label">From Date</label>
+            <input
+              type="date"
+              className="form-control"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+            />
+          </div>
+
+          {/* To Date */}
+          <div className="col-md-2">
+            <label className="form-label">To Date</label>
+            <input
+              type="date"
+              className="form-control"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+            />
+          </div>
+
+          {/* Fetch Button */}
+          <div className="col-md-12 text-end">
+            <button
+              className="btn btn-primary"
+              onClick={fetchReport}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Fetch Report'}
+            </button>
           </div>
         </div>
       </div>
 
-      {/* 🔹 Grid / Table */}
       <div className="card">
         <div className="table-responsive">
-          <table className="table table-hover table-dark-custom">
+          <table className="table table-hover">
             <thead>
               <tr>
                 <th>Ticket #</th>
@@ -168,26 +295,30 @@ export default function ManagerTicketVerification() {
             <tbody>
               {filteredTickets.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center text-muted py-3">
+                  <td colSpan={6} className="text-center">
                     No tickets found
                   </td>
                 </tr>
               ) : (
-                filteredTickets.map(t => (
+                filteredTickets.map((t) => (
                   <tr key={t.ticketId}>
                     <td>{t.ticketNumber}</td>
-                    <td>{t.category}</td>
+                    <td>{t.categoryName}</td>
+
                     <td>
                       <span className="badge bg-warning text-dark">
                         {t.priority}
                       </span>
                     </td>
+
                     <td>
                       <span className="badge bg-info">
                         {t.status}
                       </span>
                     </td>
-                    <td>{t.assignedTo || 'Unassigned'}</td>
+
+                    <td>{t.assignedTo}</td>
+
                     <td>
                       {new Date(t.createdAt).toLocaleDateString()}
                     </td>
