@@ -43,6 +43,12 @@
           border-color: #ff4d4d !important;
         }
 
+        /* present-day: any day with attendance/leave/activity */
+        .present-day {
+          background-color: #d4edda !important;
+          border-color: #c3e6cb !important;
+        }
+
         .react-calendar__tile--now {
           background-color: #d7d15396 !important;
           border-color: #339af0 !important;
