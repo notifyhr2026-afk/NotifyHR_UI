@@ -1,7 +1,9 @@
 import { BrowserRouter as Router } from 'react-router-dom';
 import { useEffect } from 'react';
+// @ts-ignore: CSS side-effect import without type declarations
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+// @ts-ignore: CSS side-effect import without type declarations
 import './App.css';
 import RoutesComponent from './Routes/RoutesComponent';
 import { EmployeeProvider } from './context/EmployeeContext';
