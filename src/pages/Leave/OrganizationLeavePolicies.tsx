@@ -231,6 +231,7 @@ const deletePolicy = async (id: number) => {
 
   // ---------- Filter for All Policies Tab ----------
   const [filterLeaveType, setFilterLeaveType] = useState("");
+  const [showAllLeaveTypes, setShowAllLeaveTypes] = useState(false);
 
   return (
     <Container>
@@ -241,29 +242,46 @@ const deletePolicy = async (id: number) => {
         <Accordion.Item eventKey="0">
           <Accordion.Header>Leave Types</Accordion.Header>
           <Accordion.Body>
+            <div className="d-flex align-items-center mb-3 gap-2">
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={showAllLeaveTypes}
+                  onChange={(e) => setShowAllLeaveTypes(e.target.checked)}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+              <span style={{ fontWeight: 500, color: showAllLeaveTypes ? "#28a745" : "#555" }}>
+                {showAllLeaveTypes ? "Manage Mode (All Types)" : "View Mode (Active Only)"}
+              </span>
+            </div>
             <Table className="table table-hover table-dark-custom">
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Description</th>
-                  <th>Action</th>
+                  {showAllLeaveTypes && <th>Action</th>}
                 </tr>
               </thead>
 
               <tbody>
-                {orgLeaveTypes.map((lt) => (
+                {orgLeaveTypes
+                  .filter((lt) => showAllLeaveTypes || !!!lt.IsActive)
+                  .map((lt) => (
                   <tr key={lt.LeaveTypeID}>
                     <td>{lt.LeaveTypeName}</td>
                     <td>{lt.Description}</td>
-                    <td>
-                      <Button
-                      size="sm"
-                      variant={lt.IsActive ? "danger" : "success"}
-                      onClick={() => handleToggleStatus(lt)}
-                    >
-                      {lt.IsActive ? "Deactivate" : "Activate"}
-                    </Button>
-                    </td>
+                    {showAllLeaveTypes && (
+                      <td>
+                        <Button
+                          size="sm"
+                          variant={lt.IsActive ? "danger" : "success"}
+                          onClick={() => handleToggleStatus(lt)}
+                        >
+                          {lt.IsActive ? "Deactivate" : "Activate"}
+                        </Button>
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
