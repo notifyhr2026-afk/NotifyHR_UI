@@ -4,7 +4,8 @@ const shiftService = {
   
  GetShiftsByOrganization: async (organizationID: number) => {
     const response = await axiosInstance.get(`Shift?organizationID=${organizationID}`);
-    return response.data;
+    const data = response.data;
+    return Array.isArray(data?.Table) ? data.Table : data || [];
   },
   PostPerformanceReviewCyclesByAsync: async (payload: any) => {
     const res = await axiosInstance.post("Shift", payload);

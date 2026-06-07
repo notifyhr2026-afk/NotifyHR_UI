@@ -14,7 +14,6 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import employeeAttendanceService from "../../services/employeeAttendanceService";
-import holidayService from "../../services/holidayService";
 import  "../../css/AttendanceCalendar.css";
 
 interface Holiday {
@@ -34,11 +33,6 @@ interface SelectedDateData {
   startTime: string;
   endTime: string;
 }
-
-const holidays: Holiday[] = [
-  { date: "2026-02-01", name: "All Saints' Day" },
-  { date: "2026-02-11", name: "Veterans Day" },
-];
 
 const AttendanceCalendar: React.FC = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");  
@@ -62,6 +56,8 @@ const AttendanceCalendar: React.FC = () => {
   >([]);
 
   const [rawAttendance, setRawAttendance] = useState<any[]>([]);
+  const [activities, setActivities] = useState<any[]>([]);
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
 
   const formatDate = (d: Date) => {
   const year = d.getFullYear();
@@ -106,17 +102,28 @@ const AttendanceCalendar: React.FC = () => {
         toDate,
       };
 
-      const res =
-        await employeeAttendanceService.getEmployeeAttendance(payload);
+      const [res, activitiesRes] = await Promise.all([
+        employeeAttendanceService.getEmployeeAttendance(payload),
+        employeeAttendanceService.GetEmployeeTimeActivities(payload),
+      ]);
 
       const raw = res?.Table1 || [];
+      const activitiesArr = Array.isArray(activitiesRes) ? activitiesRes : activitiesRes?.Table || [];
 
       setRawAttendance(raw);
+      setActivities(activitiesArr || []);
+
+      // populate holidays from activities where ActivityType === 'HOLIDAY'
+      const holidayList: Holiday[] = (activitiesArr || [])
+        .filter((a: any) => String(a.ActivityType).toUpperCase() === "HOLIDAY")
+        .map((h: any) => ({ date: (h.ActivityDate || "").split("T")[0], name: h.Description || h.ActivityType }));
+
+      setHolidays(holidayList);
 
       const grouped: Record<string, any[]> = {};
 
       raw.forEach((item: any) => {
-        const d = item.AttendanceDate.split("T")[0];
+        const d = (item.AttendanceDate || "").split("T")[0];
 
         if (!grouped[d]) grouped[d] = [];
 
@@ -433,6 +440,18 @@ const AttendanceCalendar: React.FC = () => {
 
                 if ([0, 6].includes(tileDate.getDay()))
                   classes.push("weekend-day");
+
+                const key = formatDate(tileDate);
+
+                // present if attendance logs exist for the day OR activities include present/leave/holiday
+                const hasAttendance = attendanceData.some((a) => a.date === key);
+                const presentTypes = new Set(["ATTENDANCE", "LEAVE", "ATTENDANCE_CORRECTION", "HOLIDAY"]);
+                const hasActivity = activities.some((act) => {
+                  const dt = (act.ActivityDate || "").split("T")[0];
+                  return dt === key && presentTypes.has(String(act.ActivityType).toUpperCase());
+                });
+
+                if (hasAttendance || hasActivity) classes.push("present-day");
               }
 
               return classes.join(" ");

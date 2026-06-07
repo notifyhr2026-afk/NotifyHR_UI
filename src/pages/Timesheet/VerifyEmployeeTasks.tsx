@@ -1,5 +1,9 @@
-import React, { useState } from "react";
-import { Table, Button, Form, Row, Col, Badge } from "react-bootstrap";
+import React, { useEffect, useMemo, useState } from "react";
+import Select from "react-select";
+import { Table, Button, Form, Row, Col, Badge, Spinner } from "react-bootstrap";
+import taskService from "../../services/taskService";
+import employeeService from "../../services/employeeService";
+import departmentService from "../../services/departmentService";
 
 /* ===================== INTERFACE ===================== */
 
@@ -8,77 +12,123 @@ interface EmployeeTask {
   employeeName: string;
   projectName: string;
   taskTitle: string;
+  taskDescription?: string;
   taskDate: string;
   noOfHours: number;
-  status: "Pending" | "Approved" | "Rejected";
+  status: string;
 }
 
-/* ===================== MOCK DATA ===================== */
+interface EmployeeOption {
+  value: number;
+  label: string;
+  departmentId?: number;
+}
 
-const allTasks: EmployeeTask[] = [
-  {
-    id: 1,
-    employeeName: "John Doe",
-    projectName: "Project A",
-    taskTitle: "UI Design",
-    taskDate: "2026-04-10",
-    noOfHours: 4,
-    status: "Pending",
-  },
-  {
-    id: 2,
-    employeeName: "Jane Smith",
-    projectName: "Project B",
-    taskTitle: "API Development",
-    taskDate: "2026-04-11",
-    noOfHours: 6,
-    status: "Approved",
-  },
-  {
-    id: 3,
-    employeeName: "John Doe",
-    projectName: "Project C",
-    taskTitle: "Testing",
-    taskDate: "2026-04-12",
-    noOfHours: 3,
-    status: "Rejected",
-  },
-];
+interface DepartmentOption {
+  value: number;
+  label: string;
+}
+
 
 /* ===================== COMPONENT ===================== */
 
 const VerifyEmployeeTasks: React.FC = () => {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID = user?.organizationID || 0;
 
-  /* ===== FILTER STATE ===== */
-  const [employee, setEmployee] = useState("");
-  const [status, setStatus] = useState("");
+  const [departments, setDepartments] = useState<DepartmentOption[]>([]);
+  const [employees, setEmployees] = useState<EmployeeOption[]>([]);
+  const [selectedDepartment, setSelectedDepartment] = useState<DepartmentOption | null>(null);
+  const [selectedEmployee, setSelectedEmployee] = useState<EmployeeOption | null>(null);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
-
   const [tasks, setTasks] = useState<EmployeeTask[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  /* ===================== HANDLE GET ===================== */
+  useEffect(() => {
+    const loadFilters = async () => {
+      try {
+        const [empRes, deptRes] = await Promise.all([
+          employeeService.getEmployeesByOrganizationIdAsync(organizationID),
+          departmentService.getdepartmentesAsync(organizationID),
+        ]);
 
-  const handleGet = () => {
-    let filtered = [...allTasks];
+        const empData = empRes?.Table || empRes || [];
+        const deptData = deptRes?.Table || deptRes || [];
 
-    if (employee) {
-      filtered = filtered.filter(t => t.employeeName === employee);
+        setEmployees(
+          empData.map((emp: any) => ({
+            value: emp.EmployeeID || emp.EmployeeId || emp.id,
+            label:
+              emp.EmployeeName ||
+              `${emp.FirstName || ""} ${emp.LastName || ""}`.trim() ||
+              "Unknown",
+            departmentId: emp.DepartmentID || emp.DepartmentId || null,
+          }))
+        );
+
+        setDepartments(
+          deptData.map((dept: any) => ({
+            value: dept.DepartmentID || dept.DepartmentId,
+            label: dept.DepartmentName || dept.DepartmentName || "",
+          }))
+        );
+      } catch (error) {
+        console.error("Error loading employees or departments", error);
+      }
+    };
+
+    if (organizationID > 0) {
+      loadFilters();
     }
+  }, [organizationID]);
 
-    if (status) {
-      filtered = filtered.filter(t => t.status === status);
+  const filteredEmployeeOptions = useMemo(() => {
+    return selectedDepartment
+      ? employees.filter((emp) => emp.departmentId === selectedDepartment.value)
+      : employees;
+  }, [employees, selectedDepartment]);
+
+  useEffect(() => {
+    if (
+      selectedEmployee &&
+      !filteredEmployeeOptions.some((emp) => emp.value === selectedEmployee.value)
+    ) {
+      setSelectedEmployee(null);
     }
+  }, [filteredEmployeeOptions, selectedEmployee]);
 
-    if (fromDate) {
-      filtered = filtered.filter(t => t.taskDate >= fromDate);
+  const handleGet = async () => {
+    try {
+      setLoading(true);
+
+      const payload = {
+        organizationId: organizationID,
+        employeeId: selectedEmployee?.value || null,
+        fromDate: fromDate || null,
+        toDate: toDate || null,
+      };
+
+      const data = await taskService.GetEmployeeDailyTasksByDateRange(payload);
+
+      const normalizedTasks: EmployeeTask[] = data.map((item: any) => ({
+        id: item.TaskID || item.id || item.taskId || 0,
+        employeeName: item.EmployeeName || item.employeeName || "",
+        projectName: item.ProjectName || item.projectName || "",
+        taskTitle: item.TaskTitle || item.taskTitle || "",
+        taskDescription: item.TaskDescription || item.taskDescription || "",
+        taskDate: item.TaskDate || item.taskDate || "",
+        noOfHours: item.NoOfHours ?? item.noOfHours ?? 0,
+        status: item.Status || item.status || "Pending",
+      }));
+
+      setTasks(normalizedTasks);
+    } catch (error) {
+      console.error("Error fetching employee tasks", error);
+      setTasks([]);
+    } finally {
+      setLoading(false);
     }
-
-    if (toDate) {
-      filtered = filtered.filter(t => t.taskDate <= toDate);
-    }
-
-    setTasks(filtered);
   };
 
   const getBadge = (status: string) => {
@@ -88,7 +138,7 @@ const VerifyEmployeeTasks: React.FC = () => {
       case "Rejected":
         return <Badge bg="danger">Rejected</Badge>;
       default:
-        return <Badge bg="warning">Pending</Badge>;
+        return <Badge bg="warning">{status || "Pending"}</Badge>;
     }
   };
 
@@ -101,45 +151,69 @@ const VerifyEmployeeTasks: React.FC = () => {
 
       {/* ===================== FILTER SECTION ===================== */}
 
-      <Row className="mb-3">
-
+      <Row className="mb-3 gy-3">
         <Col md={3}>
-          <Form.Select value={employee} onChange={(e) => setEmployee(e.target.value)}>
-            <option value="">All Employees</option>
-            <option>John Doe</option>
-            <option>Jane Smith</option>
-          </Form.Select>
+          <Form.Group>
+            <Form.Label>Department</Form.Label>
+            <Form.Select
+              value={selectedDepartment?.value ?? ""}
+              onChange={(e) => {
+                const value = e.target.value;
+                const dept = departments.find((d) => String(d.value) === value) || null;
+                setSelectedDepartment(dept);
+              }}
+            >
+              <option value="">All Departments</option>
+              {departments.map((dept) => (
+                <option key={dept.value} value={dept.value}>
+                  {dept.label}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
+        </Col>
+
+        <Col md={4}>
+          <Form.Group>
+            <Form.Label>Employee</Form.Label>
+            <Select
+              options={filteredEmployeeOptions}
+              value={selectedEmployee}
+              onChange={(option) => setSelectedEmployee(option as EmployeeOption | null)}
+              isClearable
+              placeholder="Select employee..."
+              className="org-select"
+              classNamePrefix="org-select"
+            />
+          </Form.Group>
         </Col>
 
         <Col md={2}>
-          <Form.Select value={status} onChange={(e) => setStatus(e.target.value)}>
-            <option value="">All Status</option>
-            <option value="Pending">Pending</option>
-            <option value="Approved">Approved</option>
-            <option value="Rejected">Rejected</option>
-          </Form.Select>
+          <Form.Group>
+            <Form.Label>From Date</Form.Label>
+            <Form.Control
+              type="date"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+            />
+          </Form.Group>
         </Col>
 
         <Col md={2}>
-          <Form.Control
-            type="date"
-            value={fromDate}
-            onChange={(e) => setFromDate(e.target.value)}
-            placeholder="From Date"
-          />
+          <Form.Group>
+            <Form.Label>To Date</Form.Label>
+            <Form.Control
+              type="date"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+            />
+          </Form.Group>
         </Col>
 
-        <Col md={2}>
-          <Form.Control
-            type="date"
-            value={toDate}
-            onChange={(e) => setToDate(e.target.value)}
-            placeholder="To Date"
-          />
-        </Col>
-
-        <Col md={2}>
-          <Button onClick={handleGet}>Get</Button>
+        <Col md={1} className="d-flex align-items-end">
+          <Button onClick={handleGet} disabled={loading}>
+            {loading ? "Loading..." : "Get"}
+          </Button>
         </Col>
 
       </Row>
@@ -147,7 +221,6 @@ const VerifyEmployeeTasks: React.FC = () => {
       {/* ===================== TABLE ===================== */}
 
       <Table className="table table-hover table-dark-custom">
-
         <thead>
           <tr>
             <th>Employee</th>
@@ -158,10 +231,15 @@ const VerifyEmployeeTasks: React.FC = () => {
             <th>Status</th>
           </tr>
         </thead>
-
         <tbody>
-          {tasks.length > 0 ? (
-            tasks.map(t => (
+          {loading ? (
+            <tr>
+              <td colSpan={6} className="text-center py-4">
+                <Spinner animation="border" />
+              </td>
+            </tr>
+          ) : tasks.length > 0 ? (
+            tasks.map((t) => (
               <tr key={t.id}>
                 <td>{t.employeeName}</td>
                 <td>{t.projectName}</td>
@@ -179,7 +257,6 @@ const VerifyEmployeeTasks: React.FC = () => {
             </tr>
           )}
         </tbody>
-
       </Table>
 
     </div>

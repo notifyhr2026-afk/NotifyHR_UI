@@ -32,5 +32,9 @@ const employeeAttendanceService = {
     const res = await axiosInstance.post("EmployeeAttendance/ApproveRejectAttendanceCorrection", payload);
     return res.data;
    },
+   GetEmployeeTimeActivities: async (payload: any) => {
+    const res = await axiosInstance.post("EmployeeAttendance/GetEmployeeTimeActivities", payload);
+    return res.data;
+   },
 };
 export default employeeAttendanceService;
