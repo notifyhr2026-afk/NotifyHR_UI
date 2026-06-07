@@ -1,9 +1,11 @@
 import axiosInstance from '../api/axiosPayrollInstance';
 
 const taskService = {
- GetEmployeeDailyTasksByDateRange: async (payload: any) => {
-    const { data } = await axiosInstance.post('Task/GetEmployeeDailyTasksByDateRange', payload);
-    return Array.isArray(data?.Table) ? data.Table : [];
+  GetEmployeeTasks: async (organizationId: number, employeeId: number) => {
+    const { data } = await axiosInstance.get('Task', {
+      params: { organizationId, employeeId },
+    });
+    return Array.isArray(data?.Table) ? data.Table : Array.isArray(data) ? data : [];
   },
   TaskEntry: async (payload: any) => {
     const { data } = await axiosInstance.post('Task', payload);

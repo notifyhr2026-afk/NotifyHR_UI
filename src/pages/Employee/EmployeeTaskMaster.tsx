@@ -1,21 +1,65 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col, Spinner } from 'react-bootstrap';
+import moment from 'moment';
 import taskService from '../../services/taskService';
 
 interface EmployeeTask {
-  id: number;
-  employeeName: string;
-  projectName: string;
-  taskTitle: string;
+  employeeDailyTaskId: number;
+  projectId: number;
+  activityDate: string;
   taskDescription: string;
-  taskDate: string;
-  noOfHours: number;
-  status: 'Pending' | 'Approved' | 'Rejected';
+  startedAt: string;
+  endedAt: string;
+  hoursSpent: number;
+  taskStatusId: number;
 }
+
+interface TaskFormData {
+  employeeDailyTaskId: number;
+  projectId: number;
+  activityDate: string;
+  taskDescription: string;
+  startedAt: string;
+  endedAt: string;
+  hoursSpent: number;
+  taskStatusId: number;
+}
+
+const STATUS_OPTIONS = [
+  { id: 1, label: 'Pending' },
+  { id: 2, label: 'In Progress' },
+  { id: 3, label: 'Completed' },
+  { id: 4, label: 'Approved' },
+  { id: 5, label: 'Rejected' },
+];
+
+const getStatusLabel = (id: number) =>
+  STATUS_OPTIONS.find((s) => s.id === id)?.label ?? String(id);
+
+const EMPTY_FORM: TaskFormData = {
+  employeeDailyTaskId: 0,
+  projectId: 0,
+  activityDate: '',
+  taskDescription: '',
+  startedAt: '',
+  endedAt: '',
+  hoursSpent: 0,
+  taskStatusId: 1,
+};
+
+const toISOString = (value: string): string => {
+  const m = value ? moment(value) : moment();
+  return (m.isValid() ? m : moment()).toISOString();
+};
+
+// Format datetime string to datetime-local input format (YYYY-MM-DDTHH:mm)
+const toDateTimeLocal = (value: string) =>
+  value ? moment(value).format('YYYY-MM-DDTHH:mm') : '';
 
 const EmployeeTaskMaster: React.FC = () => {
   const [tasks, setTasks] = useState<EmployeeTask[]>([]);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const [showModal, setShowModal] = useState(false);
   const [editTask, setEditTask] = useState<EmployeeTask | null>(null);
@@ -24,52 +68,28 @@ const EmployeeTaskMaster: React.FC = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const employeeId = user?.employeeID || 0;
   const organizationId = user?.organizationID || 0;
+  const userId = user?.userID || user?.userId || user?.id || 0;
 
-  const [formData, setFormData] = useState<EmployeeTask>({
-    id: 0,
-    employeeName: '',
-    projectName: '',
-    taskTitle: '',
-    taskDescription: '',
-    taskDate: '',
-    noOfHours: 0,
-    status: 'Pending',
-  });
-
-  // =========================
-  // BUILD PAYLOAD
-  // =========================
-  const buildPayload = (fromDate?: string | null, toDate?: string | null) => {
-    return {
-      organizationId,
-      employeeId,
-      fromDate: fromDate || null,
-      toDate: toDate || null,
-    };
-  };
+  const [formData, setFormData] = useState<TaskFormData>(EMPTY_FORM);
 
   // =========================
   // FETCH TASKS
   // =========================
-  const fetchTasks = async (fromDate?: string, toDate?: string) => {
+  const fetchTasks = async () => {
     try {
       setLoading(true);
-
-      const payload = buildPayload(fromDate, toDate);
-
-      const data =
-        await taskService.GetEmployeeDailyTasksByDateRange(payload);
+      const data = await taskService.GetEmployeeTasks(organizationId, employeeId);
 
       setTasks(
         data.map((item: any) => ({
-          id: item.id || item.taskId,
-          employeeName: item.employeeName,
-          projectName: item.projectName,
-          taskTitle: item.taskTitle,
-          taskDescription: item.taskDescription,
-          taskDate: item.taskDate,
-          noOfHours: item.noOfHours,
-          status: item.status,
+          employeeDailyTaskId: item.EmployeeDailyTaskId,
+          projectId: item.ProjectId,
+          activityDate: item.ActivityDate,
+          taskDescription: item.TaskDescription,
+          startedAt: item.StartedAt,
+          endedAt: item.EndedAt,
+          hoursSpent: item.HoursSpent,
+          taskStatusId: item.TaskStatusId,
         }))
       );
     } catch (error) {
@@ -80,7 +100,7 @@ const EmployeeTaskMaster: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchTasks(); // initial load (null dates)
+    fetchTasks();
   }, []);
 
   // =========================
@@ -88,10 +108,11 @@ const EmployeeTaskMaster: React.FC = () => {
   // =========================
   const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value } = e.target;
-
     setFormData((prev) => ({
       ...prev,
-      [id]: id === 'noOfHours' ? parseFloat(value) : value,
+      [id]: id === 'hoursSpent' || id === 'projectId' || id === 'taskStatusId'
+        ? Number(value)
+        : value,
     }));
   };
 
@@ -100,7 +121,6 @@ const EmployeeTaskMaster: React.FC = () => {
   // =========================
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-
     const form = e.currentTarget;
     if (form.checkValidity() === false) {
       e.stopPropagation();
@@ -109,11 +129,19 @@ const EmployeeTaskMaster: React.FC = () => {
     }
 
     try {
+      setSaving(true);
       const payload = {
-        ...formData,
-        id: editTask ? editTask.id : 0,
+        employeeDailyTaskId: formData.employeeDailyTaskId, // 0 = create, real ID = update
         organizationId,
         employeeId,
+        projectId: formData.projectId,
+        activityDate: toISOString(formData.activityDate),
+        taskDescription: formData.taskDescription,
+        startedAt: toISOString(formData.startedAt),
+        endedAt: toISOString(formData.endedAt),
+        hoursSpent: formData.hoursSpent,
+        taskStatusId: formData.taskStatusId,
+        userId,
       };
 
       await taskService.TaskEntry(payload);
@@ -121,10 +149,12 @@ const EmployeeTaskMaster: React.FC = () => {
       setShowModal(false);
       setEditTask(null);
       setValidated(false);
-
+      setFormData(EMPTY_FORM);
       fetchTasks();
     } catch (error) {
       console.error('Save error:', error);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -132,36 +162,39 @@ const EmployeeTaskMaster: React.FC = () => {
   // ADD
   // =========================
   const handleAdd = () => {
-    setFormData({
-      id: 0,
-      employeeName: '',
-      projectName: '',
-      taskTitle: '',
-      taskDescription: '',
-      taskDate: '',
-      noOfHours: 0,
-      status: 'Pending',
-    });
-
+    setFormData(EMPTY_FORM);
     setEditTask(null);
+    setValidated(false);
     setShowModal(true);
   };
 
   // =========================
-  // EDIT
+  // EDIT — populate all fields from stored task
   // =========================
   const handleEdit = (task: EmployeeTask) => {
     setEditTask(task);
-    setFormData(task);
+    setFormData({
+      employeeDailyTaskId: task.employeeDailyTaskId,
+      projectId: task.projectId,
+      activityDate: task.activityDate
+        ? moment(task.activityDate).format('YYYY-MM-DD')
+        : '',
+      taskDescription: task.taskDescription,
+      startedAt: toDateTimeLocal(task.startedAt),
+      endedAt: toDateTimeLocal(task.endedAt),
+      hoursSpent: task.hoursSpent,
+      taskStatusId: task.taskStatusId,
+    });
+    setValidated(false);
     setShowModal(true);
   };
 
   // =========================
-  // DELETE (UI ONLY - API optional)
+  // DELETE (UI only)
   // =========================
   const handleDelete = (id: number) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
-      setTasks((prev) => prev.filter((t) => t.id !== id));
+      setTasks((prev) => prev.filter((t) => t.employeeDailyTaskId !== id));
     }
   };
 
@@ -185,40 +218,33 @@ const EmployeeTaskMaster: React.FC = () => {
         <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
-              <th>Employee</th>
-              <th>Project</th>
-              <th>Task Title</th>
+              <th>#</th>
+              <th>Project ID</th>
               <th>Description</th>
-              <th>Date</th>
+              <th>Activity Date</th>
+              <th>Started At</th>
+              <th>Ended At</th>
               <th>Hours</th>
               <th>Status</th>
               <th>Actions</th>
             </tr>
           </thead>
-
           <tbody>
             {tasks.map((task) => (
-              <tr key={task.id}>
-                <td>{task.employeeName}</td>
-                <td>{task.projectName}</td>
-                <td>{task.taskTitle}</td>
+              <tr key={task.employeeDailyTaskId}>
+                <td>{task.employeeDailyTaskId}</td>
+                <td>{task.projectId}</td>
                 <td>{task.taskDescription}</td>
-                <td>{task.taskDate}</td>
-                <td>{task.noOfHours}</td>
-                <td>{task.status}</td>
+                <td>{moment(task.activityDate).format('YYYY-MM-DD')}</td>
+                <td>{moment(task.startedAt).format('YYYY-MM-DD HH:mm')}</td>
+                <td>{moment(task.endedAt).format('YYYY-MM-DD HH:mm')}</td>
+                <td>{task.hoursSpent}</td>
+                <td>{getStatusLabel(task.taskStatusId)}</td>
                 <td>
-                  <Button
-                    size="sm"
-                    variant="outline-primary"
-                    onClick={() => handleEdit(task)}
-                  >
+                  <Button size="sm" variant="outline-primary" onClick={() => handleEdit(task)}>
                     Edit
                   </Button>{' '}
-                  <Button
-                    size="sm"
-                    variant="outline-danger"
-                    onClick={() => handleDelete(task.id)}
-                  >
+                  <Button size="sm" variant="outline-danger" onClick={() => handleDelete(task.employeeDailyTaskId)}>
                     Delete
                   </Button>
                 </td>
@@ -233,9 +259,7 @@ const EmployeeTaskMaster: React.FC = () => {
       {/* ================= MODAL ================= */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>
-            {editTask ? 'Edit Task' : 'Add Task'}
-          </Modal.Title>
+          <Modal.Title>{editTask ? 'Edit Task' : 'Add Task'}</Modal.Title>
         </Modal.Header>
 
         <Modal.Body>
@@ -243,87 +267,115 @@ const EmployeeTaskMaster: React.FC = () => {
 
             <Row className="mb-3">
               <Col md={6}>
-                <Form.Group controlId="employeeName">
-                  <Form.Label>Employee Name</Form.Label>
+                <Form.Group controlId="projectId">
+                  <Form.Label>Project ID</Form.Label>
                   <Form.Control
+                    type="number"
                     required
-                    value={formData.employeeName}
+                    min={1}
+                    value={formData.projectId || ''}
                     onChange={handleInputChange}
+                    placeholder="Enter project ID"
                   />
+                  <Form.Control.Feedback type="invalid">
+                    Project ID is required.
+                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
 
               <Col md={6}>
-                <Form.Group controlId="projectName">
-                  <Form.Label>Project Name</Form.Label>
-                  <Form.Control
-                    required
-                    value={formData.projectName}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
-
-            <Row className="mb-3">
-              <Col md={6}>
-                <Form.Group controlId="taskTitle">
-                  <Form.Label>Task Title</Form.Label>
-                  <Form.Control
-                    required
-                    value={formData.taskTitle}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-              </Col>
-
-              <Col md={6}>
-                <Form.Group controlId="taskDate">
-                  <Form.Label>Date</Form.Label>
+                <Form.Group controlId="activityDate">
+                  <Form.Label>Activity Date</Form.Label>
                   <Form.Control
                     type="date"
                     required
-                    value={formData.taskDate}
+                    value={formData.activityDate}
                     onChange={handleInputChange}
                   />
+                  <Form.Control.Feedback type="invalid">
+                    Date is required.
+                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
             </Row>
 
             <Form.Group controlId="taskDescription" className="mb-3">
-              <Form.Label>Description</Form.Label>
+              <Form.Label>Task Description</Form.Label>
               <Form.Control
                 as="textarea"
                 rows={3}
+                required
                 value={formData.taskDescription}
                 onChange={handleInputChange}
+                placeholder="Describe the task"
               />
+              <Form.Control.Feedback type="invalid">
+                Description is required.
+              </Form.Control.Feedback>
             </Form.Group>
 
             <Row className="mb-3">
               <Col md={6}>
-                <Form.Group controlId="noOfHours">
-                  <Form.Label>Hours</Form.Label>
+                <Form.Group controlId="startedAt">
+                  <Form.Label>Started At</Form.Label>
                   <Form.Control
-                    type="number"
-                    step="0.1"
+                    type="datetime-local"
                     required
-                    value={formData.noOfHours}
+                    value={formData.startedAt}
                     onChange={handleInputChange}
                   />
+                  <Form.Control.Feedback type="invalid">
+                    Start time is required.
+                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
 
               <Col md={6}>
-                <Form.Group controlId="status">
+                <Form.Group controlId="endedAt">
+                  <Form.Label>Ended At</Form.Label>
+                  <Form.Control
+                    type="datetime-local"
+                    required
+                    value={formData.endedAt}
+                    onChange={handleInputChange}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    End time is required.
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            <Row className="mb-3">
+              <Col md={6}>
+                <Form.Group controlId="hoursSpent">
+                  <Form.Label>Hours Spent</Form.Label>
+                  <Form.Control
+                    type="number"
+                    step="0.1"
+                    min={0}
+                    required
+                    value={formData.hoursSpent}
+                    onChange={handleInputChange}
+                  />
+                  <Form.Control.Feedback type="invalid">
+                    Hours spent is required.
+                  </Form.Control.Feedback>
+                </Form.Group>
+              </Col>
+
+              <Col md={6}>
+                <Form.Group controlId="taskStatusId">
                   <Form.Label>Status</Form.Label>
                   <Form.Select
-                    value={formData.status}
+                    value={formData.taskStatusId}
                     onChange={handleInputChange}
                   >
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
-                    <option value="Rejected">Rejected</option>
+                    {STATUS_OPTIONS.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.label}
+                      </option>
+                    ))}
                   </Form.Select>
                 </Form.Group>
               </Col>
@@ -333,8 +385,8 @@ const EmployeeTaskMaster: React.FC = () => {
               <Button variant="secondary" onClick={() => setShowModal(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary">
-                {editTask ? 'Update' : 'Save'}
+              <Button type="submit" variant="primary" disabled={saving}>
+                {saving ? <Spinner animation="border" size="sm" /> : editTask ? 'Update' : 'Save'}
               </Button>
             </Modal.Footer>
 
