@@ -11,6 +11,10 @@ const taskService = {
     const { data } = await axiosInstance.post('Task', payload);
     return Array.isArray(data?.Table) ? data.Table : [];
   },
+   GetEmployeeDailyTasksByDateRange: async (payload: any) => {
+    const { data } = await axiosInstance.post('Task/GetEmployeeDailyTasksByDateRange', payload);
+    return Array.isArray(data?.Table) ? data.Table : [];
+  },
 };
 
 export default taskService;
