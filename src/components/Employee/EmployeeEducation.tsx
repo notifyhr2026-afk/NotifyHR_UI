@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
-import ToggleSection from '../ToggleSection';
+import { toast } from 'react-toastify';
+import employeeService from '../../services/employeeService';
 
 interface Education {
   id: number;
@@ -13,10 +14,15 @@ interface Education {
   isHighestQualification: boolean;
 }
 
-const EmployeeEducation: React.FC = () => {
+interface Props {
+  employeeID: number;
+}
+
+const EmployeeEducation: React.FC<Props> = ({ employeeID }) => {
   const [educationRecords, setEducationRecords] = useState<Education[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [validated, setValidated] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Education>({
     id: 0,
     qualification: '',
@@ -31,6 +37,35 @@ const EmployeeEducation: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
+  useEffect(() => {
+    loadEducations();
+  }, [employeeID]);
+
+  const loadEducations = async () => {
+    if (!employeeID) return;
+    setLoading(true);
+    try {
+      const res = await employeeService.GetEmployeeEducations(employeeID);
+      const list = res?.Table || [];
+      setEducationRecords(
+        list.map((item: any) => ({
+          id: item.EducationID || item.educationID || 0,
+          qualification: item.Qualification || item.qualification || '',
+          course: item.Course || item.course || '',
+          university: item.University || item.university || '',
+          passingYear: (item.PassingYear || item.passingYear || '').toString(),
+          grade: item.Grade || item.grade || '',
+          modeOfEducation: item.ModeOfEducation || item.modeOfEducation || '',
+          isHighestQualification: item.IsHighestQualification || item.isHighestQualification || false,
+        }))
+      );
+    } catch (err) {
+      console.error('Error loading education records:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -39,7 +74,7 @@ const EmployeeEducation: React.FC = () => {
     }));
   };
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     if (form.checkValidity() === false) {
@@ -48,21 +83,36 @@ const EmployeeEducation: React.FC = () => {
       return;
     }
 
-    if (editRecord) {
-      setEducationRecords((prev) =>
-        prev.map((rec) => (rec.id === editRecord.id ? formData : rec))
-      );
-    } else {
-      setEducationRecords((prev) => [...prev, { ...formData, id: Date.now() }]);
-    }
+    const payload: any = {
+      educationID: editRecord ? editRecord.id : 0,
+      employeeID,
+      qualification: formData.qualification,
+      course: formData.course,
+      university: formData.university,
+      passingYear: parseInt(formData.passingYear) || 0,
+      grade: formData.grade,
+      modeOfEducation: formData.modeOfEducation,
+      isHighestQualification: formData.isHighestQualification,
+      isActive: true,
+      isDeleted: false,
+      createdBy: 'Employee',
+    };
 
-    setValidated(false);
-    setShowModal(false);
+    try {
+      const res = await employeeService.SaveEmployeeEducation(payload);
+      const msg = Array.isArray(res) && res[0]?.msg ? res[0].msg : (editRecord ? 'Education updated' : 'Education added');
+      toast.success(msg);
+      setValidated(false);
+      setShowModal(false);
+      await loadEducations();
+    } catch (err) {
+      toast.error('Failed to save education record');
+    }
   };
 
   const handleAdd = () => {
     setFormData({
-      id: Date.now(),
+      id: 0,
       qualification: '',
       course: '',
       university: '',
@@ -75,14 +125,38 @@ const EmployeeEducation: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id: number) => {
-    setDeleteId(id);
-    setConfirmDelete(true);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      let deleteRes: any;
+      const record = educationRecords.find((r) => r.id === deleteId);
+      if (record) {
+        deleteRes = await employeeService.SaveEmployeeEducation({
+          educationID: deleteId,
+          employeeID,
+          qualification: record.qualification,
+          course: record.course,
+          university: record.university,
+          passingYear: parseInt(record.passingYear) || 0,
+          grade: record.grade,
+          modeOfEducation: record.modeOfEducation,
+          isHighestQualification: record.isHighestQualification,
+          isActive: false,
+          isDeleted: true,
+        });
+      }
+      const msg = Array.isArray(deleteRes) && deleteRes[0]?.msg ? deleteRes[0].msg : 'Education record deleted';
+      toast.success(msg);
+      setConfirmDelete(false);
+      await loadEducations();
+    } catch (err) {
+      toast.error('Failed to delete education record');
+    }
   };
 
-  const confirmDeleteAction = () => {
-    setEducationRecords((prev) => prev.filter((rec) => rec.id !== deleteId));
-    setConfirmDelete(false);
+  const handleDeleteClick = (id: number) => {
+    setDeleteId(id);
+    setConfirmDelete(true);
   };
 
   return (
@@ -132,7 +206,7 @@ const EmployeeEducation: React.FC = () => {
                   <Button
                     size="sm"
                     variant="outline-danger"
-                    onClick={() => handleDelete(edu.id)}
+                    onClick={() => handleDeleteClick(edu.id)}
                   >
                     Delete
                   </Button>
@@ -287,7 +361,7 @@ const EmployeeEducation: React.FC = () => {
           <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={confirmDeleteAction}>
+          <Button variant="danger" onClick={handleDelete}>
             Delete
           </Button>
         </Modal.Footer>

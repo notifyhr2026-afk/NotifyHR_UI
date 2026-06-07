@@ -1,5 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
+import { toast } from 'react-toastify';
+import employeeService from '../../services/employeeService';
+
 interface EmployeeAddress {
   id: number;
   addressType: string;
@@ -11,10 +14,15 @@ interface EmployeeAddress {
   postalCode: string;
 }
 
-const EmployeeAddress: React.FC = () => {
+interface Props {
+  employeeID: number;
+}
+
+const EmployeeAddress: React.FC<Props> = ({ employeeID }) => {
   const [addresses, setAddresses] = useState<EmployeeAddress[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [validated, setValidated] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<EmployeeAddress>({
     id: 0,
     addressType: '',
@@ -29,12 +37,41 @@ const EmployeeAddress: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
+  useEffect(() => {
+    loadAddresses();
+  }, [employeeID]);
+
+  const loadAddresses = async () => {
+    if (!employeeID) return;
+    setLoading(true);
+    try {
+      const res = await employeeService.GetEmployeeAddresses(employeeID);
+      const list = res?.Table || [];
+      setAddresses(
+        list.map((item: any) => ({
+          id: item.AddressID || item.addressID || item.id || 0,
+          addressType: item.AddressType || item.addressType || '',
+          addressLine1: item.AddressLine1 || item.addressLine1 || '',
+          addressLine2: item.AddressLine2 || item.addressLine2 || '',
+          city: item.City || item.city || '',
+          state: item.State || item.state || '',
+          country: item.Country || item.country || '',
+          postalCode: item.PostalCode || item.postalCode || '',
+        }))
+      );
+    } catch (err) {
+      console.error('Error loading addresses:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({ ...prev, [id]: value }));
   };
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     if (form.checkValidity() === false) {
@@ -43,21 +80,33 @@ const EmployeeAddress: React.FC = () => {
       return;
     }
 
-    if (editAddress) {
-      setAddresses((prev) =>
-        prev.map((addr) => (addr.id === editAddress.id ? formData : addr))
-      );
-    } else {
-      setAddresses((prev) => [...prev, { ...formData, id: Date.now() }]);
-    }
+    const payload: any = {
+      addressID: editAddress ? editAddress.id : 0,
+      employeeID,
+      addressType: formData.addressType,
+      addressLine1: formData.addressLine1,
+      addressLine2: formData.addressLine2,
+      city: formData.city,
+      state: formData.state,
+      country: formData.country,
+      postalCode: formData.postalCode,
+    };
 
-    setValidated(false);
-    setShowModal(false);
+    try {
+      const res = await employeeService.SaveEmployeeAddress(payload);
+      const msg = Array.isArray(res) && res[0]?.msg ? res[0].msg : (editAddress ? 'Address updated' : 'Address added');
+      toast.success(msg);
+      setValidated(false);
+      setShowModal(false);
+      await loadAddresses();
+    } catch (err) {
+      toast.error('Failed to save address');
+    }
   };
 
   const handleAdd = () => {
     setFormData({
-      id: Date.now(),
+      id: 0,
       addressType: '',
       addressLine1: '',
       addressLine2: '',
@@ -88,7 +137,9 @@ const EmployeeAddress: React.FC = () => {
         </Button>
       </div>
 
-      {addresses.length ? (
+      {loading ? (
+        <p>Loading...</p>
+      ) : addresses.length ? (
         <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>

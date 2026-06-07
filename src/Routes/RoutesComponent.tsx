@@ -29,6 +29,7 @@ import AssetTracking from '../pages/Asset/AssetTracking';
 import AssetAssignmentPage from '../pages/Asset/AssetAssignmentPage';
 import EmployeeClock from '../components/Employee/EmployeeClock';
 import MyProfile from '../pages/Employee/MyProfile';
+import CareerPersonal from '../pages/Employee/CareerPersonal';
 import EmployeeDashboard from '../pages/Employee/EmployeeDashboard';
 import OrganizationFeatures from '../pages/Organization/OrganizationFeatures';
 import HolidaySettings from '../pages/Holiday/HolidaySettings';
@@ -144,6 +145,14 @@ const RoutesComponent: React.FC = () => {
         <Route path="ManageLeavePolicy" element={<ManageLeavePolicy />} />
         <Route path="LeavePolicies" element={<OrganizationLeavePolicies />} />
         <Route path="MyProfile" element={<MyProfile />} />
+        <Route
+          path="career-personal"
+          element={
+            <EmployeeProvider>
+              <CareerPersonal />
+            </EmployeeProvider>
+          }
+        />
         <Route path="ChangePassword" element={<ChangePassword />} />
         <Route path="EmployeeList" element={<EmployeeList />} />
         <Route path="ApplyLeave" element={<ApplyLeave />} />
