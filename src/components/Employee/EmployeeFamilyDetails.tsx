@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
+import { toast } from 'react-toastify';
+import employeeService from '../../services/employeeService';
 
 interface FamilyMember {
   id: number;
@@ -14,10 +16,15 @@ interface FamilyMember {
   isNominee: boolean;
 }
 
-const EmployeeFamilyDetails: React.FC = () => {
+interface Props {
+  employeeID: number;
+}
+
+const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
   const [familyMembers, setFamilyMembers] = useState<FamilyMember[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [validated, setValidated] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FamilyMember>({
     id: 0,
     fullName: '',
@@ -34,6 +41,37 @@ const EmployeeFamilyDetails: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
+  useEffect(() => {
+    loadFamilyDetails();
+  }, [employeeID]);
+
+  const loadFamilyDetails = async () => {
+    if (!employeeID) return;
+    setLoading(true);
+    try {
+      const res = await employeeService.GetEmployeeFamilyDetails(employeeID);
+      const list = res?.Table || [];
+      setFamilyMembers(
+        list.map((item: any) => ({
+          id: item.FamilyDetailID || item.familyDetailID || item.id || 0,
+          fullName: item.FullName || item.fullName || '',
+          relationship: item.Relationship || item.relationship || '',
+          dateOfBirth: (item.DateOfBirth || item.dateOfBirth || '').split('T')[0],
+          gender: item.Gender || item.gender || '',
+          contactNumber: item.ContactNumber || item.contactNumber || '',
+          email: item.Email || item.email || '',
+          isEmergencyContact: item.IsEmergencyContact || item.isEmergencyContact || false,
+          isDependentForTax: item.IsDependentForTax || item.isDependentForTax || false,
+          isNominee: item.IsNominee || item.isNominee || false,
+        }))
+      );
+    } catch (err) {
+      console.error('Error loading family details:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value, type, checked } = e.target;
     setFormData((prev) => ({
@@ -42,7 +80,7 @@ const EmployeeFamilyDetails: React.FC = () => {
     }));
   };
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
     if (form.checkValidity() === false) {
@@ -51,21 +89,38 @@ const EmployeeFamilyDetails: React.FC = () => {
       return;
     }
 
-    if (editMember) {
-      setFamilyMembers((prev) =>
-        prev.map((member) => (member.id === editMember.id ? formData : member))
-      );
-    } else {
-      setFamilyMembers((prev) => [...prev, { ...formData, id: Date.now() }]);
-    }
+    const payload: any = {
+      familyDetailID: editMember ? editMember.id : 0,
+      employeeID,
+      fullName: formData.fullName,
+      relationship: formData.relationship,
+      dateOfBirth: formData.dateOfBirth,
+      gender: formData.gender,
+      contactNumber: formData.contactNumber,
+      email: formData.email,
+      isEmergencyContact: formData.isEmergencyContact,
+      isDependentForTax: formData.isDependentForTax,
+      isNominee: formData.isNominee,
+      isActive: true,
+      isDeleted: false,
+      createdBy: 'Employee',
+    };
 
-    setValidated(false);
-    setShowModal(false);
+    try {
+      const res = await employeeService.SaveEmployeeFamilyDetail(payload);
+      const msg = Array.isArray(res) && res[0]?.msg ? res[0].msg : (editMember ? 'Family member updated' : 'Family member added');
+      toast.success(msg);
+      setValidated(false);
+      setShowModal(false);
+      await loadFamilyDetails();
+    } catch (err) {
+      toast.error('Failed to save family member');
+    }
   };
 
   const handleAdd = () => {
     setFormData({
-      id: Date.now(),
+      id: 0,
       fullName: '',
       relationship: '',
       dateOfBirth: '',
@@ -80,14 +135,40 @@ const EmployeeFamilyDetails: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleDelete = (id: number) => {
-    setDeleteId(id);
-    setConfirmDelete(true);
+  const handleDelete = async () => {
+    if (!deleteId) return;
+    try {
+      let deleteRes: any;
+      const record = familyMembers.find((m) => m.id === deleteId);
+      if (record) {
+        deleteRes = await employeeService.SaveEmployeeFamilyDetail({
+          familyDetailID: deleteId,
+          employeeID,
+          fullName: record.fullName,
+          relationship: record.relationship,
+          dateOfBirth: record.dateOfBirth,
+          gender: record.gender,
+          contactNumber: record.contactNumber,
+          email: record.email,
+          isEmergencyContact: record.isEmergencyContact,
+          isDependentForTax: record.isDependentForTax,
+          isNominee: record.isNominee,
+          isActive: false,
+          isDeleted: true,
+        });
+      }
+      const msg = Array.isArray(deleteRes) && deleteRes[0]?.msg ? deleteRes[0].msg : 'Family member deleted';
+      toast.success(msg);
+      setConfirmDelete(false);
+      await loadFamilyDetails();
+    } catch (err) {
+      toast.error('Failed to delete family member');
+    }
   };
 
-  const confirmDeleteAction = () => {
-    setFamilyMembers((prev) => prev.filter((member) => member.id !== deleteId));
-    setConfirmDelete(false);
+  const handleDeleteClick = (id: number) => {
+    setDeleteId(id);
+    setConfirmDelete(true);
   };
 
   return (
@@ -98,7 +179,9 @@ const EmployeeFamilyDetails: React.FC = () => {
         </Button>
       </div>
 
-      {familyMembers.length ? (
+      {loading ? (
+        <p>Loading...</p>
+      ) : familyMembers.length ? (
         <Table className="table table-hover table-dark-custom">
           <thead>
             <tr>
@@ -141,7 +224,7 @@ const EmployeeFamilyDetails: React.FC = () => {
                   <Button
                     size="sm"
                     variant="outline-danger"
-                    onClick={() => handleDelete(member.id)}
+                    onClick={() => handleDeleteClick(member.id)}
                   >
                     Delete
                   </Button>
@@ -313,7 +396,7 @@ const EmployeeFamilyDetails: React.FC = () => {
           <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={confirmDeleteAction}>
+          <Button variant="danger" onClick={handleDelete}>
             Delete
           </Button>
         </Modal.Footer>

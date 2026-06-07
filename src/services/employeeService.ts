@@ -99,6 +99,46 @@ const employeeService = {
     const res = await api.put("Employee/ImportEmployeesAsync", payload);
     return res.data[0];
    }, 
+
+  // ---- Education ----
+  SaveEmployeeEducation: async (payload: any) => {
+    const { data } = await api.post("Employee/SaveOrUpdateEmployeeEducation", payload);
+    return data;
+  },
+  GetEmployeeEducations: async (employeeID: number) => {
+    const { data } = await api.get(`Employee/GetEmployeeEducations?EmployeeID=${employeeID}`);
+    return data;
+  },
+
+  // ---- Experience ----
+  SaveEmployeeExperience: async (payload: any) => {
+    const { data } = await api.post("Employee/SaveOrUpdateEmployeeExperience", payload);
+    return data;
+  },
+  GetEmployeeExperiences: async (employeeID: number) => {
+    const { data } = await api.get(`Employee/GetEmployeeExperiences?EmployeeID=${employeeID}`);
+    return data;
+  },
+
+  // ---- Family Details ----
+  SaveEmployeeFamilyDetail: async (payload: any) => {
+    const { data } = await api.post("Employee/SaveOrUpdateEmployeeFamilyDetails", payload);
+    return data;
+  },
+  GetEmployeeFamilyDetails: async (employeeID: number) => {
+    const { data } = await api.get(`Employee/GetEmployeeFamilyDetails?EmployeeID=${employeeID}`);
+    return data;
+  },
+
+  // ---- Address ----
+  SaveEmployeeAddress: async (payload: any) => {
+    const { data } = await api.post("Employee/SaveOrUpdateEmployeeAddress", payload);
+    return data;
+  },
+  GetEmployeeAddresses: async (employeeID: number) => {
+    const { data } = await api.get(`Employee/GetEmployeeAddress?EmployeeID=${employeeID}`);
+    return data;
+  },
 };
 
 export default employeeService;

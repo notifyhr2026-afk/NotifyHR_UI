@@ -19,6 +19,12 @@ const DashboardLayout: React.FC = () => {
     parsed?.currentRole || roles[0]
   );
 
+  const userRolesRaw = localStorage.getItem('userRoles');
+  const userRolesList: string[] = userRolesRaw
+    ? JSON.parse(userRolesRaw).map((r: any) => (typeof r === 'string' ? r : r.roleName))
+    : [];
+  const hasEmployeeRole = userRolesList.includes('Employee') || roles.includes('Employee');
+
   const navigate = useNavigate();
 
   const [isDarkMode, setIsDarkMode] = useState(
@@ -245,6 +251,20 @@ const DashboardLayout: React.FC = () => {
                           )}
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Career & Personal */}
+                {hasEmployeeRole && (
+                  <div className="px-3 py-2">
+                    <small className="section-title">Career &amp; Personal</small>
+                    <div
+                      className="role-item mt-2"
+                      onClick={() => navigate('/career-personal')}
+                    >
+                      <i className="bi bi-person-badge me-2"></i>
+                      Manage Details
                     </div>
                   </div>
                 )}
