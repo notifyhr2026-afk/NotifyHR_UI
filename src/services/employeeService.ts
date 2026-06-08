@@ -139,6 +139,11 @@ const employeeService = {
     const { data } = await api.get(`Employee/GetEmployeeAddress?EmployeeID=${employeeID}`);
     return data;
   },
+    // ---- Address ----
+  ApplyResignation: async (payload: any) => {
+    const { data } = await api.post("Employee/ApplyResignation", payload);
+    return data;
+  },
 };
 
 export default employeeService;
