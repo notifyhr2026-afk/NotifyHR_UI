@@ -25,6 +25,7 @@ const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
   const [showModal, setShowModal] = useState(false);
   const [validated, setValidated] = useState(false);
   const [loading, setLoading] = useState(false);
+
   const [formData, setFormData] = useState<FamilyMember>({
     id: 0,
     fullName: '',
@@ -37,36 +38,106 @@ const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
     isDependentForTax: false,
     isNominee: false,
   });
+
   const [editMember, setEditMember] = useState<FamilyMember | null>(null);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   useEffect(() => {
-    loadFamilyDetails();
+    if (employeeID) {
+      loadFamilyDetails();
+    }
   }, [employeeID]);
 
   const loadFamilyDetails = async () => {
-    if (!employeeID) return;
     setLoading(true);
+
     try {
       const res = await employeeService.GetEmployeeFamilyDetails(employeeID);
-      const list = res?.Table || [];
-      setFamilyMembers(
-        list.map((item: any) => ({
-          id: item.FamilyDetailID || item.familyDetailID || item.id || 0,
-          fullName: item.FullName || item.fullName || '',
-          relationship: item.Relationship || item.relationship || '',
-          dateOfBirth: (item.DateOfBirth || item.dateOfBirth || '').split('T')[0],
-          gender: item.Gender || item.gender || '',
-          contactNumber: item.ContactNumber || item.contactNumber || '',
-          email: item.Email || item.email || '',
-          isEmergencyContact: item.IsEmergencyContact || item.isEmergencyContact || false,
-          isDependentForTax: item.IsDependentForTax || item.isDependentForTax || false,
-          isNominee: item.IsNominee || item.isNominee || false,
-        }))
-      );
-    } catch (err) {
-      console.error('Error loading family details:', err);
+
+      console.log('Family API Response:', res);
+      console.log('Family Table:', res?.Table);
+
+      const list = Array.isArray(res?.Table)
+        ? res.Table
+        : Array.isArray(res)
+        ? res
+        : [];
+
+      const mappedData: FamilyMember[] = list.map((item: any) => ({
+        id:
+          item.FamilyDetailID ??
+          item.familyDetailID ??
+          item.FamilyID ??
+          item.familyID ??
+          item.Id ??
+          item.id ??
+          0,
+
+        fullName:
+          item.FullName ??
+          item.fullName ??
+          item.Name ??
+          item.name ??
+          '',
+
+        relationship:
+          item.Relationship ??
+          item.relationship ??
+          '',
+
+        dateOfBirth:
+          (
+            item.DateOfBirth ??
+            item.dateOfBirth ??
+            ''
+          )
+            ?.toString()
+            ?.split('T')[0] || '',
+
+        gender:
+          item.Gender ??
+          item.gender ??
+          '',
+
+        contactNumber:
+          item.ContactNumber ??
+          item.contactNumber ??
+          item.MobileNumber ??
+          item.mobileNumber ??
+          '',
+
+        email:
+          item.Email ??
+          item.email ??
+          '',
+
+        isEmergencyContact: Boolean(
+          item.IsEmergencyContact ??
+            item.isEmergencyContact ??
+            false
+        ),
+
+        isDependentForTax: Boolean(
+          item.IsDependentForTax ??
+            item.isDependentForTax ??
+            false
+        ),
+
+        isNominee: Boolean(
+          item.IsNominee ??
+            item.isNominee ??
+            false
+        ),
+      }));
+
+      console.log('Mapped Family Data:', mappedData);
+
+      setFamilyMembers(mappedData);
+    } catch (error) {
+      console.error('Error loading family details:', error);
+      toast.error('Failed to load family details');
+      setFamilyMembers([]);
     } finally {
       setLoading(false);
     }
@@ -74,51 +145,16 @@ const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
 
   const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value, type, checked } = e.target;
+
     setFormData((prev) => ({
       ...prev,
       [id]: type === 'checkbox' ? checked : value,
     }));
   };
 
-  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const form = e.currentTarget;
-    if (form.checkValidity() === false) {
-      e.stopPropagation();
-      setValidated(true);
-      return;
-    }
-
-    const payload: any = {
-      familyDetailID: editMember ? editMember.id : 0,
-      employeeID,
-      fullName: formData.fullName,
-      relationship: formData.relationship,
-      dateOfBirth: formData.dateOfBirth,
-      gender: formData.gender,
-      contactNumber: formData.contactNumber,
-      email: formData.email,
-      isEmergencyContact: formData.isEmergencyContact,
-      isDependentForTax: formData.isDependentForTax,
-      isNominee: formData.isNominee,
-      isActive: true,
-      isDeleted: false,
-      createdBy: 'Employee',
-    };
-
-    try {
-      const res = await employeeService.SaveEmployeeFamilyDetail(payload);
-      const msg = Array.isArray(res) && res[0]?.msg ? res[0].msg : (editMember ? 'Family member updated' : 'Family member added');
-      toast.success(msg);
-      setValidated(false);
-      setShowModal(false);
-      await loadFamilyDetails();
-    } catch (err) {
-      toast.error('Failed to save family member');
-    }
-  };
-
   const handleAdd = () => {
+    setEditMember(null);
+
     setFormData({
       id: 0,
       fullName: '',
@@ -131,38 +167,68 @@ const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
       isDependentForTax: false,
       isNominee: false,
     });
-    setEditMember(null);
+
+    setValidated(false);
     setShowModal(true);
   };
 
-  const handleDelete = async () => {
-    if (!deleteId) return;
+  const handleEdit = (member: FamilyMember) => {
+    setEditMember(member);
+    setFormData(member);
+    setValidated(false);
+    setShowModal(true);
+  };
+
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const form = e.currentTarget;
+
+    if (!form.checkValidity()) {
+      e.stopPropagation();
+      setValidated(true);
+      return;
+    }
+
     try {
-      let deleteRes: any;
-      const record = familyMembers.find((m) => m.id === deleteId);
-      if (record) {
-        deleteRes = await employeeService.SaveEmployeeFamilyDetail({
-          familyDetailID: deleteId,
-          employeeID,
-          fullName: record.fullName,
-          relationship: record.relationship,
-          dateOfBirth: record.dateOfBirth,
-          gender: record.gender,
-          contactNumber: record.contactNumber,
-          email: record.email,
-          isEmergencyContact: record.isEmergencyContact,
-          isDependentForTax: record.isDependentForTax,
-          isNominee: record.isNominee,
-          isActive: false,
-          isDeleted: true,
-        });
-      }
-      const msg = Array.isArray(deleteRes) && deleteRes[0]?.msg ? deleteRes[0].msg : 'Family member deleted';
-      toast.success(msg);
-      setConfirmDelete(false);
+      const payload = {
+        familyDetailID: editMember ? editMember.id : 0,
+        employeeID,
+
+        fullName: formData.fullName,
+        relationship: formData.relationship,
+        dateOfBirth: formData.dateOfBirth,
+        gender: formData.gender,
+        contactNumber: formData.contactNumber,
+        email: formData.email,
+
+        isEmergencyContact: formData.isEmergencyContact,
+        isDependentForTax: formData.isDependentForTax,
+        isNominee: formData.isNominee,
+
+        isActive: true,
+        isDeleted: false,
+        createdBy: 'Employee',
+      };
+
+      const res = await employeeService.SaveEmployeeFamilyDetail(payload);
+
+      const message =
+        Array.isArray(res) && res[0]?.msg
+          ? res[0].msg
+          : editMember
+          ? 'Family member updated successfully'
+          : 'Family member added successfully';
+
+      toast.success(message);
+
+      setShowModal(false);
+      setValidated(false);
+
       await loadFamilyDetails();
-    } catch (err) {
-      toast.error('Failed to delete family member');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to save family member');
     }
   };
 
@@ -171,8 +237,49 @@ const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
     setConfirmDelete(true);
   };
 
+  const handleDelete = async () => {
+    if (!deleteId) return;
+
+    try {
+      const record = familyMembers.find(
+        (x) => x.id === deleteId
+      );
+
+      if (!record) return;
+
+      await employeeService.SaveEmployeeFamilyDetail({
+        familyDetailID: record.id,
+        employeeID,
+
+        fullName: record.fullName,
+        relationship: record.relationship,
+        dateOfBirth: record.dateOfBirth,
+        gender: record.gender,
+        contactNumber: record.contactNumber,
+        email: record.email,
+
+        isEmergencyContact: record.isEmergencyContact,
+        isDependentForTax: record.isDependentForTax,
+        isNominee: record.isNominee,
+
+        isActive: false,
+        isDeleted: true,
+      });
+
+      toast.success('Family member deleted successfully');
+
+      setConfirmDelete(false);
+      setDeleteId(null);
+
+      await loadFamilyDetails();
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to delete family member');
+    }
+  };
+
   return (
-   <div className="employee-family-container">
+    <div className="employee-family-container">
       <div className="text-end mb-3">
         <Button variant="success" onClick={handleAdd}>
           + Add Family Member
@@ -180,9 +287,11 @@ const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
       </div>
 
       {loading ? (
-        <p>Loading...</p>
-      ) : familyMembers.length ? (
-        <Table className="table table-hover table-dark-custom">
+        <div className="text-center p-3">
+          Loading family details...
+        </div>
+      ) : familyMembers.length > 0 ? (
+        <Table striped bordered hover responsive>
           <thead>
             <tr>
               <th>Full Name</th>
@@ -197,34 +306,35 @@ const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {familyMembers.map((member) => (
               <tr key={member.id}>
-                <td>{member.fullName}</td>
-                <td>{member.relationship}</td>
-                <td>{member.dateOfBirth}</td>
-                <td>{member.gender}</td>
-                <td>{member.contactNumber}</td>
-                <td>{member.email}</td>
+                <td>{member.fullName || '-'}</td>
+                <td>{member.relationship || '-'}</td>
+                <td>{member.dateOfBirth || '-'}</td>
+                <td>{member.gender || '-'}</td>
+                <td>{member.contactNumber || '-'}</td>
+                <td>{member.email || '-'}</td>
                 <td>{member.isEmergencyContact ? 'Yes' : 'No'}</td>
                 <td>{member.isDependentForTax ? 'Yes' : 'No'}</td>
                 <td>{member.isNominee ? 'Yes' : 'No'}</td>
+
                 <td>
                   <Button
                     size="sm"
                     variant="outline-primary"
-                    onClick={() => {
-                      setEditMember(member);
-                      setFormData(member);
-                      setShowModal(true);
-                    }}
+                    onClick={() => handleEdit(member)}
                   >
                     Edit
                   </Button>{' '}
+
                   <Button
                     size="sm"
                     variant="outline-danger"
-                    onClick={() => handleDeleteClick(member.id)}
+                    onClick={() =>
+                      handleDeleteClick(member.id)
+                    }
                   >
                     Delete
                   </Button>
@@ -234,10 +344,12 @@ const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
           </tbody>
         </Table>
       ) : (
-        <p>No family members added yet.</p>
+        <div className="text-center p-3">
+          No family members found.
+        </div>
       )}
 
-      {/* Add/Edit Modal */}
+       {/* Add/Edit Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
         <Modal.Header closeButton>
           <Modal.Title>

@@ -100,21 +100,20 @@ const ManageEmployee: React.FC = () => {
             <EmployeeAddress />
           </Accordion.Body>
         </Accordion.Item>    */}
-        
-        <Accordion.Item eventKey="11">
-          <Accordion.Header>Exit Details</Accordion.Header>
-          <Accordion.Body>
-            <EmployeeExitDetails />
-          </Accordion.Body>
-        </Accordion.Item>
 
-          <Accordion.Item eventKey="12">
+          <Accordion.Item eventKey="11">
               <Accordion.Header>Personal and Professional Details</Accordion.Header>
               <Accordion.Body>
                 <EmployeeProfileView />
               </Accordion.Body>
             </Accordion.Item>
-
+       
+       <Accordion.Item eventKey="12">
+          <Accordion.Header>Exit Details</Accordion.Header>
+          <Accordion.Body>
+            <EmployeeExitDetails />
+          </Accordion.Body>
+        </Accordion.Item>
       </Accordion>
     </Container>
   );
