@@ -241,32 +241,9 @@ const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
     if (!deleteId) return;
 
     try {
-      const record = familyMembers.find(
-        (x) => x.id === deleteId
-      );
-
-      if (!record) return;
-
-      await employeeService.SaveEmployeeFamilyDetail({
-        familyDetailID: record.id,
-        employeeID,
-
-        fullName: record.fullName,
-        relationship: record.relationship,
-        dateOfBirth: record.dateOfBirth,
-        gender: record.gender,
-        contactNumber: record.contactNumber,
-        email: record.email,
-
-        isEmergencyContact: record.isEmergencyContact,
-        isDependentForTax: record.isDependentForTax,
-        isNominee: record.isNominee,
-
-        isActive: false,
-        isDeleted: true,
-      });
-
-      toast.success('Family member deleted successfully');
+      const res = await employeeService.DeleteFamilyDetailAsync(deleteId, employeeID);
+      const msg = Array.isArray(res) && res[0]?.msg ? res[0].msg : 'Family member deleted successfully';
+      toast.success(msg);
 
       setConfirmDelete(false);
       setDeleteId(null);

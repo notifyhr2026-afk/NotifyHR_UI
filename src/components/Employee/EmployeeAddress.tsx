@@ -125,8 +125,21 @@ const EmployeeAddress: React.FC<Props> = ({ employeeID }) => {
   };
 
   const confirmDeleteAction = () => {
-    setAddresses((prev) => prev.filter((addr) => addr.id !== deleteId));
-    setConfirmDelete(false);
+    (async () => {
+      if (!deleteId) return;
+      try {
+        const res: any = await employeeService.DeleteAddressAsync(deleteId, employeeID);
+        const msg = Array.isArray(res) && res[0]?.msg ? res[0].msg : 'Address deleted';
+        toast.success(msg);
+        await loadAddresses();
+      } catch (err) {
+        console.error('Failed to delete address:', err);
+        toast.error('Failed to delete address');
+      } finally {
+        setConfirmDelete(false);
+        setDeleteId(null);
+      }
+    })();
   };
 
   return (

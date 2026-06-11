@@ -128,26 +128,11 @@ const EmployeeEducation: React.FC<Props> = ({ employeeID }) => {
   const handleDelete = async () => {
     if (!deleteId) return;
     try {
-      let deleteRes: any;
-      const record = educationRecords.find((r) => r.id === deleteId);
-      if (record) {
-        deleteRes = await employeeService.SaveEmployeeEducation({
-          educationID: deleteId,
-          employeeID,
-          qualification: record.qualification,
-          course: record.course,
-          university: record.university,
-          passingYear: parseInt(record.passingYear) || 0,
-          grade: record.grade,
-          modeOfEducation: record.modeOfEducation,
-          isHighestQualification: record.isHighestQualification,
-          isActive: false,
-          isDeleted: true,
-        });
-      }
+      const deleteRes: any = await employeeService.DeleteEducationAsync(deleteId, employeeID);
       const msg = Array.isArray(deleteRes) && deleteRes[0]?.msg ? deleteRes[0].msg : 'Education record deleted';
       toast.success(msg);
       setConfirmDelete(false);
+      setDeleteId(null);
       await loadEducations();
     } catch (err) {
       toast.error('Failed to delete education record');

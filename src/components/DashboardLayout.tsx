@@ -109,7 +109,7 @@ const DashboardLayout: React.FC = () => {
           <div className="d-flex align-items-center gap-3">
 
             {/* Role Chip */}
-            {roles.length > 1 && (
+            {/* {roles.length > 1 && (
               <span
                 className="badge rounded-pill px-3 py-2"
                 style={{
@@ -120,7 +120,7 @@ const DashboardLayout: React.FC = () => {
                 <i className="bi bi-briefcase me-1"></i>
                 {currentRole}
               </span>
-            )}
+            )} */}
 
             <span className="fw-semibold">{user?.name || 'User'}</span>
 
@@ -231,7 +231,7 @@ const DashboardLayout: React.FC = () => {
                 <Dropdown.Divider />
 
                 {/* ROLES */}
-                {roles.length > 1 && (
+                {/* {roles.length > 1 && (
                   <div className="px-3 py-2">
                     <small className="section-title">Workspace</small>
 
@@ -253,7 +253,7 @@ const DashboardLayout: React.FC = () => {
                       ))}
                     </div>
                   </div>
-                )}
+                )} */}
 
                 {/* Career & Personal */}
                 {hasEmployeeRole && (
@@ -384,6 +384,36 @@ const DashboardLayout: React.FC = () => {
 
         .dark-mode .role-item:hover {
           background: rgba(255,255,255,0.1);
+        }
+
+        /* Override Bootstrap dropdown item hover to match theme and avoid harsh light backgrounds */
+        .custom-dropdown a.dropdown-item,
+        .custom-dropdown .dropdown-item {
+          background: transparent !important;
+          color: inherit !important;
+          border-radius: 8px;
+          margin: 2px 4px;
+        }
+
+        .custom-dropdown a.dropdown-item:hover,
+        .custom-dropdown .dropdown-item:hover,
+        .custom-dropdown a.dropdown-item:focus,
+        .custom-dropdown .dropdown-item:focus,
+        .custom-dropdown a.dropdown-item:active,
+        .custom-dropdown .dropdown-item:active {
+          background: rgba(0,0,0,0.03) !important;
+          color: inherit !important;
+        }
+
+        /* Dark mode adjustments */
+        .dark-mode .custom-dropdown a.dropdown-item:hover,
+        .dark-mode .custom-dropdown .dropdown-item:hover,
+        .dark-mode .custom-dropdown a.dropdown-item:focus,
+        .dark-mode .custom-dropdown .dropdown-item:focus,
+        .dark-mode .custom-dropdown a.dropdown-item:active,
+        .dark-mode .custom-dropdown .dropdown-item:active {
+          background: rgba(255,255,255,0.03) !important;
+          color: inherit !important;
         }
 
         .role-item.active {

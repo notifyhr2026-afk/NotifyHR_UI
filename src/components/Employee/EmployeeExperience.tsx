@@ -159,7 +159,7 @@ const EmployeeExperience: React.FC<Props> = ({ employeeID: propEmployeeID, hideP
       jobTitle: formExpData.jobTitle,
       employmentType: formExpData.employmentType,
       startDate: formExpData.startDate,
-      endDate: formExpData.endDate,
+      endDate: formExpData.isCurrent ? null : formExpData.endDate,
       reasonForLeaving: formExpData.reasonForLeaving,
       location: formExpData.location,
       description: formExpData.description,
@@ -190,21 +190,7 @@ const EmployeeExperience: React.FC<Props> = ({ employeeID: propEmployeeID, hideP
     const record = experiences.find((e) => e.id === id);
     if (!record) return;
     try {
-      const res = await employeeService.SaveEmployeeExperience({
-        experienceID: id,
-        employeeID: empID,
-        companyName: record.companyName,
-        jobTitle: record.jobTitle,
-        employmentType: record.employmentType,
-        startDate: record.startDate,
-        endDate: record.endDate,
-        reasonForLeaving: record.reasonForLeaving,
-        location: record.location,
-        description: record.description,
-        isCurrent: record.isCurrent,
-        isActive: false,
-        isDeleted: true,
-      });
+      const res = await employeeService.DeleteExperienceAsync(id, empID);
       const msg = Array.isArray(res) && res[0]?.msg ? res[0].msg : 'Experience deleted';
       toast.success(msg);
       await loadExperiences();
