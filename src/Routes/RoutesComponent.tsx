@@ -115,6 +115,7 @@ import OnboardProcess from '../pages/Recruitment/OnboardProcess';
 import CandidateOfferList from '../pages/Recruitment/CandidateOfferList';
 import EmployeeIdRulesPage from '../pages/Organization/EmployeeIdRulesPage';
 import EmployeeConnect from '../pages/Main/EmployeeConnect';
+import Approveleaves from '../pages/Leave/ApproveLeaves';
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -238,11 +239,11 @@ const RoutesComponent: React.FC = () => {
         <Route path="/employees/import" element={<EmployeeImport />} />
         <Route path="/AttendanceApprovalPage" element={<AttendanceApprovalPage />} />
         <Route path="/ManagerDashboard" element={<ManagerDashboard />} />
-         <Route path="/candidate-offers" element={<CandidateOfferList />} />
+        <Route path="/candidate-offers" element={<CandidateOfferList />} />
         <Route path="/onboard-process/:id" element={<OnboardProcess />} /> 
-      <Route path="/employee-id-rules" element={<EmployeeIdRulesPage />}/>
-      <Route path="/employee-connect" element={<EmployeeConnect />} />
-
+        <Route path="/employee-id-rules" element={<EmployeeIdRulesPage />}/>
+        <Route path="/employee-connect" element={<EmployeeConnect />} />
+        <Route path="/approve-leaves" element={<Approveleaves />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
           path="Employees/manageEmployee/:employeeID"

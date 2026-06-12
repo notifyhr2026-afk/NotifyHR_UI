@@ -45,5 +45,9 @@ ApproveOrRejectEmployeeLeaveAsync: async (payload: any) => {
 
   return data;
 },
+GetAllPendingLeavesByAsync: async (organizationID:number) => {   
+      const { data } = await axiosInstance.get(`EmployeeLeave/GetAllPendingLeavesAsync?organizationID=${organizationID}`);
+      return data;   
+  },
 };
 export default leaveService;

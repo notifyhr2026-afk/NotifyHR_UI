@@ -8,26 +8,27 @@ interface ClockRecord {
 }
 
 const EmployeeClock: React.FC = () => {
-  // ✅ Get user from localStorage
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const employeeId: number | undefined = user?.employeeID;
+  const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const employeeId = user?.employeeID;
+  const organizationID: number | undefined = user?.organizationID;
 
-  const [currentTime, setCurrentTime] = useState<string>(
+  const [currentTime, setCurrentTime] = useState(
     new Date().toLocaleTimeString()
   );
 
   const [records, setRecords] = useState<ClockRecord[]>([]);
   const [attendanceId, setAttendanceId] = useState<number>(0);
+  const [loading, setLoading] = useState(false);
 
-  // ⏱ Live clock
+  // Live Clock
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date().toLocaleTimeString());
     }, 1000);
+
     return () => clearInterval(timer);
   }, []);
 
-  // 📥 Load today's attendance
   useEffect(() => {
     if (employeeId) {
       loadTodayAttendance();
@@ -36,19 +37,20 @@ const EmployeeClock: React.FC = () => {
 
   const loadTodayAttendance = async () => {
     try {
-      const data = await employeeAttendanceService.getEmployeeAttendanceByEmployeeId(employeeId!);
+      const data =
+        await employeeAttendanceService.getEmployeeAttendanceByEmployeeId(
+          employeeId
+        );
 
       const summary = data?.Table || [];
       const logs = data?.Table1 || [];
 
       if (summary.length > 0) {
-        const att = summary[0];
-        setAttendanceId(att.AttendanceID);
+        setAttendanceId(summary[0].AttendanceID);
 
-        // 🔥 Convert logs into UI format
         const temp: ClockRecord[] = logs.map((log: any) => ({
           type: log.LogTypeID === 1 ? 'IN' : 'OUT',
-          time: new Date(log.LogTime).toLocaleTimeString()
+          time: new Date(log.LogTime).toLocaleTimeString(),
         }));
 
         setRecords(temp);
@@ -57,110 +59,238 @@ const EmployeeClock: React.FC = () => {
         setRecords([]);
       }
     } catch (error) {
-      console.error("Error loading attendance:", error);
+      console.error('Attendance Load Error:', error);
     }
   };
 
-  // 🕒 Handle Clock IN / OUT
+  const getCurrentLocation = async () => {
+    return new Promise<{
+      latitude?: number;
+      longitude?: number;
+      accuracy?: number;
+    }>((resolve) => {
+      if (!navigator.geolocation) {
+        resolve({});
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+          });
+        },
+        () => resolve({}),
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+        }
+      );
+    });
+  };
+
+  const getIPAddress = async () => {
+    try {
+      const response = await fetch(
+        'https://api.ipify.org?format=json'
+      );
+
+      const data = await response.json();
+
+      return data.ip;
+    } catch {
+      return '';
+    }
+  };
+
+  const getAddress = async (
+    latitude: number,
+    longitude: number
+  ) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`
+      );
+
+      const data = await response.json();
+
+      return data.display_name || '';
+    } catch {
+      return '';
+    }
+  };
+
   const handleClock = async (type: 'IN' | 'OUT') => {
-    const confirmMsg = `Are you sure you want to Clock ${type === 'IN' ? 'In' : 'Out'}?`;
+    const confirmMsg = `Are you sure you want to Clock ${
+      type === 'IN' ? 'In' : 'Out'
+    }?`;
 
     if (!window.confirm(confirmMsg)) return;
 
     try {
+      setLoading(true);
+
       const now = new Date();
+
+      const location = await getCurrentLocation();
+
+      const ipAddress = await getIPAddress();
+
+      let locationAddress = '';
+
+      if (location.latitude && location.longitude) {
+        locationAddress = await getAddress(
+          location.latitude,
+          location.longitude
+        );
+      }
 
       const payload: any = {
         AttendanceID: attendanceId,
         EmployeeID: employeeId,
         AttendanceDate: now.toISOString().split('T')[0],
-        AttendanceTypeID: 1, // Web Clock
-        CheckInTime: null,
-        CheckOutTime: null,
+        AttendanceTypeID: 1,
+        LogTypeID: type === 'IN' ? 1 : 2,
+        LogTime: now.toISOString(),
+        Source: 'Web Clock',
+        Remarks: '',
+
+        Devicename: navigator.platform,
+        DeviceType: 'Web',
+        BrowserInfo: navigator.userAgent,
+        UserAgent: navigator.userAgent,
+
+        OrganizationId:organizationID,
+
+        IsApproved: true,
         IsLate: false,
         IsHalfDay: false,
-        IsApproved: true,
-        Remarks: '',
-        Source: 'Web Clock',
       };
 
+      // Check In / Out
       if (type === 'IN') {
-        payload.CheckInTime = now;
+        payload.CheckInTime = now.toISOString();
       } else {
-        payload.CheckOutTime = now;
+        payload.CheckOutTime = now.toISOString();
       }
 
-      await employeeAttendanceService.CreateOrUpdateEmployeeAttendanceByemployeeId(payload);
+      // IP Address
+      if (ipAddress) {
+        payload.IpAddress = ipAddress;
+      }
 
-      // 🔄 Refresh UI
+      // Location Details
+      if (location.latitude) {
+        payload.Latitude = location.latitude;
+      }
+
+      if (location.longitude) {
+        payload.Longitude = location.longitude;
+      }
+
+      if (location.accuracy) {
+        payload.LocationAccuracy =
+          Number(location.accuracy.toFixed(2));
+      }
+
+      if (locationAddress) {
+        payload.LocationAddress = locationAddress;
+      }
+
+      if (location.latitude && location.longitude) {
+        payload.LocationSource = 'GPS';
+      }
+
+      await employeeAttendanceService.LogEmployeeAttendanceAsync(
+        payload
+      );
+
       await loadTodayAttendance();
 
+      alert(
+        type === 'IN'
+          ? 'Clock In Successful'
+          : 'Clock Out Successful'
+      );
     } catch (error) {
-      console.error("Clock error:", error);
-      alert("Something went wrong!");
+      console.error('Clock Error:', error);
+      alert('Failed to save attendance.');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // 🚫 If user not found
   if (!employeeId) {
-    return <div className="text-center mt-5">User not found</div>;
+    return (
+      <div className="container mt-5">
+        <div className="alert alert-danger text-center">
+          Employee not found. Please login again.
+        </div>
+      </div>
+    );
   }
 
-  // 🔥 Last record (for enabling/disabling buttons)
   const lastRecord = records[records.length - 1];
   const lastType = lastRecord?.type;
 
   return (
-    <div className="container">
-      <div className="card shadow-sm">
+    <div className="container mt-4">
+      <div className="card shadow">
         <div className="card-header bg-primary text-white text-center">
-          <h4>Employee Clock In / Clock Out</h4>
+          <h4 className="mb-0">
+            Employee Clock In / Clock Out
+          </h4>
         </div>
 
         <div className="card-body text-center">
-          <h5 className="mb-3">Current Time: {currentTime}</h5>
+          <h5 className="mb-4">
+            Current Time: {currentTime}
+          </h5>
 
-          {/* 🔘 Buttons */}
-          <div className="d-flex justify-content-center gap-3 mb-3">
+          <div className="d-flex justify-content-center gap-3 mb-4">
             <button
               className="btn btn-success btn-lg"
               onClick={() => handleClock('IN')}
-              disabled={lastType === 'IN'}
+              disabled={loading || lastType === 'IN'}
             >
-              Clock In
+              {loading ? 'Processing...' : 'Clock In'}
             </button>
 
             <button
               className="btn btn-danger btn-lg"
               onClick={() => handleClock('OUT')}
-              disabled={lastType !== 'IN'}
+              disabled={loading || lastType !== 'IN'}
             >
-              Clock Out
+              {loading ? 'Processing...' : 'Clock Out'}
             </button>
           </div>
 
           <hr />
 
-          {/* 📋 Records */}
-          <h5>Today Records</h5>
+          <h5>Today's Records</h5>
 
           {records.length === 0 ? (
-            <p>No clock in/out records yet.</p>
+            <p>No clock records found.</p>
           ) : (
             <ul className="list-group">
-              {records.map((rec, idx) => (
+              {records.map((record, index) => (
                 <li
-                  key={idx}
+                  key={index}
                   className={`list-group-item d-flex justify-content-between ${
-                    rec.type === 'IN'
+                    record.type === 'IN'
                       ? 'list-group-item-success'
                       : 'list-group-item-danger'
                   }`}
                 >
                   <span>
-                    {rec.type === 'IN' ? 'Clock In' : 'Clock Out'}
+                    {record.type === 'IN'
+                      ? 'Clock In'
+                      : 'Clock Out'}
                   </span>
-                  <span>{rec.time}</span>
+
+                  <span>{record.time}</span>
                 </li>
               ))}
             </ul>
