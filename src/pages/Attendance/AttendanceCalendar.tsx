@@ -58,7 +58,7 @@ const AttendanceCalendar: React.FC = () => {
   const [rawAttendance, setRawAttendance] = useState<any[]>([]);
   const [activities, setActivities] = useState<any[]>([]);
   const [holidays, setHolidays] = useState<Holiday[]>([]);
-
+  const [activityMap, setActivityMap] = useState<Record<string, any[]>>({});
   const formatDate = (d: Date) => {
   const year = d.getFullYear();
   const month = String(d.getMonth() + 1).padStart(2, "0");
@@ -66,6 +66,7 @@ const AttendanceCalendar: React.FC = () => {
 
   return `${year}-${month}-${day}`;
 };
+
 
   const correctionTypeMap: Record<string, number> = {
     WFH: 1,
@@ -102,16 +103,29 @@ const loadAttendance = async () => {
       toDate,
     };
 
-    const [res, activitiesRes] = await Promise.all([
-      employeeAttendanceService.getEmployeeAttendance(payload),
+    const [activitiesRes] = await Promise.all([
       employeeAttendanceService.GetEmployeeTimeActivities(payload),
     ]);
 
-    const raw = res?.Table1 || [];
+   
     const activitiesArr = Array.isArray(activitiesRes) ? activitiesRes : activitiesRes?.Table || [];
-
-    setRawAttendance(raw);
+    
+   
     setActivities(activitiesArr || []);
+
+    const groupedActivities: Record<string, any[]> = {};
+
+activitiesArr.forEach((item: any) => {
+  const dateKey = item.ActivityDate.split("T")[0];
+
+  if (!groupedActivities[dateKey]) {
+    groupedActivities[dateKey] = [];
+  }
+
+  groupedActivities[dateKey].push(item);
+});
+
+setActivityMap(groupedActivities);
 
     // populate holidays from activities where ActivityType === 'HOLIDAY'
     const holidayList: Holiday[] = (activitiesArr || [])
@@ -122,23 +136,7 @@ const loadAttendance = async () => {
 
     const grouped: Record<string, any[]> = {};
 
-    raw.forEach((item: any) => {
-      // 🔹 CONVERT LOG TIME TO IST DATE FOR GROUPING
-      // If server does not send a 'Z' or offset suffix, append 'Z' to treat it as absolute UTC
-      const rawLogTime = item.LogTime || "";
-      const utcString = rawLogTime.endsWith("Z") || rawLogTime.includes("+") ? rawLogTime : `${rawLogTime}Z`;
-      
-      const logDateUtc = new Date(utcString);
-      
-      // Extract the local IST Date String (YYYY-MM-DD) matching Asia/Kolkata
-      const istDateString = logDateUtc.toLocaleDateString("en-CA", {
-        timeZone: "Asia/Kolkata",
-      });
-
-      if (!grouped[istDateString]) grouped[istDateString] = [];
-      grouped[istDateString].push(item);
-    });
-
+  
     const mapped: AttendanceLog[] = Object.keys(grouped).map((day) => {
       // Sort logs by actual timestamp
       const logs = grouped[day].sort((a, b) => {
@@ -189,8 +187,9 @@ const loadAttendance = async () => {
     }
   }, [date]);
 
-  const getLogsForDay = (day: Date) =>
-    attendanceData.filter((x) => x.date === formatDate(day));
+const getActivitiesForDay = (day: Date) => {
+  return activityMap[formatDate(day)] || [];
+};
 
   const getHolidayForDay = (day: Date) =>
     holidays.find((h) => h.date === formatDate(day));
@@ -449,10 +448,19 @@ const handleSave = async () => {
             }}
             onClickDay={(d) => openModal(d)}
             tileContent={({ date: tileDate }) => {
-              const logs = getLogsForDay(tileDate);
+            
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+
+              const currentTileDate = new Date(tileDate);
+              currentTileDate.setHours(0, 0, 0, 0);
+
+              const isPastOrToday = currentTileDate <= today;
+              const activities = getActivitiesForDay(tileDate);
 
               const holiday = getHolidayForDay(tileDate);
-
+const isWeekend =
+  tileDate.getDay() === 0 || tileDate.getDay() === 6;
               const key = formatDate(tileDate);
 
               return (
@@ -469,100 +477,134 @@ const handleSave = async () => {
                   />
 
                   {/* HOLIDAY */}
-                  {holiday && (
+                  {/* {holiday && (
                     <div className="holiday-log">
                       🎉 {holiday.name}
                     </div>
-                  )}
+                  )} */}
 
                   {/* LOGS */}
-                {logs.map((log, idx) => (
-                  <OverlayTrigger
-                    key={idx}
-                    placement="top"
-                    overlay={
-                      <Tooltip>
-                        {log.logs?.length ? (
-                          <>
-                            IN:{" "}
-                            {log.logs[0]?.LogTime ? (() => {
-                              // Ensure timestamp is parsed explicitly as UTC
-                              const tStr = log.logs[0].LogTime;
-                              const utcStr = tStr.endsWith("Z") || tStr.includes("+") ? tStr : `${tStr}Z`;
-                              return new Date(utcStr).toLocaleTimeString("en-IN", {
-                                timeZone: "Asia/Kolkata",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                second: "2-digit",
-                              });
-                            })() : "-"}
-                            {" | "}
-                            OUT:{" "}
-                            {log.logs[log.logs.length - 1]?.LogTime ? (() => {
-                              // Ensure timestamp is parsed explicitly as UTC
-                              const tStr = log.logs[log.logs.length - 1].LogTime;
-                              const utcStr = tStr.endsWith("Z") || tStr.includes("+") ? tStr : `${tStr}Z`;
-                              return new Date(utcStr).toLocaleTimeString("en-IN", {
-                                timeZone: "Asia/Kolkata",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                second: "2-digit",
-                              });
-                            })() : "-"}
-                          </>
-                        ) : (
-                          "No logs"
-                        )}
-                      </Tooltip>
-                    }
-                  >
-                    <div
-                      className={`attendance-log ${
-                        log.status === "Present"
-                          ? "present"
-                          : log.status === "Half Day"
-                          ? "leave"
-                          : "absent"
-                      }`}
-                    >
-                      {log.status === "Present" && "✓ "}
-                      {log.status === "Half Day" && "◐ "}
-                      {log.status === "Absent" && "✗ "}
-                      {log.employee}
-                    </div>
-                  </OverlayTrigger>
-                ))}
+                {activities.map((activity, idx) => {
+  const type = activity.ActivityType?.toUpperCase();
+const displayText =
+  type === "ATTENDANCE"
+    ? "Present"
+    : type === "ATTENDANCE_CORRECTION"
+    ? "Attendance Correction"
+    : type === "LEAVE"
+    ? "Leave"
+    : type === "HOLIDAY"
+    ? "Holiday"
+    : "Absent";
+  let className = "absent";
+
+  if (type === "ATTENDANCE") {
+    className = "attendance";
+  } else if (type === "ATTENDANCE_CORRECTION") {
+    className = "attendance-correction";
+  } else if (type === "LEAVE") {
+    className = "leave";
+  } else if (type === "HOLIDAY") {
+    className = "holiday";
+  }
+  else className = "absent";
+
+  return (
+    <OverlayTrigger
+      key={idx}
+      placement="top"
+      overlay={
+        <Tooltip>
+          <div>
+            <strong>{type}</strong>
+          </div>
+
+          {activity.CheckInTime && (
+            <div>
+              IN:{" "}
+              {new Date(
+                activity.CheckInTime
+              ).toLocaleTimeString("en-IN")}
+            </div>
+          )}
+
+          {activity.CheckOutTime && (
+            <div>
+              OUT:{" "}
+              {new Date(
+                activity.CheckOutTime
+              ).toLocaleTimeString("en-IN")}
+            </div>
+          )}
+
+          {activity.Description && (
+            <div>{activity.Description}</div>
+          )}
+        </Tooltip>
+      }
+    >
+      <div className={`attendance-log ${className}`}>
+          {displayText}
+      </div>
+    </OverlayTrigger>
+  );
+})}
+{activities.length === 0 &&
+  isPastOrToday &&
+  !isWeekend && (
+    <div className="attendance-log absent">
+      ABSENT
+    </div>
+)}
 
                 </div>
               );
             }}
-            tileClassName={({ date: tileDate, view }) => {
-              const classes = ["calendar-tile"];
+           tileClassName={({ date: tileDate, view }) => {
+  const classes = ["calendar-tile"];
 
-              if (view === "month") {
-                if (
-                  tileDate.getMonth() !== date.getMonth()
-                )
-                  classes.push("other-month-day");
+  if (view === "month") {
+    const key = formatDate(tileDate);
 
-                if ([0, 6].includes(tileDate.getDay()))
-                  classes.push("weekend-day");
+    const dayActivities = activityMap[key] || [];
 
-                const key = formatDate(tileDate);
+    if (dayActivities.some(a => a.ActivityType === "ATTENDANCE")) {
+      classes.push("attendance-day");
+    } else if (
+      dayActivities.some(
+        a => a.ActivityType === "ATTENDANCE_CORRECTION"
+      )
+    ) {
+      classes.push("attendance-correction-day");
+    } else if (
+      dayActivities.some(a => a.ActivityType === "LEAVE")
+    ) {
+      classes.push("leave-day");
+    } else if (
+      dayActivities.some(a => a.ActivityType === "HOLIDAY")
+    ) {
+      classes.push("holiday-day");
+    } 
+     else {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
-                // present if attendance logs exist for the day OR activities include present/leave/holiday
-                const hasAttendance = attendanceData.some((a) => a.date === key);
-                const presentTypes = new Set(["ATTENDANCE", "LEAVE", "ATTENDANCE_CORRECTION", "HOLIDAY"]);
-                const hasActivity = activities.some((act) => {
-                  const dt = (act.ActivityDate || "").split("T")[0];
-                  return dt === key && presentTypes.has(String(act.ActivityType).toUpperCase());
-                });
+  const currentTileDate = new Date(tileDate);
+  currentTileDate.setHours(0, 0, 0, 0);
+  const isWeekend =
+  tileDate.getDay() === 0 || tileDate.getDay() === 6;
+ if (
+  currentTileDate <= today &&
+  !isWeekend
+) {
+  classes.push("absent-day");
+}
+}
+    
+  }
 
-                if (hasAttendance || hasActivity) classes.push("present-day");
-              }
-
-              return classes.join(" ");
-            }}
+  return classes.join(" ");
+}}
           />
         </div>
 

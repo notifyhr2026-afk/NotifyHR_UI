@@ -244,5 +244,50 @@
   bottom: 6px;
   right: 6px;
 }
-  
+.attendance-log.attendance {
+  background: #28a745;
+  color: white;
+}
+
+.attendance-log.attendance-correction {
+  background: #87cefa;
+  color: #000;
+}
+
+.attendance-log.leave {
+  background: #ff9800;
+  color: white;
+}
+
+.attendance-log.holiday {
+  background: #ffd54f;
+  color: black;
+}
+
+.attendance-log.absent {
+  background: #dc3545;
+  color: white;
+}
+
+/* Tile background colors */
+
+.attendance-day {
+  background-color: #d4edda !important;
+}
+
+.attendance-correction-day {
+  background-color: #d6f0ff !important;
+}
+
+.leave-day {
+  background-color: #ffe0b2 !important;
+}
+
+.holiday-day {
+  background-color: #fff9c4 !important;
+}
+
+.absent-day {
+  background-color: #f8d7da !important;
+}
       
