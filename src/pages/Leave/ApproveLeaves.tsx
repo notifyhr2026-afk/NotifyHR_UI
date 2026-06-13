@@ -50,7 +50,7 @@ const formatDate = (date?: string | null) => {
   return new Date(year, month - 1, day).toLocaleDateString();
 };
 
-const ApproveLeavesTab: React.FC = () => {
+const ApproveLeaves: React.FC = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const organizationID: number | undefined = user?.organizationID;
@@ -324,4 +324,4 @@ const ApproveLeavesTab: React.FC = () => {
   );
 };
 
-export default ApproveLeavesTab;
+export default ApproveLeaves;

@@ -197,7 +197,7 @@ const DashboardLayout: React.FC = () => {
                     <div className="divider-vertical" />
 
                     {/* RIGHT */}
-                    <div className="flex-grow-1 ps-3">
+                    {/* <div className="flex-grow-1 ps-3">
                       <small className="section-title">Theme</small>
 
                       <div
@@ -223,7 +223,7 @@ const DashboardLayout: React.FC = () => {
                           Dark
                         </span>
                       </div>
-                    </div>
+                    </div> */}
 
                   </div>
                 </div>
@@ -268,8 +268,7 @@ const DashboardLayout: React.FC = () => {
                     </div>
                   </div>
                 )}
-
-                <Dropdown.Divider />
+                  {hasEmployeeRole && ( <Dropdown.Divider /> )}
 
                 <Dropdown.Item onClick={handleLogout} className="text-danger">
                   <i className="bi bi-box-arrow-right me-2"></i>
