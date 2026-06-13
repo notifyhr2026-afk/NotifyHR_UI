@@ -117,7 +117,7 @@ import EmployeeIdRulesPage from '../pages/Organization/EmployeeIdRulesPage';
 import EmployeeConnect from '../pages/Main/EmployeeConnect';
 import Approveleaves from '../pages/Leave/ApproveLeaves';
 import ManageAttendanceDevices from '../pages/Organization/ManageAttendanceDevices';
-
+import ResignationApproval from '../components/Employee/ResignationApproval';
 const RoutesComponent: React.FC = () => {
   return (
     <Routes>
@@ -246,6 +246,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="/employee-connect" element={<EmployeeConnect />} />
         <Route path="/approve-leaves" element={<Approveleaves />} />
         <Route path="/manage-attendance-devices" element={<ManageAttendanceDevices />} />
+        <Route path="/resignation-approval" element={<ResignationApproval />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
           path="Employees/manageEmployee/:employeeID"

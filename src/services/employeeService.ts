@@ -139,11 +139,6 @@ const employeeService = {
     const { data } = await api.get(`Employee/GetEmployeeAddress?EmployeeID=${employeeID}`);
     return data;
   },
-    // ---- Address ----
-  ApplyResignation: async (payload: any) => {
-    const { data } = await api.post("Employee/ApplyResignation", payload);
-    return data;
-  },
 
    DeleteEducationAsync: async (educationID: number, employeeID: number  ) => {
       const { data } = await api.delete(`Employee/DeleteEducationAsync?educationID=${educationID}&employeeID=${employeeID}`);
@@ -161,6 +156,27 @@ const employeeService = {
       const { data } = await api.delete(`Employee/DeleteAddressAsync?addressID=${addressID}&employeeID=${employeeID}`);
       return data;
    },
+
+  // ---- Resignation ----
+  ApplyResignation: async (payload: any) => {
+    const { data } = await api.post("Employee/ApplyResignation", payload);
+    return data;
+  },
+   GetEmployeeExitDetails: async (employeeID: number) => {
+    const { data } = await api.get(`Employee/GetEmployeeExitDetails?EmployeeID=${employeeID}`);
+    return data;
+  },
+  ApproveorRejectResignation: async (payload: any) => {
+    const { data } = await api.put("Employee/UpdateResignatioReqStausAsync", payload);
+    return data;
+  },
+ GetResignationRequestsAsync: async (payload: any) => {
+  const { data } = await api.post(
+    "Employee/GetResignationRequestsAsync",
+    payload
+  );
+  return data;
+},
 };
 
 export default employeeService;
