@@ -368,7 +368,7 @@ const ManageAttendanceDevices: React.FC = () => {
           <tr>
             <th>Device Name</th>
             <th>Serial Number</th>
-            <th>Location</th>
+            <th>Log Type</th>
             <th>IP Address</th>
             <th>Status</th>
             <th>
@@ -575,20 +575,25 @@ const ManageAttendanceDevices: React.FC = () => {
 
               <Col md={6}>
                 <Form.Group className="mb-3">
-                  <Form.Label>
-                    Location
-                  </Form.Label>
+  <Form.Label>
+    Log Type *
+  </Form.Label>
 
-                  <Form.Control
-                    name="location"
-                    value={
-                      deviceFormData.location
-                    }
-                    onChange={
-                      handleInputChange
-                    }
-                  />
-                </Form.Group>
+      <Form.Select
+        required
+        name="location"
+        value={deviceFormData.location}
+        onChange={handleInputChange}
+      >
+        <option value="">Select Location</option>
+        <option value="In">In</option>
+        <option value="Out">Out</option>
+      </Form.Select>
+
+      <Form.Control.Feedback type="invalid">
+        Please select a location.
+      </Form.Control.Feedback>
+    </Form.Group>
               </Col>
             </Row>
 

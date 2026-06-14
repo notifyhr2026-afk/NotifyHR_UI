@@ -334,7 +334,7 @@ const handleSaveEmployee = async (e: React.FormEvent<HTMLFormElement>) => {
               <td>{emp.EmployeeName}</td>
               <td>{emp.EmployeeCode}</td>
               <td>{emp.OfficialEmail}</td>
-              <td>{emp.DateOfJoining}</td>
+              <td>{emp.DateOfJoining.slice(0, 10)}</td>
               <td>
                 <Button
                   size="sm"

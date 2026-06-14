@@ -4,7 +4,6 @@ import {
   Col,
   Card,
   Badge,
-  Dropdown,
   Form,
   Button,
   InputGroup,
@@ -12,6 +11,7 @@ import {
 } from "react-bootstrap";
 import { BsCalendar3, BsSearch, BsFilter, BsDownload } from "react-icons/bs";
 import holidayService from "../../services/holidayService";
+import branchService from "../../services/branchService";
 
 // Safe icon renderer
 const Icon = (Component: any, props: any = {}) => <Component {...props} />;
@@ -21,11 +21,19 @@ interface EmployeeHoliday {
   name: string;
   date: string;
   type: "Normal" | "Optional" | "Special" | "Company" | "Weekend";
+  branchID: number;
+}
+
+interface BranchOption {
+  value: number;
+  label: string;
 }
 
 const HolidayList: React.FC = () => {
   const [selectedYear, setSelectedYear] = useState<number>(2026);
   const [search, setSearch] = useState<string>("");
+  const [branches, setBranches] = useState<BranchOption[]>([]);
+  const [selectedBranch, setSelectedBranch] = useState<number>(0);
 
   // Filter modal states
   const [showFilter, setShowFilter] = useState(false);
@@ -40,6 +48,27 @@ const HolidayList: React.FC = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID = user?.organizationID ?? 0;
 
+  // Fetch branches once
+  useEffect(() => {
+    const fetchBranches = async () => {
+      try {
+        const data = await branchService.getBranchesAsync(organizationID);
+        const list = data?.Table ?? data ?? [];
+        const options = list.map((b: any) => ({
+          value: Number(b.BranchID ?? b.branchID ?? b.id ?? 0),
+          label: b.BranchName || b.branchName || b.name || "Unknown Branch",
+        }));
+        setBranches(options);
+      } catch (error) {
+        console.error("Error fetching branches:", error);
+      }
+    };
+
+    if (organizationID) {
+      fetchBranches();
+    }
+  }, [organizationID]);
+
   // Fetch holidays whenever organizationID or selectedYear changes
   useEffect(() => {
     const fetchHolidays = async () => {
@@ -51,10 +80,11 @@ const HolidayList: React.FC = () => {
         const mappedHolidays: EmployeeHoliday[] = data
           .filter((h: any) => new Date(h.HolidayDate).getFullYear() === selectedYear)
           .map((h: any) => ({
-            id: h.HolidayID,
-            name: h.HolidayName,
-            date: h.HolidayDate.split("T")[0], // Keep only yyyy-mm-dd
+            id: Number(h.HolidayID ?? h.holidayID ?? h.id ?? 0),
+            name: h.HolidayName || h.holidayName || "",
+            date: (h.HolidayDate || h.holidayDate || "").split("T")[0], // Keep only yyyy-mm-dd
             type: h.IsOptional ? "Optional" : "Company",
+            branchID: Number(h.BranchID ?? h.branchID ?? h.BranchId ?? 0),
           }));
 
         setHolidays(mappedHolidays);
@@ -65,7 +95,9 @@ const HolidayList: React.FC = () => {
       }
     };
 
-    fetchHolidays();
+    if (organizationID) {
+      fetchHolidays();
+    }
   }, [organizationID, selectedYear]);
 
   const badgeColor = (type: string) => {
@@ -90,6 +122,7 @@ const HolidayList: React.FC = () => {
     const month = new Date(h.date).getMonth() + 1;
 
     return (
+      (selectedBranch ? h.branchID === selectedBranch : true) &&
       (filterType ? h.type === filterType : true) &&
       (filterMonth ? month === Number(filterMonth) : true) &&
       h.name.toLowerCase().includes(search.toLowerCase())
@@ -125,7 +158,7 @@ const HolidayList: React.FC = () => {
 
       {/* Search + Filter */}
       <Row className="mb-3">
-        <Col md={6}>
+        <Col md={4}>
           <InputGroup>
             <InputGroup.Text>{Icon(BsSearch)}</InputGroup.Text>
             <Form.Control
@@ -136,7 +169,21 @@ const HolidayList: React.FC = () => {
           </InputGroup>
         </Col>
 
-        <Col md={6} className="text-end">
+          <Col md={4}>
+          <Form.Select
+            value={selectedBranch}
+            onChange={(e) => setSelectedBranch(Number(e.target.value))}
+          >
+            <option value={0}>All Branches</option>
+            {branches.map((branch) => (
+              <option key={branch.value} value={branch.value}>
+                {branch.label}
+              </option>
+            ))}
+          </Form.Select>
+        </Col>
+
+        <Col md={4} className="text-end">
           <Button variant="outline-secondary" onClick={() => setShowFilter(true)}>
             {Icon(BsFilter, { className: "me-2" })}
             Filter

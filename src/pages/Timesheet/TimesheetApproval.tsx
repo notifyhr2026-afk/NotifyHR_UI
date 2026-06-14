@@ -15,7 +15,7 @@ import shiftService from "../../services/shiftService";
 
 /* ================= TYPES ================= */
 
-type Status = "PENDING" | "APPROVED" | "REJECTED" | "RESUBMIT";
+type Status = "PENDING" | "SUBMITTED" | "APPROVED" | "REJECTED" | "RESUBMIT";
 
 interface TimesheetEntryAPI {
   TimesheetEntryId: number;
@@ -76,9 +76,10 @@ interface EmployeeTimesheet {
 
 const STATUS_MAP: Record<number, Status> = {
   0: "PENDING",
-  1: "APPROVED",
-  2: "REJECTED",
-  3: "RESUBMIT",
+  1: "SUBMITTED",
+  2: "APPROVED",
+  3: "REJECTED",
+  4: "RESUBMIT",
 };
 
 /* ================= MAIN COMPONENT ================= */
@@ -215,12 +216,12 @@ const TimesheetApproval: React.FC = () => {
 
   const statusToId = (status: Status): number =>
     status === "APPROVED"
-      ? 1
-      : status === "REJECTED"
       ? 2
-      : status === "RESUBMIT"
+      : status === "REJECTED"
       ? 3
-      : 0;
+      : status === "RESUBMIT"
+      ? 4
+      : 1;
 
   /* ===== UPDATE STATUS ===== */
   const updateProjectStatus = (
@@ -308,12 +309,12 @@ const TimesheetApproval: React.FC = () => {
       ActivityId: e.activityId, // ✅ ensured correct
       Status:
         e.status === "APPROVED"
-          ? 1
-          : e.status === "REJECTED"
           ? 2
-          : e.status === "RESUBMIT"
+          : e.status === "REJECTED"
           ? 3
-          : 0,
+          : e.status === "RESUBMIT"
+          ? 4
+          : 1,
     }));
 
     console.log("Final Approval Payload:", payload);
@@ -326,7 +327,7 @@ const TimesheetApproval: React.FC = () => {
     .map((emp) => ({
       ...emp,
       projects: emp.projects.filter((p) =>
-        p.entries.some((e) => e.status === "PENDING")
+        p.entries.some((e) => e.status === "SUBMITTED")
       ),
     }))
     .filter((emp) => emp.projects.length > 0);

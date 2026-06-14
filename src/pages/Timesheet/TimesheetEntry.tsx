@@ -278,31 +278,44 @@ const TimesheetEntry: React.FC = () => {
 
   /* ===== SAVE ===== */
 
-  const saveProject = async (projectId: number) => {
-    const sheet = timesheets.find((p) => p.projectId === projectId);
-    if (!sheet) return;
+ const saveProject = async (projectId: number) => {
+  const sheet = timesheets.find(
+    (p) => p.projectId === projectId
+  );
 
-    const payload = sheet.entries.map((e) => ({
-      TimesheetID: 0,
-      EmployeeID: employeeID,
-      OrganizationID: organizationID,
-      ProjectID: projectId,
-      EntryDate: e.date,
-      Shift: e.shift,
-      ShiftID: e.shiftId,
-      Activity: e.activity,
-      ActivityID: e.activityId,
-      Hours: e.hours,
-      StatusID: e.statusId,
-    }));
+  if (!sheet) return;
 
-    await timesheetService.createTimesheetEntries({
-      createdBy: "1",
-      timesheetEntryJson: JSON.stringify(payload),
-    });
+  // Exclude approved entries
+  const entriesToSave = sheet.entries.filter(
+    (e) => e.statusName.toUpperCase() !== "APPROVED"
+  );
 
-    alert("Saved successfully");
-  };
+  if (entriesToSave.length === 0) {
+    alert("No records available to save.");
+    return;
+  }
+
+  const payload = entriesToSave.map((e) => ({
+    TimesheetID: 0,
+    EmployeeID: employeeID,
+    OrganizationID: organizationID,
+    ProjectID: projectId,
+    EntryDate: e.date,
+    Shift: e.shift,
+    ShiftID: e.shiftId,
+    Activity: e.activity,
+    ActivityID: e.activityId,
+    Hours: e.hours,
+    StatusID: e.statusId,
+  }));
+
+  await timesheetService.createTimesheetEntries({
+    createdBy: employeeID?.toString(),
+    timesheetEntryJson: JSON.stringify(payload),
+  });
+
+  alert("Saved successfully");
+};
 
   return (
     <Card className="p-5">
@@ -366,7 +379,18 @@ const TimesheetEntry: React.FC = () => {
                       const disabled = isApproved(entry.statusId);
 
                       return (
-                        <tr key={`${entry.date}-${index}`}>
+                        <tr
+                          key={`${entry.date}-${index}`}
+                          className={
+                            entry.statusName === "APPROVED"
+                              ? "approved-row"
+                              : entry.statusName === "REJECTED"
+                              ? "rejected-row"
+                              : entry.statusName === "RESUBMIT"
+                              ? "resubmit-row"
+                              : ""
+                          }
+                        >
                           <td>{entry.date}</td>
 
                           <td>
@@ -455,6 +479,7 @@ const TimesheetEntry: React.FC = () => {
                 </Table>
 
                 <div className="text-end">
+                  
                   <Button
                     variant="success"
                     onClick={() => saveProject(project.projectId)}

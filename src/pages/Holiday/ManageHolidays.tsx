@@ -5,12 +5,11 @@ import {
   Modal,
   Form,
   Badge,
-  Toast,
-  ToastContainer,
   Row,
   Col,
 } from "react-bootstrap";
-import { BsPencilSquare, BsPlus } from "react-icons/bs";
+import { BsPencilSquare, BsPlus, BsTrash } from "react-icons/bs";
+import { toast } from "react-toastify";
 import branchService from "../../services/branchService";
 import holidayService from "../../services/holidayService";
 import LoggedInUser from "../../types/LoggedInUser";
@@ -54,12 +53,8 @@ const ManageHolidays: React.FC = () => {
 
   const [editHoliday, setEditHoliday] = useState<Holiday | null>(null);
   const [showModal, setShowModal] = useState(false);
-
-  const [toast, setToast] = useState({
-    show: false,
-    message: "",
-    variant: "success",
-  });
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteHolidayId, setDeleteHolidayId] = useState<number | null>(null);
 
   /* ================= LOAD DATA ================= */
 
@@ -144,6 +139,28 @@ const ManageHolidays: React.FC = () => {
     setShowModal(true);
   };
 
+  const handleDeleteClick = (holidayId: number) => {
+    setDeleteHolidayId(holidayId);
+    setConfirmDelete(true);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteHolidayId) return;
+    try {
+      const res = await holidayService.DeleteHolidayByAsync(deleteHolidayId);
+      // If API call succeeds (200 status), treat as success
+      const result = Array.isArray(res) ? res[0] : res;
+      const message = result?.MSG || result?.message || result?.msg || "Holiday deleted successfully!";
+      toast.success(message);
+      await loadHolidays();
+      setConfirmDelete(false);
+      setDeleteHolidayId(null);
+    } catch (error) {
+      console.error('Delete error:', error);
+      toast.error("Failed to delete holiday");
+    }
+  };
+
   /* ================= SAVE ================= */
 
   const handleSave = async (event: any) => {
@@ -169,28 +186,16 @@ const ManageHolidays: React.FC = () => {
       };
 
       const res = await holidayService.saveHolidayAsync(payload);
-
-      if (res[0]?.value === 1) {
-        setToast({
-          show: true,
-          message: res[0]?.MSG,
-          variant: "success",
-        });
-        loadHolidays();
-        setShowModal(false);
-      } else {
-        setToast({
-          show: true,
-          message: res[0]?.MSG,
-          variant: "warning",
-        });
-      }
+      // If API call succeeds (200 status), treat as success
+      const result = Array.isArray(res) ? res[0] : res;
+      const message = result?.MSG || result?.message || result?.msg || (editHoliday ? "Holiday updated successfully!" : "Holiday added successfully!");
+      toast.success(message);
+      setValidated(false);
+      setShowModal(false);
+      await loadHolidays();
     } catch (error) {
-      setToast({
-        show: true,
-        message: "Something went wrong!",
-        variant: "danger",
-      });
+      console.error('Save error:', error);
+      toast.error("Failed to save holiday");
     }
   };
 
@@ -255,8 +260,16 @@ const ManageHolidays: React.FC = () => {
                   size="sm"
                   variant="outline-primary"
                   onClick={() => openEditModal(h)}
+                  className="me-2"
                 >
                   {Icon(BsPencilSquare)}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline-danger"
+                  onClick={() => handleDeleteClick(h.id)}
+                >
+                  {Icon(BsTrash)}
                 </Button>
               </td>
             </tr>
@@ -355,21 +368,26 @@ const ManageHolidays: React.FC = () => {
         </Form>
       </Modal>
 
-      {/* ================= TOAST ================= */}
+      {/* ================= DELETE CONFIRMATION MODAL ================= */}
 
-      <ToastContainer position="top-end" className="p-3">
-        <Toast
-          bg={toast.variant}
-          show={toast.show}
-          delay={3000}
-          autohide
-          onClose={() => setToast({ ...toast, show: false })}
-        >
-          <Toast.Body className="text-white">
-            {toast.message}
-          </Toast.Body>
-        </Toast>
-      </ToastContainer>
+      <Modal show={confirmDelete} onHide={() => setConfirmDelete(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Delete</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to delete this holiday? This action cannot be undone.
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
+            Cancel
+          </Button>
+          <Button variant="danger" onClick={handleDelete}>
+            Delete
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+
     </div>
   );
 };

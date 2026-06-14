@@ -57,6 +57,10 @@ GetHolidaysAsync: async (organizationID: number) => {
       const { data } = await axiosAttendanceInstance.get(`/Holiday?organizationID=${organizationID}`);
       return data;
   },
+  DeleteHolidayByAsync: async (holidayID:number) => {   
+        const { data } = await axiosAttendanceInstance.delete(`Holiday?HolidayID=${holidayID}`);
+        return data;   
+    },
 };
 
 export default holidayService;
