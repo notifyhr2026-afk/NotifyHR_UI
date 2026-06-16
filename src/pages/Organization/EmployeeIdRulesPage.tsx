@@ -13,6 +13,7 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import employeeIdRuleService from "../../services/employeeIdRuleService";
+import LoggedInUser from "../../types/LoggedInUser";
 
 // ===== Types =====
 interface EmployeeIdRule {
@@ -43,7 +44,12 @@ const departmentOptions = [
 
 const EmployeeIdRulesPage: React.FC = () => {
   // ===== Organization ID =====
-  const organizationID = 1;
+  const userString = localStorage.getItem("user");
+    const user: LoggedInUser | null = userString
+      ? JSON.parse(userString)
+      : null;
+  
+    const organizationID = user?.organizationID ?? 0;
 
   // ===== Logged User =====
   const loginUser = "admin";

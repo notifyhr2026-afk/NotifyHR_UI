@@ -52,8 +52,8 @@ const Feedback360Page: React.FC = () => {
     async function loadMasterData() {
       try {
         const [cycleRes, empRes] = await Promise.all([
-          axios.get<ReviewCycle[]>('/api/reviewCycles'), // API endpoints
-          axios.get<Employee[]>('/api/employees')
+          axios.get<ReviewCycle[]>('/api/Performance/reviewCycles'), // API endpoints
+          axios.get<Employee[]>('/api/Performance/employees')
         ]);
         setReviewCycles(cycleRes.data);
         setEmployees(empRes.data);
@@ -68,7 +68,7 @@ const Feedback360Page: React.FC = () => {
   useEffect(() => {
     if (selectedEmployee && selectedCycle) {
       axios
-        .get<Criteria[]>(`/api/feedbackCriteria?employeeID=${selectedEmployee}&cycleID=${selectedCycle}`)
+        .get<Criteria[]>(`/api/Performance/feedbackCriteria?employeeID=${selectedEmployee}&cycleID=${selectedCycle}`)
         .then(res => {
           setCriteriaList(res.data);
           // Initialize feedbackCriteria array
@@ -106,7 +106,7 @@ const Feedback360Page: React.FC = () => {
     };
 
     try {
-      await axios.post('/api/multiReviewerFeedback', payload);
+      await axios.post('/api/Performance/multiReviewerFeedback', payload);
       alert(`Feedback ${status} successfully!`);
       // Clear form
       setSelectedCycle(null);
