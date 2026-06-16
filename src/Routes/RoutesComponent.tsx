@@ -117,7 +117,10 @@ import EmployeeIdRulesPage from '../pages/Organization/EmployeeIdRulesPage';
 import EmployeeConnect from '../pages/Main/EmployeeConnect';
 import Approveleaves from '../pages/Leave/ApproveLeaves';
 import ManageAttendanceDevices from '../pages/Organization/ManageAttendanceDevices';
+import ManageBenchPolicyRules from '../pages/Organization/ManageBenchPolicyRules';
 import ResignationApproval from '../components/Employee/ResignationApproval';
+import ManageNoticePeriodPolicies from '../pages/Organization/ManageNoticePeriodPolicies';
+
 const RoutesComponent: React.FC = () => {
   return (
     <Routes>
@@ -246,6 +249,9 @@ const RoutesComponent: React.FC = () => {
         <Route path="/employee-connect" element={<EmployeeConnect />} />
         <Route path="/approve-leaves" element={<Approveleaves />} />
         <Route path="/manage-attendance-devices" element={<ManageAttendanceDevices />} />
+        <Route path="/notice-period-policies" element={<ManageNoticePeriodPolicies />} />
+        <Route path="/bench-policy-rules" element={<ManageBenchPolicyRules />} />
+
         <Route path="/resignation-approval" element={<ResignationApproval />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 

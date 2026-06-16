@@ -8,6 +8,7 @@ import EmployeeExperience from '../../components/Employee/EmployeeExperience';
 import EmployeeFamilyDetails from '../../components/Employee/EmployeeFamilyDetails';
 import EmployeeAddress from '../../components/Employee/EmployeeAddress';
 import EmployeeSeparation from '../../components/Employee/EmployeeSeparation';
+import ManageEmployeeBankDetails from '../Payroll/ManageEmployeeBankDetails';
 
 const CareerPersonal: React.FC = () => {
   const userData: any = localStorage.getItem('user');
@@ -48,6 +49,13 @@ const CareerPersonal: React.FC = () => {
           </Accordion.Item>
 
           <Accordion.Item eventKey="4">
+            <Accordion.Header>Bank Details</Accordion.Header>
+            <Accordion.Body>
+              <ManageEmployeeBankDetails />
+            </Accordion.Body>
+          </Accordion.Item>
+
+          <Accordion.Item eventKey="5">
             <Accordion.Header>Separation</Accordion.Header>
             <Accordion.Body>
               <EmployeeSeparation employeeID={employeeID} />
