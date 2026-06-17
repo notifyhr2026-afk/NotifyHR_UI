@@ -55,7 +55,7 @@ const Home: React.FC = () => {
            <img
   src={notifyhr_logo1}
   alt="NotifyHR Logo"
-  style={{ height: "40px", width: "auto" }}
+  style={{ height: "55px", width: "auto" }}
 />
             {/* <span className="fw-bold fs-5 text-white">NotifyHR</span> */}
           </Link>

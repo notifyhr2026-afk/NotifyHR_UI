@@ -485,8 +485,8 @@ html, body, #root {
   --bg-color: #f4f7fa;
   --text-color: #000;
   --card-bg: #ffffff;
-  --sidebar-bg: #f0f4f8;
-  --topbar-bg: #f0f4f8;
+  --sidebar-bg: #fcfcfc;
+  --topbar-bg: #fcfcfc;
 }
 
 /* ===========================
@@ -553,8 +553,8 @@ body.light-mode {
   --bg-color: #f4f7fa;
   --text-color: #212529;
   --card-bg: #ffffff;
-  --sidebar-bg: #f0f4f8;
-  --topbar-bg: #f0f4f8;
+  --sidebar-bg: #fcfcfc;
+  --topbar-bg: #fcfcfc;
 }
 
 /* ================= DARK MODE ================= */
@@ -877,8 +877,8 @@ body {
   --card-bg: #ffffff;
   --border-color: #ced4da;
 
-  --sidebar-bg: #f0f4f8;
-  --topbar-bg: #f0f4f8;
+  --sidebar-bg: #fcfcfc;
+  --topbar-bg: #fcfcfc;
 
   --profile-bg: #f5f5f5;
 }
