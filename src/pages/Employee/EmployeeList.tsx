@@ -514,7 +514,7 @@ const handleSaveEmployee = async (e: React.FormEvent<HTMLFormElement>) => {
                                         <Col md={4}>
                                             <Form.Group controlId="workPhone">
                                                 <Form.Label>Work Phone</Form.Label>
-                                                <Form.Control required value={newEmp.workPhone} onChange={(e) => setNewEmp({ ...newEmp, workPhone: e.target.value })}/>
+                                                <Form.Control value={newEmp.workPhone} onChange={(e) => setNewEmp({ ...newEmp, workPhone: e.target.value })}/>
                                             </Form.Group>
                                         </Col>
                                         <Col md={4}>

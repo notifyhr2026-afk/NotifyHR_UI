@@ -13,6 +13,7 @@ import {
 import Select from 'react-select';
 import userService from '../../services/userService';
 import employeeService from '../../services/employeeService';
+import * as roleService from '../../services/roleService';
 
 interface User {
   id: number;
@@ -82,12 +83,7 @@ const ManageUsers: React.FC = () => {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
 
-  const roleOptions = [
-    { value: 'Admin', label: 'Admin' },
-    { value: 'Manager', label: 'Manager' },
-    { value: 'Employee', label: 'Employee' },
-    { value: 'Guest', label: 'Guest' },
-  ];
+  const [roleOptions, setRoleOptions] = useState<{ value: string; label: string }[]>([]);
 
   // ================= FETCH =================
   const loadUsers = async () => {
@@ -119,8 +115,25 @@ const ManageUsers: React.FC = () => {
     }
   };
 
+  const loadRoles = async () => {
+    try {
+      const res = await roleService.GetRolesByorganizationIDAsync(organizationID);
+      const list = Array.isArray(res) ? res : res?.Table || res?.data || [];
+
+      setRoleOptions(
+        list.map((r: any) => ({
+          value: r.RoleName || r.roleName || r.Role || r.name || String(r.RoleID || r.id || ''),
+          label: r.RoleName || r.roleName || r.Role || r.name || String(r.RoleID || r.id || ''),
+        }))
+      );
+    } catch (err) {
+      console.error('Failed to load roles', err);
+    }
+  };
+
   useEffect(() => {
     loadUsers();
+    loadRoles();
 
     // mock dropdowns (replace with API if needed)
     setBranches([
