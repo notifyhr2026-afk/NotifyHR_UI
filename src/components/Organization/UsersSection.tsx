@@ -128,13 +128,11 @@ const confirmResetPassword = async () => {
           <tr>
             <th>Full Name</th>
             <th>Email</th>
-            <th>Phone</th>
-            <th>Username</th>
-            <th>Password Hash</th>
+            <th>Phone</th>           
             <th>Password Reset</th>
-            <th>Reset Date</th>
+            {/* <th>Reset Date</th> */}
             <th>Active</th>
-            <th>Deleted</th>
+            {/* <th>Deleted</th> */}
             <th>Actions</th>
           </tr>
         </thead>
@@ -151,13 +149,11 @@ const confirmResetPassword = async () => {
               <tr key={u.id}>
                 <td>{u.fullName}</td>
                 <td>{u.email}</td>
-                <td>{u.phone}</td>
-                <td>{u.username}</td>
-                <td>{u.passwordHash}</td>
+                <td>{u.phone}</td>                            
                 <td>{u.isPasswordReset ? "✔️" : "❌"}</td>
-                <td>{u.passwordResetDate || "-"}</td>
+                {/* <td>{u.passwordResetDate || "-"}</td> */}
                 <td>{u.isActive ? "✔️" : "❌"}</td>
-                <td>{u.isDeleted ? "✔️" : "❌"}</td>
+                {/* <td>{u.isDeleted ? "✔️" : "❌"}</td> */}
                 <td>
                   <Button
                     size="sm"

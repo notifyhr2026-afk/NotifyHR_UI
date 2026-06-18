@@ -182,10 +182,10 @@ const DashboardLayout: React.FC = () => {
 
                     {/* LEFT */}
                     <div className="flex-grow-1 pe-3">
-                      <Dropdown.Item href="/myprofile">
+                      {/* <Dropdown.Item href="/myprofile">
                         <i className="bi bi-person me-2"></i>
                         My Profile
-                      </Dropdown.Item>
+                      </Dropdown.Item> */}
 
                       <Dropdown.Item href="/ChangePassword">
                         <i className="bi bi-lock me-2"></i>

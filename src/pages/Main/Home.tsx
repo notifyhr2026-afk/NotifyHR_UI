@@ -47,58 +47,90 @@ const Home: React.FC = () => {
     <>
       {/* NAVBAR */}
       <nav
-        className="navbar navbar-expand-lg navbar-dark fixed-top shadow"
-        style={{ backgroundColor: "#f8f9fa" }}
+        className="navbar navbar-expand-lg navbar-light fixed-top shadow-sm"
+        aria-label="Primary navigation"
+        style={{ backgroundColor: "#ffffff" }}
       >
         <div className="container">
           <Link to="/" className="navbar-brand d-flex align-items-center gap-2">
-           <img
-  src={notifyhr_logo1}
-  alt="NotifyHR Logo"
-  style={{ height: "55px", width: "auto" }}
-/>
-            {/* <span className="fw-bold fs-5 text-white">NotifyHR</span> */}
+            <img
+              src={notifyhr_logo1}
+              alt="NikuHR logo"
+              style={{ height: "55px", width: "auto" }}
+            />
           </Link>
 
           <div className="d-flex gap-2">
-            <Link to="/RequestDemo" className="btn btn-light text-primary fw-semibold">
+            <Link to="/RequestDemo" className="btn btn-outline-primary fw-semibold" aria-label="Request a demo">
               Request Demo
             </Link>
-            <Link to="/login" className="btn btn-light text-primary fw-semibold">
+            <Link to="/login" className="btn btn-primary text-white fw-semibold" aria-label="Login to NikuHR">
               Login
             </Link>
           </div>
         </div>
       </nav>
 
-      <div style={{ paddingTop: 72 }}>
+      <main style={{ paddingTop: 72 }}>
         {/* HERO */}
         <section
-          className="text-white text-center"
-        style={{
-  background: "linear-gradient(135deg, #1e73be, #0d47a1)"
-}}
+          className="text-white"
+          aria-labelledby="hero-heading"
+          style={{
+            background: "linear-gradient(135deg, #1e73be, #0d47a1)",
+          }}
         >
           <div className="container py-5">
-            <h1 className="fw-bold display-5 mb-3">
-              Smart HR, Payroll & Workforce Management
-            </h1>
-            <p className="lead opacity-75 mb-4">
-              One powerful platform to manage employees, payroll, attendance, and recruitment.
-            </p>
+            <div className="row align-items-center">
+              <div className="col-lg-7 text-center text-lg-start">
+                <h1 id="hero-heading" className="fw-bold display-5 mb-3">
+                  Build a modern HR experience for your team
+                </h1>
+                <p className="lead opacity-85 mb-4">
+                  Accelerate employee onboarding, attendance, payroll, and performance with one secure platform.
+                </p>
 
-            <div className="d-flex justify-content-center gap-3">
-              <Link to="/login" className="btn btn-light btn-lg px-5 fw-semibold">
-                Get Started
-              </Link>
-              <a href="#features" className="btn btn-outline-light btn-lg px-4">
-                View Features
-              </a>
+                <div className="d-flex flex-column flex-sm-row align-items-center justify-content-center justify-content-lg-start gap-2 mb-4">
+                  <Link to="/login" className="btn btn-light btn-lg px-5 fw-semibold" aria-label="Get started with NikuHR">
+                    Get Started
+                  </Link>
+                  <a href="#features" className="btn btn-outline-light btn-lg px-4" aria-label="View NikuHR features">
+                    View Features
+                  </a>
+                </div>
+
+                <div className="d-flex flex-column flex-sm-row flex-wrap align-items-center justify-content-center justify-content-lg-start gap-2">
+                  {['Automation', 'Compliance', 'Real-time Insights'].map((label) => (
+                    <span key={label} className="badge bg-white text-primary py-2 px-3 rounded-pill shadow-sm">
+                      {label}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
+              <div className="col-lg-5 mt-4 mt-lg-0">
+                <div className="bg-white bg-opacity-10 border border-white border-opacity-25 rounded-4 p-4 text-center shadow-lg">
+                  <h2 className="h5 fw-bold text-white mb-3">Trusted by HR teams worldwide</h2>
+                  <p className="small opacity-85 mb-4">
+                    A unified HR suite for fast-growing teams, with strong security and simple workflows.
+                  </p>
+                  <div className="row g-3">
+                    {[
+                      { value: '99.9%', label: 'Platform uptime' },
+                      { value: '70%', label: 'Less manual work' },
+                      { value: '50%', label: 'Faster hiring process' },
+                    ].map((item) => (
+                      <div key={item.label} className="col-4">
+                        <div className="p-3 bg-white bg-opacity-10 rounded-3">
+                          <strong className="d-block fs-5 text-white">{item.value}</strong>
+                          <span className="small text-white-50">{item.label}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
             </div>
-
-            <p className="small mt-4 opacity-75">
-              Trusted by 500+ growing organizations
-            </p>
           </div>
         </section>
         {/* VALUE PROPOSITION */}
@@ -108,7 +140,7 @@ const Home: React.FC = () => {
       Built for Growing Companies
     </h2>
     <p className="text-muted mb-5">
-      NotifyHR is designed to eliminate manual HR operations and bring automation,
+      NikuHR is designed to eliminate manual HR operations and bring automation,
       accuracy, and visibility to your workforce management.
     </p>
 
@@ -168,7 +200,7 @@ const Home: React.FC = () => {
           Enterprise-Grade Security
         </h2>
         <p className="text-muted">
-          We prioritize data security and compliance. NotifyHR is built with
+          We prioritize data security and compliance. NikuHR is built with
           modern encryption standards, secure authentication, and role-based access control.
         </p>
         <ul className="list-unstyled mt-3">
@@ -196,10 +228,10 @@ const Home: React.FC = () => {
     <div className="row align-items-center">
       <div className="col-lg-6">
         <h2 className="fw-bold mb-3 text-primary">
-          About NotifyHR – Complete HRM Solution
+          About NikuHR – Complete HRM Solution
         </h2>
         <p className="text-muted">
-          NotifyHR is a modern Human Resource Management (HRM) system designed
+          NikuHR is a modern Human Resource Management (HRM) system designed
           to simplify and automate HR operations for growing organizations.
           It integrates employee management, payroll, attendance tracking,
           recruitment, and performance management into one unified platform.
@@ -230,7 +262,7 @@ const Home: React.FC = () => {
 {/* WHY CHOOSE US */}
 <section className="py-5 bg-light">
   <div className="container text-center">
-    <h2 className="fw-bold mb-5">Why Choose NotifyHR?</h2>
+    <h2 className="fw-bold mb-5">Why Choose NikuHR?</h2>
 
     <div className="row g-4">
       {[
@@ -252,7 +284,7 @@ const Home: React.FC = () => {
 {/* HOW IT WORKS */}
 <section className="py-5 bg-white">
   <div className="container text-center">
-    <h2 className="fw-bold mb-5">How NotifyHR Works</h2>
+    <h2 className="fw-bold mb-5">How NikuHR Works</h2>
 
     <div className="row g-4">
       {[
@@ -299,159 +331,14 @@ const Home: React.FC = () => {
           </div>
         </section>
         
-        {/* PRICING */}
-        <section className="py-5">
-          <div className="container">
-            <h2 className="text-center fw-bold mb-4">Pricing Plans</h2>
-            <div className="row g-4">
-              {[
-                { name: "Basic", price: "Free", users: "25 Employees" },
-                { name: "Standard", price: "$99", users: "100 Employees", popular: true },
-                { name: "Pro", price: "$199", users: "500 Employees" },
-                { name: "Enterprise", price: "$499", users: "1000+ Employees" }
-              ].map((p, i) => (
-                <div className="col-md-3" key={i}>
-                  <div className={`card text-center h-100 shadow-sm ${p.popular ? "border-primary" : ""}`}>
-                    <div className="card-body">
-                      {p.popular && <span className="badge bg-success mb-2">Most Popular</span>}
-                      <h5 className="fw-bold">{p.name}</h5>
-                      <h2 className="text-primary my-3">{p.price}</h2>
-                      <p className="text-muted">{p.users}</p>
-                      <Link to="/login" className="btn btn-brand w-100">
-                        Choose Plan
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-        {/* TESTIMONIAL */}
-{/* TESTIMONIALS */}
-<section className="py-5 bg-light">
-  <div className="container">
-    <h2 className="fw-bold text-center mb-5">What Our Clients Say</h2>
-
-    <div
-      id="testimonialCarousel"
-      className="carousel slide"
-      data-bs-ride="carousel"
-    >
-      {/* Indicators */}
-      <div className="carousel-indicators">
-        <button
-          type="button"
-          data-bs-target="#testimonialCarousel"
-          data-bs-slide-to="0"
-          className="active"
-        ></button>
-        <button
-          type="button"
-          data-bs-target="#testimonialCarousel"
-          data-bs-slide-to="1"
-        ></button>
-        <button
-          type="button"
-          data-bs-target="#testimonialCarousel"
-          data-bs-slide-to="2"
-        ></button>
-      </div>
-
-      {/* Slides */}
-      <div className="carousel-inner">
-
-        <div className="carousel-item active">
-          <div className="col-lg-8 mx-auto">
-            <div className="p-5 bg-white shadow rounded text-center">
-              <p className="fst-italic text-muted mb-4">
-                "NotifyHR transformed our HR operations. Payroll processing time
-                reduced by 60% and attendance management became completely seamless."
-              </p>
-              <h6 className="fw-bold mb-0 text-primary">Anita Sharma</h6>
-              <small className="text-muted">HR Director, Tech Solutions Pvt Ltd</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="carousel-item">
-          <div className="col-lg-8 mx-auto">
-            <div className="p-5 bg-white shadow rounded text-center">
-              <p className="fst-italic text-muted mb-4">
-                "The automation features saved our HR team countless hours every month.
-                The system is simple, secure, and powerful."
-              </p>
-              <h6 className="fw-bold mb-0 text-primary">Rahul Mehta</h6>
-              <small className="text-muted">Operations Head, Nexa Manufacturing</small>
-            </div>
-          </div>
-        </div>
-
-        <div className="carousel-item">
-          <div className="col-lg-8 mx-auto">
-            <div className="p-5 bg-white shadow rounded text-center">
-              <p className="fst-italic text-muted mb-4">
-                "From recruitment to payroll, everything is centralized.
-                NotifyHR helped us scale our startup efficiently."
-              </p>
-              <h6 className="fw-bold mb-0 text-primary">Priya Verma</h6>
-              <small className="text-muted">Founder, BrightTech Startup</small>
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      {/* Controls */}
-      <button
-        className="carousel-control-prev"
-        type="button"
-        data-bs-target="#testimonialCarousel"
-        data-bs-slide="prev"
-      >
-        <span className="carousel-control-prev-icon bg-primary rounded-circle p-3"></span>
-      </button>
-
-      <button
-        className="carousel-control-next"
-        type="button"
-        data-bs-target="#testimonialCarousel"
-        data-bs-slide="next"
-      >
-        <span className="carousel-control-next-icon bg-primary rounded-circle p-3"></span>
-      </button>
-    </div>
-  </div>
-</section>
-
-
-{/* FINAL CTA */}
-<section
-  className="py-5 text-white text-center"
-  style={{
-    background: "linear-gradient(135deg, var(--brand-primary), var(--brand-secondary))"
-  }}
->
-  <div className="container">
-    <h2 className="fw-bold mb-3">
-      Ready to Transform Your HR Operations?
-    </h2>
-    <p className="opacity-75 mb-4">
-      Join hundreds of companies already using NotifyHR to simplify workforce management.
-    </p>
-    <Link to="/RequestDemo" className="btn btn-light btn-lg px-5 fw-semibold">
-      Request Free Demo
-    </Link>
-  </div>
-</section>
         {/* FOOTER */}
         <footer className="text-white py-4 text-center" style={{ backgroundColor: "#0647a7" }}>
-          <p className="fw-semibold mb-1">NotifyHR © 2026 All Rights Reserved</p>
+          <p className="fw-semibold mb-1">NikuHR © 2026 All Rights Reserved</p>
           <small className="text-white">
             HR • Payroll • Attendance • Recruitment
           </small>
         </footer>
-      </div>
+      </main>
     </>
   );
 };

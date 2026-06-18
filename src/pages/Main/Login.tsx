@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
 import '../../css/Login.css';
 import logginimage from '../../assets/Login.png';
@@ -44,10 +44,11 @@ const Login: React.FC = () => {
             url = "/sysdashboard";
             break;
           case "OrgAdmin":
-            url = "/dashboard";
+            url = "/Organization";          //  url = "/dashboard";
             break;
           default:
-            url = "/employeedashboard";
+            url = "/EmployeeClock";
+            //url = "/employeedashboard";
             //url = "/employee-connect";
         }
         navigate(url);
@@ -61,34 +62,48 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="container-fluid vh-100">
-      <div className="row h-100">
+    <main className="container-fluid min-vh-100 bg-light" role="main">
+      <div className="row g-0 h-100 align-items-center">
         {/* Left Side - Image */}
-        <div className="col-lg-6 d-none d-lg-flex align-items-center justify-content-center login-image-section">
-          <img src={logginimage} alt="Login Illustration" className="img-fluid w-75" />
+        <div className="col-lg-6 d-none d-lg-flex align-items-center justify-content-center bg-primary bg-opacity-10">
+          <img
+            src={logginimage}
+            alt="Illustration showing secure login for HR software"
+            className="img-fluid"
+            style={{ maxWidth: '420px' }}
+          />
         </div>
 
         {/* Right Side - Login Form */}
-        <div className="col-lg-6 d-flex align-items-center justify-content-center bg-light">
+        <div className="col-lg-6 d-flex align-items-center justify-content-center py-5">
           <div
-            className="login-card shadow-lg rounded-4 p-5 bg-white"
-            style={{ width: '100%', maxWidth: '420px' }}
+            className="login-card shadow-lg rounded-4 p-4 p-md-5 bg-white"
+            style={{ width: '100%', maxWidth: '440px' }}
           >
             <div className="text-center mb-4">
-              <div className="mb-2">
-                <i className="bi bi-shield-lock-fill text-primary" style={{ fontSize: '3rem' }}></i>
+              <div className="mb-3">
+                <i className="bi bi-shield-lock-fill text-primary" style={{ fontSize: '3rem' }} aria-hidden="true"></i>
               </div>
-              <h3 className="fw-bold text-dark">Welcome Back</h3>
-              <p className="text-muted small">Please sign in to your account</p>
+              <h1 id="login-heading" className="h3 fw-bold text-dark">
+                Welcome Back
+              </h1>
+              <p className="text-muted mb-0">
+                Please sign in to your account.
+              </p>
             </div>
 
             {errors.general && (
-              <div className="alert alert-danger text-center py-2" role="alert">
+              <div
+                className="alert alert-danger text-center py-2"
+                role="alert"
+                aria-live="assertive"
+                id="login-error"
+              >
                 {errors.general}
               </div>
             )}
 
-            <form noValidate onSubmit={handleSubmit}>
+            <form noValidate onSubmit={handleSubmit} aria-labelledby="login-heading" aria-describedby={errors.general ? 'login-error' : undefined}>
               {/* Username Field */}
               <div className="mb-3">
                 <label htmlFor="username" className="form-label fw-semibold">
@@ -98,19 +113,23 @@ const Login: React.FC = () => {
                   <span className="input-group-text bg-white">
                     <i className="bi bi-person-fill"></i>
                   </span>
-                  <input
+                      <input
                     type="text"
                     id="username"
-                    className={`form-control ${errors.username ? 'is-invalid' : username ? 'is-valid' : ''
-                      }`}
+                    className={`form-control ${errors.username ? 'is-invalid' : username ? 'is-valid' : ''}`}
                     placeholder="Enter your username"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     required
+                    autoComplete="username"
+                    aria-invalid={!!errors.username}
+                    aria-describedby={errors.username ? 'username-error' : undefined}
                     autoFocus
                   />
                   {errors.username && (
-                    <div className="invalid-feedback">{errors.username}</div>
+                    <div className="invalid-feedback" id="username-error">
+                      {errors.username}
+                    </div>
                   )}
                 </div>
               </div>
@@ -127,15 +146,19 @@ const Login: React.FC = () => {
                   <input
                     type="password"
                     id="password"
-                    className={`form-control ${errors.password ? 'is-invalid' : password ? 'is-valid' : ''
-                      }`}
+                    className={`form-control ${errors.password ? 'is-invalid' : password ? 'is-valid' : ''}`}
                     placeholder="Enter your password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
+                    autoComplete="current-password"
+                    aria-invalid={!!errors.password}
+                    aria-describedby={errors.password ? 'password-error' : undefined}
                   />
                   {errors.password && (
-                    <div className="invalid-feedback">{errors.password}</div>
+                    <div className="invalid-feedback" id="password-error">
+                      {errors.password}
+                    </div>
                   )}
                 </div>
               </div>
@@ -144,18 +167,20 @@ const Login: React.FC = () => {
                 type="submit"
                 className="btn btn-primary w-100 py-2 fw-semibold"
                 disabled={isSubmitting}
+                aria-busy={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
                     <span
                       className="spinner-border spinner-border-sm me-2"
                       role="status"
+                      aria-hidden="true"
                     ></span>
                     Logging in...
                   </>
                 ) : (
                   <>
-                    <i className="bi bi-box-arrow-in-right me-2"></i> Log In
+                    <i className="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i> Log In
                   </>
                 )}
               </button>
@@ -164,18 +189,19 @@ const Login: React.FC = () => {
             <div className="text-center mt-4">
               <small className="text-muted">
                 Forgot your password?{' '}
-                <a
-                  href="#"
+                <Link
+                  to="/forgot-password"
                   className="text-decoration-none text-primary fw-semibold"
+                  aria-label="Go to password reset page"
                 >
                   Reset it
-                </a>
+                </Link>
               </small>
             </div>
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 
