@@ -3,6 +3,7 @@ import { Button, Card, Col, Row, Modal, Spinner } from "react-bootstrap";
 import Select from "react-select";
 import { BsPlusLg, BsPencilSquare, BsTrash } from "react-icons/bs";
 import positionService from "../../services/positionService";
+import { Link } from "react-router-dom";
 
 const Icon = (C: any, props: any = {}) => React.createElement(C, props);
 
@@ -26,7 +27,6 @@ const ManageOrgHierarchy: React.FC = () => {
   const [mappings, setMappings] = useState<HierarchyMapping[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [loading, setLoading] = useState(false);
-
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID = user?.organizationID || 0;
 
@@ -161,8 +161,12 @@ const ManageOrgHierarchy: React.FC = () => {
 
   return (
     <div className="p-3 mt-3">
-      <h3 className="fw-bold">Organization Hierarchy</h3>
-
+      <h3 className="fw-bold">
+  <Link to="/ViewOrgTree" className="text-decoration-none">
+    Organization Hierarchy
+  </Link>
+</h3>
+      
       <div className="text-end mb-3">
         <Button onClick={openAdd}>
           {Icon(BsPlusLg, { className: "me-2" })}

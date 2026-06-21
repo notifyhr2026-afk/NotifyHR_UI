@@ -322,9 +322,9 @@ const AssignShifts: React.FC = () => {
                     options={branches}
                     value={selectedBranch}
                     onChange={setSelectedBranch}
-                    className="org-select"
-                    classNamePrefix="org-select"
                     isClearable
+                    className="org-select"
+                    classNamePrefix="org-select"                    
                   />
                 </Col>
                 <Col md={4}>
@@ -333,9 +333,9 @@ const AssignShifts: React.FC = () => {
                     options={departments}
                     value={selectedDepartment}
                     onChange={setSelectedDepartment}
-                    className="org-select"
-                    classNamePrefix="org-select"
                     isClearable
+                    className="org-select"
+                    classNamePrefix="org-select"                    
                   />
                 </Col>
                 <Col md={4} className="mt-2">
@@ -344,9 +344,9 @@ const AssignShifts: React.FC = () => {
                     options={filteredEmployees}
                     value={selectedEmployee}
                     onChange={setSelectedEmployee}
-                    className="org-select"
-                    classNamePrefix="org-select"
                     isClearable
+                    className="org-select"
+                    classNamePrefix="org-select"                    
                   />
                 </Col>
               </Row>

@@ -273,14 +273,14 @@ const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
             <tr>
               <th>Full Name</th>
               <th>Relationship</th>
-              <th>DOB</th>
+              {/* <th>DOB</th> */}
               <th>Gender</th>
               <th>Contact</th>
               <th>Email</th>
               <th>Emergency?</th>
               <th>Dependent?</th>
-              <th>Nominee?</th>
-              <th>Actions</th>
+              {/* <th>Nominee?</th>
+              <th>Actions</th> */}
             </tr>
           </thead>
 
@@ -289,13 +289,13 @@ const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
               <tr key={member.id}>
                 <td>{member.fullName || '-'}</td>
                 <td>{member.relationship || '-'}</td>
-                <td>{member.dateOfBirth || '-'}</td>
+                {/* <td>{member.dateOfBirth || '-'}</td> */}
                 <td>{member.gender || '-'}</td>
                 <td>{member.contactNumber || '-'}</td>
                 <td>{member.email || '-'}</td>
                 <td>{member.isEmergencyContact ? 'Yes' : 'No'}</td>
-                <td>{member.isDependentForTax ? 'Yes' : 'No'}</td>
-                <td>{member.isNominee ? 'Yes' : 'No'}</td>
+                {/* <td>{member.isDependentForTax ? 'Yes' : 'No'}</td>
+                <td>{member.isNominee ? 'Yes' : 'No'}</td> */}
 
                 <td>
                   <Button

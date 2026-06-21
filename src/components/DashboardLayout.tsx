@@ -48,9 +48,12 @@ const DashboardLayout: React.FC = () => {
   const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   const handleLogout = () => {
-    logout();
-    navigate('/');
-  };
+  localStorage.clear(); // Clear all localStorage data
+  sessionStorage.clear(); // Optional: clear session storage too
+
+  logout();
+  navigate('/');
+};
 
   const handleRoleChange = (role: string) => {
     setCurrentRole(role);

@@ -13,6 +13,7 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import employeeIdRuleService from "../../services/employeeIdRuleService";
+import departmentService from "../../services/departmentService";
 import LoggedInUser from "../../types/LoggedInUser";
 
 // ===== Types =====
@@ -33,14 +34,7 @@ interface EmployeeIdRule {
 }
 
 // ===== Department Options =====
-const departmentOptions = [
-  "HR",
-  "IT",
-  "FIN",
-  "OPS",
-  "ADMIN",
-  "SALES",
-];
+// Departments will be loaded from API based on organizationID
 
 const EmployeeIdRulesPage: React.FC = () => {
   // ===== Organization ID =====
@@ -56,6 +50,14 @@ const EmployeeIdRulesPage: React.FC = () => {
 
   // ===== States =====
   const [rules, setRules] = useState<EmployeeIdRule[]>([]);
+
+  const [departments, setDepartments] = useState<
+    {
+      DepartmentID: number;
+      DepartmentCode: string;
+      DepartmentName: string;
+    }[]
+  >([]);
 
   const [loading, setLoading] = useState(false);
 
@@ -86,7 +88,24 @@ const EmployeeIdRulesPage: React.FC = () => {
   // ======================================================
   useEffect(() => {
     getEmployeeIdRules();
+    getDepartments();
   }, []);
+
+  // ======================================================
+  // GET DEPARTMENTS
+  // ======================================================
+  const getDepartments = async () => {
+    try {
+      const data = await departmentService.getdepartmentesAsync(
+        organizationID
+      );
+
+      setDepartments(data?.Table || []);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to load departments");
+    }
+  };
 
   // ======================================================
   // GET RULES
@@ -463,9 +482,9 @@ const handleEdit = (rule: EmployeeIdRule) => {
                 Select Department
               </option>
 
-              {departmentOptions.map((dept) => (
-                <option key={dept} value={dept}>
-                  {dept}
+              {departments.map((d) => (
+                <option key={d.DepartmentID} value={d.DepartmentCode}>
+                  {d.DepartmentCode} {d.DepartmentName ? `- ${d.DepartmentName}` : ''}
                 </option>
               ))}
             </Form.Select>

@@ -54,7 +54,7 @@ const ApplyLeaveModal: React.FC<Props> = ({
       try {
           if (!organizationID) return;
         const res = await OrgleaveTypesService.getOrgLeaveLeaveTypes(organizationID);
-        setDropdownLeaveTypes(res);
+        setDropdownLeaveTypes( res.filter((lt: LeaveType) => lt.OrgLeaveTypeID !== 0));
       } catch (err) {
         console.error('Failed to load leave types', err);
       }

@@ -80,7 +80,7 @@ import TimesheetEntry from '../pages/Timesheet/TimesheetEntry';
 import TimesheetApproval from '../pages/Timesheet/TimesheetApproval';
 import TimesheetPayrollReport from '../pages/Timesheet/TimesheetPayrollReport';
 
-import EmployeeDailyTasks from '../components/Employee/EmployeeDailyTasks';
+
 import ManageLeaveTypes from '../pages/Leave/ManageLeaveTypes';
 import FeatureDisplaySettings from '../pages/Features/FeatureDisplaySettings';
 
@@ -205,7 +205,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="TimesheetPayrollReport" element={<TimesheetPayrollReport />} />
         <Route path="EmployeeTaskMaster" element={<EmployeeTaskMaster />} />
   
-        <Route path="/EmployeeDailyTasks" element={<EmployeeDailyTasks />} />
+        
         <Route path="/ManageLeaveTypes" element={<ManageLeaveTypes />} />
         <Route path="/FeatureDisplaySettings" element={<FeatureDisplaySettings />} />
 

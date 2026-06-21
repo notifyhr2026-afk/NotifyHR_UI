@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Container,
   Row,
@@ -9,13 +9,12 @@ import {
   Badge,
   Spinner,
   Accordion,
+  InputGroup,
 } from "react-bootstrap";
 import { toast } from "react-toastify";
 import attendanceSettingService from "../../services/attendanceSettingService";
 import LoggedInUser from "../../types/LoggedInUser";
 import { fireAudit } from "../../utils/auditUtils";
-
-// ================= TYPES =================
 
 interface SettingType {
   SettingTypeID: number;
@@ -36,8 +35,6 @@ interface SettingType {
   IsOverridden: number;
 }
 
-// ================= COMPONENT =================
-
 const AttendanceSettings: React.FC = () => {
   const [settings, setSettings] = useState<SettingType[]>([]);
   const [values, setValues] = useState<Record<number, string>>({});
@@ -47,13 +44,13 @@ const AttendanceSettings: React.FC = () => {
   const [savingGroup, setSavingGroup] = useState<string | null>(null);
 
   const userString = localStorage.getItem("user");
+const normalizeValue = (value: any) =>
+  String(value ?? "").trim();
   const user: LoggedInUser | null = userString
     ? JSON.parse(userString)
     : null;
 
   const organizationID = user?.organizationID ?? 0;
-
-  // ================= LOAD =================
 
   useEffect(() => {
     loadSettings();
@@ -68,70 +65,109 @@ const AttendanceSettings: React.FC = () => {
           organizationID
         );
 
-      const active = res.filter((s: SettingType) => s.IsActive);
+      const active = res.filter(
+        (s: SettingType) => s.IsActive
+      );
+
       setSettings(active);
-    } catch (err) {
+    } catch {
       toast.error("Failed to load settings");
     } finally {
       setLoading(false);
     }
   };
 
-  // ================= HANDLE CHANGE =================
-
-  const handleChange = (id: number, value: string) => {
+  const handleChange = (
+    settingId: number,
+    value: string
+  ) => {
     setValues((prev) => ({
       ...prev,
-      [id]: value,
+      [settingId]: value,
     }));
   };
 
-  // ================= FILTER =================
+  const filteredSettings = settings.filter((s) => {
+    const matchesSearch =
+      s.SettingKey
+        .toLowerCase()
+        .includes(search.toLowerCase()) ||
+      s.Description
+        ?.toLowerCase()
+        .includes(search.toLowerCase());
 
-  const filtered = settings.filter((s) =>
-    s.SettingKey.toLowerCase().includes(search.toLowerCase())
-  );
+    if (!matchesSearch) return false;
 
-  // ================= GROUP =================
+    if (!showModifiedOnly) return true;
 
-  const grouped: Record<string, SettingType[]> = {};
+    const current =
+      values[s.SettingTypeID] ?? s.Value ?? "";
 
-  filtered.forEach((s) => {
-    const group = s.GroupName || "General";
-    if (!grouped[group]) grouped[group] = [];
-    grouped[group].push(s);
+    return current !== (s.Value ?? "");
   });
 
-  // ================= SORT =================
+  const grouped = useMemo(() => {
+    const groups: Record<string, SettingType[]> = {};
 
-  Object.keys(grouped).forEach((group) => {
-    grouped[group].sort((a, b) => a.DisplayOrder - b.DisplayOrder);
-  });
+    filteredSettings.forEach((setting) => {
+      const group =
+        setting.GroupName || "General";
 
-  // ================= SAVE API =================
+      if (!groups[group]) {
+        groups[group] = [];
+      }
 
-  const handleSaveGroup = async (groupName: string) => {
+      groups[group].push(setting);
+    });
+
+    Object.keys(groups).forEach((group) => {
+      groups[group].sort(
+        (a, b) => a.DisplayOrder - b.DisplayOrder
+      );
+    });
+
+    return groups;
+  }, [filteredSettings]);
+
+  const totalSettings = settings.length;
+
+  const overriddenCount = settings.filter(
+    (s) => s.IsOverridden === 1
+  ).length;
+
+  const modifiedCount = settings.filter((s) => {
+    const current =
+      values[s.SettingTypeID] ?? s.Value ?? "";
+
+    return current !== (s.Value ?? "");
+  }).length;
+
+  const handleSaveGroup = async (
+    groupName: string
+  ) => {
     try {
       setSavingGroup(groupName);
 
       const groupSettings = grouped[groupName];
 
       const payload = groupSettings
-        .map((s) => {
+        .map((setting) => {
           const current =
-            values[s.SettingTypeID] ?? s.Value ?? "";
+            values[setting.SettingTypeID] ??
+            setting.Value ??
+            "";
 
           const isModified =
-            current !== (s.Value ?? "");
+            current !== (setting.Value ?? "");
 
           if (!isModified) return null;
 
           return {
             OrgAttendanceSettingID:
-              s.OrgAttendanceSettingID ?? 0,
-
-            SettingTypeID: s.SettingTypeID,
-
+              setting.OrgAttendanceSettingID ??
+              0,
+            SettingTypeID:
+              setting.SettingTypeID,
             Value: current,
           };
         })
@@ -142,44 +178,55 @@ const AttendanceSettings: React.FC = () => {
         return;
       }
 
-      // ================= FINAL API PAYLOAD =================
-
       const apiPayload = {
-        organizationID: organizationID,
+        organizationID,
         jsonData: JSON.stringify(payload),
         createdBy: "Admin",
       };
 
-      console.log("Final API Payload:", apiPayload);
-
-      const res =
+      const response =
         await attendanceSettingService.PostOrgAttendanceSettingsByAsync(
           apiPayload
         );
 
-      if (res?.success !== false) {
-        toast.success(`${groupName} saved successfully`);
-        fireAudit("UPDATE", "AttendanceSetting", null, payload, organizationID, "Admin", "AttendanceSettings");
-        loadSettings(); // refresh after save
+      if (response?.success !== false) {
+        toast.success(
+          `${groupName} settings saved successfully`
+        );
+
+        fireAudit(
+          "UPDATE",
+          "AttendanceSetting",
+          null,
+          payload,
+          organizationID,
+          "Admin",
+          "AttendanceSettings"
+        );
+
+        loadSettings();
       } else {
-        toast.error(res?.message || "Save failed");
+        toast.error(
+          response?.message ||
+            "Failed to save settings"
+        );
       }
-    } catch (err) {
+    } catch {
       toast.error("Failed to save settings");
     } finally {
       setSavingGroup(null);
     }
   };
 
-  // ================= INPUT =================
-
-  const renderInput = (setting: SettingType) => {
+  const renderInput = (
+    setting: SettingType
+  ) => {
     const value =
       values[setting.SettingTypeID] ??
       setting.Value ??
       "";
 
-    switch (setting.DataType) {
+    switch (setting.DataType?.toUpperCase()) {
       case "BIT":
         return (
           <Form.Check
@@ -201,7 +248,10 @@ const AttendanceSettings: React.FC = () => {
             type="number"
             value={value}
             onChange={(e) =>
-              handleChange(setting.SettingTypeID, e.target.value)
+              handleChange(
+                setting.SettingTypeID,
+                e.target.value
+              )
             }
           />
         );
@@ -212,7 +262,10 @@ const AttendanceSettings: React.FC = () => {
             type="time"
             value={value}
             onChange={(e) =>
-              handleChange(setting.SettingTypeID, e.target.value)
+              handleChange(
+                setting.SettingTypeID,
+                e.target.value
+              )
             }
           />
         );
@@ -223,122 +276,276 @@ const AttendanceSettings: React.FC = () => {
             type="text"
             value={value}
             onChange={(e) =>
-              handleChange(setting.SettingTypeID, e.target.value)
+              handleChange(
+                setting.SettingTypeID,
+                e.target.value
+              )
             }
           />
         );
     }
   };
 
-  // ================= UI =================
+  if (loading) {
+    return (
+      <Container fluid className="py-5">
+        <div className="text-center">
+          <Spinner
+            animation="border"
+            variant="primary"
+          />
+          <div className="mt-3">
+            Loading attendance settings...
+          </div>
+        </div>
+      </Container>
+    );
+  }
 
   return (
     <Container fluid className="p-4">
-      <h3>Attendance Configuration Center</h3>
+      {/* Header */}
+      <Card className="border-0 shadow-sm mb-4">
+        <Card.Body>
+          <div className="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+              <h3 className="mb-1">
+                Attendance Configuration Center
+              </h3>
+              <p className="text-muted mb-0">
+                Manage organization attendance
+                policies and settings
+              </p>
+            </div>
+          </div>
+        </Card.Body>
+      </Card>
 
-      {/* TOP BAR */}
-      <Row className="mb-3 align-items-center">
+      {/* Summary */}
+      <Row className="mb-4">
         <Col md={4}>
-          <Form.Control
-            placeholder="Search settings..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+          <Card className="shadow-sm border-0">
+            <Card.Body>
+              <div className="text-muted">
+                Total Settings
+              </div>
+              <h2>{totalSettings}</h2>
+            </Card.Body>
+          </Card>
         </Col>
 
         <Col md={4}>
-          <Form.Check
-            type="switch"
-            label="Show Only Modified"
-            checked={showModifiedOnly}
-            onChange={(e) =>
-              setShowModifiedOnly(e.target.checked)
-            }
-          />
+          <Card className="shadow-sm border-0">
+            <Card.Body>
+              <div className="text-muted">
+                Organization Overrides
+              </div>
+              <h2 className="text-success">
+                {overriddenCount}
+              </h2>
+            </Card.Body>
+          </Card>
+        </Col>
+
+        <Col md={4}>
+          <Card className="shadow-sm border-0">
+            <Card.Body>
+              <div className="text-muted">
+                Unsaved Changes
+              </div>
+              <h2 className="text-warning">
+                {modifiedCount}
+              </h2>
+            </Card.Body>
+          </Card>
         </Col>
       </Row>
 
-      {/* LOADING */}
-      {loading ? (
-        <div className="text-center mt-5">
-          <Spinner animation="border" />
-        </div>
-      ) : (
-        <Accordion defaultActiveKey="0">
-          {Object.keys(grouped).map((group, index) => (
-            <Accordion.Item eventKey={String(index)} key={group}>
+      {/* Filters */}
+      <Card className="shadow-sm border-0 mb-4">
+        <Card.Body>
+          <Row className="align-items-center">
+            <Col md={6}>
+              <InputGroup>
+                <Form.Control
+                  placeholder="Search settings..."
+                  value={search}
+                  onChange={(e) =>
+                    setSearch(e.target.value)
+                  }
+                />
+              </InputGroup>
+            </Col>
+
+            <Col md={6}>
+              <Form.Check
+                type="switch"
+                label="Show Modified Only"
+                checked={showModifiedOnly}
+                onChange={(e) =>
+                  setShowModifiedOnly(
+                    e.target.checked
+                  )
+                }
+              />
+            </Col>
+          </Row>
+        </Card.Body>
+      </Card>
+
+      {/* Groups */}
+      <Accordion alwaysOpen>
+        {Object.keys(grouped).map(
+          (group, index) => (
+            <Accordion.Item
+              eventKey={String(index)}
+              key={group}
+            >
               <Accordion.Header>
-                <strong>{group}</strong>
+                <div className="d-flex justify-content-between align-items-center w-100 me-3">
+                  <strong>{group}</strong>
+
+                  <Badge bg="secondary">
+                    {
+                      grouped[group].length
+                    }{" "}
+                    Settings
+                  </Badge>
+                </div>
               </Accordion.Header>
 
               <Accordion.Body>
                 <Row className="g-3">
-                  {grouped[group].map((setting) => {
-                    const val =
-                      values[setting.SettingTypeID];
+                  {grouped[group].map(
+                    (setting) => {
+                      const current =
+                        values[
+                          setting
+                            .SettingTypeID
+                        ] ??
+                        setting.Value ??
+                        "";
 
-                    const current =
-                      val ?? setting.Value ?? "";
+                      const isModified =
+                        current !==
+                        (setting.Value ??
+                          "");
 
-                    const isModified =
-                      current !== (setting.Value ?? "");
+                      return (
+                        <Col
+                          md={6}
+                          lg={4}
+                          key={
+                            setting.SettingTypeID
+                          }
+                        >
+                          <Card
+                            className="shadow-sm h-100 border-0"
+                            style={{
+                              borderLeft:
+                                setting.IsOverridden ===
+                                1
+                                  ? "5px solid #198754"
+                                  : "5px solid #dee2e6",
+                            }}
+                          >
+                            <Card.Body>
+                              <div className="d-flex justify-content-between align-items-start mb-2">
+                                <div>
+                                  <h6 className="mb-1">
+                                    {
+                                      setting.SettingKey
+                                    }
+                                  </h6>
+                                </div>
 
-                    if (showModifiedOnly && !isModified)
-                      return null;
+                                <div>
+                                  <Badge bg="secondary">
+                                    {
+                                      setting.DataType
+                                    }
+                                  </Badge>
+                                </div>
+                              </div>
 
-                    return (
-                      <Col md={6} key={setting.SettingTypeID}>
-                        <Card className="shadow-sm h-100">
-                          <Card.Body>
-                            <Form.Label>
-                              <strong>
-                                {setting.SettingKey}
-                              </strong>{" "}
-                              <Badge bg="secondary">
-                                {setting.DataType}
-                              </Badge>{" "}
-                              {isModified && (
-                                <Badge bg="warning" text="dark">
-                                  Modified
-                                </Badge>
-                              )}
-                              {setting.IsOverridden === 1 && (
-                                <Badge bg="info">
-                                  Override
-                                </Badge>
-                              )}
-                            </Form.Label>
+                              <div className="mb-2">
+                                {setting.IsOverridden ===
+                                  1 && (
+                                  <Badge
+                                    bg="success"
+                                    className="me-1"
+                                  >
+                                    Override
+                                  </Badge>
+                                )}
 
-                            {renderInput(setting)}
+                                {isModified && (
+                                  <Badge
+                                    bg="warning"
+                                    text="dark"
+                                  >
+                                    Modified
+                                  </Badge>
+                                )}
+                              </div>
 
-                            <div className="text-muted small mt-1">
-                              {setting.Description}
-                            </div>
-                          </Card.Body>
-                        </Card>
-                      </Col>
-                    );
-                  })}
+                              <p className="small text-muted">
+                                {
+                                  setting.Description
+                                }
+                              </p>
+
+                              <div className="mb-3">
+                                {renderInput(
+                                  setting
+                                )}
+                              </div>
+
+                              <small className="text-muted">
+                                Default Value:
+                                <strong className="ms-1">
+                                  {setting.DefaultValue ??
+                                    "N/A"}
+                                </strong>
+                              </small>
+                            </Card.Body>
+                          </Card>
+                        </Col>
+                      );
+                    }
+                  )}
                 </Row>
 
-                {/* SAVE BUTTON */}
-                <div className="text-end mt-3">
+                <div className="text-end mt-4">
                   <Button
+                    variant="primary"
                     onClick={() =>
                       handleSaveGroup(group)
                     }
-                    disabled={savingGroup === group}
+                    disabled={
+                      savingGroup === group
+                    }
                   >
-                    {savingGroup === group
-                      ? "Saving..."
-                      : `Save ${group}`}
+                    {savingGroup ===
+                    group ? (
+                      <>
+                        <Spinner
+                          animation="border"
+                          size="sm"
+                          className="me-2"
+                        />
+                        Saving...
+                      </>
+                    ) : (
+                      `Save ${group}`
+                    )}
                   </Button>
                 </div>
               </Accordion.Body>
             </Accordion.Item>
-          ))}
-        </Accordion>
-      )}
+          )
+        )}
+      </Accordion>
     </Container>
   );
 };
