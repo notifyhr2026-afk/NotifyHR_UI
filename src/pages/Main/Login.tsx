@@ -1,208 +1,248 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '../../auth/AuthContext';
-import '../../css/Login.css';
-import logginimage from '../../assets/Login.png';
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../../auth/AuthContext";
+import NikuHRLogo from "../../components/landing/NikuHRLogo";
+import "./LoginModern.css";
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [errors, setErrors] = useState<{ username?: string; password?: string; general?: string }>({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
+const [username, setUsername] = useState("");
+const [password, setPassword] = useState("");
+const [errors, setErrors] = useState<{
+username?: string;
+password?: string;
+general?: string;
+}>({});
+const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const { login } = useAuth();
-  const navigate = useNavigate();
+const { login } = useAuth();
+const navigate = useNavigate();
 
-  const validate = () => {
-    const newErrors: { username?: string; password?: string } = {};
-    if (!username.trim()) newErrors.username = 'Username is required';
-    if (!password) newErrors.password = 'Password is required';
-    else if (password.length < 6) newErrors.password = 'Password must be at least 6 characters';
-    return newErrors;
-  };
+const validate = () => {
+const err: {
+username?: string;
+password?: string;
+} = {};
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const validationErrors = validate();
-    setErrors(validationErrors);
 
-    if (Object.keys(validationErrors).length === 0) {
-      try {
-        setIsSubmitting(true);
-        await login(username, password);
-        const rawdata: any = localStorage.getItem('userRoles');
-        var url = '/myprofile';
-        const data = rawdata ? JSON.parse(rawdata) : [];
+if (!username.trim()) {
+  err.username = "Username is required";
+}
 
-        console.log('User roles from localStorage:', data);
-        const role = Array.isArray(data) && data.length > 0
-          ? data[0].roleName
-          : null;
+if (!password) {
+  err.password = "Password is required";
+}
 
-        switch (role != undefined && role != null && role) {
-          case "SuperAdmin":
-            url = "/sysdashboard";
-            break;
-          case "OrgAdmin":
-            url = "/Organization";          //  url = "/dashboard";
-            break;
-          default:
-            url = "/EmployeeClock";
-            //url = "/employeedashboard";
-            //url = "/employee-connect";
-        }
-        navigate(url);
-      } catch (err: any) {
-        console.error('Login error:', err);
-        setErrors({ general: err.message || 'Invalid username or password' });
-      } finally {
-        setIsSubmitting(false);
-      }
-    }
-  };
+return err;
 
-  return (
-    <main className="container-fluid min-vh-100 bg-light" role="main">
-      <div className="row g-0 h-100 align-items-center">
-        {/* Left Side - Image */}
-        <div className="col-lg-6 d-none d-lg-flex align-items-center justify-content-center bg-primary bg-opacity-10">
-          <img
-            src={logginimage}
-            alt="Illustration showing secure login for HR software"
-            className="img-fluid"
-            style={{ maxWidth: '420px' }}
-          />
+
+};
+
+const handleSubmit = async (e: React.FormEvent) => {
+e.preventDefault();
+
+
+const validationErrors = validate();
+setErrors(validationErrors);
+
+if (Object.keys(validationErrors).length > 0) {
+  return;
+}
+
+try {
+  setIsSubmitting(true);
+
+  await login(username, password);
+
+  const rawdata = localStorage.getItem("userRoles");
+  const data = rawdata ? JSON.parse(rawdata) : [];
+
+  const role =
+    Array.isArray(data) && data.length > 0
+      ? data[0].roleName
+      : null;
+
+  let url = "/EmployeeClock";
+
+  switch (role) {
+    case "SuperAdmin":
+      url = "/sysdashboard";
+      break;
+
+    case "OrgAdmin":
+      url = "/Organization";
+      break;
+
+    default:
+      url = "/EmployeeClock";
+  }
+  navigate(url);
+} catch (err: any) {
+  setErrors({
+    general: err.message || "Invalid username or password",
+  });
+} finally {
+  setIsSubmitting(false);
+}
+};
+return ( <div className="login-page"> <div className="login-bg-shape shape-1"></div> <div className="login-bg-shape shape-2"></div>
+  {/* NAVBAR */}
+  <nav className="login-navbar">
+    <div className="container d-flex justify-content-between align-items-center">
+      <Link to="/">
+        <NikuHRLogo />
+      </Link>    
+    </div>
+  </nav>
+  {/* MAIN */}
+  <main className="container login-container">
+    <div className="row justify-content-center w-100">
+      <div className="col-xl-5 col-lg-6 col-md-8">
+        {/* HEADER */}
+        <div className="text-center mb-4">
+          <span className="landing-kicker">
+            Enterprise HRMS Platform
+          </span>
+          <h1 className="login-title">
+            Welcome to
+            <span className="text-gradient"> NikuHR</span>
+          </h1>
+          <p className="login-description">
+            Access payroll, attendance, recruitment,
+            onboarding and employee management from
+            one secure platform.
+          </p>
         </div>
-
-        {/* Right Side - Login Form */}
-        <div className="col-lg-6 d-flex align-items-center justify-content-center py-5">
-          <div
-            className="login-card shadow-lg rounded-4 p-4 p-md-5 bg-white"
-            style={{ width: '100%', maxWidth: '440px' }}
-          >
-            <div className="text-center mb-4">
-              <div className="mb-3">
-                <i className="bi bi-shield-lock-fill text-primary" style={{ fontSize: '3rem' }} aria-hidden="true"></i>
-              </div>
-              <h1 id="login-heading" className="h3 fw-bold text-dark">
-                Welcome Back
-              </h1>
-              <p className="text-muted mb-0">
-                Please sign in to your account.
-              </p>
+        {/* LOGIN CARD */}
+        <div className="login-card">
+          <div className="text-center mb-4">
+            <div className="login-icon">
+              <i className="bi bi-shield-lock-fill"></i>
             </div>
 
-            {errors.general && (
-              <div
-                className="alert alert-danger text-center py-2"
-                role="alert"
-                aria-live="assertive"
-                id="login-error"
-              >
-                {errors.general}
-              </div>
-            )}
+            <h2 className="fw-bold mt-3">
+              Sign In
+            </h2>
 
-            <form noValidate onSubmit={handleSubmit} aria-labelledby="login-heading" aria-describedby={errors.general ? 'login-error' : undefined}>
-              {/* Username Field */}
-              <div className="mb-3">
-                <label htmlFor="username" className="form-label fw-semibold">
-                  Username
-                </label>
-                <div className="input-group has-validation">
-                  <span className="input-group-text bg-white">
-                    <i className="bi bi-person-fill"></i>
-                  </span>
-                      <input
-                    type="text"
-                    id="username"
-                    className={`form-control ${errors.username ? 'is-invalid' : username ? 'is-valid' : ''}`}
-                    placeholder="Enter your username"
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    required
-                    autoComplete="username"
-                    aria-invalid={!!errors.username}
-                    aria-describedby={errors.username ? 'username-error' : undefined}
-                    autoFocus
-                  />
-                  {errors.username && (
-                    <div className="invalid-feedback" id="username-error">
-                      {errors.username}
-                    </div>
-                  )}
+            <p className="text-muted mb-0">
+              Enter your credentials to continue
+            </p>
+          </div>
+          {errors.general && (
+            <div className="alert alert-danger">
+              {errors.general}
+            </div>
+          )}
+          <form onSubmit={handleSubmit}>
+            <div className="mb-3">
+              <label className="form-label fw-semibold">
+                Username
+              </label>
+              <div className="input-group">
+                <span className="input-group-text">
+                  <i className="bi bi-person"></i>
+                </span>
+                <input
+                  type="text"
+                  className={`form-control ${
+                    errors.username ? "is-invalid" : ""
+                  }`}
+                  placeholder="Enter username"
+                  value={username}
+                  onChange={(e) =>
+                    setUsername(e.target.value)
+                  }
+                />
+              </div>
+
+              {errors.username && (
+                <div className="text-danger small mt-1">
+                  {errors.username}
                 </div>
-              </div>
+              )}
+            </div>
+            <div className="mb-4">
+              <label className="form-label fw-semibold">
+                Password
+              </label>
+              <div className="input-group">
+                <span className="input-group-text">
+                  <i className="bi bi-lock"></i>
+                </span>
 
-              {/* Password Field */}
-              <div className="mb-4">
-                <label htmlFor="password" className="form-label fw-semibold">
-                  Password
-                </label>
-                <div className="input-group has-validation">
-                  <span className="input-group-text bg-white">
-                    <i className="bi bi-lock-fill"></i>
-                  </span>
-                  <input
-                    type="password"
-                    id="password"
-                    className={`form-control ${errors.password ? 'is-invalid' : password ? 'is-valid' : ''}`}
-                    placeholder="Enter your password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    autoComplete="current-password"
-                    aria-invalid={!!errors.password}
-                    aria-describedby={errors.password ? 'password-error' : undefined}
-                  />
-                  {errors.password && (
-                    <div className="invalid-feedback" id="password-error">
-                      {errors.password}
-                    </div>
-                  )}
+                <input
+                  type="password"
+                  className={`form-control ${
+                    errors.password ? "is-invalid" : ""
+                  }`}
+                  placeholder="Enter password"
+                  value={password}
+                  onChange={(e) =>
+                    setPassword(e.target.value)
+                  }
+                />
+              </div>
+              {errors.password && (
+                <div className="text-danger small mt-1">
+                  {errors.password}
                 </div>
-              </div>
-
-              <button
-                type="submit"
-                className="btn btn-primary w-100 py-2 fw-semibold"
-                disabled={isSubmitting}
-                aria-busy={isSubmitting}
-              >
-                {isSubmitting ? (
-                  <>
-                    <span
-                      className="spinner-border spinner-border-sm me-2"
-                      role="status"
-                      aria-hidden="true"
-                    ></span>
-                    Logging in...
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-box-arrow-in-right me-2" aria-hidden="true"></i> Log In
-                  </>
-                )}
-              </button>
-            </form>
-
-            <div className="text-center mt-4">
-              <small className="text-muted">
-                Forgot your password?{' '}
-                <Link
-                  to="/forgot-password"
-                  className="text-decoration-none text-primary fw-semibold"
-                  aria-label="Go to password reset page"
-                >
-                  Reset it
-                </Link>
-              </small>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="btn btn-lp-primary w-100 py-3"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <span
+                    className="spinner-border spinner-border-sm me-2"
+                    role="status"
+                  />
+                  Signing In...
+                </>
+              ) : (
+                <>
+                  <i className="bi bi-box-arrow-in-right me-2"></i>
+                  Sign In
+                </>
+              )}
+            </button>
+          </form>
+          <div className="text-center mt-4">
+            <Link
+              to="/forgot-password"
+              className="forgot-link"
+            >
+              Forgot Password?
+            </Link>
+          </div>
+        </div>
+        {/* TRUST */}
+        <div className="row mt-4 g-3">
+          <div className="col-4">
+            <div className="stat-card">
+              <h5>500+</h5>
+              <small>Companies</small>
+            </div>
+          </div>
+          <div className="col-4">
+            <div className="stat-card">
+              <h5>99.9%</h5>
+              <small>Uptime</small>
+            </div>
+          </div>
+          <div className="col-4">
+            <div className="stat-card">
+              <h5>24/7</h5>
+              <small>Support</small>
             </div>
           </div>
         </div>
       </div>
-    </main>
-  );
+    </div>
+  </main>
+</div>
+);
 };
 
 export default Login;

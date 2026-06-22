@@ -1,173 +1,198 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import notifyhr_logo1 from "../../img/Logo-blue.png";
+import NikuHRLogo from "../../components/landing/NikuHRLogo";
+import "./RequestDemo.css";
 
 const RequestDemo: React.FC = () => {
   return (
-    <>
+    <div className="request-demo-page">
+
       {/* NAVBAR */}
-     <nav
-        className="navbar navbar-expand-lg navbar-dark fixed-top shadow"
-        style={{ backgroundColor: "#f8f9fa" }}
-      >
+      <nav className="navbar navbar-expand-lg landing-navbar fixed-top">
         <div className="container">
-          <Link to="/" className="navbar-brand d-flex align-items-center gap-2">
-            <img src={notifyhr_logo1} alt="NotifyHR Logo" className="app-logo" style={{
-              height:  '56px',
-              transition: 'opacity 0.3s ease',
-            }} />
-            {/* <span className="fw-bold fs-5 text-white">NotifyHR</span> */}
+          <Link to="/" className="navbar-brand">
+            <NikuHRLogo />
           </Link>
 
-          <div className="d-flex gap-2">           
-            <Link to="/login" className="btn btn-light text-primary fw-semibold">
+          <div className="d-flex gap-2">
+            <Link to="/login" className="btn btn-lp-primary">
               Login
             </Link>
           </div>
         </div>
       </nav>
 
-      <div style={{ paddingTop: "70px" }}>
-        {/* HERO */}
-        <section
-          className="text-white"
-          style={{ background: "linear-gradient(135deg, rgb(13, 110, 253), rgb(40 197 137))" }}
-        >
-          <div className="container py-5">
-            <div className="row align-items-center">
-              <div className="col-lg-6 mb-4 mb-lg-0">
-                <h1 className="fw-bold mb-3">
-                  See Notify HR in Action
-                </h1>
-                <p className="lead opacity-75">
-                  Book a personalized demo and discover how Notify HR simplifies
-                  HR, payroll, attendance, and recruitment for your organization.
-                </p>
+      {/* HERO */}
+      <section className="demo-hero">
+        <div className="container">
+          <div className="row align-items-center g-5">
 
-                <ul className="list-unstyled mt-4">
-                  <li className="mb-2">
-                    <i className="bi bi-check-circle-fill me-2 text-warning"></i>
-                    Live product walkthrough
-                  </li>
-                  <li className="mb-2">
-                    <i className="bi bi-check-circle-fill me-2 text-warning"></i>
-                    Tailored to your business needs
-                  </li>
-                  <li className="mb-2">
-                    <i className="bi bi-check-circle-fill me-2 text-warning"></i>
-                    No obligation, completely free
-                  </li>
-                </ul>
+            <div className="col-lg-6">
+
+              <span className="landing-kicker">
+                Personalized Product Tour
+              </span>
+
+              <h1 className="display-4 fw-bold mb-4">
+                See how <span className="text-gradient">NikuHR</span>
+                <br />
+                transforms HR operations
+              </h1>
+
+              <p className="lead text-muted mb-4">
+                Discover how leading organizations automate payroll,
+                attendance, recruitment, and employee management using
+                one unified platform.
+              </p>
+
+              <div className="demo-benefits">
+                <div>✓ Live platform walkthrough</div>
+                <div>✓ Tailored to your business</div>
+                <div>✓ Free consultation</div>
+                <div>✓ No obligation</div>
               </div>
 
-              {/* FORM CARD */}
-              <div className="col-lg-5 offset-lg-1">
-                <div className="card shadow-lg border-0">
-                  <div className="card-body p-4">
-                    <h5 className="fw-bold mb-3 text-center">
-                      Request a Free Demo
-                    </h5>
+              <div className="row mt-5 g-3">
+                <div className="col-4">
+                  <div className="stat-card">
+                    <h3>500+</h3>
+                    <span>Companies</span>
+                  </div>
+                </div>
 
-                    <form>
-                      <div className="mb-3">
-                        <label className="form-label">Full Name</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Enter your name"
-                          required
-                        />
-                      </div>
+                <div className="col-4">
+                  <div className="stat-card">
+                    <h3>99.9%</h3>
+                    <span>Uptime</span>
+                  </div>
+                </div>
 
-                      <div className="mb-3">
-                        <label className="form-label">Work Email</label>
-                        <input
-                          type="email"
-                          className="form-control"
-                          placeholder="name@company.com"
-                          required
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="form-label">Company Name</label>
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Your organization"
-                          required
-                        />
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="form-label">Number of Employees</label>
-                        <select className="form-select" required>
-                          <option value="">Select</option>
-                          <option>1 – 25</option>
-                          <option>26 – 100</option>
-                          <option>101 – 500</option>
-                          <option>500+</option>
-                        </select>
-                      </div>
-
-                      <div className="mb-3">
-                        <label className="form-label">
-                          What are you looking for?
-                        </label>
-                        <textarea
-                          className="form-control"
-                          rows={3}
-                          placeholder="HR, Payroll, Attendance, Recruitment..."
-                        />
-                      </div>
-
-                      <button
-                        type="submit"
-                        className="btn btn-primary w-100 fw-semibold"
-                      >
-                        Request Demo
-                      </button>
-
-                      <p className="small text-muted text-center mt-3 mb-0">
-                        We usually respond within 24 hours
-                      </p>
-                    </form>
+                <div className="col-4">
+                  <div className="stat-card">
+                    <h3>24h</h3>
+                    <span>Response</span>
                   </div>
                 </div>
               </div>
             </div>
+
+            {/* FORM */}
+            <div className="col-lg-5 offset-lg-1">
+              <div className="demo-form-card">
+
+                <div className="text-center mb-4">
+                  <h3>Request a Demo</h3>
+                  <p className="text-muted mb-0">
+                    We'll contact you within 24 hours.
+                  </p>
+                </div>
+
+                <form>
+
+                  <div className="mb-3">
+                    <label>Full Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="John Smith"
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label>Work Email</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      placeholder="john@company.com"
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label>Company Name</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      placeholder="Your Company"
+                    />
+                  </div>
+
+                  <div className="mb-3">
+                    <label>Employees</label>
+                    <select className="form-select">
+                      <option>Select Range</option>
+                      <option>1-25</option>
+                      <option>26-100</option>
+                      <option>101-500</option>
+                      <option>500+</option>
+                    </select>
+                  </div>
+
+                  <div className="mb-4">
+                    <label>Requirements</label>
+                    <textarea
+                      className="form-control"
+                      rows={4}
+                      placeholder="Tell us about your HR needs..."
+                    />
+                  </div>
+
+                  <button
+                    className="btn btn-lp-primary w-100 py-3"
+                    type="submit"
+                  >
+                    Schedule Demo
+                  </button>
+                </form>
+              </div>
+            </div>
+
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* TRUST / FOOTER */}
-        <section className="py-4 bg-light">
-          <div className="container text-center">
-            <p className="mb-1 fw-semibold">
-              Trusted by 500+ organizations
-            </p>
-            <small className="text-muted">
-              Secure • Scalable • Cloud-based HR platform
-            </small>
+      {/* BENEFITS */}
+      <section className="demo-features">
+        <div className="container">
+
+          <div className="row g-4">
+
+            <div className="col-md-3">
+              <div className="lp-card h-100">
+                <i className="bi bi-lightning-charge"></i>
+                <h5>Fast Setup</h5>
+                <p>Get started quickly with guided onboarding.</p>
+              </div>
+            </div>
+
+            <div className="col-md-3">
+              <div className="lp-card h-100">
+                <i className="bi bi-shield-check"></i>
+                <h5>Secure</h5>
+                <p>Enterprise-grade security and compliance.</p>
+              </div>
+            </div>
+
+            <div className="col-md-3">
+              <div className="lp-card h-100">
+                <i className="bi bi-people"></i>
+                <h5>Employee Experience</h5>
+                <p>Empower teams with self-service workflows.</p>
+              </div>
+            </div>
+
+            <div className="col-md-3">
+              <div className="lp-card h-100">
+                <i className="bi bi-headset"></i>
+                <h5>Dedicated Support</h5>
+                <p>Expert assistance whenever you need it.</p>
+              </div>
+            </div>
+
           </div>
-        </section>
-      </div>
 
-      {/* HOVER & FOCUS STYLES */}
-      <style>
-        {`
-          .form-control:focus,
-          .form-select:focus {
-            border-color: rgb(30 115 190);
-            box-shadow: 0 0 0 0.15rem rgba(13,110,253,.25);
-          }
-
-          button.btn-primary:hover {
-            transform: translateY(-1px);
-            transition: 0.2s ease;
-          }
-        `}
-      </style>
-    </>
+        </div>
+      </section>
+    </div>
   );
 };
 
