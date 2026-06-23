@@ -1,50 +1,140 @@
-import React from "react";
-import { Container, Accordion } from "react-bootstrap";
+import React, { useState } from "react";
+import { Container, Nav, Tab } from "react-bootstrap";
+import { useLocation } from "react-router-dom";
 
-// Import all section components
 import OrganizationDetails from "../../components/Organization/OrganizationDetails";
 import UsersSection from "../../components/Organization/UsersSection";
-import FeaturesSection from "../../components/Organization/FeaturesSection";
-import AssignRolesSection from "../../components/Organization/AssignRolesSection";
-import ManageRolePermissionsSection from "../../components/Organization/ManageRolePermissionsSection";
-import SubscriptionInfoSection from "../../components/Organization/SubscriptionInfoSection";
-import InvoiceInfoSection from "../../components/Organization/InvoiceInfoSection";
-import PaymentInfoSection from "../../components/Organization/PaymentInfoSection";
-import AssignMenu from "../../components/Organization/AssignMenu";
 import LoginActivationSection from "../../components/Organization/LoginActivationSection";
-import OrganizationSetup from "../../components/Organization/OrganizationLogoSetup";
 import ApiKeyActivationSection from "../../components/Organization/ApiKeyActivationSection";
 
+const TABS = [
+  {
+    key: "details",
+    title: "Organization Details",
+    icon: "bi bi-building-gear",
+    component: <OrganizationDetails />,
+  },
+  {
+    key: "users",
+    title: "Admin Users",
+    icon: "bi bi-people",
+    component: <UsersSection />,
+  },
+  {
+    key: "login",
+    title: "Login Activation",
+    icon: "bi bi-shield-lock",
+    component: <LoginActivationSection />,
+  },
+  {
+    key: "apikey",
+    title: "API Key",
+    icon: "bi bi-key",
+    component: <ApiKeyActivationSection />,
+  },
+];
+
 const ManageOrganization: React.FC = () => {
-  
-  // Reusable config for all sections
-  const sections = [
-    { key: "0", title: "Organization Details", component: <OrganizationDetails /> },
-    { key: "1", title: "Admin Users", component: <UsersSection /> },
-    //{ key: "2", title: "Features", component: <FeaturesSection /> },
-    // { key: "3", title: "Assign Roles", component: <AssignRolesSection /> },
-    // { key: "4", title: "Manage Role Permissions", component: <ManageRolePermissionsSection /> },
-   // { key: "5", title: "Plan Info", component: <SubscriptionInfoSection /> },
-    // { key: "6", title: "Invoice Info", component: <InvoiceInfoSection /> },
-    // { key: "7", title: "Payment Info", component: <PaymentInfoSection /> },
-    { key: "8", title: "Onboarding & Login Activation", component: <LoginActivationSection /> },
-    // { key: "9", title: "Organization Setup", component: <OrganizationSetup /> },
-    { key: "10", title: "API Key Activation", component: <ApiKeyActivationSection /> },
-  ];
+  const location = useLocation();
+  const state = location.state as { tab?: string } | null;
+  const [activeKey, setActiveKey] = useState(state?.tab || "details");
 
   return (
-    <Container>
-      <h2 className="mb-4">Manage - Organizations</h2>
+    <div className="page-container">
+      {/* Page Header */}
+      <div
+        style={{
+          marginBottom: 24,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          flexWrap: "wrap",
+          gap: 12,
+        }}
+      >
+        <div>
+          <h4
+            style={{
+              margin: 0,
+              fontWeight: 700,
+              fontSize: "1.25rem",
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+            }}
+          >
+            <i className="bi bi-buildings" style={{ color: "var(--brand-primary, #0d6efd)" }} />
+            Manage Organization
+          </h4>
+          <p
+            style={{
+              margin: "4px 0 0",
+              fontSize: "0.8rem",
+              opacity: 0.55,
+            }}
+          >
+            Configure your organization settings, users, and integrations
+          </p>
+        </div>
+      </div>
 
-      <Accordion defaultActiveKey="0" flush>
-        {sections.map(section => (
-          <Accordion.Item eventKey={section.key} key={section.key}>
-            <Accordion.Header>{section.title}</Accordion.Header>
-            <Accordion.Body>{section.component}</Accordion.Body>
-          </Accordion.Item>
-        ))}
-      </Accordion>
-    </Container>
+      {/* Tab Navigation */}
+      <Tab.Container activeKey={activeKey} onSelect={(k) => setActiveKey(k || "details")}>
+        <div
+          style={{
+            background: "var(--card-bg)",
+            borderRadius: 12,
+            border: "1px solid var(--border-color)",
+            overflow: "hidden",
+          }}
+        >
+          {/* Tabs Header */}
+          <Nav
+            variant="tabs"
+            style={{
+              padding: "8px 8px 0",
+              borderBottom: "1px solid var(--border-color)",
+              background: "var(--bg-color)",
+              gap: 2,
+            }}
+          >
+            {TABS.map((tab) => (
+              <Nav.Item key={tab.key}>
+                <Nav.Link
+                  eventKey={tab.key}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    padding: "10px 18px",
+                    fontSize: "0.85rem",
+                    fontWeight: 500,
+                    border: "1px solid transparent",
+                    borderBottom: "none",
+                    borderRadius: "8px 8px 0 0",
+                    color: "var(--text-color)",
+                    opacity: activeKey === tab.key ? 1 : 0.6,
+                    transition: "all 0.15s",
+                  }}
+                >
+                  <i className={tab.icon} />
+                  {tab.title}
+                </Nav.Link>
+              </Nav.Item>
+            ))}
+          </Nav>
+
+          {/* Tab Content */}
+          <Tab.Content style={{ padding: 24 }}>
+            {TABS.map((tab) => (
+              <Tab.Pane eventKey={tab.key} key={tab.key}>
+                {tab.component}
+              </Tab.Pane>
+            ))}
+          </Tab.Content>
+        </div>
+      </Tab.Container>
+    </div>
   );
 };
 

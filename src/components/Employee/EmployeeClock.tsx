@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import employeeAttendanceService from '../../services/employeeAttendanceService';
+import FullPageLoader  from '../FullPageLoader';
 
 interface ClockRecord {
   type: 'IN' | 'OUT';
@@ -9,6 +10,7 @@ interface ClockRecord {
 
 const EmployeeClock: React.FC = () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+
   const employeeId = user?.employeeID;
   const organizationID: number | undefined = user?.organizationID;
 
@@ -18,9 +20,10 @@ const EmployeeClock: React.FC = () => {
 
   const [records, setRecords] = useState<ClockRecord[]>([]);
   const [attendanceId, setAttendanceId] = useState<number>(0);
-  const [loading, setLoading] = useState(false);
 
-  // Live Clock
+  const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('');
+
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date().toLocaleTimeString());
@@ -134,18 +137,25 @@ const EmployeeClock: React.FC = () => {
 
       const now = new Date();
 
-      const location = await getCurrentLocation();
+      setLoadingMessage('Getting GPS Location and IP Address...');
 
-      const ipAddress = await getIPAddress();
+      const [location, ipAddress] = await Promise.all([
+        getCurrentLocation(),
+        getIPAddress(),
+      ]);
 
       let locationAddress = '';
 
       if (location.latitude && location.longitude) {
+        setLoadingMessage('Getting Address Information...');
+
         locationAddress = await getAddress(
           location.latitude,
           location.longitude
         );
       }
+
+      setLoadingMessage('Saving Attendance...');
 
       const payload: any = {
         AttendanceID: attendanceId,
@@ -162,26 +172,23 @@ const EmployeeClock: React.FC = () => {
         BrowserInfo: navigator.userAgent,
         UserAgent: navigator.userAgent,
 
-        OrganizationId:organizationID,
+        OrganizationId: organizationID,
 
         IsApproved: true,
         IsLate: false,
         IsHalfDay: false,
       };
 
-      // Check In / Out
       if (type === 'IN') {
         payload.CheckInTime = now.toISOString();
       } else {
         payload.CheckOutTime = now.toISOString();
       }
 
-      // IP Address
       if (ipAddress) {
         payload.IpAddress = ipAddress;
       }
 
-      // Location Details
       if (location.latitude) {
         payload.Latitude = location.latitude;
       }
@@ -191,8 +198,9 @@ const EmployeeClock: React.FC = () => {
       }
 
       if (location.accuracy) {
-        payload.LocationAccuracy =
-          Number(location.accuracy.toFixed(2));
+        payload.LocationAccuracy = Number(
+          location.accuracy.toFixed(2)
+        );
       }
 
       if (locationAddress) {
@@ -219,6 +227,7 @@ const EmployeeClock: React.FC = () => {
       alert('Failed to save attendance.');
     } finally {
       setLoading(false);
+      setLoadingMessage('');
     }
   };
 
@@ -236,68 +245,74 @@ const EmployeeClock: React.FC = () => {
   const lastType = lastRecord?.type;
 
   return (
-    <div className="container mt-4">
-      <div className="card shadow">
-        <div className="card-header bg-primary text-white text-center">
-          <h4 className="mb-0">
-            Employee Clock In / Clock Out
-          </h4>
-        </div>
+    <>
+      {loading && (
+        <FullPageLoader message={loadingMessage} />
+      )}
 
-        <div className="card-body text-center">
-          <h5 className="mb-4">
-            Current Time: {currentTime}
-          </h5>
-
-          <div className="d-flex justify-content-center gap-3 mb-4">
-            <button
-              className="btn btn-success btn-lg"
-              onClick={() => handleClock('IN')}
-              disabled={loading || lastType === 'IN'}
-            >
-              {loading ? 'Processing...' : 'Clock In'}
-            </button>
-
-            <button
-              className="btn btn-danger btn-lg"
-              onClick={() => handleClock('OUT')}
-              disabled={loading || lastType !== 'IN'}
-            >
-              {loading ? 'Processing...' : 'Clock Out'}
-            </button>
+      <div className="container mt-4">
+        <div className="card shadow">
+          <div className="card-header bg-primary text-white text-center">
+            <h4 className="mb-0">
+              Employee Clock In / Clock Out
+            </h4>
           </div>
 
-          <hr />
+          <div className="card-body text-center">
+            <h5 className="mb-4">
+              Current Time: {currentTime}
+            </h5>
 
-          <h5>Today's Records</h5>
+            <div className="d-flex justify-content-center gap-3 mb-4">
+              <button
+                className="btn btn-success btn-lg"
+                onClick={() => handleClock('IN')}
+                disabled={loading || lastType === 'IN'}
+              >
+                Clock In
+              </button>
 
-          {records.length === 0 ? (
-            <p>No clock records found.</p>
-          ) : (
-            <ul className="list-group">
-              {records.map((record, index) => (
-                <li
-                  key={index}
-                  className={`list-group-item d-flex justify-content-between ${
-                    record.type === 'IN'
-                      ? 'list-group-item-success'
-                      : 'list-group-item-danger'
-                  }`}
-                >
-                  <span>
-                    {record.type === 'IN'
-                      ? 'Clock In'
-                      : 'Clock Out'}
-                  </span>
+              <button
+                className="btn btn-danger btn-lg"
+                onClick={() => handleClock('OUT')}
+                disabled={loading || lastType !== 'IN'}
+              >
+                Clock Out
+              </button>
+            </div>
 
-                  <span>{record.time}</span>
-                </li>
-              ))}
-            </ul>
-          )}
+            <hr />
+
+            <h5>Today's Records</h5>
+
+            {records.length === 0 ? (
+              <p>No clock records found.</p>
+            ) : (
+              <ul className="list-group">
+                {records.map((record, index) => (
+                  <li
+                    key={index}
+                    className={`list-group-item d-flex justify-content-between ${
+                      record.type === 'IN'
+                        ? 'list-group-item-success'
+                        : 'list-group-item-danger'
+                    }`}
+                  >
+                    <span>
+                      {record.type === 'IN'
+                        ? 'Clock In'
+                        : 'Clock Out'}
+                    </span>
+
+                    <span>{record.time}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 

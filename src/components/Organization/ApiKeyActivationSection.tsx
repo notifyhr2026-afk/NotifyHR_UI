@@ -4,8 +4,8 @@ import {
   Form,
   Row,
   Col,
-  Card,
   Spinner,
+  Alert,
 } from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import {
@@ -16,50 +16,36 @@ import { fireAudit } from "../../utils/auditUtils";
 
 const ApiKeyActivationSection: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
+  const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
+  const organizationID = id ? Number(id) : userFromStorage?.organizationID || 0;
 
-  const userFromStorage = JSON.parse(
-    localStorage.getItem("user") || "{}"
-  );
-
-  const organizationID =
-    id ? Number(id) : userFromStorage?.organizationID || 0;
-
-  const [isApiKeyActivated, setIsApiKeyActivated] =
-    useState<boolean>(false);
-
+  const [isApiKeyActivated, setIsApiKeyActivated] = useState<boolean>(false);
   const [apiKey, setApiKey] = useState<string>("");
   const [domain, setDomain] = useState<string>("");
   const [remarks, setRemarks] = useState<string>("");
 
   const [loading, setLoading] = useState<boolean>(false);
-  const [fetchLoading, setFetchLoading] =
-    useState<boolean>(true);
+  const [fetchLoading, setFetchLoading] = useState<boolean>(true);
 
-  // Old values for audit
-  const [oldIsApiKeyActivated, setOldIsApiKeyActivated] =
-    useState<boolean>(false);
-
+  const [oldIsApiKeyActivated, setOldIsApiKeyActivated] = useState<boolean>(false);
   const [oldApiKey, setOldApiKey] = useState<string>("");
   const [oldDomain, setOldDomain] = useState<string>("");
   const [oldRemarks, setOldRemarks] = useState<string>("");
 
   useEffect(() => {
     if (organizationID) {
-      fetchOrganizationDetails(organizationID);
+      fetchApiKeyDetails(organizationID);
+    } else {
+      setFetchLoading(false);
     }
   }, [organizationID]);
 
-  const fetchOrganizationDetails = async (
-    orgId: number
-  ) => {
+  const fetchApiKeyDetails = async (orgId: number) => {
     try {
       setFetchLoading(true);
-
       const data = await GetApiKeyInfoAsync(orgId);
-
       if (data && data.length > 0) {
         const apiInfo = data[0];
-
         const apiKeyValue = apiInfo.APIKey || "";
         const domainValue = apiInfo.Domain || "";
         const isActive = apiInfo.IsActive || false;
@@ -72,15 +58,11 @@ const ApiKeyActivationSection: React.FC = () => {
         setOldDomain(domainValue);
         setOldIsApiKeyActivated(isActive);
 
-        // remarks are local only (not in DB/SP)
         setRemarks("");
         setOldRemarks("");
       }
     } catch (error) {
-      console.error(
-        "Error fetching API key details:",
-        error
-      );
+      console.error("Error fetching API key details:", error);
     } finally {
       setFetchLoading(false);
     }
@@ -94,13 +76,11 @@ const ApiKeyActivationSection: React.FC = () => {
 
     try {
       setLoading(true);
-
       const payload = {
         OrganizationId: organizationID,
         APIKey: apiKey.trim(),
         Domain: domain.trim(),
-        CreatedBy:
-          userFromStorage?.name || "Admin",
+        CreatedBy: userFromStorage?.name || "Admin",
       };
 
       const response = await SaveApiKeyInfo(payload);
@@ -117,25 +97,21 @@ const ApiKeyActivationSection: React.FC = () => {
             "API Key information saved successfully."
         );
 
-        const oldData = {
-          IsApiKeyActivated: oldIsApiKeyActivated,
-          ApiKey: oldApiKey,
-          Domain: oldDomain,
-          Remarks: oldRemarks,
-        };
-
-        const newData = {
-          IsApiKeyActivated: isApiKeyActivated,
-          ApiKey: apiKey.trim(),
-          Domain: domain.trim(),
-          Remarks: remarks.trim(),
-        };
-
         fireAudit(
           "UPDATE",
           "ApiKeyActivation",
-          oldData,
-          newData,
+          {
+            IsApiKeyActivated: oldIsApiKeyActivated,
+            ApiKey: oldApiKey,
+            Domain: oldDomain,
+            Remarks: oldRemarks,
+          },
+          {
+            IsApiKeyActivated: isApiKeyActivated,
+            ApiKey: apiKey.trim(),
+            Domain: domain.trim(),
+            Remarks: remarks.trim(),
+          },
           organizationID,
           userFromStorage?.name || "Admin",
           "ApiKeyActivationSection"
@@ -144,126 +120,224 @@ const ApiKeyActivationSection: React.FC = () => {
         setOldApiKey(apiKey.trim());
         setOldDomain(domain.trim());
         setOldRemarks(remarks.trim());
-        setOldIsApiKeyActivated(
-          isApiKeyActivated
-        );
+        setOldIsApiKeyActivated(isApiKeyActivated);
       } else {
-        alert(
-          response?.MSG ||
-            response?.message ||
-            "Operation failed."
-        );
+        alert(response?.MSG || response?.message || "Operation failed.");
       }
     } catch (error) {
-      console.error(
-        "Error updating API key:",
-        error
-      );
-      alert(
-        "Something went wrong while saving API Key information."
-      );
+      console.error("Error updating API key:", error);
+      alert("Something went wrong while saving API Key information.");
     } finally {
       setLoading(false);
     }
   };
 
+  if (fetchLoading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 40,
+          color: "var(--text-color)",
+          opacity: 0.5,
+        }}
+      >
+        <Spinner animation="border" className="me-3" />
+        Loading...
+      </div>
+    );
+  }
+
   return (
-    <Card className="mb-3">
-      <Card.Body>
-        <h6 className="mb-3">
-          API Key Activation
-        </h6>
+    <div>
+      {/* Section header */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          gap: 10,
+          marginBottom: 20,
+          paddingBottom: 12,
+          borderBottom: "1px solid var(--border-color)",
+        }}
+      >
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            background: "rgba(13, 110, 253, 0.1)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "1rem",
+            color: "var(--brand-primary, #0d6efd)",
+          }}
+        >
+          <i className="bi bi-key" />
+        </div>
+        <div>
+          <div style={{ fontWeight: 600, fontSize: "0.95rem" }}>
+            API Key Configuration
+          </div>
+          <div style={{ fontSize: "0.75rem", opacity: 0.5, marginTop: 1 }}>
+            Manage API access and domain whitelisting
+          </div>
+        </div>
+      </div>
 
-        <Row className="g-3 align-items-center">
-          <Col md={2}>
-            <Form.Check
-              type="checkbox"
-              label="Activate API Key"
-              checked={isApiKeyActivated}
-              onChange={(e) =>
-                setIsApiKeyActivated(
-                  e.target.checked
-                )
-              }
-              disabled={fetchLoading}
-            />
-          </Col>
+      {/* Active alert */}
+      {isApiKeyActivated && (
+        <Alert
+          variant="success"
+          style={{
+            borderRadius: 8,
+            padding: "10px 16px",
+            fontSize: "0.82rem",
+            marginBottom: 20,
+          }}
+        >
+          <i className="bi bi-check-circle-fill me-2" />
+          API Key is <strong>active</strong> — requests from whitelisted domains
+          will be accepted.
+        </Alert>
+      )}
 
-          <Col md={3}>
-            <Form.Control
-              type="text"
-              placeholder="Enter API Key"
-              value={apiKey}
-              onChange={(e) =>
-                setApiKey(e.target.value)
-              }
-              disabled={fetchLoading}
-            />
-          </Col>
-
-          <Col md={3}>
-            <Form.Control
-              type="text"
-              placeholder="Enter Domain"
-              value={domain}
-              onChange={(e) =>
-                setDomain(e.target.value)
-              }
-              disabled={fetchLoading}
-            />
-          </Col>
-
-          <Col md={2}>
-            <Form.Control
-              type="text"
-              placeholder="Remarks"
-              value={remarks}
-              onChange={(e) =>
-                setRemarks(e.target.value)
-              }
-              disabled={fetchLoading}
-            />
-          </Col>
-
-          <Col md={2}>
-            <Button
-              variant="primary"
-              onClick={handleSaveApiKey}
-              disabled={
-                !apiKey.trim() ||
-                !domain.trim() ||
-                !remarks.trim() ||
-                loading ||
-                fetchLoading
-              }
-              className="w-100"
+      <Row className="g-4">
+        <Col md={2}>
+          <Form.Group>
+            <Form.Label
+              style={{ fontWeight: 600, fontSize: "0.8rem", marginBottom: 6 }}
             >
-              {loading ? (
-                <>
-                  <Spinner
-                    animation="border"
-                    size="sm"
-                    className="me-2"
-                  />
-                  Saving...
-                </>
-              ) : fetchLoading ? (
-                <>
-                  <Spinner
-                    animation="border"
-                    size="sm"
-                    className="me-2"
-                  />
-                  Loading...
-                </>
-              ) : (
-                "Save API Key"
-              )}
-            </Button>
-          </Col>
-        </Row>
-      </Card.Body>
-    </Card>
+              Active
+            </Form.Label>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 10,
+                padding: "10px 14px",
+                border: "1px solid var(--border-color)",
+                borderRadius: 8,
+                background: "var(--card-bg)",
+              }}
+            >
+              <Form.Check
+                type="switch"
+                checked={isApiKeyActivated}
+                onChange={(e) => setIsApiKeyActivated(e.target.checked)}
+              />
+              <span style={{ fontSize: "0.85rem" }}>
+                {isApiKeyActivated ? "On" : "Off"}
+              </span>
+            </div>
+          </Form.Group>
+        </Col>
+
+        <Col md={4}>
+          <Form.Group>
+            <Form.Label
+              style={{ fontWeight: 600, fontSize: "0.8rem", marginBottom: 6 }}
+            >
+              API Key
+            </Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Enter your API key"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              style={{
+                borderRadius: 8,
+                padding: "10px 14px",
+                fontSize: "0.9rem",
+              }}
+            />
+          </Form.Group>
+        </Col>
+
+        <Col md={3}>
+          <Form.Group>
+            <Form.Label
+              style={{ fontWeight: 600, fontSize: "0.8rem", marginBottom: 6 }}
+            >
+              Whitelisted Domain
+            </Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="e.g. https://app.example.com"
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
+              style={{
+                borderRadius: 8,
+                padding: "10px 14px",
+                fontSize: "0.9rem",
+              }}
+            />
+          </Form.Group>
+        </Col>
+
+        <Col md={3}>
+          <Form.Group>
+            <Form.Label
+              style={{ fontWeight: 600, fontSize: "0.8rem", marginBottom: 6 }}
+            >
+              Remarks
+            </Form.Label>
+            <Form.Control
+              type="text"
+              placeholder="Optional remarks"
+              value={remarks}
+              onChange={(e) => setRemarks(e.target.value)}
+              style={{
+                borderRadius: 8,
+                padding: "10px 14px",
+                fontSize: "0.9rem",
+              }}
+            />
+          </Form.Group>
+        </Col>
+      </Row>
+
+      {/* Actions */}
+      <div
+        style={{
+          marginTop: 24,
+          paddingTop: 20,
+          borderTop: "1px solid var(--border-color)",
+          display: "flex",
+          justifyContent: "flex-end",
+        }}
+      >
+        <Button
+          variant="primary"
+          onClick={handleSaveApiKey}
+          disabled={loading}
+          style={{
+            borderRadius: 8,
+            padding: "10px 32px",
+            fontWeight: 600,
+            fontSize: "0.85rem",
+            display: "flex",
+            alignItems: "center",
+            gap: 8,
+          }}
+        >
+          {loading ? (
+            <>
+              <Spinner size="sm" animation="border" />
+              Saving...
+            </>
+          ) : (
+            <>
+              <i className="bi bi-floppy" />
+              Save Configuration
+            </>
+          )}
+        </Button>
+      </div>
+    </div>
   );
 };
 

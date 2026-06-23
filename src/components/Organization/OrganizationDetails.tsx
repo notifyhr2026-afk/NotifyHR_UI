@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { Button, Col, Form, Row } from "react-bootstrap";
+import {
+  Button,
+  Col,
+  Form,
+  Row,
+  Spinner,
+  Alert,
+} from "react-bootstrap";
 import { useParams } from "react-router-dom";
 import {
   getOrgDetailsAsync,
@@ -9,8 +16,8 @@ import {
 import { Organization } from "../../types/organization";
 import { organizationTypes } from "../../types/organizationTypes";
 import { toast, ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
-import { fireAudit } from '../../utils/auditUtils';
+import "react-toastify/dist/ReactToastify.css";
+import { fireAudit } from "../../utils/auditUtils";
 
 interface OrganizationForm {
   OrganizationName: string;
@@ -24,10 +31,7 @@ interface OrganizationForm {
 
 const OrganizationDetails: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
-
   const userFromStorage = JSON.parse(localStorage.getItem("user") || "{}");
-
-  // URL ID has priority, fallback to localStorage
   const organizationID: number | undefined = id
     ? Number(id)
     : userFromStorage?.organizationID;
@@ -39,26 +43,37 @@ const OrganizationDetails: React.FC = () => {
     Website: "",
     Industry: "",
     OrganizationTypeID: "",
-    CreatedBy: "Admin"
+    CreatedBy: "Admin",
   });
 
   const [orgTypes, setOrgTypes] = useState<organizationTypes[]>([]);
   const [validated, setValidated] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(true);
   const [oldOrgData, setOldOrgData] = useState<OrganizationForm | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-  /* ==========================
-     Load Organization Details
-  ========================== */
   useEffect(() => {
     if (organizationID) {
       fetchOrganizationDetails(organizationID);
+    } else {
+      setFetchLoading(false);
     }
   }, [organizationID]);
 
+  useEffect(() => {
+    getOrganizationTypes()
+      .then(setOrgTypes)
+      .catch((err) => {
+        console.error("Failed to load org types", err);
+        toast.error("Failed to load organization types");
+      });
+  }, []);
+
   const fetchOrganizationDetails = async (orgId: number) => {
     try {
-      setLoading(true);
+      setFetchLoading(true);
+      setError(null);
       const data = await getOrgDetailsAsync(orgId);
       if (data?.length) {
         const org = data[0];
@@ -69,45 +84,23 @@ const OrganizationDetails: React.FC = () => {
           Website: org.Website || "",
           Industry: org.Industry || "",
           OrganizationTypeID: org.OrganizationTypeID?.toString() || "",
-          CreatedBy: "Admin"
+          CreatedBy: "Admin",
         };
         setFormData(fetchedData);
-        setOldOrgData(fetchedData); // Store old data for audit
-        //toast.success("Organization details loaded successfully");
+        setOldOrgData(fetchedData);
       } else {
-        toast.warning("Organization details not found");
+        setError("Organization details not found");
       }
     } catch (error) {
       console.error("Failed to load organization details", error);
-      toast.error("Failed to load organization details");
+      setError("Failed to load organization details");
     } finally {
-      setLoading(false);
+      setFetchLoading(false);
     }
   };
 
-  /* ==========================
-     Load Organization Types
-  ========================== */
-  useEffect(() => {
-    const fetchTypes = async () => {
-      try {
-        const types = await getOrganizationTypes();
-        setOrgTypes(types);
-      } catch (error) {
-        console.error("Failed to load organization types", error);
-        toast.error("Failed to load organization types");
-      }
-    };
-    fetchTypes();
-  }, []);
-
-  /* ==========================
-     Handlers
-  ========================== */
   const handleChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-    >
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -116,7 +109,6 @@ const OrganizationDetails: React.FC = () => {
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     e.stopPropagation();
-
     const form = e.currentTarget;
     setValidated(true);
 
@@ -126,28 +118,33 @@ const OrganizationDetails: React.FC = () => {
     }
 
     const payload: Organization = {
-      OrganizationID: organizationID!, // ✅ PASS ID
+      OrganizationID: organizationID!,
       OrganizationName: formData.OrganizationName,
       Email: formData.Email,
       Phone: formData.Phone,
       Website: formData.Website,
       Industry: formData.Industry,
       OrganizationTypeID: Number(formData.OrganizationTypeID),
-
-      CreatedBy: formData.CreatedBy, // or "Admin"
+      CreatedBy: formData.CreatedBy,
       ModifiedBy: "Admin",
       CreatedAt: null,
-
       IsActive: true,
       IsDeleted: false,
     };
 
     try {
       setLoading(true);
-      //toast.info("Saving organization...");
       await updateOrganization(payload);
       toast.success("Organization updated successfully");
-      fireAudit("UPDATE", "Organization", oldOrgData, formData, organizationID!, userFromStorage?.name || "Admin", "OrganizationDetails");
+      fireAudit(
+        "UPDATE",
+        "Organization",
+        oldOrgData,
+        formData,
+        organizationID!,
+        userFromStorage?.name || "Admin",
+        "OrganizationDetails"
+      );
     } catch (error) {
       console.error("Failed to update organization", error);
       toast.error("Failed to update organization");
@@ -164,28 +161,100 @@ const OrganizationDetails: React.FC = () => {
       Website: "",
       Industry: "",
       OrganizationTypeID: "",
-      CreatedBy: "Admin"
+      CreatedBy: "Admin",
     });
     setValidated(false);
     toast.info("Form cleared");
   };
 
-  /* ==========================
-     Render
-  ========================== */
+  // Loading state
+  if (fetchLoading) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 60,
+          color: "var(--text-color)",
+          opacity: 0.5,
+        }}
+      >
+        <Spinner animation="border" className="me-3" />
+        Loading organization details...
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <Alert variant="warning" style={{ margin: 0 }}>
+        <i className="bi bi-exclamation-triangle me-2" />
+        {error}
+      </Alert>
+    );
+  }
+
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />
-      <Form
-        className="mt-3"
-        noValidate
-        validated={validated}
-        onSubmit={handleSave}
-      >
-        <Row className="mb-3">
+
+      <Form noValidate validated={validated} onSubmit={handleSave}>
+        {/* Section header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            marginBottom: 20,
+            paddingBottom: 12,
+            borderBottom: "1px solid var(--border-color)",
+          }}
+        >
+          <div
+            style={{
+              width: 32,
+              height: 32,
+              borderRadius: 8,
+              background: "rgba(13, 110, 253, 0.1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              fontSize: "1rem",
+              color: "var(--brand-primary, #0d6efd)",
+            }}
+          >
+            <i className="bi bi-info-circle" />
+          </div>
+          <div>
+            <div style={{ fontWeight: 600, fontSize: "0.95rem" }}>
+              General Information
+            </div>
+            <div
+              style={{
+                fontSize: "0.75rem",
+                opacity: 0.5,
+                marginTop: 1,
+              }}
+            >
+              Basic details about your organization
+            </div>
+          </div>
+        </div>
+
+        <Row className="g-4">
           <Col md={6}>
             <Form.Group>
-              <Form.Label>Organization Name</Form.Label>
+              <Form.Label
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.8rem",
+                  marginBottom: 6,
+                }}
+              >
+                Organization Name <span style={{ color: "#dc3545" }}>*</span>
+              </Form.Label>
               <Form.Control
                 required
                 type="text"
@@ -193,6 +262,12 @@ const OrganizationDetails: React.FC = () => {
                 value={formData.OrganizationName}
                 onChange={handleChange}
                 disabled={loading}
+                placeholder="e.g. Acme Corp"
+                style={{
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  fontSize: "0.9rem",
+                }}
               />
               <Form.Control.Feedback type="invalid">
                 Organization Name is required
@@ -202,7 +277,15 @@ const OrganizationDetails: React.FC = () => {
 
           <Col md={6}>
             <Form.Group>
-              <Form.Label>Email</Form.Label>
+              <Form.Label
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.8rem",
+                  marginBottom: 6,
+                }}
+              >
+                Email <span style={{ color: "#dc3545" }}>*</span>
+              </Form.Label>
               <Form.Control
                 required
                 type="email"
@@ -210,79 +293,147 @@ const OrganizationDetails: React.FC = () => {
                 value={formData.Email}
                 onChange={handleChange}
                 disabled={loading}
+                placeholder="org@example.com"
+                style={{
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  fontSize: "0.9rem",
+                }}
               />
               <Form.Control.Feedback type="invalid">
                 Valid email is required
               </Form.Control.Feedback>
             </Form.Group>
           </Col>
-        </Row>
 
-        <Row className="mb-3">
           <Col md={6}>
             <Form.Group>
-              <Form.Label>Phone</Form.Label>
+              <Form.Label
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.8rem",
+                  marginBottom: 6,
+                }}
+              >
+                Phone
+              </Form.Label>
               <Form.Control
                 type="text"
                 name="Phone"
                 value={formData.Phone}
                 onChange={handleChange}
                 disabled={loading}
+                placeholder="+1 234 567 890"
+                style={{
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  fontSize: "0.9rem",
+                }}
               />
             </Form.Group>
           </Col>
 
           <Col md={6}>
             <Form.Group>
-              <Form.Label>Website</Form.Label>
+              <Form.Label
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.8rem",
+                  marginBottom: 6,
+                }}
+              >
+                Website
+              </Form.Label>
               <Form.Control
                 type="text"
                 name="Website"
                 value={formData.Website}
                 onChange={handleChange}
                 disabled={loading}
+                placeholder="https://acme.com"
+                style={{
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  fontSize: "0.9rem",
+                }}
               />
             </Form.Group>
           </Col>
-        </Row>
 
-        <Row className="mb-3">
           <Col md={6}>
             <Form.Group>
-              <Form.Label>Entity</Form.Label>
+              <Form.Label
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.8rem",
+                  marginBottom: 6,
+                }}
+              >
+                Entity Type <span style={{ color: "#dc3545" }}>*</span>
+              </Form.Label>
               <Form.Select
                 required
                 name="Industry"
                 value={formData.Industry}
                 onChange={handleChange}
                 disabled={loading}
+                style={{
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  fontSize: "0.9rem",
+                }}
               >
                 <option value="">Select Entity Type</option>
-                <option value="Pvt Ltd">Private Limited Company (Pvt Ltd)</option>
+                <option value="Pvt Ltd">
+                  Private Limited Company (Pvt Ltd)
+                </option>
                 <option value="Public Ltd">Public Limited Company</option>
-                <option value="LLP">Limited Liability Partnership (LLP)</option>
-                <option value="OPC">One Person Company (OPC)</option>
-                <option value="Sole Proprietorship">Sole Proprietorship</option>
+                <option value="LLP">
+                  Limited Liability Partnership (LLP)
+                </option>
+                <option value="OPC">
+                  One Person Company (OPC)
+                </option>
+                <option value="Sole Proprietorship">
+                  Sole Proprietorship
+                </option>
                 <option value="Partnership">Partnership Firm</option>
-                <option value="Government">Government / Public Sector Undertaking</option>
-                <option value="NGO">Non-Profit Organization / Section 8 Company</option>
+                <option value="Government">
+                  Government / Public Sector Undertaking
+                </option>
+                <option value="NGO">
+                  Non-Profit Organization / Section 8 Company
+                </option>
                 <option value="Trust">Trust / Society</option>
               </Form.Select>
               <Form.Control.Feedback type="invalid">
-                Industry is required
+                Entity type is required
               </Form.Control.Feedback>
             </Form.Group>
           </Col>
 
           <Col md={6}>
             <Form.Group>
-              <Form.Label>Organization Type</Form.Label>
+              <Form.Label
+                style={{
+                  fontWeight: 600,
+                  fontSize: "0.8rem",
+                  marginBottom: 6,
+                }}
+              >
+                Organization Type <span style={{ color: "#dc3545" }}>*</span>
+              </Form.Label>
               <Form.Select
                 required
                 name="OrganizationTypeID"
                 value={formData.OrganizationTypeID}
                 onChange={handleChange}
                 disabled={loading}
+                style={{
+                  borderRadius: 8,
+                  padding: "10px 14px",
+                  fontSize: "0.9rem",
+                }}
               >
                 <option value="">Select Type</option>
                 {orgTypes.map((type) => (
@@ -301,25 +452,57 @@ const OrganizationDetails: React.FC = () => {
           </Col>
         </Row>
 
-        <Row className="mt-4">
-          <Col className="text-end">
-            <Button
-              variant="primary"
-              className="me-2"
-              type="submit"
-              disabled={loading}
-            >
-              {loading ? "Saving..." : "Save"}
-            </Button>
-            <Button
-              variant="secondary"
-              onClick={handleClear}
-              disabled={loading}
-            >
-              Clear
-            </Button>
-          </Col>
-        </Row>
+        {/* Actions */}
+        <div
+          style={{
+            marginTop: 28,
+            paddingTop: 20,
+            borderTop: "1px solid var(--border-color)",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 10,
+          }}
+        >
+          <Button
+            variant="outline-secondary"
+            onClick={handleClear}
+            disabled={loading}
+            style={{
+              borderRadius: 8,
+              padding: "8px 22px",
+              fontWeight: 500,
+              fontSize: "0.85rem",
+            }}
+          >
+            Clear
+          </Button>
+          <Button
+            variant="primary"
+            type="submit"
+            disabled={loading}
+            style={{
+              borderRadius: 8,
+              padding: "8px 28px",
+              fontWeight: 600,
+              fontSize: "0.85rem",
+              display: "flex",
+              alignItems: "center",
+              gap: 8,
+            }}
+          >
+            {loading ? (
+              <>
+                <Spinner size="sm" animation="border" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-check-lg" />
+                Save Changes
+              </>
+            )}
+          </Button>
+        </div>
       </Form>
     </>
   );
