@@ -1,462 +1,192 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
-import SideMenu from './OrgSideMenu';
-import { useAuth } from '../auth/AuthContext';
-import { Dropdown, Badge } from 'react-bootstrap';
+import React, { useState, useEffect } from "react";
+import { Outlet, useNavigate } from "react-router-dom";
+import { Dropdown } from "react-bootstrap";
+import OrgSideMenu from "./OrgSideMenu";
+import { useAuth } from "../auth/AuthContext";
+
+
+import "../css/DashboardLayout.css"
 
 const DashboardLayout: React.FC = () => {
-  const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const navigate = useNavigate();
   const { logout } = useAuth();
 
-  const data: any = localStorage.getItem('user');
-  const parsed = data ? JSON.parse(data) : {};
+  const userData = JSON.parse(localStorage.getItem("user") || "{}");
 
-  const user = { name: parsed?.fullName };
-  const organizationName = { name: parsed?.organizationName };
-
-  const roles: string[] = parsed?.roles || ['Admin', 'Manager'];
-  const [currentRole, setCurrentRole] = useState(
-    parsed?.currentRole || roles[0]
-  );
-
-  const userRolesRaw = localStorage.getItem('userRoles');
-  const userRolesList: string[] = userRolesRaw
-    ? JSON.parse(userRolesRaw).map((r: any) => (typeof r === 'string' ? r : r.roleName))
-    : [];
-  const hasEmployeeRole = userRolesList.includes('Employee') || roles.includes('Employee');
-
-  const navigate = useNavigate();
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const [isDarkMode, setIsDarkMode] = useState(
-    localStorage.getItem('theme') === 'dark'
+    localStorage.getItem("theme") === "dark"
   );
 
-  // 🔔 Notifications (dummy for now)
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: 'New user registered' },
-    { id: 2, text: 'Server backup completed' },
-    { id: 3, text: 'Password changed successfully' },
-  ]);
-
   useEffect(() => {
-    document.body.classList.toggle('dark-mode', isDarkMode);
-    document.body.classList.toggle('light-mode', !isDarkMode);
-    document.body.dataset.theme = isDarkMode ? 'dark' : 'light';
-    localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    document.body.classList.toggle("dark-mode", isDarkMode);
+    document.body.classList.toggle("light-mode", !isDarkMode);
+
+    localStorage.setItem(
+      "theme",
+      isDarkMode ? "dark" : "light"
+    );
   }, [isDarkMode]);
 
-  const toggleSidebar = () => setSidebarOpen(prev => !prev);
-
   const handleLogout = () => {
-  localStorage.clear(); // Clear all localStorage data
-  sessionStorage.clear(); // Optional: clear session storage too
+    localStorage.clear();
+    sessionStorage.clear();
 
-  logout();
-  navigate('/');
-};
-
-  const handleRoleChange = (role: string) => {
-    setCurrentRole(role);
-    const updatedUser = { ...parsed, currentRole: role };
-    localStorage.setItem('user', JSON.stringify(updatedUser));
+    logout();
+    navigate("/");
   };
 
-  // Avatar initials
   const getInitials = (name: string) => {
-    if (!name) return 'U';
+    if (!name) return "U";
+
     return name
-      .split(' ')
-      .map((n: string) => n[0])
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
+      .split(" ")
+      .map((x) => x[0])
+      .join("")
+      .substring(0, 2)
+      .toUpperCase();
   };
+
+  const userRoles = JSON.parse(
+    localStorage.getItem("userRoles") || "[]"
+  );
+
+  const hasEmployeeRole =
+    userRoles.some(
+      (r: any) =>
+        r === "Employee" || r?.roleName === "Employee"
+    );
 
   return (
-    <div className="d-flex app-container">
-      <SideMenu isOpen={isSidebarOpen} />
+    <div className="dashboard-layout">
+      <OrgSideMenu isOpen={sidebarOpen} />
 
       <div
-        className="flex-grow-1 main-wrapper"
-        style={{
-          marginLeft: isSidebarOpen ? 250 : 60,
-          transition: 'margin-left 0.3s ease',
-          minHeight: '100vh',
-        }}
+        className={`dashboard-main ${
+          sidebarOpen ? "sidebar-open" : "sidebar-close"
+        }`}
       >
-        {/* TOP BAR */}
-        <div className="topbar d-flex justify-content-between align-items-center px-4 shadow-sm">
+        {/* TOPBAR */}
 
-          {/* Sidebar Toggle */}
-          <button
-            className="btn btn-link fs-4"
-            onClick={toggleSidebar}
-            style={{ color: isDarkMode ? '#fff' : '#1e73be' }}
-          >
-            <i className="bi bi-list"></i>
-          </button>
+        <header className="dashboard-topbar">
+          <div className="topbar-left">
+            <button
+              className="menu-btn"
+              onClick={() =>
+                setSidebarOpen(!sidebarOpen)
+              }
+            >
+              <i className="bi bi-list"></i>
+            </button>
 
-          {/* Organization */}
-          <div
-            className="fw-bold text-truncate"
-            style={{
-              fontSize: '1.8rem',
-              color: isDarkMode ? '#fff' : '#1e73be',
-              maxWidth: 400,
-            }}
-          >
-            {organizationName.name || 'Organization'}
+            <h5 className="org-name">
+              {userData.organizationName ||
+                "Organization"}
+            </h5>
           </div>
 
-          {/* USER */}
-          <div className="d-flex align-items-center gap-3">
+          <div className="topbar-right">
+            <span className="user-name">
+              {userData.fullName}
+            </span>
 
-            {/* Role Chip */}
-            {/* {roles.length > 1 && (
-              <span
-                className="badge rounded-pill px-3 py-2"
-                style={{
-                  background: isDarkMode ? '#4f46e5' : '#1e73be',
-                  color: '#fff',
-                }}
+            <Dropdown align="end">
+              <Dropdown.Toggle
+                className="avatar-toggle"
+                variant="light"
               >
-                <i className="bi bi-briefcase me-1"></i>
-                {currentRole}
-              </span>
-            )} */}
-
-            <span className="fw-semibold">{user?.name || 'User'}</span>
-
-            {/* 🔔 NOTIFICATIONS */}
-            <Dropdown align="end">
-              {/* <Dropdown.Toggle className="notification-toggle">
-
-                <div className="notification-icon">
-                  <i className="bi bi-bell fs-5"></i>
-
-                  {notifications.length > 0 && (
-                    <Badge bg="danger" className="notification-badge">
-                      {notifications.length}
-                    </Badge>
-                  )}
-                </div>
-
-              </Dropdown.Toggle> */}
-
-              <Dropdown.Menu className="custom-dropdown">
-
-                <div className="px-3 py-2 fw-bold">
-                  Notifications
-                </div>
-
-                <Dropdown.Divider />
-
-                {notifications.length === 0 ? (
-                  <div className="px-3 py-2 text-muted">
-                    No notifications
-                  </div>
-                ) : (
-                  notifications.map(n => (
-                    <Dropdown.Item key={n.id}>
-                      {n.text}
-                    </Dropdown.Item>
-                  ))
-                )}
-
-              </Dropdown.Menu>
-            </Dropdown>
-
-            {/* DROPDOWN */}
-            <Dropdown align="end">
-              <Dropdown.Toggle className="avatar-toggle">
-
-                {/* Avatar Initial */}
                 <div className="avatar-circle">
-                  {getInitials(user?.name)}
+                  {getInitials(userData.fullName)}
                 </div>
-
               </Dropdown.Toggle>
 
-              <Dropdown.Menu className="custom-dropdown">
+              <Dropdown.Menu className="profile-dropdown">
+                <div className="dropdown-user">
+                  <div className="avatar-large">
+                    {getInitials(userData.fullName)}
+                  </div>
 
-                {/* TOP SECTION */}
-                <div className="px-3 py-2">
-                  <div className="d-flex">
-
-                    {/* LEFT */}
-                    <div className="flex-grow-1 pe-3">
-                      {/* <Dropdown.Item href="/myprofile">
-                        <i className="bi bi-person me-2"></i>
-                        My Profile
-                      </Dropdown.Item> */}
-
-                      <Dropdown.Item href="/ChangePassword">
-                        <i className="bi bi-lock me-2"></i>
-                        Change Password
-                      </Dropdown.Item>
+                  <div>
+                    <div className="fw-bold">
+                      {userData.fullName}
                     </div>
 
-                    {/* DIVIDER */}
-                    <div className="divider-vertical" />
-
-                    {/* RIGHT */}
-                    {/* <div className="flex-grow-1 ps-3">
-                      <small className="section-title">Theme</small>
-
-                      <div
-                        className="theme-switch mt-2"
-                        onClick={() => setIsDarkMode(prev => !prev)}
-                      >
-                        <span className={!isDarkMode ? 'active' : ''}>
-                          Light
-                        </span>
-
-                        <div className="switch-track">
-                          <div
-                            className="switch-thumb"
-                            style={{
-                              transform: isDarkMode
-                                ? 'translateX(22px)'
-                                : 'translateX(0)',
-                            }}
-                          />
-                        </div>
-
-                        <span className={isDarkMode ? 'active' : ''}>
-                          Dark
-                        </span>
-                      </div>
-                    </div> */}
-
+                    <small>
+                      {userData.email}
+                    </small>
                   </div>
                 </div>
 
                 <Dropdown.Divider />
 
-                {/* ROLES */}
-                {/* {roles.length > 1 && (
-                  <div className="px-3 py-2">
-                    <small className="section-title">Workspace</small>
+                <Dropdown.Item
+                  onClick={() =>
+                    navigate("/ChangePassword")
+                  }
+                >
+                  <i className="bi bi-lock me-2"></i>
+                  Change Password
+                </Dropdown.Item>
 
-                    <div className="mt-2">
-                      {roles.map(role => (
-                        <div
-                          key={role}
-                          className={`role-item ${
-                            currentRole === role ? 'active' : ''
-                          }`}
-                          onClick={() => handleRoleChange(role)}
-                        >
-                          <i className="bi bi-briefcase me-2"></i>
-                          {role}
-                          {currentRole === role && (
-                            <i className="bi bi-check ms-auto"></i>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )} */}
-
-                {/* Career & Personal */}
                 {hasEmployeeRole && (
-                  <div className="px-3 py-2">
-                    <small className="section-title">Career &amp; Personal</small>
-                    <div
-                      className="role-item mt-2"
-                      onClick={() => navigate('/career-personal')}
-                    >
-                      <i className="bi bi-person-badge me-2"></i>
-                      Manage Details
-                    </div>
-                  </div>
+                  <Dropdown.Item
+                    onClick={() =>
+                      navigate(
+                        "/career-personal"
+                      )
+                    }
+                  >
+                    <i className="bi bi-person-badge me-2"></i>
+                    Career & Personal
+                  </Dropdown.Item>
                 )}
-                  {hasEmployeeRole && ( <Dropdown.Divider /> )}
 
-                <Dropdown.Item onClick={handleLogout} className="text-danger">
+                <Dropdown.Divider />
+
+                {/* <div className="theme-toggle">
+                  <span>Theme</span>
+
+                  <div
+                    className="switch"
+                    onClick={() =>
+                      setIsDarkMode(
+                        !isDarkMode
+                      )
+                    }
+                  >
+                    <div
+                      className={`switch-thumb ${
+                        isDarkMode
+                          ? "dark"
+                          : ""
+                      }`}
+                    />
+                  </div>
+                </div> 
+                <Dropdown.Divider />
+                */}
+
+                
+
+                <Dropdown.Item
+                  className="text-danger"
+                  onClick={handleLogout}
+                >
                   <i className="bi bi-box-arrow-right me-2"></i>
                   Logout
                 </Dropdown.Item>
-
               </Dropdown.Menu>
             </Dropdown>
           </div>
-        </div>
+        </header>
 
-        {/* PAGE */}
-        <main className="p-4">
+        {/* CONTENT */}
+
+        <main className="dashboard-content">
           <Outlet />
         </main>
       </div>
-
-      {/* STYLES */}
-      <style>{`
-        .avatar-toggle::after {
-          display: none !important;
-        }
-
-        .avatar-toggle {
-          border: none !important;
-          background: transparent !important;
-          padding: 0;
-        }
-
-        .notification-toggle::after {
-          display: none !important;
-        }
-
-        .notification-toggle {
-          border: none !important;
-          background: transparent !important;
-          padding: 0;
-        }
-
-        .notification-icon {
-          position: relative;
-          cursor: pointer;
-          color: inherit;
-        }
-
-        .notification-badge {
-          position: absolute;
-          top: -6px;
-          right: -8px;
-          font-size: 10px;
-          padding: 3px 6px;
-          border-radius: 50%;
-        }
-
-        .avatar-circle {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 600;
-          color: #fff;
-          background: linear-gradient(135deg, #1e73be, #4f46e5);
-          transition: all 0.2s ease;
-        }
-
-        .avatar-circle:hover {
-          transform: scale(1.05);
-          box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        }
-
-        .dark-mode .avatar-circle {
-          background: linear-gradient(135deg, #6366f1, #8b5cf6);
-        }
-
-        .custom-dropdown {
-          min-width: 340px;
-          border-radius: 12px;
-          padding: 8px;
-          box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-        }
-
-        .divider-vertical {
-          width: 1px;
-          background: rgba(0,0,0,0.1);
-        }
-
-        .dark-mode .divider-vertical {
-          background: rgba(255,255,255,0.2);
-        }
-
-        .section-title {
-          font-size: 11px;
-          text-transform: uppercase;
-          font-weight: 600;
-          opacity: 0.7;
-        }
-
-        .role-item {
-          display: flex;
-          align-items: center;
-          padding: 8px 10px;
-          border-radius: 8px;
-          cursor: pointer;
-          transition: 0.2s;
-        }
-
-        .role-item:hover {
-          background: rgba(0,0,0,0.05);
-        }
-
-        .dark-mode .role-item:hover {
-          background: rgba(255,255,255,0.1);
-        }
-
-        /* Override Bootstrap dropdown item hover to match theme and avoid harsh light backgrounds */
-        .custom-dropdown a.dropdown-item,
-        .custom-dropdown .dropdown-item {
-          background: transparent !important;
-          color: inherit !important;
-          border-radius: 8px;
-          margin: 2px 4px;
-        }
-
-        .custom-dropdown a.dropdown-item:hover,
-        .custom-dropdown .dropdown-item:hover,
-        .custom-dropdown a.dropdown-item:focus,
-        .custom-dropdown .dropdown-item:focus,
-        .custom-dropdown a.dropdown-item:active,
-        .custom-dropdown .dropdown-item:active {
-          background: rgba(0,0,0,0.03) !important;
-          color: inherit !important;
-        }
-
-        /* Dark mode adjustments */
-        .dark-mode .custom-dropdown a.dropdown-item:hover,
-        .dark-mode .custom-dropdown .dropdown-item:hover,
-        .dark-mode .custom-dropdown a.dropdown-item:focus,
-        .dark-mode .custom-dropdown .dropdown-item:focus,
-        .dark-mode .custom-dropdown a.dropdown-item:active,
-        .dark-mode .custom-dropdown .dropdown-item:active {
-          background: rgba(255,255,255,0.03) !important;
-          color: inherit !important;
-        }
-
-        .role-item.active {
-          background: rgba(30,115,190,0.15);
-          font-weight: 600;
-        }
-
-        .theme-switch {
-          display: flex;
-          align-items: center;
-          gap: 6px;
-          cursor: pointer;
-        }
-
-        .switch-track {
-          width: 36px;
-          height: 18px;
-          background: #ccc;
-          border-radius: 20px;
-          position: relative;
-        }
-
-        .dark-mode .switch-track {
-          background: #4f46e5;
-        }
-
-        .switch-thumb {
-          width: 16px;
-          height: 16px;
-          background: #fff;
-          border-radius: 50%;
-          position: absolute;
-          top: 1px;
-          left: 2px;
-          transition: transform 0.3s;
-        }
-
-        .theme-switch span.active {
-          font-weight: bold;
-        }
-      `}</style>
     </div>
   );
 };

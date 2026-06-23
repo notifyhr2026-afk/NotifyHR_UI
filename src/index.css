@@ -151,7 +151,7 @@ body.dark-mode .form-check-input:checked {
 .dropdown-menu {
   background-color: var(--card-bg) !important;
   color: var(--text-main) !important;
-  border: 1px solid var(--border-color);
+  border: 1px solid #bb86fc;
 }
 
 .dropdown-item {
@@ -159,7 +159,7 @@ body.dark-mode .form-check-input:checked {
 }
 
 .dropdown-item:hover {
-  background-color: var(--border-color);
+  background-color: #bb86fc;
   color: #fff !important;
 }
 

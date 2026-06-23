@@ -84,21 +84,26 @@ try {
   setIsSubmitting(false);
 }
 };
-return ( <div className="login-page"> <div className="login-bg-shape shape-1"></div> <div className="login-bg-shape shape-2"></div>
+return ( 
+<div className="login-page"> 
+  <div className="login-bg-shape shape-1">
+    </div> 
+    <div className="login-bg-shape shape-2">      
+    </div>
   {/* NAVBAR */}
-  <nav className="login-navbar">
+  {/* <nav className="login-navbar">
     <div className="container d-flex justify-content-between align-items-center">
       <Link to="/">
         <NikuHRLogo />
       </Link>    
     </div>
-  </nav>
+  </nav> */}
   {/* MAIN */}
-  <main className="container login-container">
+  <main className="container login-container m-4">
     <div className="row justify-content-center w-100">
       <div className="col-xl-5 col-lg-6 col-md-8">
         {/* HEADER */}
-        <div className="text-center mb-4">
+        {/* <div className="text-center mb-4">
           <span className="landing-kicker">
             Enterprise HRMS Platform
           </span>
@@ -111,13 +116,14 @@ return ( <div className="login-page"> <div className="login-bg-shape shape-1"></
             onboarding and employee management from
             one secure platform.
           </p>
-        </div>
+        </div> */}
         {/* LOGIN CARD */}
         <div className="login-card">
           <div className="text-center mb-4">
-            <div className="login-icon">
-              <i className="bi bi-shield-lock-fill"></i>
-            </div>
+          
+              <Link to="/">
+        <NikuHRLogo />
+      </Link>  
 
             <h2 className="fw-bold mt-3">
               Sign In
@@ -209,16 +215,16 @@ return ( <div className="login-page"> <div className="login-bg-shape shape-1"></
             </button>
           </form>
           <div className="text-center mt-4">
-            <Link
+            {/* <Link
               to="/forgot-password"
               className="forgot-link"
             >
               Forgot Password?
-            </Link>
+            </Link> */}
           </div>
         </div>
         {/* TRUST */}
-        <div className="row mt-4 g-3">
+        {/* <div className="row mt-4 g-3">
           <div className="col-4">
             <div className="stat-card">
               <h5>500+</h5>
@@ -237,7 +243,7 @@ return ( <div className="login-page"> <div className="login-bg-shape shape-1"></
               <small>Support</small>
             </div>
           </div>
-        </div>
+        </div> */}
       </div>
     </div>
   </main>
