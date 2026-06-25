@@ -1,5 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Button, Table, Modal, Form, Row, Col, Spinner } from "react-bootstrap";
+import {
+  Button,
+  Table,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Spinner,
+} from "react-bootstrap";
 import manageClientsService from "../../services/manageClientsService";
 
 interface Client {
@@ -37,19 +45,9 @@ const ManageClients: React.FC = () => {
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID = user?.organizationID || 1;
-  const modifiedBy = user?.userID || "0";
 
-  /* ===== LOOKUPS ===== */
-  const [clientTypes, setClientTypes] = useState<any[]>([]);
-  const [industries, setIndustries] = useState<any[]>([]);
-  const [paymentTerms, setPaymentTerms] = useState<any[]>([]);
-  const [taxTypes, setTaxTypes] = useState<any[]>([]);
-  const [countries, setCountries] = useState<any[]>([]);
-  const [states, setStates] = useState<any[]>([]);
-  const [currencies, setCurrencies] = useState<any[]>([]);
-
-  /* ===== FORM ===== */
-  const [formData, setFormData] = useState<Client>({
+  /* ================= FORM ================= */
+  const emptyForm: Client = {
     ClientId: 0,
     OrganizationId: organizationID,
     ClientCode: "",
@@ -73,193 +71,282 @@ const ManageClients: React.FC = () => {
     AssociationStartDate: "",
     AssociationEndDate: "",
     IsActive: true,
-  });
+  };
+
+  const [formData, setFormData] = useState<Client>(emptyForm);
 
   /* ================= LOAD ================= */
-
   useEffect(() => {
     loadClients();
-    loadLookups();
   }, []);
 
   const loadClients = async () => {
     try {
       setLoading(true);
-      const res = await manageClientsService.GetClientsByOrganization(organizationID);
+      const res = await manageClientsService.GetClientsByOrganization(
+        organizationID
+      );
       setClients(res?.Table || res || []);
     } catch (err) {
-      console.error("Error loading clients", err);
+      console.error("Load clients error", err);
     } finally {
       setLoading(false);
     }
   };
 
-  const loadLookups = async () => {
-    try {
-      const res = await manageClientsService.GetAllLookups();
-
-      setClientTypes(res.Table || []);
-      setIndustries(res.Table1 || []);
-      setPaymentTerms(res.Table2 || []);
-      setTaxTypes(res.Table3 || []);
-      setCountries(res.Table4 || []);
-      setStates(res.Table5 || []);
-      setCurrencies(res.Table6 || []);
-    } catch (error) {
-      console.error("Error loading lookups", error);
-    }
-  };
-
-  /* ================= HANDLERS ================= */
-
-  const handleChange = (e: any) => {
-    const { id, value, type, checked } = e.target;
+  /* ================= INPUT SAFE HANDLER ================= */
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const target = e.target as HTMLInputElement;
+    const { id, value, type, checked } = target;
 
     setFormData((prev) => ({
       ...prev,
-      [id]: type === "checkbox" ? checked : Number(value) || value,
+      [id]:
+        type === "checkbox"
+          ? checked
+          : value
     }));
   };
 
+  /* ================= ADD ================= */
   const handleAdd = () => {
     setEditItem(null);
     setFormData({
-      ...formData,
-      ClientId: 0,
+      ...emptyForm,
       OrganizationId: organizationID,
     });
     setShowModal(true);
   };
 
+  /* ================= EDIT ================= */
   const handleEdit = (c: Client) => {
     setEditItem(c);
     setFormData({
       ...c,
-      AssociationStartDate: c.AssociationStartDate ? c.AssociationStartDate.split("T")[0] : "",
-      AssociationEndDate: c.AssociationEndDate ? c.AssociationEndDate.split("T")[0] : "",
+      AssociationStartDate: c.AssociationStartDate
+        ? c.AssociationStartDate.split("T")[0]
+        : "",
+      AssociationEndDate: c.AssociationEndDate
+        ? c.AssociationEndDate.split("T")[0]
+        : "",
     });
     setShowModal(true);
   };
 
-  const handleSave = async (e: any) => {
+  /* ================= SAVE ================= */
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-   
     try {
       setLoading(true);
 
-        const payload = {
-      clientId: formData.ClientId,
-      organizationId: formData.OrganizationId,
-      clientCode: formData.ClientCode,
-      clientName: formData.ClientName,
-      industryTypeId: formData.IndustryTypeId,
-      clientTypeId: formData.ClientTypeId,
-      currencyId: formData.CurrencyId,
-      paymentTermId: formData.PaymentTermId,
-      taxTypeId: formData.TaxTypeId,
-      contactPerson: formData.ContactPerson,
-      email: formData.Email,
-      phone: String(formData.Phone),
-      alternatePhone: String(formData.AlternatePhone || ""),
-      addressLine1: formData.AddressLine1,
-      addressLine2: formData.AddressLine2,
-      stateId: formData.StateId,
-      countryId: formData.CountryId,
-      city: formData.City,
-      postalCode: String(formData.PostalCode),
-      taxIdentificationNumber: String(formData.TaxIdentificationNumber),
-
-      associationStartDate: formData.AssociationStartDate
-    ? new Date(formData.AssociationStartDate).toISOString()
-    : null,
-
-      associationEndDate: formData.AssociationEndDate
-    ? new Date(formData.AssociationEndDate).toISOString()
-    : null,
-
-      isActive: formData.IsActive,
-      createdBy: "1", // Replace with actual user ID
-    };
+      const payload = {
+        clientId: formData.ClientId,
+        organizationId: formData.OrganizationId,
+        clientCode: formData.ClientCode,
+        clientName: formData.ClientName,
+        industryTypeId: formData.IndustryTypeId,
+        clientTypeId: formData.ClientTypeId,
+        currencyId: formData.CurrencyId,
+        paymentTermId: formData.PaymentTermId,
+        taxTypeId: formData.TaxTypeId,
+        contactPerson: formData.ContactPerson,
+        email: formData.Email,
+        phone: String(formData.Phone || ""),
+        alternatePhone: String(formData.AlternatePhone || ""),
+        addressLine1: formData.AddressLine1,
+        addressLine2: formData.AddressLine2,
+        stateId: formData.StateId,
+        countryId: formData.CountryId,
+        city: formData.City,
+        postalCode: String(formData.PostalCode || ""),
+        taxIdentificationNumber: String(formData.TaxIdentificationNumber || ""),
+        associationStartDate: formData.AssociationStartDate
+          ? new Date(formData.AssociationStartDate).toISOString()
+          : null,
+        associationEndDate: formData.AssociationEndDate
+          ? new Date(formData.AssociationEndDate).toISOString()
+          : null,
+        isActive: formData.IsActive,
+        createdBy: "1",
+      };
 
       await manageClientsService.PostClientsByAsync(payload);
 
       await loadClients();
       setShowModal(false);
+      setFormData(emptyForm);
+      setEditItem(null);
     } catch (err) {
-      console.error("Save failed", err);
+      console.error("Save error", err);
     } finally {
       setLoading(false);
     }
   };
 
+  /* ================= DELETE ================= */
   const handleDelete = async (id: number) => {
     if (!window.confirm("Delete client?")) return;
 
     try {
-      await manageClientsService.DeleteClientsByAsync(id, modifiedBy);
+      setLoading(true);
+      await manageClientsService.DeleteClientsByAsync(id, "Admin");
       await loadClients();
     } catch (err) {
-      console.error("Delete failed", err);
+      console.error("Delete error", err);
+    } finally {
+      setLoading(false);
     }
   };
 
   /* ================= UI ================= */
-
+const [clientTypes, setClientTypes] = useState<any[]>([]);
+const [industries, setIndustries] = useState<any[]>([]);
+const [currencies, setCurrencies] = useState<any[]>([]);
+const [paymentTerms, setPaymentTerms] = useState<any[]>([]);
+const [taxTypes, setTaxTypes] = useState<any[]>([]);
+const [countries, setCountries] = useState<any[]>([]);
+const [states, setStates] = useState<any[]>([]);
   return (
-    <div className="container">
+    <>
+      <div
+        style={{
+          background: "var(--card-bg, #fff)",
+          borderRadius: 12,
+          padding: 24,
+          border: "1px solid var(--border-color)",
+        }}
+      >
+        {/* HEADER */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 24,
+            paddingBottom: 16,
+            borderBottom: "1px solid var(--border-color)",
+          }}
+        >
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                background: "rgba(13,110,253,.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#0d6efd",
+              }}
+            >
+              <i className="bi bi-people"></i>
+            </div>
 
-      <Row className="mb-3">
-        <Col><h4>Manage Clients</h4></Col>
-        <Col className="text-end">
-          <Button onClick={handleAdd}>+ Add Client</Button>
-        </Col>
-      </Row>
+            <div>
+              <div style={{ fontWeight: 600 }}>Manage Clients</div>
+              <div style={{ fontSize: ".8rem", opacity: 0.6 }}>
+                Create and manage client records
+              </div>
+            </div>
+          </div>
 
-      {loading && (
-        <div className="text-center">
-          <Spinner />
+          <Button
+            onClick={handleAdd}
+            style={{ borderRadius: 8, fontWeight: 600 }}
+          >
+            <i className="bi bi-plus-lg me-2"></i>
+            Add Client
+          </Button>
         </div>
-      )}
 
-      <Table className="table table-hover table-dark-custom">
-        <thead>
-          <tr>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Contact</th>
-            <th>Phone</th>
-            <th>City</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+        {/* TABLE */}
+        {loading ? (
+          <div className="text-center py-4">
+            <Spinner />
+          </div>
+        ) : clients.length > 0 ? (
+          <div
+            style={{
+              border: "1px solid var(--border-color)",
+              borderRadius: 10,
+              overflow: "hidden",
+            }}
+          >
+            <Table hover responsive className="mb-0">
+              <thead style={{ background: "rgba(0,0,0,.03)" }}>
+                <tr>
+                  <th>Code</th>
+                  <th>Name</th>
+                  <th>Contact</th>
+                  <th>Phone</th>
+                  <th>City</th>
+                  <th>Status</th>
+                  <th style={{ width: 140 }}>Actions</th>
+                </tr>
+              </thead>
 
-        <tbody>
-          {clients.map((c) => (
-            <tr key={c.ClientId}>
-              <td>{c.ClientCode}</td>
-              <td>{c.ClientName}</td>
-              <td>{c.ContactPerson}</td>
-              <td>{c.Phone}</td>
-              <td>{c.City}</td>
-              <td>{c.IsActive ? "Active" : "Inactive"}</td>
-              <td>
-                <Button size="sm" onClick={() => handleEdit(c)}>
-                  <i className="bi bi-pencil-square"></i>
-                </Button>{" "}
-                <Button size="sm" variant="danger" onClick={() => handleDelete(c.ClientId)}>
-                  <i className="bi bi-trash"></i>
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+              <tbody>
+                {clients.map((c) => (
+                  <tr key={c.ClientId}>
+                    <td>{c.ClientCode}</td>
+                    <td style={{ fontWeight: 500 }}>{c.ClientName}</td>
+                    <td>{c.ContactPerson}</td>
+                    <td>{c.Phone}</td>
+                    <td>{c.City}</td>
+                    <td>
+                      {c.IsActive ? (
+                        <span className="badge bg-primary">Active</span>
+                      ) : (
+                        <span className="badge bg-danger">Inactive</span>
+                      )}
+                    </td>
 
-      {/* ================= MODAL ================= */}
+                    <td>
+                      <div className="d-flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline-primary"
+                          onClick={() => handleEdit(c)}
+                        >
+                          <i className="bi bi-pencil-square"></i>
+                        </Button>
 
- <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+                        <Button
+                          size="sm"
+                          variant="outline-danger"
+                          onClick={() => handleDelete(c.ClientId)}
+                        >
+                          <i className="bi bi-trash"></i>
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        ) : (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "50px 20px",
+              border: "1px dashed var(--border-color)",
+              borderRadius: 10,
+              opacity: 0.7,
+            }}
+          >
+            <i className="bi bi-people" style={{ fontSize: "2rem" }} />
+            <div className="mt-2">No clients found.</div>
+          </div>
+        )}
+      </div>
+
+      {/* MODAL */}
+      <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
 
         <Modal.Header closeButton>
           <Modal.Title>{editItem ? "Edit Client" : "Add Client"}</Modal.Title>
@@ -380,8 +467,7 @@ const ManageClients: React.FC = () => {
         </Modal.Body>
 
       </Modal>
-
-    </div>
+    </>
   );
 };
 

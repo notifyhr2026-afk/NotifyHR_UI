@@ -281,10 +281,10 @@ const DashboardLayout: React.FC = () => {
 
                 <Dropdown.Divider className="dropdown-divider" />
 
-                <Dropdown.Item onClick={() => navigate("/MyProfile")}>
+                {/* <Dropdown.Item onClick={() => navigate("/MyProfile")}>
                   <i className="bi bi-person-circle me-3" />
                   Profile
-                </Dropdown.Item>
+                </Dropdown.Item> */}
 
                 <Dropdown.Item onClick={() => navigate("/ChangePassword")}>
                   <i className="bi bi-lock me-3" />
@@ -301,7 +301,7 @@ const DashboardLayout: React.FC = () => {
                 <Dropdown.Divider className="dropdown-divider" />
 
                 {/* Theme switch inline */}
-                <div
+                {/* <div
                   className="dropdown-item d-flex align-items-center justify-content-between"
                   onClick={() => setIsDarkMode(!isDarkMode)}
                   style={{ cursor: "pointer" }}
@@ -314,7 +314,7 @@ const DashboardLayout: React.FC = () => {
                     />
                     {isDarkMode ? "Light Mode" : "Dark Mode"}
                   </span>
-                  {/* <div className="theme-switch position-relative">
+                  <div className="theme-switch position-relative">
                     <input
                       type="checkbox"
                       checked={isDarkMode}
@@ -322,10 +322,10 @@ const DashboardLayout: React.FC = () => {
                       className="form-check-input position-static"
                       style={{ cursor: "pointer" }}
                     />
-                  </div> */}
+                  </div> 
                 </div>
 
-                <Dropdown.Divider className="dropdown-divider" />
+                <Dropdown.Divider className="dropdown-divider" />*/}
 
                 <Dropdown.Item
                   className="logout-item"

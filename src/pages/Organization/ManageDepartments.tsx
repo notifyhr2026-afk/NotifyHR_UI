@@ -160,82 +160,235 @@ const organizationID: number | undefined = user?.organizationID;
     }
   };
 
-  return (
-    <div className="Container">
-      <h3>Manage Departments</h3>
-      <div className="text-end mb-3">
-        <Button variant="success" onClick={openAddModal}>
-          + Add Department
+
+return (
+  <>
+    <ToastContainer position="top-right" autoClose={3000} />
+
+    <div
+      style={{
+        background: "var(--card-bg, #fff)",
+        borderRadius: 12,
+        padding: 24,
+        border: "1px solid var(--border-color)",
+      }}
+    >
+      {/* Header */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 24,
+          paddingBottom: 16,
+          borderBottom: "1px solid var(--border-color)",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 12,
+          }}
+        >
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 10,
+              background: "rgba(13,110,253,.1)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#0d6efd",
+            }}
+          >
+            <i className="bi bi-diagram-2"></i>
+          </div>
+
+          <div>
+            <div
+              style={{
+                fontWeight: 600,
+                fontSize: "1rem",
+              }}
+            >
+              Manage Departments
+            </div>
+
+            <div
+              style={{
+                fontSize: ".8rem",
+                opacity: 0.6,
+              }}
+            >
+              Create and manage organization departments
+            </div>
+          </div>
+        </div>
+
+        <Button
+          variant="primary"
+          onClick={openAddModal}
+          style={{
+            borderRadius: 8,
+            padding: "8px 18px",
+            fontWeight: 600,
+          }}
+        >
+          <i className="bi bi-plus-lg me-2"></i>
+          Add Department
         </Button>
       </div>
 
-      {/* Department Table */}
+      {/* Table */}
       {departments.length > 0 ? (
-        <Table  className="table table-hover table-dark-custom">
-          <thead>
-            <tr>
-              <th>Code</th>
-              <th>Name</th>
-              {/* <th>Branch</th> */}
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {departments.map((d) => (
-              <tr key={d.DepartmentID}>
-                <td>{d.DepartmentCode}</td>
-                <td>{d.DepartmentName}</td>
-                {/* <td>{branches.find((b) => b.BranchID === d.BranchID)?.BranchName || 'N/A'}</td> */}
-                <td>
-                  {d.IsActive ? (
-                    <span className="badge bg-primary">Active</span>
-                  ) : (
-                    <span className="badge bg-danger">Inactive</span>
-                  )}
-                </td>
-                <td>
-                  <Button
-                    variant="outline-primary"
-                    size="sm"
-                    onClick={() => openEditModal(d)}
-                    className="me-2"
-                  >
-                    <i className="bi bi-pencil-square"></i>
-                  </Button>
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={() => confirmDeleteDepartment(d.DepartmentID)}
-                  >
-                    <i className="bi bi-trash"></i>
-                  </Button>
-                </td>
+        <div
+          style={{
+            border: "1px solid var(--border-color)",
+            borderRadius: 10,
+            overflow: "hidden",
+          }}
+        >
+          <Table hover responsive className="mb-0">
+            <thead
+              style={{
+                background: "rgba(0,0,0,.03)",
+              }}
+            >
+              <tr>
+                <th>Code</th>
+                <th>Department Name</th>
+                <th>Status</th>
+                <th style={{ width: 140 }}>Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+
+            <tbody>
+              {departments.map((d) => (
+                <tr key={d.DepartmentID}>
+                  <td>{d.DepartmentCode}</td>
+
+                  <td
+                    style={{
+                      fontWeight: 500,
+                    }}
+                  >
+                    {d.DepartmentName}
+                  </td>
+
+                  <td>
+                    {d.IsActive ? (
+                      <span className="badge bg-primary">
+                        Active
+                      </span>
+                    ) : (
+                      <span className="badge bg-danger">
+                        Inactive
+                      </span>
+                    )}
+                  </td>
+
+                  <td>
+                    <div className="d-flex gap-2">
+                      <Button
+                        variant="outline-primary"
+                        size="sm"
+                        onClick={() => openEditModal(d)}
+                        style={{
+                          borderRadius: 8,
+                        }}
+                      >
+                        <i className="bi bi-pencil-square"></i>
+                      </Button>
+
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() =>
+                          confirmDeleteDepartment(
+                            d.DepartmentID
+                          )
+                        }
+                        style={{
+                          borderRadius: 8,
+                        }}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </div>
       ) : (
-        <p>No departments found.</p>
+        <div
+          style={{
+            textAlign: "center",
+            padding: "50px 20px",
+            border: "1px dashed var(--border-color)",
+            borderRadius: 10,
+            opacity: 0.7,
+          }}
+        >
+          <i
+            className="bi bi-diagram-2"
+            style={{
+              fontSize: "2rem",
+            }}
+          />
+
+          <div className="mt-2">
+            No departments found.
+          </div>
+        </div>
       )}
 
       {/* Add/Edit Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
+      <Modal
+        show={showModal}
+        onHide={() => setShowModal(false)}
+        centered
+      >
         <Modal.Header closeButton>
-          <Modal.Title>{editDepartment ? 'Edit Department' : 'Add Department'}</Modal.Title>
+          <Modal.Title>
+            {editDepartment
+              ? "Edit Department"
+              : "Add Department"}
+          </Modal.Title>
         </Modal.Header>
+
         <Modal.Body>
-          <Form noValidate validated={validated} onSubmit={handleSave}>
-            <Row className="mb-3">
+          <Form
+            noValidate
+            validated={validated}
+            onSubmit={handleSave}
+          >
+            <Row className="g-3">
               <Col md={6}>
                 <Form.Group controlId="DepartmentCode">
-                  <Form.Label>Department Code</Form.Label>
+                  <Form.Label
+                    style={{
+                      fontWeight: 600,
+                      fontSize: ".85rem",
+                    }}
+                  >
+                    Department Code *
+                  </Form.Label>
+
                   <Form.Control
                     required
                     type="text"
                     value={departmentFormData.DepartmentCode}
                     onChange={handleInputChange}
+                    style={{
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                    }}
                   />
+
                   <Form.Control.Feedback type="invalid">
                     Department code is required.
                   </Form.Control.Feedback>
@@ -244,42 +397,62 @@ const organizationID: number | undefined = user?.organizationID;
 
               <Col md={6}>
                 <Form.Group controlId="DepartmentName">
-                  <Form.Label>Department Name</Form.Label>
+                  <Form.Label
+                    style={{
+                      fontWeight: 600,
+                      fontSize: ".85rem",
+                    }}
+                  >
+                    Department Name *
+                  </Form.Label>
+
                   <Form.Control
                     required
                     type="text"
                     value={departmentFormData.DepartmentName}
                     onChange={handleInputChange}
+                    style={{
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                    }}
                   />
+
                   <Form.Control.Feedback type="invalid">
                     Department name is required.
                   </Form.Control.Feedback>
                 </Form.Group>
               </Col>
-            </Row>
 
-            <Row className="mb-3">
-              {/* <Col md={6}>
+              {/* Branch dropdown if enabled later */}
+              {/*
+              <Col md={6}>
                 <Form.Group controlId="BranchID">
                   <Form.Label>Branch</Form.Label>
-                  <Form.Select                    
+                  <Form.Select
                     value={departmentFormData.BranchID || ""}
                     onChange={handleInputChange}
+                    style={{ borderRadius: 8 }}
                   >
-                    <option value="">-- Select Branch --</option>
+                    <option value="">
+                      -- Select Branch --
+                    </option>
                     {branches.map((b) => (
-                      <option key={b.BranchID} value={b.BranchID}>
+                      <option
+                        key={b.BranchID}
+                        value={b.BranchID}
+                      >
                         {b.BranchName}
                       </option>
                     ))}
                   </Form.Select>
-                   <Form.Control.Feedback type="invalid">
-                    Please select a branch.
-                  </Form.Control.Feedback> 
                 </Form.Group>
-              </Col> */}
+              </Col>
+              */}
 
-              <Col md={6} className="d-flex align-items-center">
+              <Col
+                md={6}
+                className="d-flex align-items-center"
+              >
                 <Form.Check
                   id="IsActive"
                   type="checkbox"
@@ -288,49 +461,112 @@ const organizationID: number | undefined = user?.organizationID;
                   onChange={handleInputChange}
                 />
               </Col>
+
+              <Col md={12}>
+                <Form.Group controlId="Description">
+                  <Form.Label
+                    style={{
+                      fontWeight: 600,
+                      fontSize: ".85rem",
+                    }}
+                  >
+                    Description
+                  </Form.Label>
+
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
+                    value={departmentFormData.Description}
+                    onChange={handleInputChange}
+                    style={{
+                      borderRadius: 8,
+                      padding: "10px 14px",
+                    }}
+                  />
+                </Form.Group>
+              </Col>
             </Row>
 
-            <Form.Group controlId="Description" className="mb-3">
-              <Form.Label>Description</Form.Label>
-              <Form.Control
-                as="textarea"
-                rows={2}
-                value={departmentFormData.Description}
-                onChange={handleInputChange}
-              />
-            </Form.Group>
-
-            <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowModal(false)}>
+            <div
+              style={{
+                marginTop: 24,
+                paddingTop: 20,
+                borderTop:
+                  "1px solid var(--border-color)",
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 10,
+              }}
+            >
+              <Button
+                variant="outline-secondary"
+                onClick={() => setShowModal(false)}
+                style={{
+                  borderRadius: 8,
+                }}
+              >
                 Cancel
               </Button>
-              <Button variant="primary" type="submit">
-                {editDepartment ? 'Update' : 'Save'}
+
+              <Button
+                variant="primary"
+                type="submit"
+                style={{
+                  borderRadius: 8,
+                  fontWeight: 600,
+                }}
+              >
+                {editDepartment
+                  ? "Update Department"
+                  : "Save Department"}
               </Button>
-            </Modal.Footer>
+            </div>
           </Form>
         </Modal.Body>
       </Modal>
 
-      {/* Delete Confirmation */}
-      <Modal show={confirmDelete} onHide={() => setConfirmDelete(false)}>
+      {/* Delete Modal */}
+      <Modal
+        show={confirmDelete}
+        onHide={() => setConfirmDelete(false)}
+        centered
+      >
         <Modal.Header closeButton>
-          <Modal.Title>Confirm Delete</Modal.Title>
+          <Modal.Title>
+            Confirm Delete
+          </Modal.Title>
         </Modal.Header>
-        <Modal.Body>Are you sure you want to delete this department?</Modal.Body>
+
+        <Modal.Body>
+          Are you sure you want to delete this
+          department?
+        </Modal.Body>
+
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
+          <Button
+            variant="outline-secondary"
+            onClick={() => setConfirmDelete(false)}
+            style={{
+              borderRadius: 8,
+            }}
+          >
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleDelete}>
+
+          <Button
+            variant="danger"
+            onClick={handleDelete}
+            style={{
+              borderRadius: 8,
+            }}
+          >
             Delete
           </Button>
         </Modal.Footer>
       </Modal>
-
-      <ToastContainer position="top-right" autoClose={3000} />
     </div>
-  );
+  </>
+);
 };
 
 export default ManageDepartments;

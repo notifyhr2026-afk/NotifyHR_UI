@@ -168,7 +168,7 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
     >
       {/* LOGO */}
       <div className="sidebar-logo">
-        <Link to="/dashboard" className="logo-link">
+        <Link to="#" className="logo-link">
           <NikuHRLogo
             variant={isDark ? "dark" : "default"}
             showWordmark={isOpen}
@@ -245,11 +245,11 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
                         className={`menu-item ${isActive ? "active" : ""}`}
                         onClick={() => hasSub && toggleSubMenu(idx)}
                       >
-                        <i
+                        <i 
                           className={`bi ${
                             item.featureIcon || item.menuIcon
-                          } menu-icon`}
-                        />
+                          } menu-icon`} />
+                        
 
                         {isOpen && (
                           <span className="menu-label">{item.menuName}</span>

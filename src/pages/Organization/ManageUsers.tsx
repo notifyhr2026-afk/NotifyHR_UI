@@ -330,46 +330,60 @@ const ManageUsers: React.FC = () => {
             <thead>
               <tr>
                 <th>Name</th>
-                <th>Username</th>
+                {/* <th>Username</th> */}
                 <th>Email</th>
                 <th>Roles</th>
-                <th>Status</th>
+                {/* <th>Status</th> */}
                 <th>Actions</th>
               </tr>
             </thead>
 
-            <tbody>
-              {currentUsers.map(u => (
-                <tr key={u.id}>
-                  <td>{u.fullName}</td>
-                  <td>{u.username}</td>
-                  <td>{u.email}</td>
-                  <td>
-                    {u.roles.map(r => <Badge bg="info" key={r} className="me-1">{r}</Badge>)}
-                  </td>
-                  <td>
-                    <Badge bg={u.isActive ? 'success' : 'danger'}>
-                      {u.isActive ? 'Active' : 'Inactive'}
-                    </Badge>
-                  </td>
-                  <td>
-                    <Button size="sm" onClick={() => {
-                      setEditUser(u);
-                      setUserFormData(u);
-                      setShowModal(true);
-                    }}><i className="bi bi-pencil-square"></i></Button>
+           <tbody>
+  {currentUsers.map(u => (
+    <tr
+  key={u.id}
+  style={{
+    backgroundColor: u.isActive ? 'rgba(40, 167, 69, 0.08)' : 'rgba(220, 53, 69, 0.08)'
+  }}
+>
+      <td>{u.fullName}</td>
+      <td>{u.email}</td>
 
-                    <Button size="sm" variant="danger" className="ms-2"
-                      onClick={() => {
-                        setUserToDelete(u.id);
-                        setConfirmDelete(true);
-                      }}>
-                      <i className="bi bi-trash"></i>
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
+      <td>
+        {u.roles.map(r => (
+          <Badge bg="info" key={r} className="me-1">
+            {r}
+          </Badge>
+        ))}
+      </td>
+
+      <td style={{ width: '140px' }}>
+        <Button
+          size="sm"
+          onClick={() => {
+            setEditUser(u);
+            setUserFormData(u);
+            setShowModal(true);
+          }}
+        >
+          <i className="bi bi-pencil-square"></i>
+        </Button>
+
+        <Button
+          size="sm"
+          variant="danger"
+          className="ms-2"
+          onClick={() => {
+            setUserToDelete(u.id);
+            setConfirmDelete(true);
+          }}
+        >
+          <i className="bi bi-trash"></i>
+        </Button>
+      </td>
+    </tr>
+  ))}
+</tbody>
           </Table>
 
           {/* PAGINATION */}

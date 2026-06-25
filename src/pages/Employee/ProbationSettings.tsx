@@ -43,7 +43,6 @@ const ProbationSettings: React.FC = () => {
   const [data, setData] = useState<ProbationSetting[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [saving, setSaving] = useState(false);
-
   const [errors, setErrors] = useState<any>({});
 
   const defaultForm: ProbationSetting = {
@@ -60,16 +59,13 @@ const ProbationSettings: React.FC = () => {
 
   const [form, setForm] = useState<ProbationSetting>(defaultForm);
 
+  /* ================= LOAD ================= */
+
   const mapData = (res: any): ProbationSetting[] => {
     let parsed = res;
 
-    if (typeof res === "string") {
-      parsed = JSON.parse(res);
-    }
-
-    if (parsed?.Table) {
-      parsed = parsed.Table;
-    }
+    if (typeof res === "string") parsed = JSON.parse(res);
+    if (parsed?.Table) parsed = parsed.Table;
 
     return parsed.map((x: any) => ({
       settingID: x.SettingID,
@@ -91,8 +87,7 @@ const ProbationSettings: React.FC = () => {
           organizationID
         );
 
-      const mapped = mapData(res);
-      setData(mapped);
+      setData(mapData(res));
     } catch {
       ToastMessage.show("Failed to load data", "error");
     }
@@ -102,6 +97,8 @@ const ProbationSettings: React.FC = () => {
     loadData();
   }, []);
 
+  /* ================= VALIDATION ================= */
+
   const validateForm = () => {
     const newErrors: any = {};
 
@@ -109,37 +106,24 @@ const ProbationSettings: React.FC = () => {
       newErrors.employeeType = "Employee Type is required";
     }
 
-    if (!form.probationMonths) {
-      newErrors.probationMonths = "Probation Months is required";
-    } else if (
-      form.probationMonths < 1 ||
-      form.probationMonths > 24
-    ) {
-      newErrors.probationMonths =
-        "Probation Months must be between 1 and 24";
+    if (!form.probationMonths || form.probationMonths < 1 || form.probationMonths > 24) {
+      newErrors.probationMonths = "Probation Months must be 1–24";
     }
 
     if (form.allowExtension) {
-      if (
-        !form.maxExtensionMonths ||
-        form.maxExtensionMonths <= 0
-      ) {
-        newErrors.maxExtensionMonths =
-          "Max Extension Months is required";
+      if (!form.maxExtensionMonths || form.maxExtensionMonths <= 0) {
+        newErrors.maxExtensionMonths = "Max Extension Months required";
       }
-
-      if (
-        form.maxExtensionMonths &&
-        form.maxExtensionMonths > form.probationMonths
-      ) {
-        newErrors.maxExtensionMonths =
-          "Extension Months cannot exceed Probation Months";
-      }
+     if (
+  (form.maxExtensionMonths ?? 0) > form.probationMonths
+) {
+  newErrors.maxExtensionMonths =
+    "Cannot exceed probation months";
+}
     }
 
     if (!form.autoConfirmation && !form.confirmationType) {
-      newErrors.confirmationType =
-        "Confirmation Type is required";
+      newErrors.confirmationType = "Confirmation Type is required";
     }
 
     const duplicate = data.find(
@@ -149,14 +133,14 @@ const ProbationSettings: React.FC = () => {
     );
 
     if (duplicate) {
-      newErrors.employeeType =
-        "Setting already exists for this Employee Type";
+      newErrors.employeeType = "Already exists for this Employee Type";
     }
 
     setErrors(newErrors);
-
     return Object.keys(newErrors).length === 0;
   };
+
+  /* ================= SAVE ================= */
 
   const save = async () => {
     if (!validateForm()) return;
@@ -168,29 +152,20 @@ const ProbationSettings: React.FC = () => {
         ...form,
         organizationID,
         createdBy,
-        maxExtensionMonths: form.allowExtension
-          ? form.maxExtensionMonths
-          : null,
-        confirmationType: form.autoConfirmation
-          ? null
-          : form.confirmationType,
+        maxExtensionMonths: form.allowExtension ? form.maxExtensionMonths : null,
+        confirmationType: form.autoConfirmation ? null : form.confirmationType,
       };
 
       const res =
-        await probationSettingsService.createOrUpdateProbationSettingAsync(
-          payload
-        );
+        await probationSettingsService.createOrUpdateProbationSettingAsync(payload);
 
-      const parsed =
-        typeof res === "string" ? JSON.parse(res) : res;
+      const parsed = typeof res === "string" ? JSON.parse(res) : res;
 
       if (parsed[0]?.Value === 1) {
         ToastMessage.show(parsed[0].Message, "success");
 
         const oldData = form.settingID
-          ? data.find(
-              (d) => d.settingID === form.settingID
-            )
+          ? data.find((d) => d.settingID === form.settingID)
           : null;
 
         fireAudit(
@@ -205,12 +180,10 @@ const ProbationSettings: React.FC = () => {
 
         setShowModal(false);
         setErrors({});
+        setForm(defaultForm);
         loadData();
       } else {
-        ToastMessage.show(
-          parsed[0]?.Message || "Failed",
-          "warning"
-        );
+        ToastMessage.show(parsed[0]?.Message || "Failed", "warning");
       }
     } catch {
       ToastMessage.show("Save failed", "error");
@@ -219,18 +192,10 @@ const ProbationSettings: React.FC = () => {
     }
   };
 
-  const deleteSetting = async (id: number) => {
-    if (!id) {
-      ToastMessage.show("Invalid ID", "error");
-      return;
-    }
+  /* ================= DELETE ================= */
 
-    if (
-      !window.confirm(
-        "Are you sure you want to delete this setting?"
-      )
-    )
-      return;
+  const deleteSetting = async (id: number) => {
+    if (!window.confirm("Delete this setting?")) return;
 
     try {
       const res =
@@ -239,18 +204,12 @@ const ProbationSettings: React.FC = () => {
           createdBy
         );
 
-      const parsed =
-        typeof res === "string" ? JSON.parse(res) : res;
+      const parsed = typeof res === "string" ? JSON.parse(res) : res;
 
       if (parsed[0]?.Value === 1) {
-        ToastMessage.show(
-          "Deleted successfully",
-          "success"
-        );
+        ToastMessage.show("Deleted successfully", "success");
 
-        const oldData = data.find(
-          (d) => d.settingID === id
-        );
+        const oldData = data.find((d) => d.settingID === id);
 
         fireAudit(
           "DELETE",
@@ -264,10 +223,7 @@ const ProbationSettings: React.FC = () => {
 
         loadData();
       } else {
-        ToastMessage.show(
-          parsed[0]?.Message,
-          "warning"
-        );
+        ToastMessage.show(parsed[0]?.Message, "warning");
       }
     } catch {
       ToastMessage.show("Delete failed", "error");
@@ -289,104 +245,136 @@ const ProbationSettings: React.FC = () => {
   const getEmployeeLabel = (id: number) =>
     employeeOptions.find((x) => x.value === id)?.label;
 
+  /* ================= UI ================= */
+
   return (
     <>
       <ToastProvider />
 
-      <div className="container mt-3">
-        <div className="d-flex justify-content-between align-items-center mb-3">
-          <h4>Probation Settings</h4>
+      {/* CARD CONTAINER (same style as others) */}
+      <div
+        style={{
+          background: "var(--card-bg, #fff)",
+          borderRadius: 12,
+          padding: 24,
+          border: "1px solid var(--border-color)",
+        }}
+      >
+        {/* HEADER */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 24,
+            paddingBottom: 16,
+            borderBottom: "1px solid var(--border-color)",
+          }}
+        >
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                background: "rgba(13,110,253,.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#0d6efd",
+              }}
+            >
+              <i className="bi bi-shield-check"></i>
+            </div>
 
-          <button
-            className="btn btn-primary"
+            <div>
+              <div style={{ fontWeight: 600 }}>Probation Settings</div>
+              <div style={{ fontSize: ".8rem", opacity: 0.6 }}>
+                Manage employee probation rules
+              </div>
+            </div>
+          </div>
+
+          <Button
             onClick={openCreate}
+            style={{ borderRadius: 8, fontWeight: 600 }}
           >
-            + Add
-          </button>
+            + Add Setting
+          </Button>
         </div>
 
-        <table className="table table-hover table-dark-custom">
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Months</th>
-              <th>Extension</th>
-              <th>Auto Confirm</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-
-          <tbody>
-            {data.length === 0 ? (
+        {/* TABLE WRAPPER */}
+        <div
+          style={{
+            border: "1px solid var(--border-color)",
+            borderRadius: 10,
+            overflow: "hidden",
+          }}
+        >
+          <table className="table table-hover mb-0">
+            <thead style={{ background: "rgba(0,0,0,.03)" }}>
               <tr>
-                <td
-                  colSpan={6}
-                  className="text-center"
-                >
-                  No data found
-                </td>
+                <th>Type</th>
+                <th>Months</th>
+                <th>Extension</th>
+                <th>Auto Confirm</th>
+                <th>Status</th>
+                <th>Actions</th>
               </tr>
-            ) : (
-              data.map((d) => (
-                <tr key={d.settingID}>
-                  <td>
-                    {getEmployeeLabel(d.employeeType)}
-                  </td>
+            </thead>
 
-                  <td>{d.probationMonths}</td>
-
-                  <td>
-                    {d.allowExtension
-                      ? `Yes (${d.maxExtensionMonths})`
-                      : "No"}
-                  </td>
-
-                  <td>
-                    {d.autoConfirmation
-                      ? "Auto"
-                      : "Manual"}
-                  </td>
-
-                  <td>
-                    <span
-                      className={`badge ${
-                        d.isActive
-                          ? "bg-success"
-                          : "bg-secondary"
-                      }`}
-                    >
-                      {d.isActive
-                        ? "Active"
-                        : "Inactive"}
-                    </span>
-                  </td>
-
-                  <td>
-                    <button
-                      className="btn btn-warning btn-sm me-2"
-                      onClick={() => edit(d)}
-                    >
-                      <i className="bi bi-pencil-square"></i>
-                    </button>
-
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() =>
-                        deleteSetting(d.settingID)
-                      }
-                    >
-                      <i className="bi bi-trash"></i>
-                    </button>
+            <tbody>
+              {data.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-3">
+                    No data found
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ) : (
+                data.map((d) => (
+                  <tr key={d.settingID}>
+                    <td>{getEmployeeLabel(d.employeeType)}</td>
+                    <td>{d.probationMonths}</td>
+                    <td>
+                      {d.allowExtension
+                        ? `Yes (${d.maxExtensionMonths})`
+                        : "No"}
+                    </td>
+                    <td>{d.autoConfirmation ? "Auto" : "Manual"}</td>
+                    <td>
+                      <span
+                        className={`badge ${
+                          d.isActive ? "bg-success" : "bg-secondary"
+                        }`}
+                      >
+                        {d.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td>
+                      <button
+                        className="btn btn-warning btn-sm me-2"
+                        onClick={() => edit(d)}
+                      >
+                        <i className="bi bi-pencil-square"></i>
+                      </button>
+
+                      <button
+                        className="btn btn-danger btn-sm"
+                        onClick={() => deleteSetting(d.settingID)}
+                      >
+                        <i className="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
       </div>
 
-      <Modal
+      {/* MODAL (unchanged logic) */}
+          <Modal
         show={showModal}
         onHide={() => setShowModal(false)}
         centered

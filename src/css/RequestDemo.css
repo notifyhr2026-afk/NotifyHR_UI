@@ -128,3 +128,33 @@
   transform: translateY(-1px);
   box-shadow: 0 8px 20px rgba(79, 70, 229, 0.35);
 }
+.demo-form-card {
+  position: sticky;
+  top: 90px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 24px;
+}
+
+.demo-hero {
+  padding: 120px 0 70px;
+}
+
+.demo-form-card textarea {
+  min-height: 90px;
+}
+
+.form-label {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.alert {
+  border-radius: 12px;
+}
+
+@media (max-width: 991px) {
+  .demo-form-card {
+    position: static;
+    margin-top: 24px;
+  }
+}

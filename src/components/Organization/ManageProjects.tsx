@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Button,
   Table,
   Modal,
   Form,
   Row,
-  Col
+  Col,
+  Spinner,
 } from "react-bootstrap";
 import Select from "react-select";
 
@@ -17,7 +18,7 @@ import manageClientsService from "../../services/manageClientsService";
 interface Project {
   ProjectId: number;
   OrganizationId: number;
-  ClientId: number; // ✅ NEW
+  ClientId: number;
   ProjectCode: string;
   ProjectName: string;
   IsBillable: boolean;
@@ -36,13 +37,10 @@ interface ClientOption {
 const projectStatuses = [
   { ProjectStatusId: 1, StatusName: "Active" },
   { ProjectStatusId: 2, StatusName: "On Hold" },
-  { ProjectStatusId: 3, StatusName: "Completed" }
+  { ProjectStatusId: 3, StatusName: "Completed" },
 ];
 
-/* ===================== COMPONENT ===================== */
-
 const ManageProjects: React.FC = () => {
-
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID = user?.organizationID ?? 0;
 
@@ -51,11 +49,12 @@ const ManageProjects: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [clients, setClients] = useState<ClientOption[]>([]);
 
-  const [selectedClient, setSelectedClient] = useState<ClientOption | null>(null);
+  const [selectedClient, setSelectedClient] =
+    useState<ClientOption | null>(null);
 
   const [showModal, setShowModal] = useState(false);
-  const [validated, setValidated] = useState(false);
   const [editItem, setEditItem] = useState<Project | null>(null);
+  const [validated, setValidated] = useState(false);
 
   const [formData, setFormData] = useState<Project>({
     ProjectId: 0,
@@ -66,22 +65,26 @@ const ManageProjects: React.FC = () => {
     IsBillable: false,
     StartDate: "",
     EndDate: "",
-    ProjectStatusId: 1
+    ProjectStatusId: 1,
   });
 
-  /* ===================== LOAD DATA ===================== */
+  /* ===================== LOAD ===================== */
 
   const loadProjects = async () => {
-    const res = await projectService.GetProjectsByOrganization(organizationID);
-    setProjects(res);
+    const res = await projectService.GetProjectsByOrganization(
+      organizationID
+    );
+    setProjects(res || []);
   };
 
   const loadClients = async () => {
-    const res = await manageClientsService.GetClientsByOrganization(organizationID);
+    const res = await manageClientsService.GetClientsByOrganization(
+      organizationID
+    );
 
-    const mapped = res.map((c: any) => ({
+    const mapped = (res || []).map((c: any) => ({
       value: c.ClientId,
-      label: c.ClientName
+      label: c.ClientName,
     }));
 
     setClients(mapped);
@@ -97,16 +100,16 @@ const ManageProjects: React.FC = () => {
   const handleInputChange = (e: any) => {
     const { id, value, type, checked } = e.target;
 
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [id]: type === "checkbox" ? checked : value
+      [id]: type === "checkbox" ? checked : value,
     }));
   };
 
   const handleAdd = () => {
-
     setEditItem(null);
     setSelectedClient(null);
+    setValidated(false);
 
     setFormData({
       ProjectId: 0,
@@ -117,25 +120,24 @@ const ManageProjects: React.FC = () => {
       IsBillable: false,
       StartDate: "",
       EndDate: "",
-      ProjectStatusId: 1
+      ProjectStatusId: 1,
     });
 
-    setValidated(false);
     setShowModal(true);
   };
 
   const handleEdit = (project: Project) => {
-
     setEditItem(project);
 
-    const client = clients.find(c => c.value === project.ClientId) || null;
+    const client =
+      clients.find((c) => c.value === project.ClientId) || null;
 
     setSelectedClient(client);
 
     setFormData({
       ...project,
       StartDate: project.StartDate?.split("T")[0] || "",
-      EndDate: project.EndDate?.split("T")[0] || ""
+      EndDate: project.EndDate?.split("T")[0] || "",
     });
 
     setShowModal(true);
@@ -144,13 +146,9 @@ const ManageProjects: React.FC = () => {
   /* ===================== SAVE ===================== */
 
   const handleSave = async (e: any) => {
-
     e.preventDefault();
 
-    if (!selectedClient) {
-      alert("Client is required");
-      return;
-    }
+    if (!selectedClient) return;
 
     const payload = {
       projectId: editItem ? editItem.ProjectId : 0,
@@ -165,28 +163,22 @@ const ManageProjects: React.FC = () => {
         : null,
       projectStatusId: Number(formData.ProjectStatusId),
       createdBy: "1",
-      modifiedBy: "1"
+      modifiedBy: "1",
     };
 
     try {
-
-      const res = await projectService.PostProjectByAsync(payload);
-
-      alert(res.message || "Saved successfully");
+      await projectService.PostProjectByAsync(payload);
 
       setShowModal(false);
       loadProjects();
-
     } catch (err) {
       console.error(err);
-      alert("Save failed");
     }
   };
 
   /* ===================== DELETE ===================== */
 
   const handleDelete = async (id: number) => {
-
     if (!window.confirm("Delete this project?")) return;
 
     await projectService.DeleteProjectByAsync(id);
@@ -196,63 +188,158 @@ const ManageProjects: React.FC = () => {
   /* ===================== UI ===================== */
 
   return (
-    <div className="Container">
+    <>
+      <div
+        style={{
+          background: "var(--card-bg, #fff)",
+          borderRadius: 12,
+          padding: 24,
+          border: "1px solid var(--border-color)",
+        }}
+      >
+        {/* HEADER */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 24,
+            paddingBottom: 16,
+            borderBottom: "1px solid var(--border-color)",
+          }}
+        >
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                background: "rgba(13,110,253,.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#0d6efd",
+              }}
+            >
+              <i className="bi bi-kanban"></i>
+            </div>
 
-      <Row className="mb-3">
-        <Col><h4>Manage Projects</h4></Col>
-        <Col className="text-end">
-          <Button onClick={handleAdd}>+ Add Project</Button>
-        </Col>
-      </Row>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: "1rem" }}>
+                Manage Projects
+              </div>
+              <div style={{ fontSize: ".8rem", opacity: 0.6 }}>
+                Create and manage project records
+              </div>
+            </div>
+          </div>
 
-      <Table className="table table-hover table-dark-custom">
+          <Button
+            onClick={handleAdd}
+            style={{ borderRadius: 8, fontWeight: 600 }}
+          >
+            <i className="bi bi-plus-lg me-2"></i>
+            Add Project
+          </Button>
 
-        <thead>
-          <tr>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Client</th>
-            <th>Billable</th>
-            <th>Start</th>
-            <th>End</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+          
+        </div>
 
-        <tbody>
-          {projects.map(p => {
+        {/* TABLE */}
+        {projects.length > 0 ? (
+          <div
+            style={{
+              border: "1px solid var(--border-color)",
+              borderRadius: 10,
+              overflow: "hidden",
+            }}
+          >
+            <Table hover responsive className="mb-0">
+              <thead style={{ background: "rgba(0,0,0,.03)" }}>
+                <tr>
+                  <th>Code</th>
+                  <th>Name</th>
+                  <th>Client</th>
+                  <th>Billable</th>
+                  <th>Start</th>
+                  <th>End</th>
+                  <th>Status</th>
+                  <th style={{ width: 140 }}>Actions</th>
+                </tr>
+              </thead>
 
-            const client = clients.find(c => c.value === p.ClientId);
+              <tbody>
+                {projects.map((p) => {
+                  const client = clients.find(
+                    (c) => c.value === p.ClientId
+                  );
 
-            return (
-              <tr key={p.ProjectId}>
-                <td>{p.ProjectCode}</td>
-                <td>{p.ProjectName}</td>
-                <td>{client?.label}</td>
-                <td>{p.IsBillable ? "Yes" : "No"}</td>
-                <td>{p.StartDate?.split("T")[0]}</td>
-                <td>{p.EndDate?.split("T")[0]}</td>
-                <td>
-                  {projectStatuses.find(s => s.ProjectStatusId === p.ProjectStatusId)?.StatusName}
-                </td>
-                <td>
-                  <Button size="sm" onClick={() => handleEdit(p)}>
-                    <i className="bi bi-pencil-square"></i>
-                  </Button>{" "}
-                  <Button size="sm" variant="danger" onClick={() => handleDelete(p.ProjectId)}>
-                    <i className="bi bi-trash"></i>
-                  </Button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
+                  return (
+                    <tr key={p.ProjectId}>
+                      <td>{p.ProjectCode}</td>
+                      <td style={{ fontWeight: 500 }}>
+                        {p.ProjectName}
+                      </td>
+                      <td>{client?.label}</td>
+                      <td>{p.IsBillable ? "Yes" : "No"}</td>
+                      <td>{p.StartDate?.split("T")[0]}</td>
+                      <td>{p.EndDate?.split("T")[0]}</td>
+                      <td>
+                        {
+                          projectStatuses.find(
+                            (s) =>
+                              s.ProjectStatusId === p.ProjectStatusId
+                          )?.StatusName
+                        }
+                      </td>
 
-      </Table>
+                      <td>
+                        <div className="d-flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline-primary"
+                            onClick={() => handleEdit(p)}
+                          >
+                            <i className="bi bi-pencil-square"></i>
+                          </Button>
 
-      {/* ===================== MODAL ===================== */}
+                          <Button
+                            size="sm"
+                            variant="outline-danger"
+                            onClick={() =>
+                              handleDelete(p.ProjectId)
+                            }
+                          >
+                            <i className="bi bi-trash"></i>
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </Table>
+          </div>
+        ) : (
+          <div
+            style={{
+              textAlign: "center",
+              padding: "50px 20px",
+              border: "1px dashed var(--border-color)",
+              borderRadius: 10,
+              opacity: 0.7,
+            }}
+          >
+            <i
+              className="bi bi-kanban"
+              style={{ fontSize: "2rem" }}
+            />
+            <div className="mt-2">No projects found.</div>
+          </div>
+        )}
+      </div>
 
+      {/* MODAL */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
 
         <Modal.Header closeButton>
@@ -345,8 +432,7 @@ const ManageProjects: React.FC = () => {
         </Modal.Body>
 
       </Modal>
-
-    </div>
+    </>
   );
 };
 

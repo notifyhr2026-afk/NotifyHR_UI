@@ -581,140 +581,61 @@ const handleEdit = (rule: EmployeeIdRule) => {
       {/* ====================================================== */}
       {/* TABLE */}
       {/* ====================================================== */}
-      <Card className="shadow-sm border-0">
+        <Card className="border-0 shadow-sm">
         <Card.Body>
-          <h5 className="mb-4">
-            Configured Rules
-          </h5>
+          <h5 className="mb-3">Rules List</h5>
 
           {loading ? (
-            <div className="text-center py-5">
-              <Spinner animation="border" />
-            </div>
+            <Spinner animation="border" />
           ) : (
-            <div className="table-responsive">
-              <Table bordered hover striped>
-                <thead className="table-dark">
-                  <tr>
-                    <th>Rule Name</th>
-                    <th>Prefix</th>
-                    <th>Department</th>
-                    <th>Year</th>
-                    <th>Separator</th>
-                    <th>Sequence</th>
-                    <th>Preview</th>
-                    <th>Status</th>
-                    <th>
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
+            <Table hover responsive>
+              <thead className="table-light">
+                <tr>
+                  <th>Name</th>
+                  <th>Prefix</th>
+                  <th>Dept</th>
+                  <th>Year</th>
+                  <th>Separator</th>
+                  <th>Seq</th>
+                  <th>Preview</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
 
-                <tbody>
-                  {rules.length > 0 ? (
-                    rules.map((rule) => (
-                      <tr key={rule.id}>
-                        <td>
-                          {rule.ruleName}
-                        </td>
-
-                        <td>
-                          {rule.prefix}
-                        </td>
-
-                        <td>
-                          {rule.includeDepartmentCode
-                            ? rule.departmentCode || "-"
-                            : "No"}
-                        </td>
-
-                        <td>
-                          {rule.includeYear
-                            ? "Yes"
-                            : "No"}
-                        </td>
-
-                        <td>
-                          {rule.separator ? (
-                            <code>
-                              {
-                                rule.separator
-                              }
-                            </code>
-                          ) : (
-                            <span className="text-muted">
-                              No Separator
-                            </span>
-                          )}
-                        </td>
-
-                        <td>
-                          {
-                            rule.sequenceLength
-                          }
-                        </td>
-
-                        <td>
-                          <span className="fw-bold text-primary">
-                            {rule.preview || "-"}
-                          </span>
-                        </td>
-
-                        <td>
-                          <Badge
-                            bg={
-                              rule.status ===
-                              "Active"
-                                ? "success"
-                                : "secondary"
-                            }
-                          >
-                            {rule.status}
-                          </Badge>
-                        </td>
-
-                        <td>
-                          <div className="d-flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="warning"
-                              onClick={() =>
-                                handleEdit(
-                                  rule
-                                )
-                              }
-                            >
-                              Edit
-                            </Button>
-
-                            <Button
-                              size="sm"
-                              variant="danger"
-                              onClick={() =>
-                                openDeleteModal(
-                                  rule.id
-                                )
-                              }
-                            >
-                              Delete
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={9}
-                        className="text-center"
+              <tbody>
+                {rules.map((rule) => (
+                  <tr key={rule.id}>
+                    <td>{rule.ruleName}</td>
+                    <td>{rule.prefix}</td>
+                    <td>{rule.departmentCode || "-"}</td>
+                    <td>{rule.includeYear ? "Yes" : "No"}</td>
+                    <td>{rule.separator || "None"}</td>
+                    <td>{rule.sequenceLength}</td>
+                    <td className="text-primary fw-bold">
+                      {rule.preview}
+                    </td>
+                    <td>
+                      <Badge bg={rule.status === "Active" ? "success" : "secondary"}>
+                        {rule.status}
+                      </Badge>
+                    </td>
+                    <td>
+                      <Button size="sm" variant="warning" onClick={() => handleEdit(rule)}>
+                        Edit
+                      </Button>{" "}
+                      <Button
+                        size="sm"
+                        variant="danger"
+                        onClick={() => openDeleteModal(rule.id)}
                       >
-                        No rules configured
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </Table>
-            </div>
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
           )}
         </Card.Body>
       </Card>

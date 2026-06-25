@@ -165,17 +165,17 @@ const renderNode = ({ nodeDatum, toggleNode }: any) => {
       onClick={toggleNode}
       style={{ cursor: "pointer" }}
     >
-      <rect
-        width={190}
-        height={65}
-        x={-95}
-        y={-32}
-        rx={12}
-        fill={isDark ? "#1e293b" : "#3b82f6"}
-        stroke={isDark ? "#94a3b8" : "#1e40af"}
-        strokeWidth={1.5}
-      />
-
+<rect
+  width={190}
+  height={65}
+  x={-95}
+  y={-32}
+  rx={12}
+  fill={isDark ? "#111827" : "#f8fafc"}
+  stroke={isDark ? "#334155" : "#cbd5e1"}
+  strokeWidth={1.2}
+  filter="drop-shadow(0px 1px 3px rgba(0,0,0,0.12))"
+/>
       <text
         x={0}
         y={0}

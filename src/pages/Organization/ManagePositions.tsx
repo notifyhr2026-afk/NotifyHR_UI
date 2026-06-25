@@ -33,6 +33,7 @@ const ManagePositions: React.FC = () => {
   const user: LoggedInUser | null = userString
     ? JSON.parse(userString)
     : null;
+
   const organizationID = user?.organizationID ?? 0;
 
   const emptyForm: Position = {
@@ -47,20 +48,20 @@ const ManagePositions: React.FC = () => {
   const [positions, setPositions] = useState<Position[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
   const [validated, setValidated] = useState(false);
+
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<'success' | 'danger' | 'warning'>('success');
 
   const [editPosition, setEditPosition] = useState<Position | null>(null);
-  const [positionFormData, setPositionFormData] =
-    useState<Position>(emptyForm);
+  const [positionFormData, setPositionFormData] = useState<Position>(emptyForm);
 
   const [showModal, setShowModal] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const [positionToDelete, setPositionToDelete] =
-    useState<number | null>(null);
+  const [positionToDelete, setPositionToDelete] = useState<number | null>(null);
 
-  // ================= LOAD POSITIONS =================
+  // ================= LOAD =================
   const loadPositions = async () => {
     try {
       setLoading(true);
@@ -83,7 +84,6 @@ const ManagePositions: React.FC = () => {
     }
   };
 
-  // ================= LOAD DEPARTMENTS =================
   const loadDepartments = async () => {
     try {
       const res = await departmentService.getdepartmentesAsync(organizationID);
@@ -100,10 +100,12 @@ const ManagePositions: React.FC = () => {
     }
   }, [organizationID]);
 
-  // ================= INPUT CHANGE =================
-  const handleInputChange = (
-    e: React.ChangeEvent<any>
-  ) => {
+  // ================= HELPERS =================
+  const getDepartmentName = (departmentId: number) =>
+    departments.find((d) => d.DepartmentID === departmentId)?.DepartmentName || '-';
+
+  // ================= INPUT =================
+  const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value, type } = e.target;
 
     if (type === 'checkbox') {
@@ -120,17 +122,12 @@ const ManagePositions: React.FC = () => {
     }
   };
 
-  // ================= SAVE / UPDATE =================
-  const handleSave = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
+  // ================= SAVE =================
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const form = event.currentTarget;
 
-    if (
-      form.checkValidity() === false ||
-      positionFormData.departmentId === 0
-    ) {
+    if (!form.checkValidity() || positionFormData.departmentId === 0) {
       event.stopPropagation();
       setValidated(true);
       return;
@@ -141,34 +138,31 @@ const ManagePositions: React.FC = () => {
 
       const payload = {
         positionID: positionFormData.id,
-        organizationID: organizationID,
+        organizationID,
         positionCode: positionFormData.positionCode,
         positionTitle: positionFormData.positionName,
         description: positionFormData.description,
         departmentID: positionFormData.departmentId,
         isActive: positionFormData.isActive,
-        createdBy:  'Admin',
+        createdBy: 'Admin',
       };
 
       const response = await positionService.createOrUpdatePositionAsync(payload);
 
-      if (response.length > 0) {
+      if (response?.length > 0) {
         const result = response[0];
 
+        setMessage(result.MSG);
+        setMessageType(result.value === 1 ? 'success' : 'warning');
+
         if (result.value === 1) {
-          setMessage(result.MSG);
-          setMessageType('success');
           loadPositions();
           setShowModal(false);
           setPositionFormData(emptyForm);
           setEditPosition(null);
-        } else {
-          setMessage(result.MSG);
-          setMessageType('warning');
         }
       }
     } catch (error) {
-      console.error(error);
       setMessage('Something went wrong');
       setMessageType('danger');
     } finally {
@@ -183,24 +177,10 @@ const ManagePositions: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await positionService.deletePositionAsync(positionToDelete);
-
-      if (response.length > 0) {
-        const result = response[0];
-
-        if (result.value === 1) {
-          setMessage(result.MSG);
-          setMessageType('success');
-          loadPositions();
-        } else {
-          setMessage(result.MSG);
-          setMessageType('warning');
-        }
-      }
+      await positionService.deletePositionAsync(positionToDelete);
+      loadPositions();
     } catch (error) {
       console.error(error);
-      setMessage('Delete failed');
-      setMessageType('danger');
     } finally {
       setConfirmDelete(false);
       setPositionToDelete(null);
@@ -208,89 +188,165 @@ const ManagePositions: React.FC = () => {
     }
   };
 
-  const getDepartmentName = (departmentId: number) =>
-    departments.find((d) => d.DepartmentID === departmentId)
-      ?.DepartmentName || '-';
-
   return (
-    <div className="container">
-      <h3 className="mb-4">Manage Positions</h3>
-
-      {message && (
-        <Alert
-          variant={messageType}
-          onClose={() => setMessage(null)}
-          dismissible
+    <>
+      <div
+        style={{
+          background: 'var(--card-bg, #fff)',
+          borderRadius: 12,
+          padding: 24,
+          border: '1px solid var(--border-color)',
+        }}
+      >
+        {/* HEADER */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: 24,
+            paddingBottom: 16,
+            borderBottom: '1px solid var(--border-color)',
+          }}
         >
-          {message}
-        </Alert>
-      )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                background: 'rgba(25,135,84,.1)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#198754',
+              }}
+            >
+              <i className="bi bi-person-badge"></i>
+            </div>
 
-      <div className="text-end mb-3">
-        <Button variant="success" onClick={() => {
-          setEditPosition(null);
-          setPositionFormData(emptyForm);
-          setShowModal(true);
-        }}>
-          + Add Position
-        </Button>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: '1rem' }}>
+                Manage Positions
+              </div>
+              <div style={{ fontSize: '.8rem', opacity: 0.6 }}>
+                Create and manage organization positions
+              </div>
+            </div>
+          </div>
+
+          <Button
+            variant="primary"
+            onClick={() => {
+              setEditPosition(null);
+              setPositionFormData(emptyForm);
+              setShowModal(true);
+            }}
+            style={{ borderRadius: 8, padding: '8px 18px', fontWeight: 600 }}
+          >
+            <i className="bi bi-plus-lg me-2"></i>
+            Add Position
+          </Button>
+
+          
+        </div>
+
+        {/* ALERT */}
+        {message && (
+          <Alert
+            variant={messageType}
+            onClose={() => setMessage(null)}
+            dismissible
+          >
+            {message}
+          </Alert>
+        )}
+
+        {/* TABLE */}
+        {loading ? (
+          <Spinner />
+        ) : positions.length > 0 ? (
+          <div
+            style={{
+              border: '1px solid var(--border-color)',
+              borderRadius: 10,
+              overflow: 'hidden',
+            }}
+          >
+            <Table hover responsive className="mb-0">
+              <thead style={{ background: 'rgba(0,0,0,.03)' }}>
+                <tr>
+                  <th>Code</th>
+                  <th>Name</th>
+                  <th>Description</th>
+                  <th>Department</th>
+                  <th>Status</th>
+                  <th style={{ width: 140 }}>Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {positions.map((p) => (
+                  <tr key={p.id}>
+                    <td>{p.positionCode}</td>
+                    <td style={{ fontWeight: 500 }}>{p.positionName}</td>
+                    <td>{p.description}</td>
+                    <td>{getDepartmentName(p.departmentId)}</td>
+                    <td>
+                      {p.isActive ? (
+                        <span className="badge bg-primary">Active</span>
+                      ) : (
+                        <span className="badge bg-danger">Inactive</span>
+                      )}
+                    </td>
+
+                    <td>
+                      <div className="d-flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline-primary"
+                          onClick={() => {
+                            setEditPosition(p);
+                            setPositionFormData(p);
+                            setShowModal(true);
+                          }}
+                        >
+                          <i className="bi bi-pencil-square"></i>
+                        </Button>
+
+                        <Button
+                          size="sm"
+                          variant="outline-danger"
+                          onClick={() => {
+                            setPositionToDelete(p.id);
+                            setConfirmDelete(true);
+                          }}
+                        >
+                          <i className="bi bi-trash"></i>
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </Table>
+          </div>
+        ) : (
+          <div
+            style={{
+              textAlign: 'center',
+              padding: '50px 20px',
+              border: '1px dashed var(--border-color)',
+              borderRadius: 10,
+              opacity: 0.7,
+            }}
+          >
+            <i className="bi bi-person-badge" style={{ fontSize: '2rem' }} />
+            <div className="mt-2">No positions found.</div>
+          </div>
+        )}
       </div>
-
-      {loading ? (
-        <Spinner />
-      ) : positions.length > 0 ? (
-        <Table className="table table-hover table-dark-custom">
-          <thead className="table-light">
-            <tr>
-              <th>Code</th>
-              <th>Name</th>
-              <th>Description</th>
-              <th>Department</th>
-              <th>Active</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {positions.map((p) => (
-              <tr key={p.id}>
-                <td>{p.positionCode}</td>
-                <td>{p.positionName}</td>
-                <td>{p.description}</td>
-                <td>{getDepartmentName(p.departmentId)}</td>
-                <td>{p.isActive ? 'Yes' : 'No'}</td>
-                <td>
-                  <Button
-                    size="sm"
-                    variant="outline-primary"
-                    className="me-2"
-                    onClick={() => {
-                      setEditPosition(p);
-                      setPositionFormData(p);
-                      setShowModal(true);
-                    }}
-                  >
-                    <i className="bi bi-pencil-square"></i>
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline-danger"
-                    onClick={() => {
-                      setPositionToDelete(p.id);
-                      setConfirmDelete(true);
-                    }}
-                  >
-                    <i className="bi bi-trash"></i>
-                  </Button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </Table>
-      ) : (
-        <p>No positions found.</p>
-      )}
-
-      {/* Add/Edit Modal */}
+ {/* Add/Edit Modal */}
       <Modal show={showModal} onHide={() => setShowModal(false)} centered>
         <Modal.Header closeButton>
           <Modal.Title>
@@ -398,7 +454,7 @@ const ManagePositions: React.FC = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </>
   );
 };
 

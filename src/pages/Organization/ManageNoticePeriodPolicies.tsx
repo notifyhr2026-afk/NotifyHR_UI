@@ -10,22 +10,13 @@ import {
   Row,
   Col,
 } from "react-bootstrap";
-import {
-  BsPencilSquare,
-  BsPlus,
-  BsTrash,
-} from "react-icons/bs";
+import { BsPlus } from "react-icons/bs";
 
 import branchService from "../../services/branchService";
 import noticePeriodPolicyService from "../../services/noticePeriodPolicyService";
 import employeeService from "../../services/employeeService";
 import positionService from "../../services/positionService";
 import LoggedInUser from "../../types/LoggedInUser";
-
-const normalizeLookupList = (response: any) =>
-  Array.isArray(response)
-    ? response
-    : response?.Table || response?.data || [];
 
 const Icon = (Component: any, props: any = {}) => (
   <Component {...props} />
@@ -56,19 +47,12 @@ const ManageNoticePeriodPolicies: React.FC = () => {
 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [policies, setPolicies] = useState<NoticePeriodPolicy[]>([]);
-  const [employmentTypes, setEmploymentTypes] = useState<{
-    id: number;
-    name: string;
-  }[]>([]);
-  const [positions, setPositions] = useState<{
-    id: number;
-    name: string;
-  }[]>([]);
+  const [employmentTypes, setEmploymentTypes] = useState<any[]>([]);
+  const [positions, setPositions] = useState<any[]>([]);
   const [selectedBranch, setSelectedBranch] = useState(0);
 
   const [showModal, setShowModal] = useState(false);
   const [validated, setValidated] = useState(false);
-
   const [editPolicy, setEditPolicy] =
     useState<NoticePeriodPolicy | null>(null);
 
@@ -120,11 +104,9 @@ const ManageNoticePeriodPolicies: React.FC = () => {
           noticePeriodPolicyID:
             p.NoticePeriodPolicyID,
           branchID: p.BranchID,
-          employmentTypeID:
-            p.EmploymentTypeID,
+          employmentTypeID: p.EmploymentTypeID,
           positionID: p.PositionID,
-          noticePeriodDays:
-            p.NoticePeriodDays,
+          noticePeriodDays: p.NoticePeriodDays,
           isActive: p.IsActive,
         })) || [];
 
@@ -136,23 +118,9 @@ const ManageNoticePeriodPolicies: React.FC = () => {
 
   const loadEmploymentTypes = async () => {
     try {
-      const res = await employeeService.getEmploymentTypes();
-      const list = normalizeLookupList(res);
-      setEmploymentTypes(
-        list.map((item: any) => ({
-          id:
-            item.EmploymentTypeID ||
-            item.id ||
-            item.EmploymentTypeId ||
-            0,
-          name:
-            item.EmploymentTypeName ||
-            item.name ||
-            item.employmentTypeName ||
-            item.EmploymentType ||
-            "",
-        }))
-      );
+      const res =
+        await employeeService.getEmploymentTypes();
+      setEmploymentTypes(res?.Table ?? []);
     } catch (error) {
       console.error(error);
     }
@@ -160,24 +128,11 @@ const ManageNoticePeriodPolicies: React.FC = () => {
 
   const loadPositions = async () => {
     try {
-      const res = await positionService.getPositionsAsync(
-        organizationID
-      );
-      const list = normalizeLookupList(res);
-      setPositions(
-        list.map((item: any) => ({
-          id:
-            item.PositionID ||
-            item.id ||
-            item.positionId ||
-            0,
-          name:
-            item.PositionTitle ||
-            item.name ||
-            item.positionName ||
-            "",
-        }))
-      );
+      const res =
+        await positionService.getPositionsAsync(
+          organizationID
+        );
+      setPositions(res?.Table ?? []);
     } catch (error) {
       console.error(error);
     }
@@ -187,22 +142,15 @@ const ManageNoticePeriodPolicies: React.FC = () => {
     selectedBranch === 0
       ? policies
       : policies.filter(
-          (x) =>
-            x.branchID === selectedBranch
+          (x) => x.branchID === selectedBranch
         );
 
-  const handleInputChange = (
-    e: React.ChangeEvent<any>
-  ) => {
-    const { name, value, type } =
-      e.target;
+  const handleInputChange = (e: React.ChangeEvent<any>) => {
+    const { name, value, type, checked } = e.target;
 
     setFormData((prev) => ({
       ...prev,
-      [name]:
-        type === "checkbox"
-          ? e.target.checked
-          : value,
+      [name]: type === "checkbox" ? checked : value,
     }));
   };
 
@@ -222,18 +170,14 @@ const ManageNoticePeriodPolicies: React.FC = () => {
     setShowModal(true);
   };
 
-  const openEditModal = (
-    policy: NoticePeriodPolicy
-  ) => {
+  const openEditModal = (policy: NoticePeriodPolicy) => {
     setEditPolicy(policy);
     setFormData(policy);
     setValidated(false);
     setShowModal(true);
   };
 
-  const handleSave = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
+  const handleSave = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     const form = event.currentTarget;
@@ -246,40 +190,18 @@ const ManageNoticePeriodPolicies: React.FC = () => {
 
     try {
       const payload = {
-        noticePeriodPolicyID:
-          formData.noticePeriodPolicyID,
+        ...formData,
         organizationID,
-        branchID: Number(
-          formData.branchID
-        ),
-        employmentTypeID: Number(
-          formData.employmentTypeID
-        ),
-        positionID: Number(
-          formData.positionID
-        ),
-        noticePeriodDays: Number(
-          formData.noticePeriodDays
-        ),
-        isActive: formData.isActive,
-        createdBy:
-          user?.userID ?? 0,
+        createdBy: user?.userID ?? 0,
       };
 
       const res =
-        await noticePeriodPolicyService.postNoticePeriodPolicy(
-          payload
-        );
+        await noticePeriodPolicyService.postNoticePeriodPolicy(payload);
 
-      if (
-        res?.Value === 1 ||
-        res?.value === 1
-      ) {
+      if (res?.Value === 1 || res?.value === 1) {
         setToast({
           show: true,
-          message:
-            res?.Message ||
-            "Policy saved successfully.",
+          message: res?.Message || "Saved successfully",
           variant: "success",
         });
 
@@ -288,235 +210,196 @@ const ManageNoticePeriodPolicies: React.FC = () => {
       } else {
         setToast({
           show: true,
-          message:
-            res?.Message ||
-            "Unable to save policy.",
+          message: res?.Message || "Save failed",
           variant: "warning",
         });
       }
     } catch {
       setToast({
         show: true,
-        message:
-          "Something went wrong.",
+        message: "Something went wrong",
         variant: "danger",
       });
     }
   };
 
-  const handleDelete = async (
-    id: number
-  ) => {
-    if (
-      !window.confirm(
-        "Delete this policy?"
-      )
-    )
-      return;
+  const handleDelete = async (id: number) => {
+    if (!window.confirm("Delete this policy?")) return;
 
     try {
-      const res =
-        await noticePeriodPolicyService.deleteNoticePeriodPolicy(
-          id,
-          user?.userID ?? 0
-        );
+      await noticePeriodPolicyService.deleteNoticePeriodPolicy(
+        id,
+        user?.userID ?? 0
+      );
 
-      const result = Array.isArray(res)
-        ? res[0]
-        : res;
+      loadPolicies();
 
-      if (
-        result?.Value === 1 ||
-        result?.value === 1
-      ) {
-        setToast({
-          show: true,
-          message:
-            result?.Message ||
-            "Deleted successfully.",
-          variant: "success",
-        });
-
-        loadPolicies();
-      }
+      setToast({
+        show: true,
+        message: "Deleted successfully",
+        variant: "success",
+      });
     } catch {
       setToast({
         show: true,
-        message:
-          "Delete failed.",
+        message: "Delete failed",
         variant: "danger",
       });
     }
   };
 
-  const getEmploymentType = (
-    id: number
-  ) =>
-    employmentTypes.find(
-      (x) => x.id === id
-    )?.name ?? "-";
+  const getEmploymentType = (id: number) =>
+    employmentTypes.find((x) => x.id === id)?.name ?? "-";
 
   const getPosition = (id: number) =>
-    positions.find(
-      (x) => x.id === id
-    )?.name ?? "-";
+    positions.find((x) => x.id === id)?.name ?? "-";
 
-  const getBranchName = (
-    branchID: number
-  ) =>
-    branches.find(
-      (x) =>
-        x.BranchID === branchID
-    )?.BranchName ?? "-";
+  const getBranchName = (id: number) =>
+    branches.find((x) => x.BranchID === id)?.BranchName ?? "-";
 
   return (
-    <div className="Container">
-      <Row className="mb-4 align-items-center">
-        <Col md={4}>
-          <h3>
-            Notice Period Policies
-          </h3>
-        </Col>
+    <>
+      {/* CARD CONTAINER */}
+      <div
+        style={{
+          background: "var(--card-bg, #fff)",
+          borderRadius: 12,
+          padding: 24,
+          border: "1px solid var(--border-color)",
+        }}
+      >
+        {/* HEADER */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 24,
+            paddingBottom: 16,
+            borderBottom: "1px solid var(--border-color)",
+          }}
+        >
+          <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+            <div
+              style={{
+                width: 40,
+                height: 40,
+                borderRadius: 10,
+                background: "rgba(13,110,253,.1)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                color: "#0d6efd",
+              }}
+            >
+              <i className="bi bi-clock-history"></i>
+            </div>
 
-        <Col md={4}>
+            <div>
+              <div style={{ fontWeight: 600 }}>
+                Notice Period Policies
+              </div>
+              <div style={{ fontSize: ".8rem", opacity: 0.6 }}>
+                Manage employee notice period rules
+              </div>
+            </div>
+          </div>
+
+          <Button
+            onClick={openAddModal}
+            style={{ borderRadius: 8, fontWeight: 600 }}
+          >
+            {Icon(BsPlus, { className: "me-2" })}
+            Add Policy
+          </Button>
+        </div>
+
+        {/* FILTER */}
+        <div className="mb-3">
           <Form.Select
             value={selectedBranch}
             onChange={(e) =>
-              setSelectedBranch(
-                Number(e.target.value)
-              )
+              setSelectedBranch(Number(e.target.value))
             }
           >
-            <option value={0}>
-              All Branches
-            </option>
-
+            <option value={0}>All Branches</option>
             {branches.map((b) => (
-              <option
-                key={b.BranchID}
-                value={b.BranchID}
-              >
+              <option key={b.BranchID} value={b.BranchID}>
                 {b.BranchName}
               </option>
             ))}
           </Form.Select>
-        </Col>
+        </div>
 
-        <Col md={4} className="text-end">
-          <Button
-            onClick={openAddModal}
-          >
-            {Icon(BsPlus, {
-              className: "me-1",
-            })}
-            Add Policy
-          </Button>
-        </Col>
-      </Row>
+        {/* TABLE */}
+        <div
+          style={{
+            border: "1px solid var(--border-color)",
+            borderRadius: 10,
+            overflow: "hidden",
+          }}
+        >
+          <Table className="table-hover mb-0">
+            <thead style={{ background: "rgba(0,0,0,.03)" }}>
+              <tr>
+                <th>Branch</th>
+                <th>Employment Type</th>
+                <th>Position</th>
+                <th>Notice Days</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
 
-      <Table className="table-hover table-dark-custom">
-        <thead>
-          <tr>
-            <th>Branch</th>
-            <th>Employment Type</th>
-            <th>Position</th>
-            <th>Notice Days</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
+            <tbody>
+              {filteredPolicies.length > 0 ? (
+                filteredPolicies.map((p) => (
+                  <tr key={p.noticePeriodPolicyID}>
+                    <td>{getBranchName(p.branchID)}</td>
+                    <td>{getEmploymentType(p.employmentTypeID)}</td>
+                    <td>{getPosition(p.positionID)}</td>
+                    <td>{p.noticePeriodDays}</td>
+                    <td>
+                      <Badge bg={p.isActive ? "success" : "secondary"}>
+                        {p.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </td>
+                    <td>
+                      <div className="d-flex gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline-primary"
+                          onClick={() => openEditModal(p)}
+                        >
+                          Edit
+                        </Button>
 
-        <tbody>
-          {filteredPolicies.length >
-          0 ? (
-            filteredPolicies.map(
-              (policy) => (
-                <tr
-                  key={
-                    policy.noticePeriodPolicyID
-                  }
-                >
-                  <td>
-                    {getBranchName(
-                      policy.branchID
-                    )}
-                  </td>
-
-                  <td>
-                    {getEmploymentType(
-                      policy.employmentTypeID
-                    )}
-                  </td>
-
-                  <td>
-                    {getPosition(
-                      policy.positionID
-                    )}
-                  </td>
-
-                  <td>
-                    {
-                      policy.noticePeriodDays
-                    }
-                  </td>
-
-                  <td>
-                    <Badge
-                      bg={
-                        policy.isActive
-                          ? "success"
-                          : "danger"
-                      }
-                    >
-                      {policy.isActive
-                        ? "Active"
-                        : "Inactive"}
-                    </Badge>
-                  </td>
-
-                  <td>
-                    <div className="d-flex gap-2">
-                      <Button
-                        size="sm"
-                        variant="outline-primary"
-                        onClick={() =>
-                          openEditModal(
-                            policy
-                          )
-                        }
-                      >
-                        Edit
-                      </Button>
-
-                      <Button
-                        size="sm"
-                        variant="outline-danger"
-                        onClick={() =>
-                          handleDelete(
-                            policy.noticePeriodPolicyID
-                          )
-                        }
-                      >
-                        Delete
-                      </Button>
-                    </div>
+                        <Button
+                          size="sm"
+                          variant="outline-danger"
+                          onClick={() =>
+                            handleDelete(p.noticePeriodPolicyID)
+                          }
+                        >
+                          Delete
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={6} className="text-center py-3">
+                    No policies found
                   </td>
                 </tr>
-              )
-            )
-          ) : (
-            <tr>
-              <td
-                colSpan={6}
-                className="text-center"
-              >
-                No policies found.
-              </td>
-            </tr>
-          )}
-        </tbody>
-      </Table>
+              )}
+            </tbody>
+          </Table>
+        </div>
+      </div>
 
+      {/* MODAL + TOAST unchanged */}
       <Modal
         show={showModal}
         onHide={() =>
@@ -689,20 +572,14 @@ const ManageNoticePeriodPolicies: React.FC = () => {
         </Form>
       </Modal>
 
-      <ToastContainer
-        position="top-end"
-        className="p-3"
-      >
+      <ToastContainer position="top-end" className="p-3">
         <Toast
           bg={toast.variant}
           show={toast.show}
           autohide
           delay={3000}
           onClose={() =>
-            setToast((prev) => ({
-              ...prev,
-              show: false,
-            }))
+            setToast((p) => ({ ...p, show: false }))
           }
         >
           <Toast.Body className="text-white">
@@ -710,7 +587,7 @@ const ManageNoticePeriodPolicies: React.FC = () => {
           </Toast.Body>
         </Toast>
       </ToastContainer>
-    </div>
+    </>
   );
 };
 

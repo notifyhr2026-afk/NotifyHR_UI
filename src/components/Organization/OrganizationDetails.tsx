@@ -463,7 +463,7 @@ const OrganizationDetails: React.FC = () => {
             gap: 10,
           }}
         >
-          <Button
+          {/* <Button
             variant="outline-secondary"
             onClick={handleClear}
             disabled={loading}
@@ -475,7 +475,7 @@ const OrganizationDetails: React.FC = () => {
             }}
           >
             Clear
-          </Button>
+          </Button> */}
           <Button
             variant="primary"
             type="submit"

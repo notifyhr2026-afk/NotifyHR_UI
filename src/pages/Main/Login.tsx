@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import NikuHRLogo from "../../components/landing/NikuHRLogo";
-import "./LoginModern.css";
+import "../../css/LoginModern.css";
 
 const Login: React.FC = () => {
 const [username, setUsername] = useState("");
