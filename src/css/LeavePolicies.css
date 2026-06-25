@@ -1,0 +1,115 @@
+.leave-policies-page {
+  padding-bottom: 2rem;
+}
+
+.leave-policies-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.leave-policies-header h2 {
+  margin-bottom: 0.25rem;
+  font-weight: 700;
+}
+
+.leave-policies-subtitle {
+  color: var(--text-muted, #6c757d);
+  margin-bottom: 0;
+  font-size: 0.95rem;
+}
+
+.leave-policies-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.leave-stat-card {
+  background: var(--card-bg);
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.leave-stat-label {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #6c757d);
+  margin-bottom: 0.15rem;
+}
+
+.leave-stat-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+
+.leave-policies-accordion .accordion-item {
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 12px !important;
+  overflow: hidden;
+  margin-bottom: 1rem;
+  background: var(--card-bg);
+}
+
+.leave-policies-accordion .accordion-button {
+  font-weight: 600;
+  padding: 1rem 1.25rem;
+}
+
+.leave-policies-accordion .accordion-body {
+  padding: 1.25rem;
+}
+
+.leave-section-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding: 0.85rem 1rem;
+  background: var(--card-bg);
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 10px;
+}
+
+.leave-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.leave-table-card {
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.leave-table-card .table {
+  margin-bottom: 0;
+}
+
+.leave-empty-state {
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--text-muted, #6c757d);
+}
+
+.leave-filter-field {
+  min-width: 220px;
+  max-width: 320px;
+}
+
+@media (max-width: 768px) {
+  .leave-filter-field {
+    width: 100%;
+    max-width: none;
+  }
+}

@@ -198,19 +198,7 @@ body.dark-mode .table-dark-custom tbody tr:hover {
 }
 
 /* ================= MODAL ================= */
-.modal-content {
-  background-color: var(--card-bg) !important;
-  color: var(--text-main) !important;
-}
-
-.modal-header,
-.modal-footer {
-  border-color: var(--border-color);
-}
-
-body.dark-mode .btn-close {
-  filter: invert(1);
-}
+/* Base modal styles live in css/AppModal.css */
 
 /* ================= TOOLTIP ================= */
 .tooltip-inner {
@@ -1283,15 +1271,10 @@ body.dark-mode .form-select {
   border: 1px solid #3a3a50 !important;
 }
 
-/* ===== MODAL FIX ===== */
+/* ===== MODAL FIX (body/footer; header styled in AppModal.css) ===== */
 body.dark-mode .modal-content {
   background-color: #2a2a3d !important;
   color: #e4e6eb !important;
-}
-
-body.dark-mode .modal-header,
-body.dark-mode .modal-footer {
-  border-color: #3a3a50 !important;
 }
 
 /* ===== PAGINATION FIX ===== */

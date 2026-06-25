@@ -1,0 +1,98 @@
+/* ================= GLOBAL APP MODAL (EmployeeList style) ================= */
+
+.modal .modal-content {
+  border: none;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+  background-color: var(--card-bg) !important;
+  color: var(--text-main) !important;
+}
+
+.modal .modal-header {
+  background: linear-gradient(135deg, var(--brand-primary, #0d6efd) 0%, #0a58ca 100%);
+  color: #fff !important;
+  border-bottom: none;
+  padding: 1.1rem 1.35rem;
+}
+
+.modal .modal-header .modal-title {
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fff !important;
+}
+
+.modal .modal-header .btn-close {
+  filter: brightness(0) invert(1);
+  opacity: 0.85;
+}
+
+.modal .modal-body {
+  padding: 1.35rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.modal .modal-footer {
+  padding: 0.85rem 1.35rem;
+  background: var(--card-bg);
+  border-top: 1px solid var(--border-color);
+  gap: 0.5rem;
+}
+
+/* Optional form layout helpers for modals */
+.app-form-section {
+  margin-bottom: 1.35rem;
+}
+
+.app-form-section:last-child {
+  margin-bottom: 0;
+}
+
+.app-form-section-title {
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-weight: 700;
+  color: var(--brand-primary, #0d6efd);
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid rgba(13, 110, 253, 0.15);
+}
+
+.app-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.app-filter-field label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 0.35rem;
+  color: var(--text-main);
+}
+
+@media (max-width: 768px) {
+  .app-filter-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark mode: keep gradient header, styled body/footer */
+body.dark-mode .modal .modal-header {
+  background: linear-gradient(135deg, var(--brand-primary, #0d6efd) 0%, #0a58ca 100%) !important;
+  color: #fff !important;
+  border-bottom: none !important;
+}
+
+body.dark-mode .modal .modal-header .modal-title {
+  color: #fff !important;
+}
+
+body.dark-mode .modal .modal-footer {
+  background-color: var(--card-bg) !important;
+  border-color: var(--border-color) !important;
+}
