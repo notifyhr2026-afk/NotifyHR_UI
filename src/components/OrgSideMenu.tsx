@@ -38,7 +38,7 @@ const SECTION_LABELS: Record<string, string> = {
   Performance: "Performance",
   Timesheet: "Time Tracking",
   Report: "Reports",
-  Organization: "Admin",
+  Organization: "HR",
   Feature: "System",
 };
 

@@ -113,6 +113,7 @@ body.dark-mode .sidebar-menu::-webkit-scrollbar-thumb {
   position: relative;
   gap: 12px;
   white-space: nowrap;
+  color:#000103;
 }
 
 .menu-item:hover {
@@ -161,7 +162,7 @@ body.dark-mode .menu-item.active .menu-icon {
 
 /* ===== MENU LABEL ===== */
 .menu-label {
-  font-size: 0.9rem;
+  font-size: 1rem;
   flex: 1;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -169,7 +170,7 @@ body.dark-mode .menu-item.active .menu-icon {
 
 /* ===== SUBMENU ARROW ===== */
 .submenu-arrow {
-  font-size: 0.7rem;
+  font-size: 0.9rem;
   flex-shrink: 0;
   transition: transform 0.25s ease;
   opacity: 0.5;
@@ -207,7 +208,7 @@ body.dark-mode .menu-item.active .menu-icon {
   color: var(--text-color);
   text-decoration: none;
   border-radius: 8px;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   transition: all 0.15s;
   white-space: nowrap;
 }
