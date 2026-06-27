@@ -54,22 +54,39 @@ interface RoleOption {
     fetchRoles();
   }, []);
 
-  const handleAssignRoles = async () => {
-    try {
-     
-      const payload = {
-        createdBy: "Admin",
-        roles: roles.join(','),
-        userID: userIDNum
-      };
-      await AssignUserRolesAsync(payload);
-      alert('Roles assigned successfully!');
-      fireAudit("UPDATE", "EmployeeRoleAssignment", { employeeID: userIDNum, roles: oldRoles.join(',') }, { employeeID: userIDNum, roles: roles.join(',') }, organizationID, user?.name || "Admin", "EmployeeRoles");
-    } catch (error) {
-      console.error('Error assigning roles:', error);
-      alert('Failed to assign roles.');
+const handleAssignRoles = async () => {
+  try {
+    const payload = {
+      createdBy: "Admin",
+      roles: roles.join(','),
+      userID: userIDNum
+    };
+
+    const response = await AssignUserRolesAsync(payload);
+
+    // ✅ Handle warning response from API
+    if (Array.isArray(response) && response.length > 0 && response[0]?.msg) {
+      alert(response[0].msg); // or use toast.warning
+      return;
     }
-  };
+
+    alert('Roles assigned successfully!');
+
+    fireAudit(
+      "UPDATE",
+      "EmployeeRoleAssignment",
+      { employeeID: userIDNum, roles: oldRoles.join(',') },
+      { employeeID: userIDNum, roles: roles.join(',') },
+      organizationID,
+      user?.name || "Admin",
+      "EmployeeRoles"
+    );
+
+  } catch (error) {
+    console.error('Error assigning roles:', error);
+    alert('Failed to assign roles.');
+  }
+};
 
   if (loading) {
     return <div>Loading roles...</div>;

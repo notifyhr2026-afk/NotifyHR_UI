@@ -19,6 +19,25 @@ const ManageShifts: React.FC = () => {
     desc: "",
   });
 
+  const normalizeTime = (t: string) => {
+  if (!t) return "00:00:00";
+  const parts = t.split(":");
+  if (parts.length === 2) return `${t}:00`;
+  return t;
+};
+
+const formatToIST = (time: string) => {
+  if (!time) return "";
+
+  // Expecting "HH:mm:ss"
+  const [hh, mm] = time.split(":");
+
+  const hour = parseInt(hh, 10);
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const formattedHour = hour % 12 || 12;
+
+  return `${formattedHour}:${mm} ${ampm} IST`;
+};
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID = user?.organizationID || 0;
 
@@ -58,8 +77,8 @@ const ManageShifts: React.FC = () => {
       OrganizationID: organizationID,
       ShiftCode: formData.code,
       ShiftName: formData.name,
-      StartTime: formData.start + ":00",
-      EndTime: formData.end + ":00",
+      StartTime: normalizeTime(formData.start),
+      EndTime: normalizeTime(formData.end),
       BreakDurationMinutes: Number(formData.breakMin),
       IsNightShift: formData.isNight,
       Description: formData.desc || "",
@@ -121,7 +140,7 @@ const ManageShifts: React.FC = () => {
               <Card.Body>
                 <h5 className="fw-bold">{s.name}</h5>
                 <p className="text-muted mb-1">Code: {s.code}</p>
-                <p className="mb-1">Time: {s.start} → {s.end}</p>
+                <p className="mb-1">Time: {formatToIST(s.start)} → {formatToIST(s.end)}</p>
                 <p className="mb-1">Break: {s.breakMin} mins</p>
                 <p>
                   <span className={`badge bg-${s.isNight ? "dark" : "primary"}`}>

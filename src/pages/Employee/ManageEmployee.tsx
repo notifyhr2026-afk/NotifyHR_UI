@@ -51,27 +51,28 @@ const ManageEmployee: React.FC = () => {
           </Accordion.Body>
         </Accordion.Item>
 
-           <Accordion.Item eventKey="4">
-          <Accordion.Header>Assigned Roles</Accordion.Header>
-          <Accordion.Body>
-            <EmployeeRoles />
-          </Accordion.Body>
-        </Accordion.Item>
 
-        <Accordion.Item eventKey="5">
+
+        <Accordion.Item eventKey="4">
           <Accordion.Header>Assigned Projects</Accordion.Header>
           <Accordion.Body>
             <EmployeeProjects />
           </Accordion.Body>
         </Accordion.Item>
 
-         <Accordion.Item eventKey="6">
+         <Accordion.Item eventKey="5">
             <Accordion.Header>Assigned Assets</Accordion.Header>
             <Accordion.Body>
               <EmployeeAsset />
             </Accordion.Body>
           </Accordion.Item>
-
+        
+        <Accordion.Item eventKey="6">
+          <Accordion.Header>Assigned Roles</Accordion.Header>
+          <Accordion.Body>
+            <EmployeeRoles />
+          </Accordion.Body>
+        </Accordion.Item>
 
         {/* <Accordion.Item eventKey="7">
           <Accordion.Header>Experience</Accordion.Header>

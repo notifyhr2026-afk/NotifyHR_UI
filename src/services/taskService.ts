@@ -12,9 +12,20 @@ const taskService = {
     return Array.isArray(data?.Table) ? data.Table : [];
   },
    GetEmployeeDailyTasksByDateRange: async (payload: any) => {
-    const { data } = await axiosInstance.post('Task/GetEmployeeDailyTasksByDateRange', payload);
-    return Array.isArray(data?.Table) ? data.Table : [];
+    const { data } = await axiosInstance.post(
+      "Task/GetEmployeeDailyTasksByDateRange",
+      payload
+    );
+
+    console.log("API Response:", data);
+
+    return Array.isArray(data?.Table)
+      ? data.Table
+      : Array.isArray(data)
+      ? data
+      : [];
   },
+
 };
 
 export default taskService;

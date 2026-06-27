@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Button, Table, Modal, Form, Row, Col, Spinner } from 'react-bootstrap';
 import moment from 'moment';
 import taskService from '../../services/taskService';
+import employeeProjectService from "../../services/employeeProjectService";
 
 interface EmployeeTask {
   employeeDailyTaskId: number;
@@ -23,6 +24,11 @@ interface TaskFormData {
   endedAt: string;
   hoursSpent: number;
   taskStatusId: number;
+}
+
+interface ProjectOption {
+  ProjectId: number;
+  ProjectName: string;
 }
 
 const STATUS_OPTIONS = [
@@ -52,12 +58,14 @@ const toISOString = (value: string): string => {
   return (m.isValid() ? m : moment()).toISOString();
 };
 
-// Format datetime string to datetime-local input format (YYYY-MM-DDTHH:mm)
 const toDateTimeLocal = (value: string) =>
   value ? moment(value).format('YYYY-MM-DDTHH:mm') : '';
 
 const EmployeeTaskMaster: React.FC = () => {
+
   const [tasks, setTasks] = useState<EmployeeTask[]>([]);
+  const [employeeProjects, setEmployeeProjects] = useState<any[]>([]);
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -72,9 +80,26 @@ const EmployeeTaskMaster: React.FC = () => {
 
   const [formData, setFormData] = useState<TaskFormData>(EMPTY_FORM);
 
-  // =========================
-  // FETCH TASKS
-  // =========================
+  /* ================= LOAD PROJECTS ================= */
+  const loadEmployeeProjects = async () => {
+  try {
+    const res = await employeeProjectService.GetEmployeeProjectsByemployeeId(employeeId);
+
+    const formatted = (res || []).map((p: any) => ({
+      EmployeeProjectId: p.EmployeeProjectId,
+      ProjectId: p.ProjectId,
+      ProjectName: p.ProjectName,
+      ProjectCode: p.ProjectCode,
+    }));
+
+    setEmployeeProjects(formatted);
+  } catch (error) {
+    console.error('Employee project load error:', error);
+    setEmployeeProjects([]);
+  }
+};
+
+  /* ================= FETCH TASKS ================= */
   const fetchTasks = async () => {
     try {
       setLoading(true);
@@ -101,27 +126,28 @@ const EmployeeTaskMaster: React.FC = () => {
 
   useEffect(() => {
     fetchTasks();
+    loadEmployeeProjects(); // ✅ ADDED
   }, []);
 
-  // =========================
-  // INPUT CHANGE
-  // =========================
+  /* ================= INPUT CHANGE ================= */
   const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value } = e.target;
     setFormData((prev) => ({
       ...prev,
-      [id]: id === 'hoursSpent' || id === 'projectId' || id === 'taskStatusId'
-        ? Number(value)
-        : value,
+      [id]:
+        id === 'hoursSpent' ||
+        id === 'projectId' ||
+        id === 'taskStatusId'
+          ? Number(value)
+          : value,
     }));
   };
 
-  // =========================
-  // SAVE (CREATE / UPDATE)
-  // =========================
+  /* ================= SAVE ================= */
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const form = e.currentTarget;
+
     if (form.checkValidity() === false) {
       e.stopPropagation();
       setValidated(true);
@@ -130,8 +156,9 @@ const EmployeeTaskMaster: React.FC = () => {
 
     try {
       setSaving(true);
+
       const payload = {
-        employeeDailyTaskId: formData.employeeDailyTaskId, // 0 = create, real ID = update
+        employeeDailyTaskId: formData.employeeDailyTaskId,
         organizationId,
         employeeId,
         projectId: formData.projectId,
@@ -151,6 +178,7 @@ const EmployeeTaskMaster: React.FC = () => {
       setValidated(false);
       setFormData(EMPTY_FORM);
       fetchTasks();
+
     } catch (error) {
       console.error('Save error:', error);
     } finally {
@@ -158,9 +186,7 @@ const EmployeeTaskMaster: React.FC = () => {
     }
   };
 
-  // =========================
-  // ADD
-  // =========================
+  /* ================= ADD ================= */
   const handleAdd = () => {
     setFormData(EMPTY_FORM);
     setEditTask(null);
@@ -168,11 +194,10 @@ const EmployeeTaskMaster: React.FC = () => {
     setShowModal(true);
   };
 
-  // =========================
-  // EDIT — populate all fields from stored task
-  // =========================
+  /* ================= EDIT ================= */
   const handleEdit = (task: EmployeeTask) => {
     setEditTask(task);
+
     setFormData({
       employeeDailyTaskId: task.employeeDailyTaskId,
       projectId: task.projectId,
@@ -185,22 +210,19 @@ const EmployeeTaskMaster: React.FC = () => {
       hoursSpent: task.hoursSpent,
       taskStatusId: task.taskStatusId,
     });
+
     setValidated(false);
     setShowModal(true);
   };
 
-  // =========================
-  // DELETE (UI only)
-  // =========================
+  /* ================= DELETE (UI ONLY) ================= */
   const handleDelete = (id: number) => {
     if (window.confirm('Are you sure you want to delete this task?')) {
       setTasks((prev) => prev.filter((t) => t.employeeDailyTaskId !== id));
     }
   };
 
-  // =========================
-  // UI
-  // =========================
+  /* ================= UI ================= */
   return (
     <div className="container">
 
@@ -219,7 +241,7 @@ const EmployeeTaskMaster: React.FC = () => {
           <thead>
             <tr>
               <th>#</th>
-              <th>Project ID</th>
+              <th>Project</th>
               <th>Description</th>
               <th>Activity Date</th>
               <th>Started At</th>
@@ -229,6 +251,7 @@ const EmployeeTaskMaster: React.FC = () => {
               <th>Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {tasks.map((task) => (
               <tr key={task.employeeDailyTaskId}>
@@ -266,21 +289,30 @@ const EmployeeTaskMaster: React.FC = () => {
           <Form noValidate validated={validated} onSubmit={handleSave}>
 
             <Row className="mb-3">
-              <Col md={6}>
-                <Form.Group controlId="projectId">
-                  <Form.Label>Project ID</Form.Label>
-                  <Form.Control
-                    type="number"
-                    required
-                    min={1}
-                    value={formData.projectId || ''}
-                    onChange={handleInputChange}
-                    placeholder="Enter project ID"
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    Project ID is required.
-                  </Form.Control.Feedback>
-                </Form.Group>
+
+              {/* ✅ PROJECT DROPDOWN ADDED */}
+              <Col md={12}>
+               <Form.Group controlId="projectId">
+  <Form.Label>Project</Form.Label>
+
+  <Form.Select
+    required
+    value={formData.projectId}
+    onChange={handleInputChange}
+  >
+    <option value="">Select Project</option>
+
+    {employeeProjects.map((p) => (
+      <option key={p.ProjectId} value={p.ProjectId}>
+        {p.ProjectName} ({p.ProjectCode})
+      </option>
+    ))}
+  </Form.Select>
+
+  <Form.Control.Feedback type="invalid">
+    Project is required.
+  </Form.Control.Feedback>
+</Form.Group>
               </Col>
 
               <Col md={6}>
@@ -292,9 +324,6 @@ const EmployeeTaskMaster: React.FC = () => {
                     value={formData.activityDate}
                     onChange={handleInputChange}
                   />
-                  <Form.Control.Feedback type="invalid">
-                    Date is required.
-                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
             </Row>
@@ -307,11 +336,7 @@ const EmployeeTaskMaster: React.FC = () => {
                 required
                 value={formData.taskDescription}
                 onChange={handleInputChange}
-                placeholder="Describe the task"
               />
-              <Form.Control.Feedback type="invalid">
-                Description is required.
-              </Form.Control.Feedback>
             </Form.Group>
 
             <Row className="mb-3">
@@ -324,9 +349,6 @@ const EmployeeTaskMaster: React.FC = () => {
                     value={formData.startedAt}
                     onChange={handleInputChange}
                   />
-                  <Form.Control.Feedback type="invalid">
-                    Start time is required.
-                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
 
@@ -339,9 +361,6 @@ const EmployeeTaskMaster: React.FC = () => {
                     value={formData.endedAt}
                     onChange={handleInputChange}
                   />
-                  <Form.Control.Feedback type="invalid">
-                    End time is required.
-                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
             </Row>
@@ -358,9 +377,6 @@ const EmployeeTaskMaster: React.FC = () => {
                     value={formData.hoursSpent}
                     onChange={handleInputChange}
                   />
-                  <Form.Control.Feedback type="invalid">
-                    Hours spent is required.
-                  </Form.Control.Feedback>
                 </Form.Group>
               </Col>
 
@@ -386,7 +402,7 @@ const EmployeeTaskMaster: React.FC = () => {
                 Cancel
               </Button>
               <Button type="submit" variant="primary" disabled={saving}>
-                {saving ? <Spinner animation="border" size="sm" /> : editTask ? 'Update' : 'Save'}
+                {saving ? <Spinner size="sm" animation="border" /> : editTask ? 'Update' : 'Save'}
               </Button>
             </Modal.Footer>
 

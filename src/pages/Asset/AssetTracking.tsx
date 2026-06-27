@@ -199,20 +199,37 @@ const AssetTracking: React.FC = () => {
   };
 
   const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (e.currentTarget.checkValidity() === false) {
-      setValidated(true);
-      return;
-    }
-    try {
-      await AssetService.createAssetsTracking(formData);
-      fireAudit(editItem ? "UPDATE" : "CREATE", "AssetTracking", editItem, formData, organizationID, "Admin", "AssetTracking");
-      await loadTracking();
-      setShowModal(false);
-    } catch (error) {
-      console.error('Save failed', error);
-    }
-  };
+  e.preventDefault();
+
+  if (e.currentTarget.checkValidity() === false) {
+    setValidated(true);
+    return;
+  }
+
+  try {
+    const payload = {
+      ...formData,
+      WarrantyExpiryDate: formData.WarrantyExpiryDate || null,
+    };
+
+    await AssetService.createAssetsTracking(payload);
+
+    fireAudit(
+      editItem ? "UPDATE" : "CREATE",
+      "AssetTracking",
+      editItem,
+      payload,
+      organizationID,
+      "Admin",
+      "AssetTracking"
+    );
+
+    await loadTracking();
+    setShowModal(false);
+  } catch (error) {
+    console.error("Save failed", error);
+  }
+};
 
   const confirmDeleteItem = (id: number) => {
     setItemToDelete(id);

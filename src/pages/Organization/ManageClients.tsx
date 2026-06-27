@@ -36,6 +36,8 @@ interface Client {
   IsActive: boolean;
 }
 
+
+
 const ManageClients: React.FC = () => {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(false);
@@ -78,6 +80,7 @@ const ManageClients: React.FC = () => {
   /* ================= LOAD ================= */
   useEffect(() => {
     loadClients();
+    loadLookups();
   }, []);
 
   const loadClients = async () => {
@@ -91,6 +94,22 @@ const ManageClients: React.FC = () => {
       console.error("Load clients error", err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadLookups = async () => {
+    try {
+      const res = await manageClientsService.GetAllLookups();
+
+      setClientTypes(res.Table || []);
+      setIndustries(res.Table1 || []);
+      setPaymentTerms(res.Table2 || []);
+      setTaxTypes(res.Table3 || []);
+      setCountries(res.Table4 || []);
+      setStates(res.Table5 || []);
+      setCurrencies(res.Table6 || []);
+    } catch (error) {
+      console.error("Error loading lookups", error);
     }
   };
 

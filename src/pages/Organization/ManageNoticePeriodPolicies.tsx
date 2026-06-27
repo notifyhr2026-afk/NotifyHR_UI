@@ -17,7 +17,10 @@ import noticePeriodPolicyService from "../../services/noticePeriodPolicyService"
 import employeeService from "../../services/employeeService";
 import positionService from "../../services/positionService";
 import LoggedInUser from "../../types/LoggedInUser";
-
+const normalizeLookupList = (response: any) =>
+  Array.isArray(response)
+    ? response
+    : response?.Table || response?.data || [];
 const Icon = (Component: any, props: any = {}) => (
   <Component {...props} />
 );
@@ -47,8 +50,14 @@ const ManageNoticePeriodPolicies: React.FC = () => {
 
   const [branches, setBranches] = useState<Branch[]>([]);
   const [policies, setPolicies] = useState<NoticePeriodPolicy[]>([]);
-  const [employmentTypes, setEmploymentTypes] = useState<any[]>([]);
-  const [positions, setPositions] = useState<any[]>([]);
+  const [employmentTypes, setEmploymentTypes] = useState<{
+    id: number;
+    name: string;
+  }[]>([]);
+  const [positions, setPositions] = useState<{
+    id: number;
+    name: string;
+  }[]>([]);
   const [selectedBranch, setSelectedBranch] = useState(0);
 
   const [showModal, setShowModal] = useState(false);
@@ -118,9 +127,23 @@ const ManageNoticePeriodPolicies: React.FC = () => {
 
   const loadEmploymentTypes = async () => {
     try {
-      const res =
-        await employeeService.getEmploymentTypes();
-      setEmploymentTypes(res?.Table ?? []);
+      const res = await employeeService.getEmploymentTypes();
+      const list = normalizeLookupList(res);
+      setEmploymentTypes(
+        list.map((item: any) => ({
+          id:
+            item.EmploymentTypeID ||
+            item.id ||
+            item.EmploymentTypeId ||
+            0,
+          name:
+            item.EmploymentTypeName ||
+            item.name ||
+            item.employmentTypeName ||
+            item.EmploymentType ||
+            "",
+        }))
+      );      
     } catch (error) {
       console.error(error);
     }
@@ -132,7 +155,21 @@ const ManageNoticePeriodPolicies: React.FC = () => {
         await positionService.getPositionsAsync(
           organizationID
         );
-      setPositions(res?.Table ?? []);
+     const list = normalizeLookupList(res);
+      setPositions(
+        list.map((item: any) => ({
+          id:
+            item.PositionID ||
+            item.id ||
+            item.positionId ||
+            0,
+          name:
+            item.PositionTitle ||
+            item.name ||
+            item.positionName ||
+            "",
+        }))
+      );
     } catch (error) {
       console.error(error);
     }

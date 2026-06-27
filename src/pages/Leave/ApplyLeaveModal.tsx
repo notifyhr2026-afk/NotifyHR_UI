@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Modal, Button, Form, Row, Col, Spinner } from 'react-bootstrap';
 import Select, { SingleValue } from 'react-select';
 import { Leave } from '../../types/Leaves';
-import leaveTypesService from '../../services/leaveTypesService';
 import leaveService from '../../services/leaveService';
 import OrgleaveTypesService from '../../services/OrgleaveTypesService';
 import LeaveType from '../../types/LeaveType';
@@ -32,6 +31,7 @@ const ApplyLeaveModal: React.FC<Props> = ({
   const organizationID: number | undefined = user?.organizationID;
   const employeeID: number | undefined = user?.employeeID;
   const employeeName: number | undefined = user?.fullName;
+  const [errors, setErrors] = useState<any>({});
   const [data, setData] = useState<any>({
     id: 0,
     employeeID: employeeID, // Static employee ID for now
@@ -105,8 +105,42 @@ const ApplyLeaveModal: React.FC<Props> = ({
     { value: 'SecondHalf', label: 'Second Half' },
   ];
 
+  const validate = () => {
+  const newErrors: any = {};
+
+  if (!data.leaveTypeID) {
+    newErrors.leaveTypeID = "Leave type is required";
+  }
+
+  if (!data.startDate) {
+    newErrors.startDate = "Start date is required";
+  }
+
+  if (!data.isHalfDay && !data.endDate) {
+    newErrors.endDate = "End date is required";
+  }
+
+  if (data.startDate && data.endDate) {
+    if (new Date(data.endDate) < new Date(data.startDate)) {
+      newErrors.endDate = "End date cannot be before Start date";
+    }
+  }
+
+  if (data.isHalfDay && !data.halfDayType) {
+    newErrors.halfDayType = "Select First Half or Second Half";
+  }
+
+  if (!data.reason.trim()) {
+    newErrors.reason = "Reason is required";
+  }
+
+  setErrors(newErrors);
+
+  return Object.keys(newErrors).length === 0;
+};
   // Submit Leave to API
   const submit = async () => {
+    if (!validate()) return;
     try {
       setLoading(true);
 
@@ -156,109 +190,194 @@ const ApplyLeaveModal: React.FC<Props> = ({
         </Modal.Title>
       </Modal.Header>
 
-      <Modal.Body className="pt-3">
-        {/* Leave Type */}
-        <Form.Group className="mb-3">
-          <Form.Label className="fw-semibold">Leave Type</Form.Label>
-          <Select
-            options={leaveTypeOptions}
-            value={leaveTypeOptions.find(option => option.value === data.leaveTypeID) || null}
-            onChange={(selected: SingleValue<SelectOption>) =>
-              setData((prev: any) => ({
-                ...prev,
-                leaveTypeID: selected?.value || '',
-              }))
-            }
-            placeholder="Select leave type"
-            className="org-select"
-          classNamePrefix="org-select"
-          />
-        </Form.Group>
+     <Modal.Body className="pt-3">
+  {/* Leave Type */}
+  <Form.Group className="mb-3">
+    <Form.Label className="fw-semibold">
+      Leave Type <span className="text-danger">*</span>
+    </Form.Label>
 
-        {/* Half Day */}
-        <Form.Group className="mb-3">
-          <Form.Check
-            type="checkbox"
-            label="Apply for Half Day"
-            checked={data.isHalfDay}
-            onChange={e =>
-              setData((prev: any) => ({
-                ...prev,
-                isHalfDay: e.target.checked,
-                halfDayType: '',
-              }))
-            }
-          />
-        </Form.Group>
+    <Select
+      options={leaveTypeOptions}
+      value={
+        leaveTypeOptions.find(
+          (option) => option.value === data.leaveTypeID
+        ) || null
+      }
+      onChange={(selected: SingleValue<SelectOption>) => {
+        setData((prev: any) => ({
+          ...prev,
+          leaveTypeID: selected?.value || "",
+        }));
 
-        {/* Half Day Type */}
-        {data.isHalfDay && (
-          <Form.Group className="mb-3">
-            <Form.Label>Select Half</Form.Label>
-            <Select
-              options={halfDayOptions}
-              value={halfDayOptions.find(option => option.value === data.halfDayType) || null}
-              onChange={(selected: SingleValue<SelectOption>) =>
-                setData((prev: any) => ({
-                  ...prev,
-                  halfDayType: selected?.value || '',
-                }))
-              }
-              className="org-select"
-          classNamePrefix="org-select"
-            />
-          </Form.Group>
-        )}
+        setErrors((prev: any) => ({
+          ...prev,
+          leaveTypeID: "",
+        }));
+      }}
+      placeholder="Select Leave Type"
+      className="org-select"
+      classNamePrefix="org-select"
+    />
 
-        {/* Dates */}
-        <Row className="g-3">
-          <Col md={6}>
-            <Form.Group>
-              <Form.Label>Start Date</Form.Label>
-              <Form.Control
-                type="date"
-                value={data.startDate}
-                onChange={e =>
-                  setData((prev: any) => ({ ...prev, startDate: e.target.value }))
-                }
-              />
-            </Form.Group>
-          </Col>
-          <Col md={6}>
-            <Form.Group>
-              <Form.Label>End Date</Form.Label>
-              <Form.Control
-                type="date"
-                value={data.endDate}
-                disabled={data.isHalfDay}
-                onChange={e =>
-                  setData((prev: any) => ({ ...prev, endDate: e.target.value }))
-                }
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+    {errors.leaveTypeID && (
+      <div className="text-danger small mt-1">
+        {errors.leaveTypeID}
+      </div>
+    )}
+  </Form.Group>
 
-        {/* Total Days */}
-        {data.numberOfDays > 0 && (
-          <div className="mt-3 text-muted small">
-            🗓 Total Days: <strong>{data.numberOfDays}</strong>
-          </div>
-        )}
+  {/* Half Day */}
+  <Form.Group className="mb-3">
+    <Form.Check
+      type="checkbox"
+      label="Apply for Half Day"
+      checked={data.isHalfDay}
+      onChange={(e) =>
+        setData((prev: any) => ({
+          ...prev,
+          isHalfDay: e.target.checked,
+          halfDayType: "",
+        }))
+      }
+    />
+  </Form.Group>
 
-        {/* Reason */}
-        <Form.Group className="mt-3">
-          <Form.Label>Reason</Form.Label>
-          <Form.Control
-            as="textarea"
-            rows={3}
-            value={data.reason}
-            onChange={e =>
-              setData((prev: any) => ({ ...prev, reason: e.target.value }))
-            }
-          />
-        </Form.Group>
-      </Modal.Body>
+  {/* Half Day Type */}
+  {data.isHalfDay && (
+    <Form.Group className="mb-3">
+      <Form.Label>
+        Select Half <span className="text-danger">*</span>
+      </Form.Label>
+
+      <Select
+        options={halfDayOptions}
+        value={
+          halfDayOptions.find(
+            (option) => option.value === data.halfDayType
+          ) || null
+        }
+        onChange={(selected: SingleValue<SelectOption>) => {
+          setData((prev: any) => ({
+            ...prev,
+            halfDayType: selected?.value || "",
+          }));
+
+          setErrors((prev: any) => ({
+            ...prev,
+            halfDayType: "",
+          }));
+        }}
+        className="org-select"
+        classNamePrefix="org-select"
+      />
+
+      {errors.halfDayType && (
+        <div className="text-danger small mt-1">
+          {errors.halfDayType}
+        </div>
+      )}
+    </Form.Group>
+  )}
+
+  {/* Dates */}
+  <Row className="g-3">
+    <Col md={6}>
+      <Form.Group>
+        <Form.Label>
+          Start Date <span className="text-danger">*</span>
+        </Form.Label>
+
+        <Form.Control
+          type="date"
+          value={data.startDate}
+          isInvalid={!!errors.startDate}
+          onChange={(e) => {
+            setData((prev: any) => ({
+              ...prev,
+              startDate: e.target.value,
+            }));
+
+            setErrors((prev: any) => ({
+              ...prev,
+              startDate: "",
+            }));
+          }}
+        />
+
+        <Form.Control.Feedback type="invalid">
+          {errors.startDate}
+        </Form.Control.Feedback>
+      </Form.Group>
+    </Col>
+
+    <Col md={6}>
+      <Form.Group>
+        <Form.Label>
+          End Date {!data.isHalfDay && <span className="text-danger">*</span>}
+        </Form.Label>
+
+        <Form.Control
+          type="date"
+          value={data.endDate}
+          disabled={data.isHalfDay}
+          isInvalid={!!errors.endDate}
+          onChange={(e) => {
+            setData((prev: any) => ({
+              ...prev,
+              endDate: e.target.value,
+            }));
+
+            setErrors((prev: any) => ({
+              ...prev,
+              endDate: "",
+            }));
+          }}
+        />
+
+        <Form.Control.Feedback type="invalid">
+          {errors.endDate}
+        </Form.Control.Feedback>
+      </Form.Group>
+    </Col>
+  </Row>
+
+  {/* Total Days */}
+  {data.numberOfDays > 0 && (
+    <div className="mt-3 text-muted">
+      🗓 <strong>Total Days:</strong> {data.numberOfDays}
+    </div>
+  )}
+
+  {/* Reason */}
+  <Form.Group className="mt-3">
+    <Form.Label>
+      Reason <span className="text-danger">*</span>
+    </Form.Label>
+
+    <Form.Control
+      as="textarea"
+      rows={3}
+      value={data.reason}
+      isInvalid={!!errors.reason}
+      onChange={(e) => {
+        setData((prev: any) => ({
+          ...prev,
+          reason: e.target.value,
+        }));
+
+        setErrors((prev: any) => ({
+          ...prev,
+          reason: "",
+        }));
+      }}
+    />
+
+    <Form.Control.Feedback type="invalid">
+      {errors.reason}
+    </Form.Control.Feedback>
+  </Form.Group>
+</Modal.Body>
 
       <Modal.Footer>
         <Button variant="light" onClick={onHide} disabled={loading}>

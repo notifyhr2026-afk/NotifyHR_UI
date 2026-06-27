@@ -99,6 +99,7 @@ const VerifyEmployeeTasks: React.FC = () => {
   }, [filteredEmployeeOptions, selectedEmployee]);
 
   const handleGet = async () => {
+    debugger;
     try {
       setLoading(true);
 
@@ -109,18 +110,27 @@ const VerifyEmployeeTasks: React.FC = () => {
         toDate: toDate || null,
       };
 
-      const data = await taskService.GetEmployeeDailyTasksByDateRange(payload);
+      const res = await taskService.GetEmployeeDailyTasksByDateRange(payload);
+    
+      const data = res?.data ?? res;
 
       const normalizedTasks: EmployeeTask[] = data.map((item: any) => ({
-        id: item.TaskID || item.id || item.taskId || 0,
-        employeeName: item.EmployeeName || item.employeeName || "",
-        projectName: item.ProjectName || item.projectName || "",
-        taskTitle: item.TaskTitle || item.taskTitle || "",
-        taskDescription: item.TaskDescription || item.taskDescription || "",
-        taskDate: item.TaskDate || item.taskDate || "",
-        noOfHours: item.NoOfHours ?? item.noOfHours ?? 0,
-        status: item.Status || item.status || "Pending",
-      }));
+  id: item.EmployeeDailyTaskId,
+  employeeName: item.EmployeeName || "",
+  projectName: item.ProjectName || "",
+  taskTitle: item.TaskDescription || "",
+  taskDescription: item.TaskDescription,
+  taskDate: item.ActivityDate,
+  noOfHours: item.HoursSpent,
+  status:
+    item.TaskStatusId === 1
+      ? "Pending"
+      : item.TaskStatusId === 2
+      ? "Approved"
+      : item.TaskStatusId === 3
+      ? "Rejected"
+      : "",
+}));
 
       setTasks(normalizedTasks);
     } catch (error) {

@@ -14,7 +14,7 @@ import {
   navLinks,
   trustLogos,
 } from "../../components/landing/landingData";
-import "./Home.css";
+import "../../css/Home.css";
 
 const groupedFeatures = features.reduce<Record<string, typeof features>>((acc, f) => {
   acc[f.type] = acc[f.type] || [];

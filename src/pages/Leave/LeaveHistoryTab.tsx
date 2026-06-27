@@ -1,12 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { Table, Button, Badge, Spinner, Alert, Card } from "react-bootstrap";
-import { Leave, LeaveTypeOption } from "../../types/Leaves";
+import { Leave } from "../../types/Leaves";
 import leaveService from "../../services/leaveService";
 import ApplyLeaveModal from "./ApplyLeaveModal";
 
 interface Props {
-  employeeID: number;
-  leaveTypes: LeaveTypeOption[];
+  employeeID: number;  
   onDelete: (id: number) => void;
 }
 
@@ -16,7 +15,7 @@ const formatDate = (date?: string | null) => {
   return new Date(year, month - 1, day).toLocaleDateString();
 };
 
-const LeaveHistoryTab: React.FC<Props> = ({ employeeID, leaveTypes, onDelete }) => {
+const LeaveHistoryTab: React.FC<Props> = ({ employeeID, onDelete }) => {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -50,6 +49,7 @@ const LeaveHistoryTab: React.FC<Props> = ({ employeeID, leaveTypes, onDelete }) 
         reason: l.Reason,
         isHalfDay: l.IsHalfDay,
         halfDayType: l.HalfDayType,
+        leaveTypeName : l.LeaveTypeName
       }));
 
       setLeaves(mapped);
@@ -124,10 +124,8 @@ const LeaveHistoryTab: React.FC<Props> = ({ employeeID, leaveTypes, onDelete }) 
               <tbody>
                 {leaves.map((l) => (
                   <tr key={l.id}>
-                    <td>
-                      {leaveTypes.find((t) => t.value === l.leaveTypeID)?.label ||
-                        l.leaveTypeID}
-                    </td>
+                    <td>{l.leaveTypeName}
+                    </td> 
 
                     <td>
                       {formatDate(l.startDate)}{" "}

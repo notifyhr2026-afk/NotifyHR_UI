@@ -68,6 +68,12 @@ const selectProps = {
   className: 'org-select',
   classNamePrefix: 'org-select',
 };
+ const FormSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
+    <div className="app-form-section">
+      <div className="app-form-section-title">{title}</div>
+      {children}
+    </div>
+  );
 
 const EmployeeList: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
@@ -350,13 +356,7 @@ const EmployeeList: React.FC = () => {
   const toSelectOptions = (items: DropdownItem[]) =>
     items.map((item) => ({ value: item.id, label: item.name }));
 
-  const FormSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="app-form-section">
-      <div className="app-form-section-title">{title}</div>
-      {children}
-    </div>
-  );
-
+ 
   if (loading) {
     return (
       <div className="employee-list-page container">

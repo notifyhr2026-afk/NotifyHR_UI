@@ -75,7 +75,6 @@ const ApplyLeave: React.FC = () => {
   <Tab eventKey="history" title="Leave History" >
     <LeaveHistoryTab
   employeeID={employeeID}
-  leaveTypes={leaveTypeOptions}
   onDelete={(id) => {
     setLeaveToDelete(id);
     setConfirmDelete(true);

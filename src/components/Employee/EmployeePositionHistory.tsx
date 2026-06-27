@@ -215,10 +215,9 @@ const [showToast, setShowToast] = useState(false);
 
       if (response) {
         // Refresh the data after successful save
-        const updatedResponse = await getEmployeeDetails(Number(employeeID!));
-        if (updatedResponse?.Table1) {
-          setRecords(updatedResponse.Table1);
-        }
+       const updatedResponse = await getEmployeeDetails(Number(employeeID!));
+       setRecords(updatedResponse?.Table1 || []);
+       
 
         fireAudit(editRecord ? "UPDATE" : "CREATE", "ManagerHistory", editRecord, payload, organizationID, user?.name || "Admin", "EmployeePositionHistory");
         clearCache(Number(employeeID!)); // Clear cache after update

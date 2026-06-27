@@ -264,7 +264,7 @@ const EmployeeDetails: React.FC = () => {
                             <Col md={4}>
                                 <Form.Group controlId="workPhone">
                                     <Form.Label>Work Phone</Form.Label>
-                                    <Form.Control required value={formData.workPhone} onChange={handleChange}/>
+                                    <Form.Control  value={formData.workPhone} onChange={handleChange}/>
                                 </Form.Group>
                             </Col>
                             <Col md={4}>

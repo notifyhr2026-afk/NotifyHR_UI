@@ -421,15 +421,11 @@ const EmployeeFamilyDetails: React.FC<Props> = ({ employeeID }) => {
               <Col md={6}>
                 <Form.Group controlId="email">
                   <Form.Label>Email</Form.Label>
-                  <Form.Control
-                    required
+                  <Form.Control                    
                     type="email"
                     value={formData.email}
                     onChange={handleInputChange}
-                  />
-                  <Form.Control.Feedback type="invalid">
-                    Please enter a valid email.
-                  </Form.Control.Feedback>
+                  />                 
                 </Form.Group>
               </Col>
             </Row>

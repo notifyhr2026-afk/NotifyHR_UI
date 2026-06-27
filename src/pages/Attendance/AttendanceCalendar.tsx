@@ -421,21 +421,9 @@ const handleSave = async () => {
 };
 
   return (
-    <div className="container-fluid">
-      <h2 className="fw-bold mb-4 text-center">
-        Attendance Calendar
-      </h2>
+    <div className="container-fluid">   
 
-      {/* APPLY BUTTON */}
-      <div className="d-flex justify-content-end mb-3">
-        <Button
-          className="px-4"
-          disabled={selectedDates.length === 0}
-          onClick={handleApply}
-        >
-          Apply ({selectedDates.length})
-        </Button>
-      </div>
+    
 
       <div className="calendar-layout">
         <div className="calendar-left">
@@ -610,7 +598,17 @@ const displayText =
 
         {/* RIGHT SIDE */}
         <div className="calendar-right">
-          <div className="calendar-tile p-3">
+          {/* APPLY BUTTON */}
+      <div className="d-flex justify-content mb-3">
+        <Button
+          className="px-4"
+          disabled={selectedDates.length === 0}
+          onClick={handleApply}
+        >
+          Apply ({selectedDates.length})
+        </Button>
+      </div>
+           <div className="calendar-tile p-3">
             <h5>Upcoming Holidays</h5>
 
             {holidays.map((h, i) => (
@@ -618,7 +616,7 @@ const displayText =
                 {h.date} - {h.name}
               </div>
             ))}
-          </div>
+          </div> 
         </div>
       </div>
 
@@ -637,6 +635,13 @@ const displayText =
 
         <Modal.Body>
           {/* REQUEST TYPE */}
+          <div className="alert alert-info mt-2 py-2">
+  <i className="bi bi-info-circle me-2"></i>
+  Please enter <strong>Start Time</strong> and <strong>End Time</strong> using the
+  <strong> 24-hour format (HH:mm)</strong>.
+  <br />
+  Examples: <strong>09:00</strong>, <strong>13:30</strong>, <strong>18:45</strong>.
+</div>
           <div className="mb-4">
             <label className="fw-bold mb-2">
               Request Type
