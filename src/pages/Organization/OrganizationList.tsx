@@ -10,11 +10,20 @@ import {
   Tooltip,
   Pagination,
 } from 'react-bootstrap';
+import { FaInfoCircle } from 'react-icons/fa';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import organizationService from '../../services/organizationService';
 import { Organization } from '../../types/organization';
 import { organizationTypes } from '../../types/organizationTypes';
+import employeeService from '../../services/employeeService';
+
+interface OrganizationCounts {
+  OrganizationID: number;
+  BranchesCount: number;
+  DivisionsCount: number;
+  EmployeesCount: number;
+}
 
 const OrganizationList: React.FC = () => {
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -24,10 +33,16 @@ const OrganizationList: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [openInNewTab, setOpenInNewTab] = useState<boolean>(false);
+
   const [showModal, setShowModal] = useState<boolean>(false);
   const [validated, setValidated] = useState<boolean>(false);
 
-  // ✅ Pagination
+  // Counts Modal
+  const [showCountModal, setShowCountModal] = useState(false);
+  const [countLoading, setCountLoading] = useState(false);
+  const [organizationCounts, setOrganizationCounts] = useState<OrganizationCounts | null>(null);
+
+  // Pagination
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 7;
 
@@ -75,6 +90,7 @@ const OrganizationList: React.FC = () => {
         toast.error('Error loading organization types');
       }
     };
+
     fetchOrganizationTypes();
   }, []);
 
@@ -82,11 +98,11 @@ const OrganizationList: React.FC = () => {
     const filtered = organizations.filter((org) =>
       org.OrganizationName.toLowerCase().includes(searchTerm.toLowerCase())
     );
+
     setFilteredOrganizations(filtered);
     setCurrentPage(1);
   }, [searchTerm, organizations]);
 
-  // ✅ Pagination Logic
   const totalPages = Math.ceil(filteredOrganizations.length / itemsPerPage);
 
   const paginatedOrganizations = useMemo(() => {
@@ -108,6 +124,7 @@ const OrganizationList: React.FC = () => {
       IsActive: true,
       IsDeleted: false,
     });
+
     setValidated(false);
   };
 
@@ -115,6 +132,7 @@ const OrganizationList: React.FC = () => {
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
+
     setNewOrg((prev) => ({
       ...prev,
       [name]:
@@ -129,6 +147,7 @@ const OrganizationList: React.FC = () => {
     e.stopPropagation();
 
     const form = e.currentTarget;
+
     setValidated(true);
 
     if (!form.checkValidity()) {
@@ -152,26 +171,50 @@ const OrganizationList: React.FC = () => {
 
     try {
       toast.info('Saving organization...');
+
       const result = await organizationService.createOrganization(newOrgData);
-      debugger;
-       const normalizedResult = Array.isArray(result) ? result[0] : result;
-        if (result[0]?.value === 1) {
-             toast.success(result[0].message || 'Role saved successfully!');
-           await fetchOrganizations();
-      handleCloseModal();
-           } else {
-             toast.warning(result[0]?.message || 'Something went wrong!');
-           }
-      
+
+      if (result[0]?.value === 1) {
+        toast.success(result[0].message || 'Organization saved successfully!');
+        await fetchOrganizations();
+        handleCloseModal();
+      } else {
+        toast.warning(result[0]?.message || 'Something went wrong!');
+      }
     } catch (err) {
       toast.error('Failed to add organization.');
-      console.error('Error creating organization:', err);
+      console.error(err);
     }
-    };
+  };
 
   const handleCloseModal = () => {
     setShowModal(false);
     handleClear();
+  };
+
+  // ===========================
+  // Organization Counts
+  // ===========================
+
+  const handleViewCounts = async (organizationID: number) => {
+    try {
+      setCountLoading(true);
+      setShowCountModal(true);
+
+      const result =
+        await employeeService.GetOrganizationCountsAsync(organizationID);
+
+      if (result && result.length > 0) {
+        setOrganizationCounts(result[0]);
+      } else {
+        setOrganizationCounts(null);
+      }
+    } catch (error) {
+      toast.error('Failed to load organization counts.');
+      setOrganizationCounts(null);
+    } finally {
+      setCountLoading(false);
+    }
   };
 
   if (loading) return <div className="text-center mt-5">Loading...</div>;
@@ -180,6 +223,7 @@ const OrganizationList: React.FC = () => {
   return (
     <div className="Container">
       <ToastContainer position="top-right" autoClose={3000} />
+
       <h2 className="mb-4">Organization List</h2>
 
       <div className="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
@@ -193,7 +237,7 @@ const OrganizationList: React.FC = () => {
 
         <OverlayTrigger
           placement="top"
-          overlay={<Tooltip id="toggle-tooltip">Open Manage Page in New Tab</Tooltip>}
+          overlay={<Tooltip>Open Manage Page in New Tab</Tooltip>}
         >
           <Form.Check
             type="switch"
@@ -216,9 +260,10 @@ const OrganizationList: React.FC = () => {
               <th>Phone</th>
               <th>Website</th>
               <th>Industry</th>
-              <th>Actions</th>
+              <th style={{ width: 170 }}>Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {paginatedOrganizations.length > 0 ? (
               paginatedOrganizations.map((org) => (
@@ -228,18 +273,34 @@ const OrganizationList: React.FC = () => {
                   <td>{org.Phone || '-'}</td>
                   <td>{org.Website || '-'}</td>
                   <td>{org.Industry || '-'}</td>
+
                   <td>
-                    <button
-                      className="btn btn-primary btn-sm"
+                    <Button
+                      size="sm"
+                      className="me-2"
                       onClick={() => {
                         const path = `/Organizations/manageOrganization/${org.OrganizationID}`;
+
                         openInNewTab
                           ? window.open(path, '_blank')
                           : navigate(path);
                       }}
                     >
                       Manage
-                    </button>
+                    </Button>
+
+                    <OverlayTrigger
+                      placement="top"
+                      overlay={<Tooltip>View Organization Counts</Tooltip>}
+                    >
+                      <Button
+                        variant="info"
+                        size="sm"
+                        onClick={() => handleViewCounts(org.OrganizationID)}
+                      >
+                        Info
+                      </Button>
+                    </OverlayTrigger>
                   </td>
                 </tr>
               ))
@@ -254,22 +315,23 @@ const OrganizationList: React.FC = () => {
         </table>
       </div>
 
-      {/* ✅ Pagination */}
       {totalPages > 1 && (
         <Pagination className="justify-content-center mt-3">
           <Pagination.Prev
             disabled={currentPage === 1}
             onClick={() => setCurrentPage(currentPage - 1)}
           />
+
           {[...Array(totalPages)].map((_, index) => (
             <Pagination.Item
               key={index}
-              active={index + 1 === currentPage}
+              active={currentPage === index + 1}
               onClick={() => setCurrentPage(index + 1)}
             >
               {index + 1}
             </Pagination.Item>
           ))}
+
           <Pagination.Next
             disabled={currentPage === totalPages}
             onClick={() => setCurrentPage(currentPage + 1)}
@@ -277,7 +339,7 @@ const OrganizationList: React.FC = () => {
         </Pagination>
       )}
 
-      {/* ✅ FULL ORIGINAL MODAL WITH ALL FIELDS */}
+       {/* ✅ FULL ORIGINAL MODAL WITH ALL FIELDS */}
       <Modal show={showModal} onHide={handleCloseModal}>
         <Modal.Header closeButton>
           <Modal.Title>Add New Organization</Modal.Title>
@@ -405,6 +467,62 @@ const OrganizationList: React.FC = () => {
             </div>
           </Form>
         </Modal.Body>
+      </Modal>
+
+      {/* Organization Counts Modal */}
+      <Modal
+        show={showCountModal}
+        onHide={() => setShowCountModal(false)}
+        centered
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Organization Statistics</Modal.Title>
+        </Modal.Header>
+
+        <Modal.Body>
+          {countLoading ? (
+            <div className="text-center">
+              <div className="spinner-border text-primary" />
+            </div>
+          ) : organizationCounts ? (
+            <table className="table table-bordered">
+              <tbody>
+                {/* <tr>
+                  <th>Organization ID</th>
+                  <td>{organizationCounts.OrganizationID}</td>
+                </tr> */}
+
+                <tr>
+                  <th>Branches</th>
+                  <td>{organizationCounts.BranchesCount}</td>
+                </tr>
+
+                <tr>
+                  <th>Divisions</th>
+                  <td>{organizationCounts.DivisionsCount}</td>
+                </tr>
+
+                <tr>
+                  <th>Employees</th>
+                  <td>{organizationCounts.EmployeesCount}</td>
+                </tr>
+              </tbody>
+            </table>
+          ) : (
+            <div className="text-center">
+              No data available.
+            </div>
+          )}
+        </Modal.Body>
+
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowCountModal(false)}
+          >
+            Close
+          </Button>
+        </Modal.Footer>
       </Modal>
     </div>
   );

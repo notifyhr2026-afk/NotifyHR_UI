@@ -46,7 +46,7 @@ const MONTHS = [
 ];
 
 const YEARS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i + 1);
-
+  const userData = JSON.parse(localStorage.getItem("user") || "{}");
 // ---------------------------
 // PDF Builder — uses real API data
 // ---------------------------
@@ -70,7 +70,7 @@ const buildPayslipPDF = (
   doc.setFontSize(20);
   doc.setTextColor(255, 255, 255);
   doc.setFont("helvetica", "bold");
-  doc.text("NotifyHR – Payslip", W / 2, 28, { align: "center" });
+  doc.text(`${userData.organizationName} - Payslip`, W / 2, 28, {  align: "center",});
   doc.setFontSize(10);
   doc.setFont("helvetica", "normal");
   doc.text(`Pay Period: ${summary.MonthName} ${summary.PayrollYear}`, W / 2, 46, { align: "center" });
@@ -185,6 +185,7 @@ const buildPayslipPDF = (
 };
 
 const EmployeePayslip: React.FC = () => {
+
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear]   = useState<number>(new Date().getFullYear());
   const [summary, setSummary]             = useState<PayslipSummary | null>(null);

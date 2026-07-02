@@ -10,7 +10,7 @@ interface EmployeeData {
 }
 
 interface EmployeeContextType {
-  getEmployeeDetails: (employeeID: number) => Promise<EmployeeData | null>;
+  getEmployeeDetails: (employeeID: number,organizationID: number) => Promise<EmployeeData | null>;
   clearCache: (employeeID?: number) => void;
 }
 
@@ -24,14 +24,14 @@ export const useEmployee = () => useContext(EmployeeContext);
 export const EmployeeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [cache, setCache] = useState<Map<number, EmployeeData>>(new Map());
 
-  const getEmployeeDetails = async (employeeID: number): Promise<EmployeeData | null> => {
+  const getEmployeeDetails = async (employeeID: number,organizationID: number): Promise<EmployeeData | null> => {
     // Check cache first
     if (cache.has(employeeID)) {
       return cache.get(employeeID)!;
     }
 
     try {
-      const res = await employeeService.GetEmployeeDetialsByEmployeeID(employeeID);
+      const res = await employeeService.GetEmployeeDetialsByEmployeeID(employeeID,organizationID);
       // Update cache
       setCache(prev => new Map(prev).set(employeeID, res));
       return res;

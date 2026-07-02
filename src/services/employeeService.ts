@@ -15,7 +15,7 @@ const employeeService = {
     const { data } = await api.get('Master/employees');
     return data;
   }, 
-  GetEmployeeDetialsByEmployeeID: async (EmployeeID: number) => {
+  GetEmployeeDetialsByEmployeeID: async (EmployeeID: number,organizationID:number) => {
     try {
       // Check cache first
       if (employeeCache.has(EmployeeID)) {
@@ -24,7 +24,7 @@ const employeeService = {
       }
 
       console.log(`Fetching data for EmployeeID: ${EmployeeID}`);
-      const { data } = await api.get(`Employee/GetEmployeeDetialsByEmployeeID?EmployeeID=${EmployeeID}`);
+      const { data } = await api.get(`Employee/GetEmployeeDetialsByEmployeeID?EmployeeID=${EmployeeID}&organizationID=${organizationID}`);
       
       // Cache the data
       employeeCache.set(EmployeeID, data);
@@ -38,14 +38,14 @@ const employeeService = {
   createEmployee: async (employee: any) => {
     debugger;
     console.log('Request body:', employee);
-    const { data } = await api.post('Employee/CreateEmployee', employee);
+    const res = await api.post('Employee/CreateEmployee', employee);
     
     // Invalidate cache for this employee if it exists
     if (employee.employeeID) {
       employeeCache.delete(employee.employeeID);
     }
     
-    return Array.isArray(data?.Table) ? data.Table : [];
+    return res.data[0];
   },
    PostUpdateProbationDetails: async (payload: any) => {
     const res = await api.post("Employee/UpdateProbationDetails", payload);
@@ -177,6 +177,11 @@ const employeeService = {
   );
   return data;
 },
+
+ GetOrganizationCountsAsync: async (organizationID : number) => {    
+      const { data } = await api.get(`Employee/GetOrganizationCounts?organizationID=${organizationID}`);
+      return data;
+  },
 };
 
 export default employeeService;

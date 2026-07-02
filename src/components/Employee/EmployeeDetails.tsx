@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Row, Col, Form, Button } from 'react-bootstrap';
-import { useParams } from 'react-router-dom';
 import employeeService from '../../services/employeeService';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { fireAudit } from '../../utils/auditUtils';
 import { useEmployee } from '../../context/EmployeeContext';
+import { useParams, useNavigate } from 'react-router-dom';
 
 const EmployeeDetails: React.FC = () => {
     const { employeeID } = useParams<{ employeeID: string }>();
@@ -14,7 +14,7 @@ const EmployeeDetails: React.FC = () => {
     const user = JSON.parse(data || '{}');
     const organizationID = user?.organizationID || 0;
     const { getEmployeeDetails, clearCache } = useEmployee();
-
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         employeeID: 0,
         organizationID: organizationID,
@@ -40,68 +40,83 @@ const EmployeeDetails: React.FC = () => {
     const [oldEmployeeData, setOldEmployeeData] = useState<any>(null);
 
     useEffect(() => {
-        toast.info('Toast system ready ✅');
+        //toast.info('Toast system ready ✅');
     }, []);
 
     // ✅ LOAD DATA
-    useEffect(() => {
-        if (!employeeID) return;
+ useEffect(() => {
+    if (!employeeID) return;
 
-        const id = parseInt(employeeID);
+    const id = parseInt(employeeID);
 
-        getEmployeeDetails(id)
-            .then((res) => {
-                if (res?.Table?.length) {
-                    const emp = res.Table[0];
+    getEmployeeDetails(id, organizationID)
+        .then((res) => {
+            const emp = res?.Table?.[0];
 
-                    setFormData({
-                        employeeID: id,
-                        organizationID: emp.OrganizationID || 0,
-                        firstName: emp.FirstName || '',
-                        middleName: emp.MiddleName || '',
-                        lastName: emp.LastName || '',
-                        employeeCode: emp.EmployeeCode || '',
-                        dob: emp.DOB ? emp.DOB.split('T')[0] : '',
-                        gender: emp.Gender || '',
-                        officialEmail: emp.OfficialEmail || '',
-                        personalEmail: emp.PersonalEmail || '',   // ✅ NEW
-                        personalPhone: emp.PersonalPhone || '',   // ✅ NEW
-                        workPhone: emp.WorkPhone || '',           // ✅ NEW
-                        dateOfJoining: emp.DateOfJoining ? emp.DateOfJoining.split('T')[0] : '',
-                        maritalStatus: emp.MaritalStatus || '',
-                        createdBy: 'admin',
-                        pan: emp.PAN || '',
-                        aadhar: emp.Aadhar || '',
-                        passportNumber: emp.PassportNumber || '',
-                        profilePic: emp.ProfilePic || ''
-                    });
-                    setOldEmployeeData({
-                        employeeID: id,
-                        organizationID: emp.OrganizationID || 0,
-                        firstName: emp.FirstName || '',
-                        middleName: emp.MiddleName || '',
-                        lastName: emp.LastName || '',
-                        employeeCode: emp.EmployeeCode || '',
-                        dob: emp.DOB ? emp.DOB.split('T')[0] : '',
-                        gender: emp.Gender || '',
-                        officialEmail: emp.OfficialEmail || '',
-                        personalEmail: emp.PersonalEmail || '',   // ✅ NEW
-                        personalPhone: emp.PersonalPhone || '',   // ✅ NEW
-                        workPhone: emp.WorkPhone || '',           // ✅ NEW
-                        dateOfJoining: emp.DateOfJoining ? emp.DateOfJoining.split('T')[0] : '',
-                        maritalStatus: emp.MaritalStatus || '',
-                        createdBy: 'admin',
-                        pan: emp.PAN || '',
-                        aadhar: emp.Aadhar || '',
-                        passportNumber: emp.PassportNumber || '',
-                        profilePic: emp.ProfilePic || ''
-                    });
-                } else {
-                    toast.info('No employee data found.');
-                }
-            })
-            .catch(() => toast.error('Failed to load employee data'));
-    }, [employeeID, getEmployeeDetails]);
+            if (emp) {
+                setFormData({
+                    employeeID: id,
+                    organizationID: emp.OrganizationID || 0,
+                    firstName: emp.FirstName || '',
+                    middleName: emp.MiddleName || '',
+                    lastName: emp.LastName || '',
+                    employeeCode: emp.EmployeeCode || '',
+                    dob: emp.DOB ? emp.DOB.split('T')[0] : '',
+                    gender: emp.Gender || '',
+                    officialEmail: emp.OfficialEmail || '',
+                    personalEmail: emp.PersonalEmail || '',
+                    personalPhone: emp.PersonalPhone || '',
+                    workPhone: emp.WorkPhone || '',
+                    dateOfJoining: emp.DateOfJoining
+                        ? emp.DateOfJoining.split('T')[0]
+                        : '',
+                    maritalStatus: emp.MaritalStatus || '',
+                    createdBy: 'admin',
+                    pan: emp.PAN || '',
+                    aadhar: emp.Aadhar || '',
+                    passportNumber: emp.PassportNumber || '',
+                    profilePic: emp.ProfilePic || '',
+                });
+
+                setOldEmployeeData({
+                    employeeID: id,
+                    organizationID: emp.OrganizationID || 0,
+                    firstName: emp.FirstName || '',
+                    middleName: emp.MiddleName || '',
+                    lastName: emp.LastName || '',
+                    employeeCode: emp.EmployeeCode || '',
+                    dob: emp.DOB ? emp.DOB.split('T')[0] : '',
+                    gender: emp.Gender || '',
+                    officialEmail: emp.OfficialEmail || '',
+                    personalEmail: emp.PersonalEmail || '',
+                    personalPhone: emp.PersonalPhone || '',
+                    workPhone: emp.WorkPhone || '',
+                    dateOfJoining: emp.DateOfJoining
+                        ? emp.DateOfJoining.split('T')[0]
+                        : '',
+                    maritalStatus: emp.MaritalStatus || '',
+                    createdBy: 'admin',
+                    pan: emp.PAN || '',
+                    aadhar: emp.Aadhar || '',
+                    passportNumber: emp.PassportNumber || '',
+                    profilePic: emp.ProfilePic || '',
+                });
+            } else {
+                toast.info('Employee not found. Redirecting...');
+
+                setTimeout(() => {
+                    navigate('/EmployeeList', { replace: true });
+                }, 0);
+            }
+        })
+        .catch(() => {
+            toast.error('Failed to load employee data');
+
+            setTimeout(() => {
+                navigate('/EmployeeList', { replace: true });
+            }, 1500);
+        });
+}, [employeeID, organizationID, getEmployeeDetails, navigate]);
 
     const handleChange = (e: React.ChangeEvent<any>) => {
         const { id, value } = e.target;
@@ -122,7 +137,7 @@ const EmployeeDetails: React.FC = () => {
         }
 
         try {
-            toast.info('Saving employee...');
+            //toast.info('Saving employee...');
 
             const payload = {
                 ...formData,

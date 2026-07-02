@@ -131,7 +131,7 @@ const [showToast, setShowToast] = useState(false);
     const fetchManagerHistory = async () => {
       try {       
         if (!employeeID) return;
-        const response = await getEmployeeDetails(Number(employeeID!));
+        const response = await getEmployeeDetails(Number(employeeID!),organizationID);
         if (response?.Table1) {
           setRecords(response.Table1);
         }
@@ -215,7 +215,7 @@ const [showToast, setShowToast] = useState(false);
 
       if (response) {
         // Refresh the data after successful save
-       const updatedResponse = await getEmployeeDetails(Number(employeeID!));
+       const updatedResponse = await getEmployeeDetails(Number(employeeID!),organizationID);
        setRecords(updatedResponse?.Table1 || []);
        
 

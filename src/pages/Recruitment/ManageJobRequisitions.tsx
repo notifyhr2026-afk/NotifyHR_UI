@@ -521,6 +521,9 @@ const handleInputChange = (e: any) => {
             >
               <option value="">Select Status</option>
               <option value="Open">Open</option>
+              <option value="Approved">Approved</option>
+              <option value="Assigned Recruiter">Assigned Recruiter</option>
+              <option value="Recruiting">Recruiting</option>
               <option value="Closed">Closed</option>
               <option value="Pending">Pending</option>
             </Form.Select>

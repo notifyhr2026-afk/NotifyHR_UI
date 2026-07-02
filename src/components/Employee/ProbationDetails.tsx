@@ -35,7 +35,7 @@ const ProbationDetails: React.FC = () => {
 
       try {
         const id = parseInt(employeeID);
-        const res = await getEmployeeDetails(id);
+        const res = await getEmployeeDetails(id,organizationID);
 
         if (res?.Table4?.length) {
           const probation = res.Table4[0];

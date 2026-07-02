@@ -25,6 +25,10 @@ const payrollService = {
       const { data } = await axiosInstance.get(`Payroll/GetOrgPayrollCycles?organizationId=${organizationId}&branchId=${branchID}`);
       return data;
    },
+   RunPayrollBulkAsyncByAsync: async (payload: any) => {
+    const res = await axiosInstance.post("Payroll/RunPayrollBulkAsync", payload);
+    return res.data;
+   },
   };
 
 export default payrollService;

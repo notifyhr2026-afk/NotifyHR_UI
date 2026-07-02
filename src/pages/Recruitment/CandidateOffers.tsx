@@ -142,7 +142,8 @@ const CandidateOffers: React.FC = () => {
             <Form.Label>Offer Status</Form.Label>
             <Form.Select name="OfferStatusID" value={formData.OfferStatusID} onChange={handleChange}>
               <option value="Pending">Pending</option>
-              <option value="Pending">Release</option>
+              <option value="Hold">Hold</option>
+              <option value="Release">Release</option>
               <option value="Accepted">Accepted</option>
               <option value="Rejected">Rejected</option>
             </Form.Select>

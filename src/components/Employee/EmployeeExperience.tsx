@@ -27,7 +27,9 @@ const EmployeeExperience: React.FC<Props> = ({ employeeID: propEmployeeID, hideP
   const { employeeID: urlEmployeeID } = useParams<{ employeeID: string }>();
   const { getEmployeeDetails } = useEmployee();
   const [validated, setValidated] = useState(false);
-
+ const data: any = localStorage.getItem('user');
+    const user = JSON.parse(data || '{}');
+    const organizationID = user?.organizationID || 0;
   const empID = propEmployeeID || (urlEmployeeID ? parseInt(urlEmployeeID) : 0);
 
   const [formData, setFormData] = useState({
@@ -69,7 +71,7 @@ const EmployeeExperience: React.FC<Props> = ({ employeeID: propEmployeeID, hideP
       setFormData((prev) => ({ ...prev, employeeID: empID }));
 
       if (!hidePersonalDetails) {
-        getEmployeeDetails(empID)
+        getEmployeeDetails(empID,organizationID)
           .then((res) => {
             if (res?.Table && res.Table.length > 0) {
               const emp = res.Table[0];

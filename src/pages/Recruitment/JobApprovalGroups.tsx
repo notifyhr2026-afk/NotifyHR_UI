@@ -25,8 +25,12 @@ interface Employee {
 }
 
 const JobApprovalGroups: React.FC = () => {
-  const organizationID = 45;
-  const user = "Admin"; // TODO: replace with real user
+
+   const user = "Admin"; // TODO: replace with real user
+ const data: any = localStorage.getItem('user');
+const userdata = JSON.parse(data || '{}');
+    const organizationID = userdata?.organizationID || 0;
+ 
 
   const [groups, setGroups] = useState<ApprovalGroup[]>([]);
   const [members, setMembers] = useState<GroupMember[]>([]);

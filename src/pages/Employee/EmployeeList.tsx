@@ -22,7 +22,8 @@ import {
   BsX,
 } from 'react-icons/bs';
 import employeeService from '../../services/employeeService';
-import { toast } from 'react-toastify';
+import { toast, ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import { Employee } from '../../types/Employee';
 import Select from 'react-select';
 import '../../css/EmployeeList.css';
@@ -169,41 +170,55 @@ const EmployeeList: React.FC = () => {
     setSaving(true);
 
     try {
-      const payload = {
-        organizationID: newEmp.OrganizationID,
-        firstName: newEmp.FirstName,
-        middleName: newEmp.MiddleName || null,
-        lastName: newEmp.LastName,
-        employeeCode: newEmp.EmployeeCode,
-        dob: newEmp.DateOfBirth,
-        dateOfJoining: newEmp.DateOfJoining,
-        gender: newEmp.Gender,
-        officialEmail: newEmp.OfficialEmail,
-        maritalStatus: newEmp.MaritalStatus,
-        createdBy: 'admin',
-        pan: newEmp.PAN,
-        aadhar: newEmp.Aadhar,
-        passportNumber: newEmp.PassportNumber,
-        personalPhone: newEmp.personalPhone,
-        workPhone: newEmp.workPhone,
-        personalEmail: newEmp.personalEmail,
-      };
+  const payload = {
+    organizationID: newEmp.OrganizationID,
+    firstName: newEmp.FirstName,
+    middleName: newEmp.MiddleName || null,
+    lastName: newEmp.LastName,
+    employeeCode: newEmp.EmployeeCode,
+    dob: newEmp.DateOfBirth,
+    dateOfJoining: newEmp.DateOfJoining,
+    gender: newEmp.Gender,
+    officialEmail: newEmp.OfficialEmail,
+    maritalStatus: newEmp.MaritalStatus,
+    createdBy: 'admin',
+    pan: newEmp.PAN,
+    aadhar: newEmp.Aadhar,
+    passportNumber: newEmp.PassportNumber,
+    personalPhone: newEmp.personalPhone,
+    workPhone: newEmp.workPhone,
+    personalEmail: newEmp.personalEmail,
+  };
 
-      const newEmployeeID = await employeeService.createEmployee(payload);
+  const response = await employeeService.createEmployee(payload);
 
-      if (newEmployeeID) {
-        toast.success(`Employee created (ID: ${newEmployeeID})`);
-        const data = await employeeService.getEmployeesByOrganizationIdAsync(organizationID);
-        const empList = Array.isArray(data) ? data : data?.Table || [];
-        setEmployees(empList);
-        setFilteredEmployees(empList);
-        handleCloseAddModal();
-      }
-    } catch {
-      toast.error('Error saving employee');
-    } finally {
-      setSaving(false);
-    }
+const result = response;
+
+if (result?.value === 1) {
+  toast.success(result.msg || "Employee Details Created Successfully.");
+
+  const data = await employeeService.getEmployeesByOrganizationIdAsync(
+    organizationID
+  );
+
+  const empList = Array.isArray(data) ? data : data?.Table || [];
+
+  setEmployees(empList);
+  setFilteredEmployees(empList);
+
+  // Close only on success
+  handleCloseAddModal();
+} else if (result?.value === 0) {
+  // Keep popup open
+  toast.warning(result.msg || "Validation failed.");
+} else {
+  toast.error("Unable to create employee.");
+}
+} catch {
+  toast.error("Error saving employee");
+} finally {
+  setSaving(false);
+}
   };
 
   useEffect(() => {
@@ -377,7 +392,9 @@ const EmployeeList: React.FC = () => {
   }
 
   return (
+    
     <div className="employee-list-page container">
+       <ToastContainer position="top-right" autoClose={3000} />
       <div className="employee-list-header">
         <div>
           <h2>Employee List</h2>

@@ -31,7 +31,7 @@ const recruiters: DropdownItem[] = [
 ];
 
 const statuses: DropdownItem[] = [
-  { id: 1, name: "Active" },
+  { id: 1, name: "Assign" },
   { id: 2, name: "Revoked" },
 ];
 
@@ -43,7 +43,7 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
       JobRequisitionID: 1,
       RecruiterUserID: 101,
       AssignedDate: "2025-12-20",
-      Status: "Active",
+      Status: "Assign",
     },
   ]);
 
@@ -54,8 +54,8 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
     JobRequisitionID: 0,
     RecruiterUserID: 0,
     AssignedDate: new Date().toISOString().slice(0, 10),
-    RevokedDate: "",
-    Status: "Active",
+    RevokedDate: new Date().toISOString().slice(0, 10),
+    Status: "Assign",
   });
 
   const [validated, setValidated] = useState(false);
@@ -81,7 +81,7 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
       RecruiterUserID: 0,
       AssignedDate: new Date().toISOString().slice(0, 10),
       RevokedDate: "",
-      Status: "Active",
+      Status: "Assign",
     });
     setShowModal(true);
   };
@@ -125,15 +125,15 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
     setConfirmDelete(true);
   };
 
-  const handleDelete = () => {
-    if (recruiterToDelete !== null) {
-      setRecruitersList((prev) =>
-        prev.filter((r) => r.JobReqRecruiterID !== recruiterToDelete)
-      );
-      toast.success("Recruiter deleted successfully!");
-      setConfirmDelete(false);
-    }
-  };
+  // const handleDelete = () => {
+  //   if (recruiterToDelete !== null) {
+  //     setRecruitersList((prev) =>
+  //       prev.filter((r) => r.JobReqRecruiterID !== recruiterToDelete)
+  //     );
+  //     toast.success("Recruiter deleted successfully!");
+  //     setConfirmDelete(false);
+  //   }
+  // };
 
   // ======= Render =======
   return (
@@ -169,7 +169,7 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
               <td>
                 <span
                   className={`badge ${
-                    r.Status === "Active" ? "bg-primary" : "bg-danger"
+                    r.Status === "Assign" ? "bg-primary" : "bg-danger"
                   }`}
                 >
                   {r.Status}
@@ -242,7 +242,7 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
               </Col>
             </Row>
 
-            <Row className="mb-3">
+            {/* <Row className="mb-3">
               <Col md={6}>
                 <Form.Group controlId="AssignedDate">
                   <Form.Label>Assigned Date</Form.Label>
@@ -265,7 +265,7 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
                   />
                 </Form.Group>
               </Col>
-            </Row>
+            </Row> */}
 
             <Row className="mb-3">
               <Col md={6}>
@@ -308,9 +308,9 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
           <Button variant="secondary" onClick={() => setConfirmDelete(false)}>
             Cancel
           </Button>
-          <Button variant="danger" onClick={handleDelete}>
+          {/* <Button variant="danger" onClick={handleDelete}>
             Delete
-          </Button>
+          </Button> */}
         </Modal.Footer>
       </Modal>
 
