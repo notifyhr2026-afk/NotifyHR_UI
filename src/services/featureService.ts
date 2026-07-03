@@ -1,7 +1,7 @@
 import axiosInstance from '../api/axiosIdentityInstance';
 
 export const GetAllFeaturesAsync = async () => {
-    debugger;
+    
   const res = await axiosInstance.get("/Menus/GetAllFeatures");
   return res.data;
 };

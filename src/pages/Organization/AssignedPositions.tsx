@@ -16,7 +16,7 @@ const AssignedPositions: React.FC = () => {
   // Get organizationID from localStorage
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID: number | undefined = user?.organizationID;
-  debugger;
+  
   useEffect(() => {
     if (organizationID) {
       fetchOrganizationPositions(organizationID);

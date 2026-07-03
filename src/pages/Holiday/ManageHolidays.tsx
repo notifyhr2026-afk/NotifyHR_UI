@@ -73,7 +73,7 @@ const ManageHolidays: React.FC = () => {
   };
 
   const loadHolidays = async () => {
-    debugger;
+    
     try {
       const res = await holidayService.getOrgholidays(organizationID);
       const data = res;

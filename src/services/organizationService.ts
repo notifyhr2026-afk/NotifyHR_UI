@@ -58,7 +58,7 @@ export const updateOrganization = async (newOrg: Omit<Organization, 'Organizatio
   // ✅ Create or update a division
   export const CreateOrgRolesAsync =  async (OrgRole : any) => {
     try {
-        debugger;
+        
       console.log('Request body:', OrgRole);
       const { data } = await axiosInstance.post('/Organizations/CreateOrgRolesAsync', OrgRole);
       return Array.isArray(data?.Table) ? data.Table : [];

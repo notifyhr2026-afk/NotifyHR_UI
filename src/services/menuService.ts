@@ -53,7 +53,7 @@ export const createMenu = async (menuData: Omit<MenuItem, 'menuID'>): Promise<nu
 
 export const updateMenu = async (menu: MenuItem): Promise<boolean> => {
   try {
-    debugger;
+    
     const payload = toApiMenu(menu);
     const response = await axiosInstance.put('/menus', payload);
     return response.data?.success ?? false;

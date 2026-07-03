@@ -14,7 +14,7 @@ const branchService = {
   // ✅ Create or update a branch
   createOrUpdateBranchAsync: async (branch : any) => {
     try {
-        debugger;
+        
       console.log('Request body:', branch);
       const { data } = await api.post('Branch/CreateOrUpdateBranchAsync', branch);
       // Assuming your API returns a JSON array like [{ BranchID: 123 }]

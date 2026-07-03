@@ -14,7 +14,7 @@ const departmentService = {
   // ✅ Create or update a department
   createOrUpdatedepartmentAsync: async (department : any) => {
     try {
-        debugger;
+        
       console.log('Request body:', department);
       const { data } = await api.post('department/CreateOrUpdatedepartmentAsync', department);
       // Assuming your API returns a JSON array like [{ departmentID: 123 }]

@@ -14,7 +14,7 @@ const divisionService = {
   // ✅ Create or update a division
   createOrUpdatedivisionAsync: async (division : any) => {
     try {
-        debugger;
+        
       console.log('Request body:', division);
       const { data } = await api.post('division/CreateOrUpdateDivisionAsync', division);
       // Assuming your API returns a JSON array like [{ divisionID: 123 }]

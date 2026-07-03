@@ -73,7 +73,7 @@ const AssignRoles: React.FC = () => {
   const fetchRolesByOrganization = async (organizationID: number) => {
     try {
       setLoading(true);
-     debugger;
+     
       const response = await GetRolesByorganizationIDAsync(organizationID);
 
       const activeRoles = response.filter((r: Role) => r.IsActive);

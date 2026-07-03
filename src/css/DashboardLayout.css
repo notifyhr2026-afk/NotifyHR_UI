@@ -421,7 +421,8 @@ body.dark-mode .dropdown-header-card {
 
 .profile-dropdown .dropdown-item:hover {
   background: rgba(13, 110, 253, 0.08);
-  color: var(--brand-primary, #0d6efd);
+  color: #0d6efd !important;
+  
 }
 
 .profile-dropdown .logout-item {

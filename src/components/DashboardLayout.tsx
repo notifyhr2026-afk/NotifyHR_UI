@@ -73,7 +73,7 @@ const DashboardLayout: React.FC = () => {
   const { logout } = useAuth();
 
   const userData = JSON.parse(localStorage.getItem("user") || "{}");
-
+  const EmployeeID = userData?.employeeID || 0;
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isDarkMode, setIsDarkMode] = useState(
     localStorage.getItem("theme") === "dark"
@@ -281,22 +281,23 @@ const DashboardLayout: React.FC = () => {
 
                 <Dropdown.Divider className="dropdown-divider" />
 
-                {/* <Dropdown.Item onClick={() => navigate("/MyProfile")}>
-                  <i className="bi bi-person-circle me-3" />
-                  Profile
-                </Dropdown.Item> */}
-
-                <Dropdown.Item onClick={() => navigate("/ChangePassword")}>
-                  <i className="bi bi-lock me-3" />
-                  Change Password
-                </Dropdown.Item>
-
-                {hasEmployeeRole && (
+               
+                 {hasEmployeeRole && (
+                  <Dropdown.Item onClick={() => navigate("/MyProfile")}>
+                    <i className="bi bi-person-circle me-3" />
+                    Profile
+                  </Dropdown.Item>
+                )}
+                {hasEmployeeRole && (                  
                   <Dropdown.Item onClick={() => navigate("/career-personal")}>
                     <i className="bi bi-person-badge me-3" />
                     Career & Personal
                   </Dropdown.Item>
                 )}
+                 <Dropdown.Item onClick={() => navigate("/ChangePassword")}>
+                  <i className="bi bi-lock me-3" />
+                  Change Password
+                </Dropdown.Item>
 
                 <Dropdown.Divider className="dropdown-divider" />
 

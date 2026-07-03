@@ -99,7 +99,7 @@ const VerifyEmployeeTasks: React.FC = () => {
   }, [filteredEmployeeOptions, selectedEmployee]);
 
   const handleGet = async () => {
-    debugger;
+    
     try {
       setLoading(true);
 

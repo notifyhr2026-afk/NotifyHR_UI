@@ -156,7 +156,7 @@ const EmployeeDetails: React.FC = () => {
                 toast.error('No response from server');
                 return;
             }
-            debugger;
+            
             if (Number(finalResult.value) === 1) {
                 toast.success(finalResult.msg);
                 fireAudit("UPDATE", "Employee", oldEmployeeData, formData, organizationID, user?.name || user?.username || "Admin", "EmployeeDetails");

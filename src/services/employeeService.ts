@@ -11,7 +11,7 @@ const employeeService = {
       return data;
   },
   getEmployees: async () => {
-    debugger;
+    
     const { data } = await api.get('Master/employees');
     return data;
   }, 
@@ -36,7 +36,7 @@ const employeeService = {
     }
   },
   createEmployee: async (employee: any) => {
-    debugger;
+    
     console.log('Request body:', employee);
     const res = await api.post('Employee/CreateEmployee', employee);
     
@@ -170,18 +170,25 @@ const employeeService = {
     const { data } = await api.put("Employee/UpdateResignatioReqStausAsync", payload);
     return data;
   },
- GetResignationRequestsAsync: async (payload: any) => {
-  const { data } = await api.post(
-    "Employee/GetResignationRequestsAsync",
-    payload
-  );
-  return data;
-},
-
+  GetResignationRequestsAsync: async (payload: any) => {
+    const { data } = await api.post(
+      "Employee/GetResignationRequestsAsync",
+      payload
+    );
+    return data;
+  },
  GetOrganizationCountsAsync: async (organizationID : number) => {    
       const { data } = await api.get(`Employee/GetOrganizationCounts?organizationID=${organizationID}`);
       return data;
   },
+  GetEmployeeTreeAsync: async (payload: any) => {
+    const { data } = await api.post("Employee/GetEmployeeTreeAsync", payload);
+    return data;
+  },
+  GetEmployeeProfileAsync: async (organizationID: number, employeeID: number  ) => {
+      const { data } = await api.get(`Employee/GetEmployeeProfile?organizationID=${organizationID}&employeeID=${employeeID}`);
+      return data;
+   },
 };
 
 export default employeeService;
