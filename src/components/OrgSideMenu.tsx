@@ -23,6 +23,7 @@ interface MenuItem {
 
 interface SideMenuProps {
   isOpen: boolean;
+  isDarkMode: boolean;
 }
 
 const SECTION_LABELS: Record<string, string> = {
@@ -49,7 +50,7 @@ const getMenuSection = (name: string): string => {
   return "";
 };
 
-const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
+const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen, isDarkMode }) => {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [hoverIndex, setHoverIndex] = useState<number | null>(null);
@@ -61,9 +62,7 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen }) => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userID = user?.userID;
 
-  const isDark =
-    typeof document !== "undefined" &&
-    document.body.classList.contains("dark-mode");
+  const isDark = isDarkMode;
 
   // Auto-close submenu when sidebar collapses
   useEffect(() => {

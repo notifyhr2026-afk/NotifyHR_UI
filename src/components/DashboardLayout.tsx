@@ -149,7 +149,7 @@ const DashboardLayout: React.FC = () => {
 
   return (
     <div className="dashboard-layout">
-      <OrgSideMenu isOpen={sidebarOpen} />
+      <OrgSideMenu isOpen={sidebarOpen} isDarkMode={isDarkMode} />
 
       <div
         className={`dashboard-main ${

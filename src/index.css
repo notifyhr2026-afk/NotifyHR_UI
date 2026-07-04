@@ -503,6 +503,11 @@ body {
   color: var(--text-color) !important;
 }
 
+.table thead th {
+  color: #9800f9 !important;
+}
+
+
 /* Cards */
 .card {
   background-color: var(--card-bg) !important;
@@ -527,10 +532,10 @@ input, select, textarea {
 /* ===========================
    SIDEBAR
 =========================== */
-.sidebar,
+/* .sidebar,
 nav {
   background-color: var(--sidebar-bg) !important;
-}
+} */
 
 /* Topbar */
 .topbar {

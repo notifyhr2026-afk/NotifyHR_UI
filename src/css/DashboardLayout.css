@@ -28,15 +28,15 @@
   position: sticky;
   top: 0;
   z-index: 999;
-  background: var(--topbar-bg);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border-color);
+  background: linear-gradient(180deg, rgba(124, 58, 237, 0.08), var(--topbar-bg));
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-bottom: 1px solid rgba(124, 58, 237, 0.16);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.06);
 }
 
 /* ===== LEFT SECTION ===== */
@@ -109,7 +109,7 @@ body.dark-mode .menu-btn:hover {
   margin: 0;
   font-weight: 700;
   font-size: 1rem;
-  color: var(--brand-primary, #0d6efd);
+  color: #7c3aed;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -120,6 +120,7 @@ body.dark-mode .menu-btn:hover {
 
 .org-name i {
   font-size: 1rem;
+  color: #7c3aed;
 }
 
 /* Breadcrumbs */
@@ -127,34 +128,44 @@ body.dark-mode .menu-btn:hover {
   display: flex;
   align-items: center;
   padding-left: 14px;
-  border-left: 1px solid var(--border-color);
-  margin-left: 4px;
+  border-left: 1px solid rgba(124, 58, 237, 0.18);
+  margin-left: 8px;
 }
 
 .breadcrumb {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 0;
   font-size: 0.8rem;
 }
 
 .breadcrumb-item {
   color: var(--text-color);
-  opacity: 0.65;
+  opacity: 0.75;
   text-transform: capitalize;
   font-size: 0.8rem;
+  padding: 4px 10px;
+  border-radius: 999px;
+  transition: background 0.2s, color 0.2s, opacity 0.2s;
 }
 
 .breadcrumb-item.active {
   opacity: 1;
   font-weight: 600;
-  color: var(--brand-primary, #0d6efd);
+  color: #ffffff;
+  background: #7c3aed;
+  box-shadow: 0 8px 20px rgba(124, 58, 237, 0.18);
 }
 
 .breadcrumb-item + .breadcrumb-item::before {
-  content: "/";
-  opacity: 0.35;
-  padding-right: 4px;
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(124, 58, 237, 0.3);
+  margin: 0 10px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .breadcrumb-item i {
