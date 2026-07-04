@@ -262,7 +262,7 @@ const handleInputChange = (e: any) => {
     <div className="container mt-3">
       <h3>Job Requisitions</h3>
 
-      <div className="d-flex justify-content-end">
+      <div className="d-flex justify-content-end m-1">
     <Button
       onClick={() => {
         setFormData(initialForm);
@@ -305,7 +305,7 @@ const handleInputChange = (e: any) => {
       </Table>
 
       {/* ================= ADD / EDIT MODAL ================= */}
-<Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
+<Modal show={showModal} onHide={() => setShowModal(false)} size="xl">
   <Modal.Header closeButton>
     <Modal.Title>
       {editRequisition ? "Edit Job Requisition" : "Add Job Requisition"}

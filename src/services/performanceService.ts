@@ -18,7 +18,7 @@ const performanceService = {
   getPerformanceCriteriaByOrganizationIDAsync: async (organizationID:number) => {   
       const { data } = await axiosInstance.get(`Performance/Criteria?organizationID=${organizationID}`);
       return data;   
-  },
+  }, 
    PostPerformanceCriteriaByAsync: async (payload: any) => {
     const res = await axiosInstance.post("Performance/Criteria", payload);
     return res.data[0];
@@ -40,7 +40,22 @@ const performanceService = {
       const { data } = await axiosInstance.delete(`Performance/ReviewCycles?reviewCycleID=${reviewCycleID}`);
       return data;   
   },
-
+   CriteriaByTemplateAsync: async (organizationID: number, templateID: number) => {
+        const { data } = await axiosInstance.get(`Performance/CriteriaByTemplateAsync?organizationID=${organizationID}&templateID=${templateID}`);
+        return data;
+  },
+  SaveEmployeeReviewAsync: async (payload: any) => {
+    const res = await axiosInstance.post("Performance/SaveEmployeeReviewAsync", payload);
+    return res.data;
+   },
+   GetPerformanceReviewByIDAsync: async (ReviewerID:number) => {   
+      const { data } = await axiosInstance.get(`Performance/GetPerformanceReviewByID?reviewerID=${ReviewerID}`);
+      return data;   
+  },
+   GetEmployeeReviewsAsync: async (payload: any) => {
+    const res = await axiosInstance.post("Performance/GetEmployeeReviewsAsync", payload);
+    return res.data;
+   },
 };
 
 export default performanceService;

@@ -8,13 +8,17 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 interface ReviewGridRow {
   ReviewID: number;
+  EmployeeID?: number;
+  ReviewerID?: number;
+  TemplateID?: number;
+  ReviewCycleID?: number;
   EmployeeName: string;
   CycleName: string;
-  TemplateName: string;
-  ReviewDate: string;
+  TemplateName: string;  
   Status: string;
   Comments: string;
   ReviewStatus: string;
+  Ratings?: any[];
 }
 
 interface CriteriaRating {
@@ -43,34 +47,11 @@ interface Template {
 
 const statuses = ["Draft", "Submitted", "Approved", "Rejected"];
 
-const reviewsMock: ReviewGridRow[] = [
-  {
-    ReviewID: 1,
-    EmployeeName: "John Doe",
-    CycleName: "FY 2024",
-    TemplateName: "Annual Review",
-    ReviewDate: "2024-12-31",
-    Status: "Submitted",
-    Comments: "Good performance overall",
-    ReviewStatus: "Submitted",
-  },
-  {
-    ReviewID: 2,
-    EmployeeName: "Jane Smith",
-    CycleName: "Mid-Year 2024",
-    TemplateName: "Probation Review",
-    ReviewDate: "2024-06-30",
-    Status: "Approved",
-    Comments: "Excellent progress during probation",
-    ReviewStatus: "Submitted",
-  },
-];
-
 /* ================= COMPONENT ================= */
 
 const SubmittedPerformanceReviews: React.FC = () => {
   /* ================= STATE ================= */
-  const [reviews, setReviews] = useState<ReviewGridRow[]>(reviewsMock);
+  const [reviews, setReviews] = useState<ReviewGridRow[]>([]);
 
   const [filters, setFilters] = useState({
     employee: "",
@@ -83,11 +64,15 @@ const SubmittedPerformanceReviews: React.FC = () => {
 
   const [selectedReview, setSelectedReview] = useState<ReviewGridRow | null>(null);
   const [criteriaRatings, setCriteriaRatings] = useState<CriteriaRating[]>([]);
+  const [existingReviewID, setExistingReviewID] = useState<number | null>(null);
 
   const [isNewReview, setIsNewReview] = useState(false);
   const [selectedCycle, setSelectedCycle] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState("");
   const [selectedEmployee, setSelectedEmployee] = useState("");
+  const [selectedCycleID, setSelectedCycleID] = useState<string>("");
+  const [selectedTemplateID, setSelectedTemplateID] = useState<string>("");
+  const [selectedEmployeeID, setSelectedEmployeeID] = useState<string>("");
   const [comments, setComments] = useState("");
   const [reviewStatus, setReviewStatus] = useState<"Draft" | "Submitted">("Draft");
 
@@ -95,22 +80,120 @@ const SubmittedPerformanceReviews: React.FC = () => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [cycles, setCycles] = useState<ReviewCycle[]>([]);
   const [templates, setTemplates] = useState<Template[]>([]);
-  const [templateCriteria, setTemplateCriteria] = useState<CriteriaRating[]>([]);
   
   const [loading, setLoading] = useState(false);
   const [criteriaLoading, setCriteriaLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+     // Get organizationID from localStorage
+        const user = JSON.parse(localStorage.getItem("user") || "{}");
+        const organizationID = user.organizationID;
+        const logedInUserid = user.employeeID;
+
+  const normalizeApiRecord = (record: any) => {
+    if (!record || typeof record !== "object") return record;
+    const jsonKey = Object.keys(record).find(key => key.startsWith("JSON_"));
+    if (jsonKey && typeof record[jsonKey] === "string") {
+      try {
+        return JSON.parse(record[jsonKey]);
+      } catch {
+        return record;
+      }
+    }
+    return record;
+  };
+
+  const normalizeApiResponse = (response: any) => {
+    if (!response) return [];
+    if (Array.isArray(response)) return response.map(normalizeApiRecord);
+
+    if (typeof response === "string") {
+      try {
+        const parsed = JSON.parse(response);
+        return Array.isArray(parsed)
+          ? parsed.map(normalizeApiRecord)
+          : [normalizeApiRecord(parsed)];
+      } catch {
+        return [];
+      }
+    }
+
+    if (typeof response === "object") {
+      const jsonKey = Object.keys(response).find(key => key.startsWith("JSON_"));
+      if (jsonKey && typeof response[jsonKey] === "string") {
+        try {
+          const parsed = JSON.parse(response[jsonKey]);
+          return Array.isArray(parsed)
+            ? parsed.map(normalizeApiRecord)
+            : [normalizeApiRecord(parsed)];
+        } catch {
+          return [];
+        }
+      }
+
+      if (Array.isArray(response.Table)) return response.Table.map(normalizeApiRecord);
+      if (Array.isArray(response.data)) return response.data.map(normalizeApiRecord);
+      return [normalizeApiRecord(response)];
+    }
+
+    return [];
+  };
+
+  const normalizeRatings = (ratings: any) => {
+    if (!ratings) return [];
+    if (Array.isArray(ratings)) return ratings;
+    if (typeof ratings === "string") {
+      try {
+        const parsed = JSON.parse(ratings);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    if (typeof ratings === "object") return [ratings];
+    return [];
+  };
+
+  const getCriteriaNames = (ratings: any) => {
+    const normalized = normalizeRatings(ratings);
+    return normalized
+      .map((rating: any) => rating.CriteriaName || rating.criteriaName || "")
+      .filter(Boolean)
+      .join(", ");
+  };
+
+  const getCriteriaSummary = (ratings: any) => {
+    const normalized = normalizeRatings(ratings);
+    return normalized
+      .map((rating: any) => {
+        const name = rating.CriteriaName || rating.criteriaName || rating.Criteria || rating.Name || "";
+        const value = rating.Rating != null ? ` (${rating.Rating})` : "";
+        return name ? `${name}${value}` : "";
+      })
+      .filter(Boolean)
+      .join(", ");
+  };
+
+  const getEmployeeName = (employeeID: number | string | undefined) => {
+    const id = employeeID != null ? String(employeeID) : "";
+    return employees.find(emp => String(emp.EmployeeID) === id)?.EmployeeName || "";
+  };
+
+  const getCycleName = (cycleID: number | string | undefined) => {
+    const id = cycleID != null ? String(cycleID) : "";
+    return cycles.find(c => String(c.PerformanceReviewCycleID) === id)?.CycleName || "";
+  };
+
+  const getTemplateName = (templateID: number | string | undefined) => {
+    const id = templateID != null ? String(templateID) : "";
+    return templates.find(t => String(t.PerformanceTemplateID) === id)?.TemplateName || "";
+  };
 
   /* ================= FETCH API DATA ================= */
   useEffect(() => {
-    const fetchDropdownData = async () => {
+    const fetchInitialData = async () => {
       try {
         setLoading(true);
         setError(null);
-
-        // Get organizationID from localStorage
-        const user = JSON.parse(localStorage.getItem("user") || "{}");
-        const organizationID = user.organizationID;
 
         if (!organizationID) {
           setError("Organization ID not found");
@@ -118,55 +201,99 @@ const SubmittedPerformanceReviews: React.FC = () => {
           return;
         }
 
-        // Fetch employees
         const employeesData = await employeeService.getEmployeesByOrganizationIdAsync(organizationID);
         const employeesArray = Array.isArray(employeesData) ? employeesData : employeesData?.Table || [];
         const mappedEmployees: Employee[] = employeesArray.map((emp: any) => ({
-          EmployeeID: emp.EmployeeID || emp.id,
-          EmployeeName: emp.EmployeeName || emp.name,
+          EmployeeID:
+            emp.EmployeeID ?? emp.EmployeeId ?? emp.id ?? emp.ID ?? "",
+          EmployeeName:
+            emp.EmployeeName || emp.Name || emp.name || emp.Employee || "",
         }));
         setEmployees(mappedEmployees);
 
-        // Fetch review cycles
         const cyclesData = await performanceService.getPerformanceReviewCyclesByOrganizationIDAsync(organizationID);
-        const cyclesArray = Array.isArray(cyclesData) ? cyclesData : cyclesData?.Table || [];
+        const cyclesArray = Array.isArray(cyclesData)
+          ? cyclesData
+          : cyclesData?.Table || cyclesData?.Table1 || cyclesData?.data || [];
         const mappedCycles: ReviewCycle[] = cyclesArray.map((cycle: any) => ({
-          PerformanceReviewCycleID: cycle.PerformanceReviewCycleID || cycle.id,
-          CycleName: cycle.CycleName || cycle.name,
+          PerformanceReviewCycleID:
+            cycle.PerformanceReviewCycleID ?? cycle.ReviewCycleID ?? cycle.id ?? cycle.ID ?? "",
+          CycleName: cycle.CycleName || cycle.Cycle || cycle.name || cycle.Name || "",
         }));
         setCycles(mappedCycles);
 
-        // Fetch templates
         const templatesData = await performanceService.getPerformanceTemplatesByOrganizationIDAsync(organizationID);
-        const templatesArray = Array.isArray(templatesData) ? templatesData : templatesData?.Table || [];
+        const templatesArray = Array.isArray(templatesData)
+          ? templatesData
+          : templatesData?.Table || templatesData?.Table1 || templatesData?.data || [];
         const mappedTemplates: Template[] = templatesArray.map((template: any) => ({
-          PerformanceTemplateID: template.PerformanceTemplateID || template.id,
-          TemplateName: template.TemplateName || template.name,
+          PerformanceTemplateID:
+            template.PerformanceTemplateID ?? template.TemplateID ?? template.id ?? template.ID ?? "",
+          TemplateName:
+            template.TemplateName || template.Template || template.name || template.Name || "",
         }));
         setTemplates(mappedTemplates);
 
+        if (logedInUserid) {
+          const response = await performanceService.GetPerformanceReviewByIDAsync(logedInUserid);
+          const responseArray = normalizeApiResponse(response);
+
+          const normalizedReviews = responseArray
+            .map((rawReview: any) => normalizeApiRecord(rawReview))
+            .map((review: any) => ({
+              ReviewID: Number(review.ReviewID || 0),
+              EmployeeID: review.EmployeeID,
+              ReviewerID: review.ReviewerID,
+              TemplateID: review.TemplateID,
+              ReviewCycleID: review.ReviewCycleID,
+              EmployeeName: review.EmployeeName || mappedEmployees.find(emp => String(emp.EmployeeID) === String(review.EmployeeID))?.EmployeeName || "",
+              CycleName: review.CycleName || mappedCycles.find(c => String(c.PerformanceReviewCycleID) === String(review.ReviewCycleID))?.CycleName || "",
+              TemplateName: review.TemplateName || mappedTemplates.find(t => String(t.PerformanceTemplateID) === String(review.TemplateID))?.TemplateName || "",
+              Status: review.Status || "",
+              Comments: review.Comments || "",
+              ReviewStatus: review.ReviewStatus || review.Status || "",
+              Ratings: normalizeRatings(review.Ratings || review.Rating || review.RatingList || review.ReviewRatings),
+            }));
+
+          setReviews(normalizedReviews);
+        }
+
         setLoading(false);
       } catch (err) {
-        console.error("Failed to fetch dropdown data", err);
+        console.error("Failed to fetch dropdown or reviewer data", err);
         setError("Failed to load data. Please check the console for details.");
         setLoading(false);
       }
     };
 
-    fetchDropdownData();
-  }, []);
+    fetchInitialData();
+  }, [logedInUserid]);
 
-  /* ================= FETCH CRITERIA WHEN TEMPLATE SELECTED ================= */
+  /* ================= FETCH TEMPLATE REVIEW OR CRITERIA ================= */
   useEffect(() => {
-    const fetchTemplateCriteria = async () => {
-      if (!selectedTemplate || !isNewReview) {
+    const fetchExistingReviewOrCriteria = async () => {
+      if (!isNewReview || selectedTemplateID === "") {
+        return;
+      }
+
+      if (!selectedEmployeeID || !selectedCycleID) {
+        setCriteriaRatings([]);
+        return;
+      }
+
+      if (existingReviewID !== null) {
+        return;
+      }
+
+      const selectedTemplateNum = Number(selectedTemplateID);
+      if (Number.isNaN(selectedTemplateNum)) {
+        setCriteriaRatings([]);
         return;
       }
 
       try {
         setCriteriaLoading(true);
 
-        // Get organizationID from localStorage
         const user = JSON.parse(localStorage.getItem("user") || "{}");
         const organizationID = user.organizationID;
 
@@ -176,29 +303,63 @@ const SubmittedPerformanceReviews: React.FC = () => {
           return;
         }
 
-        // Fetch criteria for the organization
-        // (The backend can filter by template if needed)
-        const criteriaData = await performanceService.getPerformanceCriteriaByOrganizationIDAsync(organizationID);
-        const criteriaArray = Array.isArray(criteriaData) ? criteriaData : criteriaData?.Table || [];
-        
-        const mappedCriteria: CriteriaRating[] = criteriaArray.map((criteria: any) => ({
-          CriteriaID: criteria.PerformanceCriteriaID || criteria.id,
-          CriteriaName: criteria.CriteriaName || criteria.name,
-          Rating: 0,
-          Feedback: "",
-        }));
+        const payload = {
+          employeeID: Number(selectedEmployeeID),
+          reviewerID: Number(logedInUserid),
+          reviewCycleID: Number(selectedCycleID),
+          templateID: selectedTemplateNum,
+        };
 
-        setTemplateCriteria(mappedCriteria);
-        setCriteriaRatings(mappedCriteria);
+        const existingReview = await performanceService.GetEmployeeReviewsAsync(payload);
+        const rawReviewRecord = Array.isArray(existingReview)
+          ? existingReview[0]
+          : existingReview;
+        const reviewRecord = normalizeApiRecord(rawReviewRecord);
+
+        if (reviewRecord && reviewRecord.ReviewID) {
+          const ratingsArray = Array.isArray(reviewRecord.Ratings)
+            ? reviewRecord.Ratings
+            : [];
+
+          setExistingReviewID(Number(reviewRecord.ReviewID));
+          setComments(reviewRecord.Comments || "");
+          setReviewStatus((reviewRecord.Status as "Draft" | "Submitted") || reviewStatus);
+          setCriteriaRatings(
+            ratingsArray.map((criteria: any) => ({
+              CriteriaID: criteria.CriteriaID || criteria.PerformanceCriteriaID || criteria.id,
+              CriteriaName: criteria.CriteriaName || criteria.CriteriaName || criteria.criteriaName || criteria.name || "",
+              Rating: criteria.Rating || 0,
+              Feedback: criteria.Feedback || "",
+            }))
+          );
+        } else {
+          const criteriaData = await performanceService.CriteriaByTemplateAsync(
+            organizationID,
+            selectedTemplateNum
+          );
+          const criteriaArray = Array.isArray(criteriaData)
+            ? criteriaData
+            : criteriaData?.Table || criteriaData?.Table1 || criteriaData?.data || [];
+
+          const mappedCriteria: CriteriaRating[] = criteriaArray.map((criteria: any) => ({
+            CriteriaID: criteria.PerformanceCriteriaID || criteria.CriteriaID || criteria.id,
+            CriteriaName: criteria.CriteriaName || criteria.name || criteria.criteriaName || criteria.CriteriaName || "",
+            Rating: 0,
+            Feedback: "",
+          }));
+
+          setCriteriaRatings(mappedCriteria);
+        }
+
         setCriteriaLoading(false);
       } catch (err) {
-        console.error("Failed to fetch template criteria", err);
+        console.error("Failed to load review or template criteria", err);
         setCriteriaLoading(false);
       }
     };
 
-    fetchTemplateCriteria();
-  }, [selectedTemplate, isNewReview]);
+    fetchExistingReviewOrCriteria();
+  }, [selectedTemplateID, selectedEmployeeID, selectedCycleID, isNewReview, existingReviewID, reviewStatus]);
 
   /* ================= FILTER LOGIC ================= */
 
@@ -210,73 +371,102 @@ const SubmittedPerformanceReviews: React.FC = () => {
 
   /* ================= ACTIONS ================= */
 
-  const openEdit = (review: ReviewGridRow) => {
-    setIsNewReview(false);
-    setSelectedReview(review);
-    setSelectedCycle(review.CycleName);
-    setSelectedTemplate(review.TemplateName);
-    setSelectedEmployee(review.EmployeeName);
-    setComments(review.Comments || "");
-    setReviewStatus((review.ReviewStatus as "Draft" | "Submitted") || "Draft");
+const openEdit = (review: ReviewGridRow) => {
+      const detailRecord = normalizeApiRecord(review);
+      const cycleID = String(detailRecord.ReviewCycleID || detailRecord.CycleID || "");
+      const templateID = String(detailRecord.TemplateID || detailRecord.PerformanceTemplateID || "");
+      const employeeID = String(detailRecord.EmployeeID || "");
 
-    setCriteriaRatings([
-      {
-        CriteriaID: 1,
-        CriteriaName: "Technical Skills",
-        Rating: 4,
-        Feedback: "Good knowledge",
-      },
-      {
-        CriteriaID: 2,
-        CriteriaName: "Communication",
-        Rating: 3,
-        Feedback: "Needs improvement",
-      },
-    ]);
+      setIsNewReview(false);
+      setSelectedReview(review);
+      setSelectedCycle(detailRecord.CycleName || review.CycleName || "");
+      setSelectedTemplate(detailRecord.TemplateName || review.TemplateName || "");
+      setSelectedEmployee(detailRecord.EmployeeName || review.EmployeeName || "");
+      setSelectedCycleID(cycleID);
+      setSelectedTemplateID(templateID);
+      setSelectedEmployeeID(employeeID);
+      setExistingReviewID(review.ReviewID);
+      setComments(detailRecord.Comments || review.Comments || "");
+      setReviewStatus((detailRecord.ReviewStatus as "Draft" | "Submitted") || review.ReviewStatus || "Draft");
+      setCriteriaRatings(
+        Array.isArray(detailRecord.Ratings)
+          ? detailRecord.Ratings.map((criteria: any) => ({
+              CriteriaID: criteria.PerformanceCriteriaID || criteria.CriteriaID || criteria.id,
+              CriteriaName: criteria.CriteriaName || criteria.name || "",
+              Rating: criteria.Rating || 0,
+              Feedback: criteria.Feedback || "",
+            }))
+          : []
+      );
+      setShowEditModal(true);
+    };
 
-    setShowEditModal(true);
-  };
-
-  const saveReviewChanges = () => {
-    if (!selectedEmployee || !selectedCycle || !selectedTemplate) {
-      ToastMessage.show("Please fill all required fields.", "error");
+  const saveReviewChanges = async () => {
+    if (!selectedEmployeeID || !selectedCycleID || !selectedTemplateID) {
+      ToastMessage.show("Employee, cycle and template are required.", "error");
       return;
     }
 
-    if (isNewReview) {
-      const newReview: ReviewGridRow = {
-        ReviewID: Date.now(),
-        EmployeeName: selectedEmployee,
-        CycleName: selectedCycle,
-        TemplateName: selectedTemplate,
-        ReviewDate: new Date().toISOString().split("T")[0],
-        Status: "Submitted",
-        Comments: comments,
-        ReviewStatus: reviewStatus,
-      };
+    const ratingsPayload = criteriaRatings.map(c => ({
+      RatingID: 0,
+      CriteriaID: c.CriteriaID,
+      Rating: c.Rating,
+      Feedback: c.Feedback,
+    }));
 
-      setReviews(prev => [...prev, newReview]);
+    const reviewIDToSave = existingReviewID ?? (isNewReview ? 0 : selectedReview?.ReviewID);
+    const isUpdate = reviewIDToSave !== 0 && reviewIDToSave !== undefined;
 
-      console.log("Insert TblPerformanceReviews", newReview);
-      console.log("Insert TblReviewCriteriaRatings", criteriaRatings);
+    const payload = {
+      ReviewID: reviewIDToSave,
+      EmployeeID: selectedEmployeeID || undefined,
+      ReviewCycleID: selectedCycleID || undefined,
+      TemplateID: selectedTemplateID || undefined,
+      EmployeeName: selectedEmployee,
+      CycleName: selectedCycle,
+      TemplateName: selectedTemplate,
+      Status: reviewStatus,
+      Comments: comments,
+      ReviewStatus: reviewStatus,
+      ReviewerID: logedInUserid,
+      Ratings: ratingsPayload,
+    };
 
-      ToastMessage.show("Review submitted successfully!", "success");
-    } else {
-      console.log("Update TblPerformanceReviews", selectedReview);
-      console.log("Update TblReviewCriteriaRatings", criteriaRatings);
+    try {
+      const response = await performanceService.SaveEmployeeReviewAsync(payload);
+      const result = Array.isArray(response) ? response[0] : response;
 
-      setReviews(prev =>
-        prev.map(r =>
-          r.ReviewID === selectedReview!.ReviewID
-            ? { ...r, Status: selectedReview!.Status, Comments: comments, ReviewStatus: reviewStatus }
-            : r
-        )
-      );
-
-      ToastMessage.show("Review updated successfully!", "success");
+      if (result?.value === 1 || result?.success === true || result?.status === "success") {
+        if (!isUpdate) {
+          const newReview: ReviewGridRow = {
+            ReviewID: result?.reviewID || Date.now(),
+            EmployeeName: selectedEmployee,
+            CycleName: selectedCycle,
+            TemplateName: selectedTemplate,
+            Status: reviewStatus,
+            Comments: comments,
+            ReviewStatus: reviewStatus,
+          };
+          setReviews(prev => [...prev, newReview]);
+          ToastMessage.show("Review submitted successfully!", "success");
+        } else {
+          setReviews(prev =>
+            prev.map(r =>
+              r.ReviewID === reviewIDToSave
+                ? { ...r, Status: reviewStatus, Comments: comments, ReviewStatus: reviewStatus }
+                : r
+            )
+          );
+          ToastMessage.show("Review updated successfully!", "success");
+        }
+        setShowEditModal(false);
+      } else {
+        ToastMessage.show(result?.msg || "Unable to save review.", "error");
+      }
+    } catch (err) {
+      console.error("Failed to save review", err);
+      ToastMessage.show("Failed to save review. Please try again.", "error");
     }
-
-    setShowEditModal(false);
   };
 
   const confirmDelete = (review: ReviewGridRow) => {
@@ -340,6 +530,9 @@ const SubmittedPerformanceReviews: React.FC = () => {
             setSelectedEmployee("");
             setSelectedCycle("");
             setSelectedTemplate("");
+            setSelectedEmployeeID("");
+            setSelectedCycleID("");
+            setSelectedTemplateID("");
             setComments("");
             setReviewStatus("Draft");
             setCriteriaRatings([]);
@@ -401,7 +594,7 @@ const SubmittedPerformanceReviews: React.FC = () => {
               <th>Employee</th>
               <th>Cycle</th>
               <th>Template</th>
-              <th>Review Date</th>
+              <th>Criteria</th>
               <th>Status</th>
               <th>Action</th>
             </tr>
@@ -412,7 +605,9 @@ const SubmittedPerformanceReviews: React.FC = () => {
                 <td>{r.EmployeeName}</td>
                 <td>{r.CycleName}</td>
                 <td>{r.TemplateName}</td>
-                <td>{r.ReviewDate}</td>
+                <td>
+                  {getCriteriaSummary(r.Ratings) || "No criteria"}
+                </td>
                 <td>
                   <select
                     className="form-select form-select-sm"
@@ -426,16 +621,10 @@ const SubmittedPerformanceReviews: React.FC = () => {
                 </td>
                 <td>
                   <button
-                    className="btn btn-warning btn-sm me-2"
+                    className="btn btn-warning btn-sm"
                     onClick={() => openEdit(r)}
                   >
                     <i className="bi bi-pencil-square"></i>
-                  </button>
-                  <button
-                    className="btn btn-danger btn-sm"
-                    onClick={() => confirmDelete(r)}
-                  >
-                    <i className="bi bi-trash"></i>
                   </button>
                 </td>
               </tr>
@@ -468,12 +657,20 @@ const SubmittedPerformanceReviews: React.FC = () => {
                       <label className="fw-bold">Employee</label>
                       <select
                         className="form-select"
-                        value={selectedEmployee}
-                        onChange={e => setSelectedEmployee(e.target.value)}
+                        value={selectedEmployeeID}
+                        onChange={e => {
+                          const id = e.target.value || "";
+                          setExistingReviewID(null);
+                          setSelectedEmployeeID(id);
+                          const employee = employees.find(emp => String(emp.EmployeeID) === id);
+                          setSelectedEmployee(employee?.EmployeeName || "");
+                        }}
                       >
                         <option value="">Select Employee</option>
                         {employees.map(e => (
-                          <option key={e.EmployeeID}>{e.EmployeeName}</option>
+                          <option key={e.EmployeeID} value={String(e.EmployeeID || "")}>
+                            {e.EmployeeName}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -482,12 +679,22 @@ const SubmittedPerformanceReviews: React.FC = () => {
                       <label className="fw-bold">Review Cycle</label>
                       <select
                         className="form-select"
-                        value={selectedCycle}
-                        onChange={e => setSelectedCycle(e.target.value)}
+                        value={selectedCycleID}
+                        onChange={e => {
+                          const id = e.target.value || "";
+                          setExistingReviewID(null);
+                          setSelectedCycleID(id);
+                          const cycle = cycles.find(
+                            c => String(c.PerformanceReviewCycleID) === id
+                          );
+                          setSelectedCycle(cycle?.CycleName || "");
+                        }}
                       >
                         <option value="">Select Cycle</option>
                         {cycles.map(c => (
-                          <option key={c.PerformanceReviewCycleID}>{c.CycleName}</option>
+                          <option key={c.PerformanceReviewCycleID} value={String(c.PerformanceReviewCycleID || "")}>
+                            {c.CycleName}
+                          </option>
                         ))}
                       </select>
                     </div>
@@ -496,12 +703,23 @@ const SubmittedPerformanceReviews: React.FC = () => {
                       <label className="fw-bold">Template</label>
                       <select
                         className="form-select"
-                        value={selectedTemplate}
-                        onChange={e => setSelectedTemplate(e.target.value)}
+                        value={selectedTemplateID}
+                        disabled={!selectedEmployeeID || !selectedCycleID}
+                        onChange={e => {
+                          const id = e.target.value || "";
+                          setExistingReviewID(null);
+                          setSelectedTemplateID(id);
+                          const template = templates.find(
+                            t => String(t.PerformanceTemplateID) === id
+                          );
+                          setSelectedTemplate(template?.TemplateName || "");
+                        }}
                       >
                         <option value="">Select Template</option>
                         {templates.map(t => (
-                          <option key={t.PerformanceTemplateID}>{t.TemplateName}</option>
+                          <option key={t.PerformanceTemplateID} value={String(t.PerformanceTemplateID || "")}>
+                            {t.TemplateName}
+                          </option>
                         ))}
                       </select>
                     </div>
