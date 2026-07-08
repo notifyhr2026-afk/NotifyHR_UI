@@ -211,9 +211,9 @@ const UsersSection: React.FC = () => {
                       </div>
                       <div>
                         <div>{u.fullName}</div>
-                        <div style={{ fontSize: "0.75rem", opacity: 0.5 }}>
+                        {/* <div style={{ fontSize: "0.75rem", opacity: 0.5 }}>
                           {u.username}
-                        </div>
+                        </div> */}
                       </div>
                     </div>
                   </td>
@@ -281,7 +281,7 @@ const UsersSection: React.FC = () => {
                       }}
                     >
                       <i className="bi bi-arrow-counterclockwise" />
-                      Reset Password
+                      Reset
                     </Button>
                   </td>
                 </tr>

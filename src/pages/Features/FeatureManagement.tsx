@@ -233,7 +233,7 @@ useEffect(() => {
               <th>Description</th>
               <th>Feature Type</th>
               <th>Status</th>
-              <th>Action</th>
+              <th style={{ minWidth: 100 }}>Action</th>
             </tr>
           </thead>
           <tbody>

@@ -189,6 +189,10 @@ const employeeService = {
       const { data } = await api.get(`Employee/GetEmployeeProfile?organizationID=${organizationID}&employeeID=${employeeID}`);
       return data;
    },
+    GetEmployeeDataAsync: async (organizationID : number) => {    
+      const { data } = await api.get(`Employee/GetEmployeeDataAsync?organizationID=${organizationID}`);
+      return data;
+  },
 };
 
 export default employeeService;

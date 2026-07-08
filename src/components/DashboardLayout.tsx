@@ -9,13 +9,14 @@ import "../css/DashboardLayout.css";
 const BREADCRUMB_MAP: Record<string, string> = {
   dashboard: "Dashboard",
   menus: "Menus",
+  Organization: "Manage Organization",
   Organizations: "Organizations",
   ManageRoles: "Roles",
   Users: "Users",
-  Branches: "Branches",
-  Divisions: "Divisions",
+  Branches: "Manage Branches",
+  Divisions: "Manage Divisions",
   Departments: "Departments",
-  EmployeeList: "Employees",
+  EmployeeList: "Employee List",
   ApplyLeave: "Apply Leave",
   LeavePolicies: "Leave Policies",
   ManageLeavePolicy: "Leave Policy",
@@ -65,6 +66,7 @@ const BREADCRUMB_MAP: Record<string, string> = {
   "bench-policy-rules": "Bench Policy",
   "notice-period-policies": "Notice Period",
   "resignation-approval": "Resignation Approval",
+  AssignedRoles: "Available Roles",
 };
 
 const DashboardLayout: React.FC = () => {

@@ -230,7 +230,7 @@ const ManageLeavePolicy: React.FC = () => {
                 <th>Encashable</th>
                 <th>Negative Balance</th>
                 {/* <th>Effective Period</th> */}
-                <th>Action</th>
+                <th style={{ minWidth: 100 }}>Action</th>
               </tr>
             </thead>
             <tbody>

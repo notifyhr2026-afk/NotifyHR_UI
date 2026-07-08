@@ -50,12 +50,13 @@ const AssignedRoles: React.FC = () => {
   }
 
   return (
-    <Container>
-      <h3 className="mb-4">Assigned Roles</h3>
-
+    <Container>      
       <Card className="p-3">
-        <Table className="table table-hover table-dark-custom">
-          <thead className="table-primary">
+        <Table hover responsive className="mb-0">
+                   <thead
+                     style={{
+                       background: "rgba(0,0,0,.03)",
+                     }}>                     
             <tr>
               <th>Role Name</th>
               <th>Description</th>

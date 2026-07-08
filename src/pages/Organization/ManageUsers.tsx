@@ -8,12 +8,15 @@ import {
   Col,
   Pagination,
   Badge,
-  Card
+  Card,
+  Spinner,
 } from 'react-bootstrap';
 import Select from 'react-select';
 import userService from '../../services/userService';
 import employeeService from '../../services/employeeService';
 import * as roleService from '../../services/roleService';
+import Swal from 'sweetalert2';
+import { resetUserPasswordByAdmin } from '../../services/Changepassword';
 
 interface User {
   id: number;
@@ -82,6 +85,11 @@ const ManageUsers: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [userToDelete, setUserToDelete] = useState<number | null>(null);
+
+  // Reset password state
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [selectedResetUser, setSelectedResetUser] = useState<User | null>(null);
+  const [resetting, setResetting] = useState(false);
 
   const [roleOptions, setRoleOptions] = useState<{ value: string; label: string }[]>([]);
 
@@ -371,6 +379,18 @@ const ManageUsers: React.FC = () => {
 
         <Button
           size="sm"
+          variant="warning"
+          className="ms-2"
+          onClick={() => {
+            setSelectedResetUser(u);
+            setShowResetModal(true);
+          }}
+        >
+          <i className="bi bi-arrow-counterclockwise"></i>
+        </Button>
+
+        <Button
+          size="sm"
           variant="danger"
           className="ms-2"
           onClick={() => {
@@ -593,6 +613,62 @@ const ManageUsers: React.FC = () => {
 
         </Modal.Footer>
 
+      </Modal>
+
+      {/* Reset Password Modal */}
+      <Modal show={showResetModal} onHide={() => setShowResetModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title>Confirm Password Reset</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          Are you sure you want to reset the password for <strong>{selectedResetUser?.fullName}</strong>?
+          <div style={{ fontSize: '0.85rem', opacity: 0.65, marginTop: 8 }}>
+            The user will be required to set a new password on their next login.
+          </div>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowResetModal(false)}>Cancel</Button>
+          <Button
+            variant="danger"
+            onClick={async () => {
+              if (!selectedResetUser) return;
+              try {
+                setResetting(true);
+                await resetUserPasswordByAdmin({
+                  userID: selectedResetUser.id,
+                  organizationID: organizationID,
+                  modifiedBy: 'admin',
+                });
+
+                setUsers(prev => prev.map(u => u.id === selectedResetUser.id ? { ...u, isPasswordReset: true } : u));
+                setShowResetModal(false);
+
+                await Swal.fire({
+                  icon: 'success',
+                  title: 'Password Reset Successful!',
+                  showConfirmButton: false,
+                  timer: 1800,
+                  heightAuto: false,
+                });
+              } catch (err) {
+                console.error(err);
+                await Swal.fire({ icon: 'error', title: 'Password Reset Failed' });
+              } finally {
+                setResetting(false);
+              }
+            }}
+            disabled={resetting}
+          >
+            {resetting ? (
+              <>
+                <Spinner animation="border" size="sm" className="me-2" />
+                Resetting...
+              </>
+            ) : (
+              'Yes, Reset'
+            )}
+          </Button>
+        </Modal.Footer>
       </Modal>
 
       {/* Delete Modal */}

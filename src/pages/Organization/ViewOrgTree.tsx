@@ -159,34 +159,54 @@ const ViewOrgTree: React.FC = () => {
 
   // ---------------- Node UI ----------------
 
-const renderNode = ({ nodeDatum, toggleNode }: any) => {
+  // node dimensions (keep in sync with nodeSize below)
+  const NODE_W = 260;
+  const NODE_H = 72;
+
+  const renderNode = ({ nodeDatum, toggleNode }: any) => {
+  const w = NODE_W;
+  const h = NODE_H;
+  const innerStyle = {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
+    height: "100%",
+    borderRadius: 12,
+    padding: "8px 12px",
+    boxSizing: "border-box" as const,
+    fontFamily: "Inter, system-ui, -apple-system, 'Segoe UI', Roboto",
+    fontWeight: 500 as const,
+    fontSize: "15px",
+    transition: "box-shadow .15s ease, transform .12s ease",
+  };
+
+  const bg = isDark
+    ? "#17181b"
+    : "linear-gradient(180deg, rgba(245,243,255,0.9), #ffffff)";
+  const color = isDark ? "#e6e6e9" : "#071033";
+  const border = isDark ? "rgba(255,255,255,0.04)" : "rgba(99,102,241,0.08)";
+  const shadow = isDark
+    ? "0 4px 10px rgba(0,0,0,0.35), 0 1px 0 rgba(99,102,241,0.02)"
+    : "0 4px 8px rgba(15,23,42,0.04), 0 1px 0 rgba(99,102,241,0.03)";
+
   return (
-    <g
-      onClick={toggleNode}
-      style={{ cursor: "pointer" }}
-    >
-<rect
-  width={190}
-  height={65}
-  x={-95}
-  y={-32}
-  rx={12}
-  fill={isDark ? "#111827" : "#f8fafc"}
-  stroke={isDark ? "#334155" : "#cbd5e1"}
-  strokeWidth={1.2}
-  filter="drop-shadow(0px 1px 3px rgba(0,0,0,0.12))"
-/>
-      <text
-        x={0}
-        y={0}
-        textAnchor="middle"
-        dominantBaseline="middle"
-        fill="#ffffff"
-        fontSize={14}
-        fontWeight={600}
-      >
-        {nodeDatum.name}
-      </text>
+    <g onClick={toggleNode} style={{ cursor: "pointer" }}>
+      <foreignObject x={-w / 2} y={-h / 2} width={w} height={h}>
+        <div {...({ xmlns: "http://www.w3.org/1999/xhtml" } as any)} style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div
+            style={{
+              ...innerStyle,
+              background: bg,
+              color,
+              border: `1px solid ${border}`,
+              boxShadow: shadow,
+            }}
+          >
+            <div style={{ textAlign: "center", pointerEvents: "none" }}>{nodeDatum.name}</div>
+          </div>
+        </div>
+      </foreignObject>
     </g>
   );
 };
@@ -203,7 +223,7 @@ const renderNode = ({ nodeDatum, toggleNode }: any) => {
         <style>
         {`
           .rd3t-link {
-            stroke: #6b7280;
+            stroke: #9800f9;
             stroke-width: 1.5px;
             fill: none;
           }
@@ -222,6 +242,7 @@ const renderNode = ({ nodeDatum, toggleNode }: any) => {
           collapsible
           zoomable
           draggable
+          nodeSize={{ x: NODE_W * 0.7, y: NODE_H * 1.5 }}
           separation={{ siblings: 1.5, nonSiblings: 2 }}
         />
       )}

@@ -195,12 +195,19 @@ const AttendanceApprovalPage: React.FC = () => {
       </div>
 
       <div className="table-responsive">
-        <Table
-          bordered
-          hover
-          className="align-middle shadow-sm"
-        >
-          <thead className="table-dark">
+       <Table
+                   hover
+                   responsive
+                   className="mb-0"
+                   style={{
+                     verticalAlign: "middle",
+                   }}
+                 >
+         <thead
+              style={{
+                background: "rgba(0,0,0,.03)",
+              }}
+            >
             <tr>
               <th>ID</th>
               <th>Employee</th>

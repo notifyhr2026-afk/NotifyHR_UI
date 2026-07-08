@@ -42,7 +42,7 @@ const ManageOrganization: React.FC = () => {
   return (
     <div className="page-container">
       {/* Page Header */}
-      <div
+      {/* <div
         style={{
           marginBottom: 24,
           display: "flex",
@@ -76,7 +76,7 @@ const ManageOrganization: React.FC = () => {
             Configure your organization settings, users, and integrations
           </p>
         </div>
-      </div>
+      </div> */}
 
       {/* Tab Navigation */}
       <Tab.Container activeKey={activeKey} onSelect={(k) => setActiveKey(k || "details")}>

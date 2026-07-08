@@ -164,8 +164,19 @@ const CandidateOfferList: React.FC = () => {
 
           {/* ===== Grid ===== */}
           <div className="table-responsive">
-            <Table bordered hover striped>
-              <thead className="table-dark">
+            <Table
+                               hover
+                               responsive
+                               className="mb-0"
+                               style={{
+                                 verticalAlign: "middle",
+                               }}
+                             >
+                     <thead
+                          style={{
+                            background: "rgba(0,0,0,.03)",
+                          }}
+                        >
                 <tr>
                   <th>Name</th>
                   <th>Email</th>

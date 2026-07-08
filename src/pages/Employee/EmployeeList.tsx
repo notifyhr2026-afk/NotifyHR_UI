@@ -394,19 +394,8 @@ if (result?.value === 1) {
   return (
     
     <div className="employee-list-page container">
-       <ToastContainer position="top-right" autoClose={3000} />
-      <div className="employee-list-header">
-        <div>
-          <h2>Employee List</h2>
-          <p className="employee-list-subtitle">Manage and view all employees in your organization</p>
-        </div>
-        <Button variant="success" onClick={() => setShowModal(true)}>
-          {Icon(BsPlusLg, { className: 'me-2' })}
-          Add Employee
-        </Button>
-      </div>
-
-      <div className="employee-stat-cards">
+       <ToastContainer position="top-right" autoClose={3000} /> 
+      {/* <div className="employee-stat-cards">
         <div className="employee-stat-card">
           <div className="employee-stat-icon total">
             {Icon(BsPeople)}
@@ -425,7 +414,7 @@ if (result?.value === 1) {
             <div className="employee-stat-value">{filteredEmployees.length}</div>
           </div>
         </div>
-      </div>
+      </div> */}
 
       <div className="employee-toolbar">
         <div className="employee-search-wrap">
@@ -442,6 +431,17 @@ if (result?.value === 1) {
         </div>
 
         <div className="employee-toolbar-actions">
+           <Button
+              variant="outline-primary"
+              onClick={() => window.location.href = "/employee-data"}
+              style={{ borderRadius: 8, fontWeight: 600 }}
+            >
+              View Employee Data
+            </Button>
+          <Button variant="success" onClick={() => setShowModal(true)}>
+          {Icon(BsPlusLg, { className: 'me-2' })}
+          Add Employee
+        </Button>
           <Button variant="outline-primary" onClick={openFilterModal}>
             {Icon(BsFunnel, { className: 'me-2' })}
             Filters

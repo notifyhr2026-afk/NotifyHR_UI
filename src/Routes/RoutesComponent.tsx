@@ -121,6 +121,7 @@ import ManageBenchPolicyRules from '../pages/Organization/ManageBenchPolicyRules
 import ResignationApproval from '../components/Employee/ResignationApproval';
 import ManageNoticePeriodPolicies from '../pages/Organization/ManageNoticePeriodPolicies';
 import EmployeeTree from '../pages/Employee/EmployeeTree';
+import EmployeeData from '../pages/Employee/EmployeeData';
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -255,6 +256,7 @@ const RoutesComponent: React.FC = () => {
 
         <Route path="/resignation-approval" element={<ResignationApproval />} />
         <Route path="/employee-tree" element={<EmployeeTree />} />
+        <Route path="/employee-data" element={<EmployeeData />} />
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
           path="Employees/manageEmployee/:employeeID"

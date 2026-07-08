@@ -216,7 +216,7 @@ const TaxSectionMaster: React.FC = () => {
               <th>Section Name</th>
               <th>Description</th>
               <th className="text-center">Status</th>
-              <th className="text-center">Actions</th>
+              <th className="text-center" style={{ minWidth: 100 }}>Actions</th>
             </tr>
           </thead>
           <tbody>
