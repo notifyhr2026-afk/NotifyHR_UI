@@ -247,9 +247,18 @@ const EmployeeSalaryAssignment: React.FC = () => {
         </Col>
 
         <Col md={4} className="d-flex align-items-end justify-content-end">
-          <Button variant="success" disabled={!selectedEmployee} onClick={handleAdd}>
-            + Add Salary
-          </Button>
+          {selectedEmployee ? (
+            // show Add only when selected employee has no salary records
+            salaryData.length === 0 ? (
+              <Button variant="success" onClick={handleAdd}>
+                + Add Salary
+              </Button>
+            ) : null
+          ) : (
+            <Button variant="success" disabled>
+              + Add Salary
+            </Button>
+          )}
         </Col>
       </Row>
 
@@ -277,7 +286,7 @@ const EmployeeSalaryAssignment: React.FC = () => {
                 <td>{row.EffectiveFrom?.split('T')[0]}</td>
                 <td>{row.EffectiveTo?.split('T')[0]}</td>
                 <td>{changeStatuses.find(s => s.ChangeStatusID === row.ChangeStatusID)?.Status}</td>
-                <td>
+                <td style={{ minWidth: 220 }}>
                   <Button size="sm" variant="secondary" className="me-2"
                     onClick={() => handleViewBreakup(row.EmployeeID)}>
                     View Breakup

@@ -408,7 +408,7 @@ const ManageNoticePeriodPolicies: React.FC = () => {
                           variant="outline-primary"
                           onClick={() => openEditModal(p)}
                         >
-                          Edit
+                           <i className="bi bi-pencil-square"></i>
                         </Button>
 
                         <Button
@@ -418,7 +418,7 @@ const ManageNoticePeriodPolicies: React.FC = () => {
                             handleDelete(p.noticePeriodPolicyID)
                           }
                         >
-                          Delete
+                          <i className="bi bi-trash"></i>
                         </Button>
                       </div>
                     </td>

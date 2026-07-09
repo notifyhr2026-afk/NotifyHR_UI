@@ -621,7 +621,7 @@ const openEdit = (review: ReviewGridRow) => {
                 </td>
                 <td>
                   <button
-                    className="btn btn-warning btn-sm"
+                    className="btn btn-outline-warning btn-sm"
                     onClick={() => openEdit(r)}
                   >
                     <i className="bi bi-pencil-square"></i>
@@ -814,13 +814,13 @@ const openEdit = (review: ReviewGridRow) => {
 
               <div className="modal-footer">
                 <button
-                  className="btn btn-secondary"
+                  className="btn btn-outline-secondary"
                   onClick={() => setShowEditModal(false)}
                 >
                   Cancel
                 </button>
                 <button
-                  className="btn btn-success"
+                  className="btn btn-outline-success"
                   onClick={saveReviewChanges}
                 >
                   {isNewReview ? "Submit Review" : "Save Changes"}
@@ -846,13 +846,13 @@ const openEdit = (review: ReviewGridRow) => {
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-secondary"
+                  className="btn btn-outline-secondary"
                   onClick={() => setShowDeleteModal(false)}
                 >
                   Cancel
                 </button>
                 <button
-                  className="btn btn-danger"
+                  className="btn btn-outline-danger"
                   onClick={deleteReview}
                 >
                   Delete

@@ -228,13 +228,13 @@ const EmployeeSelfReview: React.FC = () => {
                 <td>{r.Status}</td>
                 <td>
                   <button
-                    className="btn btn-warning btn-sm me-2"
+                    className="btn btn-outline-warning btn-sm me-2"
                     onClick={() => openEdit(r)}
                   >
                     <i className="bi bi-pencil-square"></i>
                   </button>
                   <button
-                    className="btn btn-danger btn-sm"
+                    className="btn btn-outline-danger btn-sm"
                     onClick={() => confirmDelete(r)}
                   >
                     <i className="bi bi-trash"></i>
@@ -370,13 +370,13 @@ const EmployeeSelfReview: React.FC = () => {
 
               <div className="modal-footer">
                 <button
-                  className="btn btn-secondary"
+                  className="btn btn-outline-secondary"
                   onClick={() => setShowModal(false)}
                 >
                   Cancel
                 </button>
                 <button
-                  className="btn btn-success"
+                  className="btn btn-outline-success"
                   onClick={saveReview}
                 >
                   {isNewReview ? "Submit Self Review" : "Save Changes"}
@@ -400,13 +400,13 @@ const EmployeeSelfReview: React.FC = () => {
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-secondary"
+                  className="btn btn-outline-secondary"
                   onClick={() => setShowDeleteModal(false)}
                 >
                   Cancel
                 </button>
                 <button
-                  className="btn btn-danger"
+                  className="btn btn-outline-danger"
                   onClick={deleteReview}
                 >
                   Delete

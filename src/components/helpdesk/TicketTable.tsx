@@ -114,13 +114,13 @@ export default function TicketTable({ tickets, onUpdate }: Props) {
                 {isEditing ? (
                   <>
                     <button
-                      className="btn btn-success btn-sm me-1"
+                      className="btn btn-outline-success btn-sm me-1"
                       onClick={saveEdit}
                     >
                       Save
                     </button>
                     <button
-                      className="btn btn-secondary btn-sm"
+                      className="btn btn-outline-secondary btn-sm"
                       onClick={cancelEdit}
                     >
                       Cancel

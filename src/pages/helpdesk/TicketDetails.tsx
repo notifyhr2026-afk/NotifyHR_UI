@@ -21,7 +21,7 @@ export default function TicketDetails() {
             </div>
 
             <textarea className="form-control mb-2" />
-            <button className="btn btn-secondary">
+            <button className="btn btn-outline-secondary">
               Add Comment
             </button>
           </div>

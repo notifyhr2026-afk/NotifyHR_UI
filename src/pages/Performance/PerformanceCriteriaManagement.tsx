@@ -224,13 +224,13 @@ const PerformanceCriteriaManagement: React.FC = () => {
                 </td>
                 <td>
                   <button
-                    className="btn btn-warning btn-sm me-2"
+                    className="btn btn-outline-warning btn-sm me-2"
                     onClick={() => openEditModal(item)}
                   >
                     <i className="bi bi-pencil-square"></i>
                   </button>
                   <button
-                    className="btn btn-danger btn-sm"
+                    className="btn btn-outline-danger btn-sm"
                     onClick={() => openDeleteModal(item.CriteriaID)}
                   >
                     <i className="bi bi-trash"></i>
@@ -357,10 +357,10 @@ const PerformanceCriteriaManagement: React.FC = () => {
               </div>
 
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                <button className="btn btn-outline-secondary" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button className="btn btn-success" onClick={saveCriteria}>
+                <button className="btn btn-outline-success" onClick={saveCriteria}>
                   Save
                 </button>
               </div>
@@ -383,10 +383,10 @@ const PerformanceCriteriaManagement: React.FC = () => {
                 <p>Are you sure you want to delete this criteria?</p>
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>
+                <button className="btn btn-outline-secondary" onClick={() => setShowDeleteModal(false)}>
                   Cancel
                 </button>
-                <button className="btn btn-danger" onClick={deleteCriteria}>
+                <button className="btn btn-outline-danger" onClick={deleteCriteria}>
                   Delete
                 </button>
               </div>

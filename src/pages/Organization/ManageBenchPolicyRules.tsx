@@ -353,7 +353,7 @@ const getDepartment = (id: number) =>
                         className="me-2"
                         onClick={() => openEditModal(r)}
                       >
-                        Edit
+                         <i className="bi bi-pencil-square"></i>
                       </Button>
 
                       <Button
@@ -361,7 +361,7 @@ const getDepartment = (id: number) =>
                         variant="outline-danger"
                         onClick={() => handleDelete(r.benchPolicyRuleID)}
                       >
-                        Delete
+                        <i className="bi bi-trash"></i>
                       </Button>
                     </td>
                   </tr>

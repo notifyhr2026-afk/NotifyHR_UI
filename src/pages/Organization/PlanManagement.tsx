@@ -347,7 +347,7 @@ const PlanManagement: React.FC = () => {
 
               <div className="modal-footer">
                 <button
-                  className="btn btn-secondary"
+                  className="btn btn-outline-secondary"
                   onClick={() => setShowModal(false)}
                 >
                   Cancel
@@ -378,12 +378,12 @@ const PlanManagement: React.FC = () => {
               </div>
               <div className="modal-footer">
                 <button
-                  className="btn btn-secondary"
+                  className="btn btn-outline-secondary"
                   onClick={() => setShowDeleteModal(false)}
                 >
                   Cancel
                 </button>
-                <button className="btn btn-danger" onClick={deletePlan}>
+                <button className="btn btn-outline-danger" onClick={deletePlan}>
                   Delete
                 </button>
               </div>

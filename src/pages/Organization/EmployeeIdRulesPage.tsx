@@ -621,15 +621,15 @@ const handleEdit = (rule: EmployeeIdRule) => {
                       </Badge>
                     </td>
                     <td>
-                      <Button size="sm" variant="warning" onClick={() => handleEdit(rule)}>
-                        Edit
+                      <Button size="sm" variant="outline-primary" onClick={() => handleEdit(rule)}>
+                        <i className="bi bi-pencil-square"></i>
                       </Button>{" "}
                       <Button
                         size="sm"
-                        variant="danger"
+                        variant="outline-danger"
                         onClick={() => openDeleteModal(rule.id)}
                       >
-                        Delete
+                        <i className="bi bi-trash"></i>
                       </Button>
                     </td>
                   </tr>

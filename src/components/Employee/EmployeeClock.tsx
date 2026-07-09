@@ -265,7 +265,7 @@ const EmployeeClock: React.FC = () => {
 
             <div className="d-flex justify-content-center gap-3 mb-4">
               <button
-                className="btn btn-success btn-lg"
+                className="btn btn-outline-success btn-lg"
                 onClick={() => handleClock('IN')}
                 disabled={loading || lastType === 'IN'}
               >
@@ -273,7 +273,7 @@ const EmployeeClock: React.FC = () => {
               </button>
 
               <button
-                className="btn btn-danger btn-lg"
+                className="btn btn-outline-danger btn-lg"
                 onClick={() => handleClock('OUT')}
                 disabled={loading || lastType !== 'IN'}
               >

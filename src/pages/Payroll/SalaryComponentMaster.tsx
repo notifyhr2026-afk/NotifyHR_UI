@@ -216,13 +216,13 @@ const SalaryComponentMaster: React.FC = () => {
                 <td>{comp.defaultTaxable ? 'Yes' : 'No'}</td>
                 <td>
                   <Button    
-                   className="btn btn-warning btn-sm me-2"                
+                   className="btn btn-outline-warning btn-sm me-2"                
                     onClick={() => handleEdit(comp)}
                   >
                     <i className="bi bi-pencil-square"></i>
                   </Button>{' '}
                   <Button                
-                    className="btn btn-danger btn-sm"   
+                    className="btn btn-outline-danger btn-sm"   
                     onClick={() => handleDelete(comp.id)}
                   >
                     <i className="bi bi-trash"></i>

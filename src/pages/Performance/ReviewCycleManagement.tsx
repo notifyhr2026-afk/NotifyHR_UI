@@ -204,13 +204,13 @@ const openEditModal = (cycle: ReviewCycle) => {
                 </td>
                 <td>
                   <button
-                    className="btn btn-warning btn-sm me-2"
+                    className="btn btn-outline-warning btn-sm me-2"
                     onClick={() => openEditModal(cycle)}
                   >
                     <i className="bi bi-pencil-square"></i>
                   </button>
                   <button
-                    className="btn btn-danger btn-sm"
+                    className="btn btn-outline-danger btn-sm"
                     onClick={() => openDeleteModal(cycle.ReviewCycleID)}
                   >
                     <i className="bi bi-trash"></i>
@@ -305,10 +305,10 @@ const openEditModal = (cycle: ReviewCycle) => {
               </div>
 
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowModal(false)}>
+                <button className="btn btn-outline-secondary" onClick={() => setShowModal(false)}>
                   Cancel
                 </button>
-                <button className="btn btn-success" onClick={saveCycle}>
+                <button className="btn btn-outline-success" onClick={saveCycle}>
                   Save
                 </button>
               </div>
@@ -330,10 +330,10 @@ const openEditModal = (cycle: ReviewCycle) => {
                 <p>Are you sure you want to delete this review cycle?</p>
               </div>
               <div className="modal-footer">
-                <button className="btn btn-secondary" onClick={() => setShowDeleteModal(false)}>
+                <button className="btn btn-outline-secondary" onClick={() => setShowDeleteModal(false)}>
                   Cancel
                 </button>
-                <button className="btn btn-danger" onClick={deleteCycle}>
+                <button className="btn btn-outline-danger" onClick={deleteCycle}>
                   Delete
                 </button>
               </div>
