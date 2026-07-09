@@ -252,7 +252,7 @@ useEffect(() => {
                 </td>
                 <td>
                   <button
-                    className="btn btn-outline-warning btn-sm me-2"
+                    className="btn btn-outline-primary btn-sm me-2"
                     onClick={() => openEditModal(feature)}
                   >
                     <i className="bi bi-pencil-square"></i>

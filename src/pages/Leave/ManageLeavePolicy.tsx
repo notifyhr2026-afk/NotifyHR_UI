@@ -247,7 +247,7 @@ const ManageLeavePolicy: React.FC = () => {
                   </td> */}
                   <td>
                     <button
-                      className="btn btn-outline-warning btn-sm me-2"
+                      className="btn btn-outline-primary btn-sm me-2"
                       onClick={() => openEditModal(p)}
                     >
                       <i className="bi bi-pencil-square"></i>

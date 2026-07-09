@@ -336,7 +336,7 @@ const handleEdit = (item: SalaryStructureComponent) => {
                 <td>{s.ComponentCode}</td>
                 <td>{s.CalculationTypeName}</td>
                 <td>{s.Value}</td>
-                <td>
+                <td style={{ width: '140px' }}>
                   <Button
                     size="sm"
                     variant="outline-primary"

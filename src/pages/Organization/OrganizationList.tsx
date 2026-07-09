@@ -275,6 +275,10 @@ const OrganizationList: React.FC = () => {
                   <td>{org.Industry || '-'}</td>
 
                   <td>
+                      <OverlayTrigger
+                      placement="top"
+                      overlay={<Tooltip>Manage Organization</Tooltip>}
+                    >
                     <Button
                       size="sm"
                       className="me-2"
@@ -286,9 +290,9 @@ const OrganizationList: React.FC = () => {
                           : navigate(path);
                       }}
                     >
-                      Manage
+                      <i className="bi bi-gear"></i>  
                     </Button>
-
+                    </OverlayTrigger>
                     <OverlayTrigger
                       placement="top"
                       overlay={<Tooltip>View Organization Counts</Tooltip>}
@@ -298,7 +302,7 @@ const OrganizationList: React.FC = () => {
                         size="sm"
                         onClick={() => handleViewCounts(org.OrganizationID)}
                       >
-                        Info
+                        <i className="bi bi-info-circle"></i>
                       </Button>
                     </OverlayTrigger>
                   </td>

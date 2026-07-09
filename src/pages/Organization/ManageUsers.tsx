@@ -10,6 +10,8 @@ import {
   Badge,
   Card,
   Spinner,
+  OverlayTrigger,
+  Tooltip,
 } from 'react-bootstrap';
 import Select from 'react-select';
 import userService from '../../services/userService';
@@ -366,8 +368,8 @@ const ManageUsers: React.FC = () => {
       </td>
 
       <td style={{ width: '140px' }}>
-        <Button
-          size="sm"
+        <button
+          className="btn btn-outline-primary btn-sm me-2"
           onClick={() => {
             setEditUser(u);
             setUserFormData(u);
@@ -375,31 +377,31 @@ const ManageUsers: React.FC = () => {
           }}
         >
           <i className="bi bi-pencil-square"></i>
-        </Button>
-
-        <Button
-          size="sm"
-          variant="warning"
-          className="ms-2"
-          onClick={() => {
-            setSelectedResetUser(u);
-            setShowResetModal(true);
+        </button>
+       <OverlayTrigger 
+          placement="top"
+          overlay={<Tooltip>Reset Password</Tooltip>}
+        >
+          <button
+            className="btn btn-outline-warning btn-sm me-2"   
+            onClick={() => {
+              setSelectedResetUser(u);
+              setShowResetModal(true);
           }}
         >
+          
           <i className="bi bi-arrow-counterclockwise"></i>
-        </Button>
-
-        <Button
-          size="sm"
-          variant="danger"
-          className="ms-2"
+        </button>
+</OverlayTrigger>
+        <button
+         className="btn btn-outline-danger btn-sm me-2"   
           onClick={() => {
             setUserToDelete(u.id);
             setConfirmDelete(true);
           }}
         >
           <i className="bi bi-trash"></i>
-        </Button>
+        </button>
       </td>
     </tr>
   ))}

@@ -434,7 +434,7 @@ const handleSave = async () => {
                 setDate(activeStartDate);
               }
             }}
-            onClickDay={(d) => openModal(d)}
+            // onClickDay={(d) => openModal(d)}
             tileContent={({ date: tileDate }) => {
             
               const today = new Date();

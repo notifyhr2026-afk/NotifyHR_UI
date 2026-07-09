@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import '../../css/EmployeeClock.css';
 import employeeAttendanceService from '../../services/employeeAttendanceService';
 import FullPageLoader  from '../FullPageLoader';
 
@@ -243,6 +244,8 @@ const EmployeeClock: React.FC = () => {
 
   const lastRecord = records[records.length - 1];
   const lastType = lastRecord?.type;
+  const totalIns = records.filter((record) => record.type === 'IN').length;
+  const totalOuts = records.filter((record) => record.type === 'OUT').length;
 
   return (
     <>
@@ -251,19 +254,18 @@ const EmployeeClock: React.FC = () => {
       )}
 
       <div className="container mt-4">
-        <div className="card shadow">
-          <div className="card-header bg-primary text-white text-center">
-            <h4 className="mb-0">
-              Employee Clock In / Clock Out
-            </h4>
+        <div className="card shadow employee-clock-card">
+          <div className="card-header clock-header text-center py-4">
+            <h4 className="mb-0">Employee Clock In / Clock Out</h4>
           </div>
 
-          <div className="card-body text-center">
-            <h5 className="mb-4">
-              Current Time: {currentTime}
-            </h5>
+          <div className="card-body p-4 text-center">
+            <div className="clock-time-box">
+              <h5 className="mb-2">Current Time</h5>
+              <div className="clock-time-value">{currentTime}</div>
+            </div>
 
-            <div className="d-flex justify-content-center gap-3 mb-4">
+            <div className="clock-action-btns d-flex justify-content-center flex-wrap gap-3 mb-3">
               <button
                 className="btn btn-outline-success btn-lg"
                 onClick={() => handleClock('IN')}
@@ -281,30 +283,48 @@ const EmployeeClock: React.FC = () => {
               </button>
             </div>
 
-            <hr />
+            <p className="clock-actions-note mb-4">
+              {lastType === 'IN'
+                ? 'You have clocked in. Please clock out when your shift ends.'
+                : 'Ready to clock in for your next shift.'}
+            </p>
 
-            <h5>Today's Records</h5>
+            <div className="clock-summary">
+              <div className="clock-summary-item">
+                <span>Total Ins</span>
+                <strong>{totalIns}</strong>
+              </div>
+              <div className="clock-summary-item">
+                <span>Total Outs</span>
+                <strong>{totalOuts}</strong>
+              </div>
+            </div>
+
+            <hr className="my-4" />
+
+            <h5 className="mb-3">Today's Records</h5>
 
             {records.length === 0 ? (
               <p>No clock records found.</p>
             ) : (
-              <ul className="list-group">
+              <ul className="list-group clock-records">
                 {records.map((record, index) => (
                   <li
                     key={index}
-                    className={`list-group-item d-flex justify-content-between ${
-                      record.type === 'IN'
-                        ? 'list-group-item-success'
-                        : 'list-group-item-danger'
-                    }`}
+                    className="list-group-item d-flex justify-content-between align-items-center"
                   >
-                    <span>
-                      {record.type === 'IN'
-                        ? 'Clock In'
-                        : 'Clock Out'}
-                    </span>
+                    <div>
+                      <span className={`clock-badge ${record.type === 'IN' ? 'in' : 'out'}`}>
+                        {record.type}
+                      </span>
+                      <span className="ms-3 clock-record-status">
+                        {record.type === 'IN' ? 'Clock In' : 'Clock Out'}
+                      </span>
+                    </div>
 
-                    <span>{record.time}</span>
+                    <span className="clock-record-time">
+                      {record.time}
+                    </span>
                   </li>
                 ))}
               </ul>

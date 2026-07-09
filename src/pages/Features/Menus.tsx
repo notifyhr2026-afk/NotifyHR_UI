@@ -253,14 +253,19 @@ const Menus: React.FC = () => {
                         </td>
                         <td>
                           <OverlayTrigger overlay={<Tooltip>Edit Menu</Tooltip>}>
-                            <Button className="btn btn-outline-warning btn-sm me-2" onClick={() => handleShowModal(menu)}>
+                            <button className="btn btn-outline-primary btn-sm me-2" onClick={() => handleShowModal(menu)}>
                               <i className="bi bi-pencil-square" />
-                            </Button>
+                            </button>
                           </OverlayTrigger>
                           <OverlayTrigger overlay={<Tooltip>{menu.isActive ? 'Deactivate' : 'Activate'}</Tooltip>}>
-                            <Button className="btn btn-outline-danger btn-sm" variant={menu.isActive ? 'warning' : 'success'} onClick={() => toggleActive(menu.menuID)}>
-                              <i className={`bi ${menu.isActive ? 'bi-toggle-off' : 'bi-toggle-on'}`} />
-                            </Button>
+                         <button
+                          className={`btn btn-sm ${
+                            menu.isActive ? "btn-outline-danger" : "btn-outline-warning"
+                          }`}
+                          onClick={() => toggleActive(menu.menuID)}
+                        >
+                          <i className={`bi ${menu.isActive ? "bi-toggle-off" : "bi-toggle-on"}`}></i>
+                        </button>
                           </OverlayTrigger>
                         </td>
                       </tr>

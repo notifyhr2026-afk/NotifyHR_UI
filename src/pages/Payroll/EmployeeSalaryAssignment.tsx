@@ -286,16 +286,19 @@ const EmployeeSalaryAssignment: React.FC = () => {
                 <td>{row.EffectiveFrom?.split('T')[0]}</td>
                 <td>{row.EffectiveTo?.split('T')[0]}</td>
                 <td>{changeStatuses.find(s => s.ChangeStatusID === row.ChangeStatusID)?.Status}</td>
-                <td style={{ minWidth: 220 }}>
-                  <Button size="sm" variant="secondary" className="me-2"
+                <td>
+                  <Button size="sm"
+                    variant="outline-success"
                     onClick={() => handleViewBreakup(row.EmployeeID)}>
                     View Breakup
                   </Button>
-                  <Button size="sm" variant="info" className="me-2"
+                  <Button size="sm"
+                    variant="outline-primary"
                     onClick={() => handleEdit(row)}>
                     <i className="bi bi-pencil-square"></i>
                   </Button>
-                  <Button size="sm" variant="danger"
+                  <Button size="sm"
+                    variant="outline-danger"
                     onClick={() => handleDelete(row.SalaryAssignmentID)}>
                     <i className="bi bi-trash"></i>
                   </Button>

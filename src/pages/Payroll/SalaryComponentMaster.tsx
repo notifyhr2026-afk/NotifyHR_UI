@@ -215,18 +215,18 @@ const SalaryComponentMaster: React.FC = () => {
                 <td>{comp.isStatutory ? 'Yes' : 'No'}</td>
                 <td>{comp.defaultTaxable ? 'Yes' : 'No'}</td>
                 <td>
-                  <Button    
-                   className="btn btn-outline-warning btn-sm me-2"                
+                  <button    
+                   className="btn btn-outline-primary btn-sm me-2"                
                     onClick={() => handleEdit(comp)}
                   >
                     <i className="bi bi-pencil-square"></i>
-                  </Button>{' '}
-                  <Button                
-                    className="btn btn-outline-danger btn-sm"   
+                  </button>{' '}
+                  <button                
+                    className="btn btn-danger btn-sm me-2"   
                     onClick={() => handleDelete(comp.id)}
                   >
                     <i className="bi bi-trash"></i>
-                  </Button>
+                  </button>
                 </td>
               </tr>
             ))}

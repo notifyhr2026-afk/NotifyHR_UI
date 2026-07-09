@@ -408,7 +408,7 @@ const OrganizationLeavePolicies: React.FC = () => {
                     <th>Encash</th>
                     <th>-Ve Balance</th>
                     <th>Status</th>
-                    <th className="text-end">Actions</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -428,7 +428,7 @@ const OrganizationLeavePolicies: React.FC = () => {
                             {p.IsActive ? "Active" : "Inactive"}
                           </Badge>
                         </td>
-                        <td className="text-end">
+                        <td style={{ width: '100px' }}>
                           <Button
                             size="sm"
                             variant="outline-primary"

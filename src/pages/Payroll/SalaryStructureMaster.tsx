@@ -207,7 +207,7 @@ const SalaryStructureMaster: React.FC = () => {
                 <td>{s.StructureName}</td>
                 <td>{s.Description}</td>
                 <td>{s.IsActive ? 'Yes' : 'No'}</td>
-                <td>
+                 <td style={{ width: '100px' }}>
                   <Button
                     size="sm"
                     variant="outline-primary"

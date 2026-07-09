@@ -211,7 +211,7 @@ const PlanManagement: React.FC = () => {
                     <td>{plan.billingCycleID === 1 ? "Monthly" : "Other"}</td>
                     <td className="text-center">
                       <button
-                        className="btn btn-outline-warning btn-sm me-2"
+                        className="btn btn-outline-primary btn-sm me-2"
                         onClick={() => openEditModal(plan)}
                       >
                         <i className="bi bi-pencil-square"></i>
