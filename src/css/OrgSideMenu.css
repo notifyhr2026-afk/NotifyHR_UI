@@ -412,3 +412,37 @@ body.dark-mode .hover-menu {
 .org-sidebar.collapsed .sidebar-footer-label {
   display: none;
 }
+  @media (max-width: 768px) {
+    .org-sidebar {
+      width: 0;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease, width 0.3s ease;
+      box-shadow: none;
+      border-right: none;
+      visibility: hidden;
+      pointer-events: none;
+      top: 60px;
+      height: calc(100vh - 60px);
+    }
+
+    .org-sidebar.expanded {
+      width: 250px;
+      transform: translateX(0);
+      visibility: visible;
+      pointer-events: auto;
+      box-shadow: 8px 0 40px rgba(124, 58, 237, 0.12);
+      border-right: 1px solid rgba(124, 58, 237, 0.16);
+      top: 60px;
+      height: calc(100vh - 60px);
+    }
+
+    .org-sidebar.collapsed .sidebar-logo,
+    .org-sidebar.collapsed .sidebar-menu,
+    .org-sidebar.collapsed .sidebar-footer {
+      display: none;
+    }
+
+    .org-sidebar .sidebar-menu {
+      padding-top: 8px;
+    }
+  }

@@ -76,7 +76,9 @@ const DashboardLayout: React.FC = () => {
 
   const userData = JSON.parse(localStorage.getItem("user") || "{}");
   const EmployeeID = userData?.employeeID || 0;
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() =>
+    typeof window !== "undefined" && window.innerWidth <= 768 ? false : true
+  );
   const [isDarkMode, setIsDarkMode] = useState(
     localStorage.getItem("theme") === "dark"
   );
@@ -90,6 +92,25 @@ const DashboardLayout: React.FC = () => {
     document.body.classList.toggle("light-mode", !isDarkMode);
     localStorage.setItem("theme", isDarkMode ? "dark" : "light");
   }, [isDarkMode]);
+
+  useEffect(() => {
+    const applyInitialSidebarState = () => {
+      if (window.innerWidth <= 768) {
+        setSidebarOpen(false);
+      }
+    };
+
+    applyInitialSidebarState();
+
+    const handleResize = () => {
+      if (window.innerWidth <= 768) {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   // Close search on outside click
   useEffect(() => {
@@ -141,6 +162,18 @@ const DashboardLayout: React.FC = () => {
   // User role for display — handles both string[] and {roleID, roleName}[]
   const primaryRole = userRoles[0]?.roleName || "User";
 
+  const prevPathRef = useRef<string>(location.pathname);
+
+  useEffect(() => {
+    if (
+      window.innerWidth <= 768 &&
+      location.pathname !== prevPathRef.current
+    ) {
+      setSidebarOpen(false);
+    }
+    prevPathRef.current = location.pathname;
+  }, [location.pathname]);
+
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "Enter" && searchQuery.trim()) {
       // Simple search navigation — can be extended
@@ -162,7 +195,7 @@ const DashboardLayout: React.FC = () => {
         <header className="dashboard-topbar">
           <div className="topbar-left">
             <button
-              className={`menu-btn ${!sidebarOpen ? "active" : ""}`}
+              className={`menu-btn ${sidebarOpen ? "active" : ""}`}
               onClick={() => setSidebarOpen(!sidebarOpen)}
               aria-label={sidebarOpen ? "Collapse sidebar" : "Expand sidebar"}
             >
