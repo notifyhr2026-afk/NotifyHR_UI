@@ -259,11 +259,7 @@ const EmployeeClock: React.FC = () => {
             <h4 className="mb-0">Employee Clock In / Clock Out</h4>
           </div>
 
-          <div className="card-body p-4 text-center">
-            <div className="clock-time-box">
-              <h5 className="mb-2">Current Time</h5>
-              <div className="clock-time-value">{currentTime}</div>
-            </div>
+          <div className="card-body p-4 text-center">         
 
             <div className="clock-action-btns d-flex justify-content-center flex-wrap gap-3 mb-3">
               <button
@@ -281,15 +277,20 @@ const EmployeeClock: React.FC = () => {
               >
                 Clock Out
               </button>
+              
             </div>
-
-            <p className="clock-actions-note mb-4">
+              <p className="clock-actions-note mb-4">
               {lastType === 'IN'
                 ? 'You have clocked in. Please clock out when your shift ends.'
                 : 'Ready to clock in for your next shift.'}
             </p>
+           <div className="clock-time-box">
+              <h5 className="mb-2">Current Time</h5>
+              <div className="clock-time-value">{currentTime}</div>
+            </div>
+          
 
-            <div className="clock-summary">
+            {/* <div className="clock-summary">
               <div className="clock-summary-item">
                 <span>Total Ins</span>
                 <strong>{totalIns}</strong>
@@ -298,7 +299,7 @@ const EmployeeClock: React.FC = () => {
                 <span>Total Outs</span>
                 <strong>{totalOuts}</strong>
               </div>
-            </div>
+            </div> */}
 
             <hr className="my-4" />
 
