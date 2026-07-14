@@ -30,7 +30,7 @@ const ApplyLeaveModal: React.FC<Props> = ({
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID: number | undefined = user?.organizationID;
   const employeeID: number | undefined = user?.employeeID;
-  const employeeName: number | undefined = user?.fullName;
+  const employeeName: string | undefined = user?.fullName;
   const [errors, setErrors] = useState<any>({});
   const [data, setData] = useState<any>({
     id: 0,

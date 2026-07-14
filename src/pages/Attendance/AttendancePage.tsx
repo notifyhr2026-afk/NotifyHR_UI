@@ -4,6 +4,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 import employeeService from "../../services/employeeService";
 import employeeAttendanceService from "../../services/employeeAttendanceService";
 import LoggedInUser from "../../types/LoggedInUser";
+import "bootstrap-icons/font/bootstrap-icons.css";
 
 interface Employee {
   value: number;
@@ -114,37 +115,59 @@ const AttendancePage: React.FC = () => {
   // -------------------------------
   // Get Attendance
   // -------------------------------
-  const handleGetAttendance = async () => {
-    if (!selectedEmployee) {
-      alert("Please select employee");
-      return;
+const handleGetAttendance = async () => {
+  try {
+    setLoading(true);
+
+    const employeeID = selectedEmployee?.value ?? 0;
+
+    let finalFromDate: string | null = fromDate || null;
+    let finalToDate: string | null = toDate || null;
+
+    // If only employee is selected (no dates), use current month
+    if (employeeID > 0 && !finalFromDate && !finalToDate) {
+      const today = new Date();
+
+      const firstDay = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        1
+      );
+
+      finalFromDate = firstDay.toISOString().split("T")[0];
+      finalToDate = today.toISOString().split("T")[0];
     }
 
-    try {
-      setLoading(true);
-
-      const res =
-        await employeeAttendanceService.getEmployeeAttendance({
-          employeeID: selectedEmployee.value,
-          organizationID: organizationID,
-          fromDate,
-          toDate,
-        });
-
-      const summary = res?.Table || [];
-      const logs = res?.Table1 || [];
-
-      setAttendanceData(summary);
-      setAttendanceLogs(logs);
-
-      setExpandedRows({});
-    } catch (err) {
-      console.error("Attendance load error:", err);
-    } finally {
-      setLoading(false);
+    // If only From Date is selected
+    if (finalFromDate && !finalToDate) {
+      finalToDate = finalFromDate;
     }
-  };
 
+    // If only To Date is selected
+    if (!finalFromDate && finalToDate) {
+      finalFromDate = finalToDate;
+    }
+
+    const res =
+      await employeeAttendanceService.getEmployeeAttendance({
+        employeeID,
+        organizationID,
+        fromDate: finalFromDate,
+        toDate: finalToDate,
+      });
+
+    const summary = res?.Table || [];
+    const logs = res?.Table1 || [];
+
+    setAttendanceData(summary);
+    setAttendanceLogs(logs);
+    setExpandedRows({});
+  } catch (err) {
+    console.error("Attendance load error:", err);
+  } finally {
+    setLoading(false);
+  }
+};
   return (
     <div className="container">
       <h3 className="text-center mb-4">
@@ -159,9 +182,13 @@ const AttendancePage: React.FC = () => {
           <Select
             options={employees}
             value={selectedEmployee}
-            onChange={(value) => setSelectedEmployee(value)}
+            onChange={(value: any) => setSelectedEmployee(value as Employee | null)}
             className="org-select"
             classNamePrefix="org-select"
+            isClearable
+            isSearchable
+            placeholder="Select employee..."
+            noOptionsMessage={() => "No employees"}
           />
         </div>
 
@@ -194,7 +221,7 @@ const AttendancePage: React.FC = () => {
           >
             GET
           </button>
-        </div>
+        </div>        
       </div>
 
       {/* Attendance Grid */}
@@ -206,6 +233,7 @@ const AttendancePage: React.FC = () => {
         <table className="table table-hover table-bordered">
           <thead className="table-dark">
             <tr>
+              <th>Name</th>
               <th>Date</th>
               <th>Check In</th>
               <th>Check Out</th>
@@ -241,6 +269,9 @@ const AttendancePage: React.FC = () => {
                         )
                       }
                     >
+                      <td>
+                        {attendance.EmployeeName} 
+                      </td>
                       <td>
                         {formatDate(
                           attendance.AttendanceDate
@@ -308,10 +339,7 @@ const AttendancePage: React.FC = () => {
                                {" | "}
 
                               {log.LocationAddress}
-                            </td>
-
-
-                            
+                            </td>                            
                           </tr>
                         ))
                       ) : (
@@ -329,8 +357,18 @@ const AttendancePage: React.FC = () => {
             )}
           </tbody>
         </table>
+        
       )}
+      <div className="alert alert-info py-2 mt-2 mb-3">
+  <i className="bi bi-info-circle me-2"></i>
+  <strong>Search Tips:</strong> Employee and date filters are optional.
+  Selecting only an employee searches from the first day of the current
+  month to today. Selecting only one date uses that date for both
+  <strong> From</strong> and <strong>To</strong>. Leaving all filters empty
+  displays attendance for all employees.
+</div>
     </div>
+    
   );
 };
 

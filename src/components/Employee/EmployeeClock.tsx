@@ -14,7 +14,7 @@ const EmployeeClock: React.FC = () => {
 
   const employeeId = user?.employeeID;
   const organizationID: number | undefined = user?.organizationID;
-
+  const employeeName: number | undefined = user?.fullName;
   const [currentTime, setCurrentTime] = useState(
     new Date().toLocaleTimeString()
   );
@@ -178,6 +178,7 @@ const EmployeeClock: React.FC = () => {
         IsApproved: true,
         IsLate: false,
         IsHalfDay: false,
+        EmployeeName: employeeName,
       };
 
       if (type === 'IN') {
