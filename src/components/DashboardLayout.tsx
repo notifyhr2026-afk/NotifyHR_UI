@@ -211,7 +211,7 @@ const DashboardLayout: React.FC = () => {
               <span>{userData.organizationName || "Organization"}</span>
             </h5>
 
-            {breadcrumbs.length > 0 && (
+            {/* {breadcrumbs.length > 0 && (
               <nav className="breadcrumb-nav">
                 <ol className="breadcrumb">
                   {breadcrumbs.map((crumb, i) => (
@@ -228,7 +228,7 @@ const DashboardLayout: React.FC = () => {
                   ))}
                 </ol>
               </nav>
-            )}
+            )} */}
           </div>
 
           <div className="topbar-right">

@@ -1103,51 +1103,60 @@ body.dark-mode::-webkit-scrollbar-thumb {
 /* ================= REACT SELECT DARK MODE FIX ================= */
 
 /* control box */
-.org-select__control {
+.org-select__control,
+.react-select__control {
   background-color: var(--card-bg) !important;
   border-color: var(--border-color) !important;
   box-shadow: none !important;
 }
 
 /* selected value text */
-.org-select__single-value {
+.org-select__single-value,
+.react-select__single-value {
   color: var(--text-color) !important;
 }
 
 /* input text */
-.org-select__input-container {
+.org-select__input-container,
+.react-select__input-container {
   color: var(--text-color) !important;
 }
 
 /* placeholder */
-.org-select__placeholder {
+.org-select__placeholder,
+.react-select__placeholder {
   color: #888 !important;
 }
 
 /* dropdown menu */
-.org-select__menu {
+.org-select__menu,
+.react-select__menu {
   background-color: var(--card-bg) !important;
   border: 1px solid var(--border-color) !important;
   z-index: 9999 !important;
 }
 
 /* option */
-.org-select__option {
+.org-select__option,
+.react-select__option {
   background-color: var(--card-bg) !important;
   color: var(--text-color) !important;
 }
 
 /* hover */
-.org-select__option--is-focused {
+.org-select__option--is-focused,
+.react-select__option--is-focused {
   background-color: rgba(13, 110, 253, 0.15) !important;
 }
 
 /* selected option */
-.org-select__option--is-selected {
+.org-select__option--is-selected,
+.react-select__option--is-selected {
   background-color: var(--brand-primary) !important;
   color: #fff !important;
 }
-.react-select-container {
+.react-select-container,
+.org-select__control {
   z-index: 9999;
 }
 .custom-tabs {

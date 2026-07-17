@@ -323,6 +323,11 @@ const AssignShifts: React.FC = () => {
                     value={selectedBranch}
                     onChange={setSelectedBranch}
                     isClearable
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                    styles={{
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    }}
                     className="org-select"
                     classNamePrefix="org-select"                    
                   />
@@ -334,6 +339,11 @@ const AssignShifts: React.FC = () => {
                     value={selectedDepartment}
                     onChange={setSelectedDepartment}
                     isClearable
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                    styles={{
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    }}
                     className="org-select"
                     classNamePrefix="org-select"                    
                   />
@@ -345,6 +355,11 @@ const AssignShifts: React.FC = () => {
                     value={selectedEmployee}
                     onChange={setSelectedEmployee}
                     isClearable
+                    menuPortalTarget={document.body}
+                    menuPosition="fixed"
+                    styles={{
+                      menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                    }}
                     className="org-select"
                     classNamePrefix="org-select"                    
                   />
@@ -353,8 +368,19 @@ const AssignShifts: React.FC = () => {
             </Card.Body>
           </Card>
 
-          <Table className="table table-hover table-dark-custom">
-            <thead>
+            <Table
+                      hover
+                      responsive
+                      className="mb-0"
+                      style={{
+                        verticalAlign: "middle",
+                      }}
+                    >
+                      <thead
+                        style={{
+                          background: "rgba(0,0,0,.03)",
+                        }}
+                      >
               <tr>
                 <th>Shift</th>
                 <th>From</th>
@@ -446,6 +472,11 @@ const AssignShifts: React.FC = () => {
                   options={weekendOptions}
                   value={weekendOptions.filter((opt) => assignData.weekends.includes(opt.value))}
                   onChange={handleWeekendSelect}
+                  menuPortalTarget={document.body}
+                  menuPosition="fixed"
+                  styles={{
+                    menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+                  }}
                   className="org-select"
                   classNamePrefix="org-select"
                 />

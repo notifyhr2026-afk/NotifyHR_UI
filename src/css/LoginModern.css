@@ -53,12 +53,14 @@
 
 /* ================= LOGIN CARD ================= */
 .login-card {
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(20px);
   border: 1px solid var(--lp-border, #e2e8f0);
   border-radius: 28px;
   padding: 40px;
   box-shadow: var(--lp-shadow-md, 0 25px 80px rgba(15, 23, 42, 0.08));
+  width: 100%;
+  max-width: 520px;
 }
 
 /* ================= ICON ================= */
@@ -108,9 +110,15 @@
 
 /* ================= FORM ================= */
 .form-control,
-.input-group-text {
-  /* min-height: 56px; */
+.input-group-text,
+.input-group .btn.password-toggle {
   border: 1px solid var(--lp-border, #e2e8f0);
+}
+
+.input-group .btn.password-toggle {
+  border-left: none;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
 }
 
 .form-control {
@@ -150,6 +158,36 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+@media (max-width: 768px) {
+  .login-container {
+    min-height: calc(100vh - 40px);
+    padding: 18px 0;
+  }
+
+  .login-card {
+    padding: 28px 20px;
+    border-radius: 24px;
+  }
+
+  .login-bg-shape.shape-1 {
+    width: 260px;
+    height: 260px;
+    top: -80px;
+    right: -60px;
+  }
+
+  .login-bg-shape.shape-2 {
+    width: 220px;
+    height: 220px;
+    bottom: -80px;
+    left: -40px;
+  }
+
+  .input-group .btn.password-toggle {
+    border-radius: 0 0.375rem 0.375rem 0;
+  }
 }
 .btn-lp-primary {
   background: var(--lp-indigo-light, #818cf8) !important;

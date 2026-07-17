@@ -109,7 +109,7 @@ body.dark-mode .menu-btn:hover {
   margin: 0;
   font-weight: 700;
   font-size: 1rem;
-  color: #7c3aed;
+  color: #4f46e5;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -120,7 +120,7 @@ body.dark-mode .menu-btn:hover {
 
 .org-name i {
   font-size: 1rem;
-  color: #7c3aed;
+  color: #4f46e5;
 }
 
 /* Breadcrumbs */
@@ -153,7 +153,7 @@ body.dark-mode .menu-btn:hover {
   opacity: 1;
   font-weight: 600;
   color: #ffffff;
-  background: #7c3aed;
+  background: #818cf8;
   box-shadow: 0 8px 20px rgba(124, 58, 237, 0.18);
 }
 

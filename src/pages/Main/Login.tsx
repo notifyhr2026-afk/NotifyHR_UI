@@ -7,6 +7,7 @@ import "../../css/LoginModern.css";
 const Login: React.FC = () => {
 const [username, setUsername] = useState("");
 const [password, setPassword] = useState("");
+const [showPassword, setShowPassword] = useState(false);
 const [errors, setErrors] = useState<{
 username?: string;
 password?: string;
@@ -90,33 +91,11 @@ return (
     </div> 
     <div className="login-bg-shape shape-2">      
     </div>
-  {/* NAVBAR */}
-  {/* <nav className="login-navbar">
-    <div className="container d-flex justify-content-between align-items-center">
-      <Link to="/">
-        <NikuHRLogo />
-      </Link>    
-    </div>
-  </nav> */}
   {/* MAIN */}
   <main className="container login-container m-4">
     <div className="row justify-content-center w-100">
       <div className="col-xl-5 col-lg-6 col-md-8">
-        {/* HEADER */}
-        {/* <div className="text-center mb-4">
-          <span className="landing-kicker">
-            Enterprise HRMS Platform
-          </span>
-          <h1 className="login-title">
-            Welcome to
-            <span className="text-gradient"> NikuHR</span>
-          </h1>
-          <p className="login-description">
-            Access payroll, attendance, recruitment,
-            onboarding and employee management from
-            one secure platform.
-          </p>
-        </div> */}
+        
         {/* LOGIN CARD */}
         <div className="login-card">
           <div className="text-center mb-4">
@@ -176,7 +155,7 @@ return (
                 </span>
 
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   className={`form-control ${
                     errors.password ? "is-invalid" : ""
                   }`}
@@ -186,6 +165,18 @@ return (
                     setPassword(e.target.value)
                   }
                 />
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary password-toggle"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <i
+                    className={`bi ${
+                      showPassword ? "bi-eye-slash" : "bi-eye"
+                    }`}
+                  />
+                </button>
               </div>
               {errors.password && (
                 <div className="text-danger small mt-1">
@@ -215,35 +206,12 @@ return (
             </button>
           </form>
           <div className="text-center mt-4">
-            {/* <Link
-              to="/forgot-password"
-              className="forgot-link"
-            >
-              Forgot Password?
-            </Link> */}
+           
           </div>
         </div>
         {/* TRUST */}
-        {/* <div className="row mt-4 g-3">
-          <div className="col-4">
-            <div className="stat-card">
-              <h5>500+</h5>
-              <small>Companies</small>
-            </div>
-          </div>
-          <div className="col-4">
-            <div className="stat-card">
-              <h5>99.9%</h5>
-              <small>Uptime</small>
-            </div>
-          </div>
-          <div className="col-4">
-            <div className="stat-card">
-              <h5>24/7</h5>
-              <small>Support</small>
-            </div>
-          </div>
-        </div> */}
+       
+     
       </div>
     </div>
   </main>

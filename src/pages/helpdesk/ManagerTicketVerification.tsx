@@ -237,6 +237,13 @@ export default function ManagerTicketVerification() {
               options={employeeOptions}
               isClearable
               placeholder="Select Employee"
+              className="org-select"
+              classNamePrefix="org-select"
+              menuPortalTarget={document.body}
+              menuPosition="fixed"
+              styles={{
+                menuPortal: (base) => ({ ...base, zIndex: 9999 }),
+              }}
               onChange={(option) =>
                 setEmployee(option ? option.value : null)
               }

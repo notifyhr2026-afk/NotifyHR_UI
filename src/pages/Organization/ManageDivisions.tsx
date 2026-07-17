@@ -341,8 +341,15 @@ return (
 
           <div className="mt-2">No divisions found.</div>
         </div>
+        
       )}
-
+      <div className="alert alert-info py-2 mt-2 mb-3">
+  <i className="bi bi-info-circle me-2"></i>
+  <strong>Division Management Tips:</strong> Enter a unique Division Code and Division Name to create a new division.
+  Parent Division is optional and helps organize divisions into a hierarchy.
+  Top-level divisions should have <strong>Parent Division</strong> set to <strong>None</strong>.
+  You can edit existing divisions at any time or delete divisions that are no longer required.
+</div>
       {/* Add/Edit Modal */}
       <Modal
         show={showModal}
@@ -557,6 +564,7 @@ return (
         </Modal.Footer>
       </Modal>
     </div>
+
   </>
 );
 

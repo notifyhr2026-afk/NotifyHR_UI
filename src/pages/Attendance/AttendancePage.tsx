@@ -5,6 +5,7 @@ import employeeService from "../../services/employeeService";
 import employeeAttendanceService from "../../services/employeeAttendanceService";
 import LoggedInUser from "../../types/LoggedInUser";
 import "bootstrap-icons/font/bootstrap-icons.css";
+import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
 
 interface Employee {
   value: number;
@@ -230,8 +231,19 @@ const handleGetAttendance = async () => {
           Loading attendance...
         </div>
       ) : (
-        <table className="table table-hover table-bordered">
-          <thead className="table-dark">
+       <Table
+            hover
+            responsive
+            className="mb-0"
+            style={{
+              verticalAlign: "middle",
+            }}
+          >
+            <thead
+              style={{
+                background: "rgba(0,0,0,.03)",
+              }}
+            >
             <tr>
               <th>Name</th>
               <th>Date</th>
@@ -356,7 +368,7 @@ const handleGetAttendance = async () => {
               })
             )}
           </tbody>
-        </table>
+        </Table>
         
       )}
       <div className="alert alert-info py-2 mt-2 mb-3">

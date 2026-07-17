@@ -1,9 +1,19 @@
-import React, { useState } from "react";
-import { Button, Table, Modal, Form, Row, Col } from "react-bootstrap";
+import React, { useEffect, useState } from "react";
+import {
+  Button,
+  Table,
+  Modal,
+  Form,
+  Row,
+  Col,
+  Spinner,
+} from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import jobRequisitionService from "../../services/jobRequisitionService";
 
-// ======= Types =======
+// ================= TYPES =================
+
 interface JobRequisition {
   JobReqRecruiterID: number;
   JobRequisitionID: number;
@@ -13,221 +23,689 @@ interface JobRequisition {
   Comment?: string;
 }
 
-interface DropdownItem {
-  id: number;
-  name: string;
-}
 
-const jobRequisitions: DropdownItem[] = [
+// ================= STATIC DATA =================
+// Replace later with API
+
+const jobRequisitions = [
   { id: 1, name: "JR-001" },
   { id: 2, name: "JR-002" },
 ];
 
-const recruiters: DropdownItem[] = [
+
+const recruiters = [
   { id: 101, name: "Alice" },
   { id: 102, name: "Bob" },
   { id: 103, name: "Charlie" },
 ];
 
-const statuses: DropdownItem[] = [
-  { id: 1, name: "Approved" },
-  { id: 2, name: "Rejected" },
-];
 
-// ======= Component =======
+// ================= COMPONENT =================
+
 const RecruiterApprovalPage: React.FC = () => {
-  const [recruitersList, setRecruitersList] = useState<JobRequisition[]>([
-    {
-      JobReqRecruiterID: 1,
-      JobRequisitionID: 1,
-      RecruiterUserID: 101,
-      AssignedDate: "2025-12-20",
-      Status: "Pending",
-    },
-  ]);
-  const [showModal, setShowModal] = useState(false);
-  const [editRequisition, setEditRequisition] = useState<JobRequisition | null>(null);
-  const [formData, setFormData] = useState<JobRequisition>({
-    JobReqRecruiterID: 0,
-    JobRequisitionID: 0,
-    RecruiterUserID: 0,
-    AssignedDate: new Date().toISOString().slice(0, 10),
-    Status: "Pending",
-  });
 
-  const [validated, setValidated] = useState(false);
 
-  // ======= Handlers =======
+  const user =
+    JSON.parse(localStorage.getItem("user") || "{}");
+
+
+  const employeeID = user?.employeeID;
+
+  const employeeName = user?.fullName;
+
+
+
+  const [recruitersList, setRecruitersList] =
+    useState<JobRequisition[]>([]);
+
+
+  const [loading, setLoading] =
+    useState(false);
+
+
+
+  const [showModal, setShowModal] =
+    useState(false);
+
+
+
+  const [selectedRecruiter, setSelectedRecruiter] =
+    useState<JobRequisition | null>(null);
+
+
+
+  const [validated, setValidated] =
+    useState(false);
+
+
+
+  const [formData, setFormData] =
+    useState({
+      JobReqRecruiterID: 0,
+      Status: "Approved",
+      Comment: "",
+    });
+
+
+
+  // ================= LOAD DATA =================
+
+
+  useEffect(() => {
+
+    if(employeeID){
+      loadAssignedJobs();
+    }
+
+  }, []);
+
+
+
+  const loadAssignedJobs = async () => {
+
+    try {
+
+      setLoading(true);
+
+
+      const response =
+        await jobRequisitionService
+        .GetRecruiterAssignedJobsAsync(
+          employeeID
+        );
+
+
+      setRecruitersList(response || []);
+
+
+    } catch(error){
+
+      console.error(error);
+
+      toast.error(
+        "Unable to load assigned jobs."
+      );
+
+
+    } finally {
+
+      setLoading(false);
+
+    }
+
+  };
+
+
+
+  // ================= OPEN MODAL =================
+
+
+  const openApprovalModal = (
+    item: JobRequisition
+  ) => {
+
+
+    setSelectedRecruiter(item);
+
+
+    setFormData({
+
+      JobReqRecruiterID:
+        item.JobReqRecruiterID,
+
+      Status:
+        "Approved",
+
+      Comment:
+        "",
+
+    });
+
+
+    setShowModal(true);
+
+  };
+
+
+
+  // ================= HANDLE CHANGE =================
+
+
   const handleInputChange = (
     e: React.ChangeEvent<any>
   ) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({
+
+
+    const {
+      id,
+      value
+    } = e.target;
+
+
+    setFormData(prev => ({
       ...prev,
-      [id]: id === "JobRequisitionID" || id === "RecruiterUserID" ? parseInt(value) : value,
+      [id]: value
     }));
+
   };
 
-  const openApprovalModal = (req: JobRequisition) => {
-    setEditRequisition(req);
-    setFormData(req);
-    setShowModal(true);
-  };
 
-  const handleApprovalChange = (status: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      Status: status,
-    }));
-  };
 
-  const handleSaveApproval = (event: React.FormEvent<HTMLFormElement>) => {
+  // ================= SAVE APPROVAL =================
+
+
+  const handleSaveApproval = async (
+    event: React.FormEvent<HTMLFormElement>
+  ) => {
+
+
     event.preventDefault();
-    const form = event.currentTarget;
 
-    if (form.checkValidity() === false) {
+
+    const form =
+      event.currentTarget;
+
+
+
+    if(form.checkValidity() === false){
+
       event.stopPropagation();
+
       setValidated(true);
-      toast.warn("Please fill all required fields correctly.");
+
+      toast.warning(
+        "Please select status."
+      );
+
       return;
+
     }
 
-    // Update the recruiters list
-    setRecruitersList((prev) =>
-      prev.map((r) =>
-        r.JobReqRecruiterID === formData.JobReqRecruiterID
-          ? { ...r, Status: formData.Status, Comment: formData.Comment }
-          : r
-      )
-    );
-    toast.success(`Requisition ${formData.Status} successfully!`);
 
-    setShowModal(false);
-    setValidated(false);
+
+    try {
+
+
+      const payload = {
+
+        jobReqRecruiterID:
+          formData.JobReqRecruiterID,
+
+
+        recruiterActionStatus:
+          formData.Status,
+
+
+        createdBy:
+          employeeName,
+
+      };
+
+
+
+      await jobRequisitionService
+      .PostManageRecruiterActionAsync(
+        payload
+      );
+
+
+
+      toast.success(
+        `Recruiter action ${formData.Status} completed`
+      );
+
+
+
+      setShowModal(false);
+
+
+      setValidated(false);
+
+
+      loadAssignedJobs();
+
+
+
+    } catch(error){
+
+
+      console.error(error);
+
+
+      toast.error(
+        "Failed to update recruiter action."
+      );
+
+
+    }
+
   };
 
-  // ======= Render =======
+
+
+  // ================= NAME HELPERS =================
+
+
+  const getJobName = (
+    id:number
+  ) => {
+
+    return (
+      jobRequisitions.find(
+        x => x.id === id
+      )?.name || id
+    );
+
+  };
+
+
+
+  const getRecruiterName = (
+    id:number
+  ) => {
+
+    return (
+      recruiters.find(
+        x => x.id === id
+      )?.name || id
+    );
+
+  };
+
+
+
   return (
-    <div className="Container">
-      <h3>Recruiter Approval Page</h3>
 
-      {/* Table */}
-      <Table className="table table-hover table-dark-custom">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Job Requisition</th>
-            <th>Recruiter</th>
-            <th>Assigned Date</th>
-            <th>Status</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {recruitersList.map((r) => (
-            <tr key={r.JobReqRecruiterID}>
-              <td>{r.JobReqRecruiterID}</td>
-              <td>{jobRequisitions.find((j) => j.id === r.JobRequisitionID)?.name}</td>
-              <td>{recruiters.find((u) => u.id === r.RecruiterUserID)?.name}</td>
-              <td>{r.AssignedDate}</td>
-              <td>
-                <span
-                  className={`badge ${
-                    r.Status === "Approved" ? "bg-success" : r.Status === "Rejected" ? "bg-danger" : "bg-warning"
-                  }`}
-                >
-                  {r.Status}
-                </span>
-              </td>
-              <td>
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  onClick={() => openApprovalModal(r)}
-                >
-                  Approve/Reject
-                </Button>
-              </td>
+    <div className="container mt-3">
+
+
+      <h3>
+        Recruiter Approval Page
+      </h3>
+
+
+
+      {
+        loading ? (
+
+          <div className="text-center mt-5">
+
+            <Spinner animation="border"/>
+
+          </div>
+
+        ) : (
+
+
+        <Table
+          bordered
+          hover
+          className="mt-3"
+        >
+
+          <thead>
+
+            <tr>
+
+              <th>ID</th>
+
+              <th>
+                Job Requisition
+              </th>
+
+              <th>
+                Recruiter
+              </th>
+
+              <th>
+                Assigned Date
+              </th>
+
+              <th>
+                Status
+              </th>
+
+              <th>
+                Action
+              </th>
+
+
             </tr>
-          ))}
-        </tbody>
-      </Table>
 
-      {/* Approval/Reject Modal */}
-      <Modal show={showModal} onHide={() => setShowModal(false)}>
-        <Modal.Header closeButton>
-          <Modal.Title>{editRequisition ? "Approve/Reject Requisition" : "Requisition Status"}</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Form noValidate validated={validated} onSubmit={handleSaveApproval}>
-            <Row className="mb-3">
-              <Col md={6}>
-                <Form.Group controlId="JobRequisitionID">
-                  <Form.Label>Job Requisition</Form.Label>
-                  <Form.Control
-                    value={jobRequisitions.find((j) => j.id === formData.JobRequisitionID)?.name}
-                    disabled
-                  />
-                </Form.Group>
-              </Col>
 
-              <Col md={6}>
-                <Form.Group controlId="RecruiterUserID">
-                  <Form.Label>Recruiter</Form.Label>
-                  <Form.Control
-                    value={recruiters.find((r) => r.id === formData.RecruiterUserID)?.name}
-                    disabled
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
+          </thead>
 
-            <Row className="mb-3">
-              <Col md={12}>
-                <Form.Group controlId="Status">
-                  <Form.Label>Status</Form.Label>
-                  <Form.Select
-                    value={formData.Status}
-                    onChange={(e) => handleApprovalChange(e.target.value)}
-                    required
+
+
+          <tbody>
+
+
+          {
+            recruitersList.length === 0 ? (
+
+              <tr>
+
+                <td
+                  colSpan={6}
+                  className="text-center"
+                >
+                  No records found
+                </td>
+
+              </tr>
+
+
+            ) : (
+
+
+            recruitersList.map(item => (
+
+              <tr
+                key={
+                  item.JobReqRecruiterID
+                }
+              >
+
+
+                <td>
+                  {
+                    item.JobReqRecruiterID
+                  }
+                </td>
+
+
+                <td>
+                  {
+                    getJobName(
+                      item.JobRequisitionID
+                    )
+                  }
+                </td>
+
+
+                <td>
+                  {
+                    getRecruiterName(
+                      item.RecruiterUserID
+                    )
+                  }
+                </td>
+
+
+                <td>
+                  {
+                    item.AssignedDate
+                  }
+                </td>
+
+
+                <td>
+
+                  <span
+                    className={
+                      `badge ${
+                        item.Status==="Approved"
+                        ?"bg-success"
+                        :
+                        item.Status==="Rejected"
+                        ?"bg-danger"
+                        :
+                        "bg-warning"
+                      }`
+                    }
                   >
-                    <option value="Pending">Pending</option>
-                    <option value="Approved">Approve</option>
-                    <option value="Rejected">Reject</option>
-                  </Form.Select>
-                </Form.Group>
-              </Col>
-            </Row>
 
-            <Row className="mb-3">
-              <Col md={12}>
-                <Form.Group controlId="Comment">
-                  <Form.Label>Comment</Form.Label>
-                  <Form.Control
-                    as="textarea"
-                    rows={3}
-                    value={formData.Comment || ""}
-                    onChange={handleInputChange}
-                  />
-                </Form.Group>
-              </Col>
-            </Row>
+                    {
+                      item.Status
+                    }
 
-            <Modal.Footer>
-              <Button variant="secondary" onClick={() => setShowModal(false)}>
-                Cancel
-              </Button>
-              <Button variant="primary" type="submit">
-                Save
-              </Button>
-            </Modal.Footer>
-          </Form>
+                  </span>
+
+                </td>
+
+
+
+                <td>
+
+
+                  {
+                    item.Status === "Pending" ||
+                    !item.Status ? (
+
+
+                    <Button
+                      size="sm"
+                      variant="primary"
+                      onClick={() =>
+                        openApprovalModal(item)
+                      }
+                    >
+
+                      Approve / Reject
+
+                    </Button>
+
+
+                    ) : (
+
+                      <span>
+                        Completed
+                      </span>
+
+                    )
+                  }
+
+
+                </td>
+
+
+
+              </tr>
+
+            ))
+
+            )
+
+          }
+
+
+          </tbody>
+
+
+        </Table>
+
+
+        )
+
+      }
+
+
+
+
+      {/* ================= MODAL ================= */}
+
+
+      <Modal
+        show={showModal}
+        onHide={() =>
+          setShowModal(false)
+        }
+      >
+
+
+        <Modal.Header closeButton>
+
+          <Modal.Title>
+            Approve / Reject Recruiter
+          </Modal.Title>
+
+        </Modal.Header>
+
+
+
+        <Modal.Body>
+
+
+        <Form
+          noValidate
+          validated={validated}
+          onSubmit={handleSaveApproval}
+        >
+
+
+          <Row className="mb-3">
+
+
+            <Col>
+
+              <Form.Label>
+                Job Requisition
+              </Form.Label>
+
+
+              <Form.Control
+                disabled
+                value={
+                  selectedRecruiter
+                  ?
+                  getJobName(
+                    selectedRecruiter.JobRequisitionID
+                  )
+                  :
+                  ""
+                }
+              />
+
+
+            </Col>
+
+
+
+          </Row>
+
+
+
+          <Form.Group className="mb-3">
+
+            <Form.Label>
+              Status
+            </Form.Label>
+
+
+            <Form.Select
+
+              id="Status"
+
+              value={
+                formData.Status
+              }
+
+              onChange={
+                handleInputChange
+              }
+
+              required
+
+            >
+
+              <option value="Approved">
+                Approve
+              </option>
+
+
+              <option value="Rejected">
+                Reject
+              </option>
+
+
+            </Form.Select>
+
+
+          </Form.Group>
+
+
+
+          <Form.Group>
+
+            <Form.Label>
+              Comment
+            </Form.Label>
+
+
+            <Form.Control
+
+              id="Comment"
+
+              as="textarea"
+
+              rows={3}
+
+              value={
+                formData.Comment
+              }
+
+              onChange={
+                handleInputChange
+              }
+
+            />
+
+
+          </Form.Group>
+
+
+
+          <Modal.Footer>
+
+
+            <Button
+              variant="secondary"
+              onClick={() =>
+                setShowModal(false)
+              }
+            >
+
+              Cancel
+
+            </Button>
+
+
+
+            <Button
+              variant="success"
+              type="submit"
+            >
+
+              Submit
+
+            </Button>
+
+
+          </Modal.Footer>
+
+
+
+        </Form>
+
+
         </Modal.Body>
+
+
       </Modal>
 
-      <ToastContainer position="top-right" autoClose={3000} />
+
+
+      <ToastContainer
+        position="top-right"
+        autoClose={3000}
+      />
+
+
     </div>
+
   );
+
 };
+
 
 export default RecruiterApprovalPage;
