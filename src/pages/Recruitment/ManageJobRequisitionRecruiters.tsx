@@ -400,98 +400,72 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
           className="align-middle"
         >
           <thead>
-            <tr>
-              <th style={{ width: "80px" }}>ID</th>
-              <th>Job Requisition</th>
-              <th>Recruiter</th>
-              <th>Assigned Date</th>
-              <th>Revoked Date</th>
-              <th>Status</th>
-              <th style={{ width: "130px" }}>Actions</th>
-            </tr>
-          </thead>
+  <tr>
+    <th>Req No</th>
+    <th>Position</th>
+    <th>Department</th>
+    <th>Requested By</th>
+    <th>Openings</th>
+    <th>Target Date</th>
+    <th>Salary</th>
+    <th style={{ width: "130px" }}>Actions</th>
+  </tr>
+</thead>
 
-          <tbody>
-            {recruitersList.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={7}
-                  className="text-center"
-                >
-                  No Records Found.
-                </td>
-              </tr>
-            ) : (
-              recruitersList.map((item) => (
-                <tr key={item.JobReqRecruiterID}>
-                  <td>{item.JobReqRecruiterID}</td>
 
-                  <td>
-                    {getJobName(
-                      item.JobRequisitionID
-                    )}
-                  </td>
+       <tbody>
+  {recruitersList.length === 0 ? (
+    <tr>
+      <td colSpan={8} className="text-center">
+        No Records Found.
+      </td>
+    </tr>
+  ) : (
+    recruitersList.map((item: any) => (
+      <tr key={item.JobRequisitionID}>
+        <td>{item.JobRequisitionNo}</td>
 
-                  <td>
-                    {getRecruiterName(
-                      item.RecruiterUserID
-                    )}
-                  </td>
+        <td>{item.Position}</td>
 
-                  <td>
-                    {item.AssignedDate
-                      ? new Date(
-                          item.AssignedDate
-                        ).toLocaleDateString()
-                      : "-"}
-                  </td>
+        <td>{item.Department}</td>
 
-                  <td>
-                    {item.RevokedDate
-                      ? new Date(
-                          item.RevokedDate
-                        ).toLocaleDateString()
-                      : "-"}
-                  </td>
+        <td>{item.RequestedUser}</td>
 
-                  <td>
-                    <span
-                      className={`badge ${badgeClass(
-                        item.Status
-                      )}`}
-                    >
-                      {item.Status}
-                    </span>
-                  </td>
+        <td>{item.NoOfOpenings}</td>
 
-                  <td>
-                    <Button
-                      size="sm"
-                      variant="outline-primary"
-                      className="me-2"
-                      onClick={() =>
-                        openEditModal(item)
-                      }
-                    >
-                      <i className="bi bi-pencil-square"></i>
-                    </Button>
+        <td>
+          {new Date(item.TargetStartDate).toLocaleDateString()}
+        </td>
 
-                    <Button
-                      size="sm"
-                      variant="outline-danger"
-                      onClick={() =>
-                        confirmDeleteRecruiter(
-                          item.JobReqRecruiterID
-                        )
-                      }
-                    >
-                      <i className="bi bi-trash"></i>
-                    </Button>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
+        <td>
+          ₹{item.MinSalary.toLocaleString()} - ₹{item.MaxSalary.toLocaleString()}
+        </td>
+
+        <td>
+          <Button
+            size="sm"
+            variant="outline-primary"
+            className="me-2"
+            onClick={() => openEditModal(item)}
+          >
+            <i className="bi bi-pencil-square"></i>
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline-danger"
+            onClick={() =>
+              confirmDeleteRecruiter(item.JobReqRecruiterID)
+            }
+          >
+            <i className="bi bi-trash"></i>
+          </Button>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
+
         </Table>
       )}
             {/* ================= ADD / EDIT MODAL ================= */}

@@ -1,133 +1,97 @@
 import React, { useEffect, useState } from "react";
-import {
-  Button,
-  Table,
-  Modal,
-  Form,
-  Row,
-  Col,
-  Spinner,
-} from "react-bootstrap";
+import { Button, Table, Modal, Form, Row, Col, Spinner } from "react-bootstrap";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+
 import jobRequisitionService from "../../services/jobRequisitionService";
 
-// ================= TYPES =================
-
-interface JobRequisition {
+// ===== Types =====
+interface RecruiterApproval {
   JobReqRecruiterID: number;
   JobRequisitionID: number;
-  RecruiterUserID: number;
-  AssignedDate: string;
-  Status: string;
-  Comment?: string;
+  JobRequisitionNo: string;
+
+  Position: string;
+  Department: string;
+  Branch: string;
+
+  NoOfOpenings: number;
+
+  RequestedUser: string;
+  RequestedDate: string;
+  TargetStartDate: string;
+
+  MinExperienceYears: number;
+  MaxExperienceYears: number;
+
+  MinSalary: number;
+  MaxSalary: number;
+
+  JobStatus: string;
+
+  Comments?: string;
+
+  RecruiterActionStatus?: string;
 }
 
 
-// ================= STATIC DATA =================
-// Replace later with API
-
-const jobRequisitions = [
-  { id: 1, name: "JR-001" },
-  { id: 2, name: "JR-002" },
-];
-
-
-const recruiters = [
-  { id: 101, name: "Alice" },
-  { id: 102, name: "Bob" },
-  { id: 103, name: "Charlie" },
-];
-
-
-// ================= COMPONENT =================
-
+// ===== Component =====
 const RecruiterApprovalPage: React.FC = () => {
 
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  const user =
-    JSON.parse(localStorage.getItem("user") || "{}");
+  const employeeName =
+    user?.name ||
+    user?.username ||
+    "";
+const EmployeeID = user?.employeeID || 0;
+  const [approvalList, setApprovalList] = useState<RecruiterApproval[]>([]);
 
+  const [loading, setLoading] = useState(false);
 
-  const employeeID = user?.employeeID;
+  const [showModal, setShowModal] = useState(false);
 
-  const employeeName = user?.fullName;
-
-
-
-  const [recruitersList, setRecruitersList] =
-    useState<JobRequisition[]>([]);
-
-
-  const [loading, setLoading] =
-    useState(false);
+  const [selectedRequest, setSelectedRequest] =
+    useState<RecruiterApproval | null>(null);
 
 
+  const [formData, setFormData] = useState({
+    status: "",
+    comments: "",
+  });
 
-  const [showModal, setShowModal] =
-    useState(false);
 
-
-
-  const [selectedRecruiter, setSelectedRecruiter] =
-    useState<JobRequisition | null>(null);
+  const [validated, setValidated] = useState(false);
 
 
 
-  const [validated, setValidated] =
-    useState(false);
+  // ============================
+  // Load recruiter assigned jobs
+  // ============================
 
-
-
-  const [formData, setFormData] =
-    useState({
-      JobReqRecruiterID: 0,
-      Status: "Approved",
-      Comment: "",
-    });
-
-
-
-  // ================= LOAD DATA =================
-
-
-  useEffect(() => {
-
-    if(employeeID){
-      loadAssignedJobs();
-    }
-
-  }, []);
-
-
-
-  const loadAssignedJobs = async () => {
+  const loadRecruiterApprovals = async () => {
 
     try {
 
       setLoading(true);
 
-
       const response =
-        await jobRequisitionService
-        .GetRecruiterAssignedJobsAsync(
-          employeeID
-        );
+        await jobRequisitionService.GetRecruiterAssignedJobsAsync(EmployeeID);
 
 
-      setRecruitersList(response || []);
+      setApprovalList(response || []);
 
-
-    } catch(error){
+    }
+    catch(error){
 
       console.error(error);
 
       toast.error(
-        "Unable to load assigned jobs."
+        "Failed to load recruiter approvals"
       );
 
-
-    } finally {
+    }
+    finally{
 
       setLoading(false);
 
@@ -137,27 +101,33 @@ const RecruiterApprovalPage: React.FC = () => {
 
 
 
-  // ================= OPEN MODAL =================
+  useEffect(() => {
 
+    loadRecruiterApprovals();
+
+  }, []);
+
+
+
+  // ============================
+  // Open modal
+  // ============================
 
   const openApprovalModal = (
-    item: JobRequisition
+    item: RecruiterApproval
   ) => {
 
-
-    setSelectedRecruiter(item);
-
+    setSelectedRequest(item);
 
     setFormData({
 
-      JobReqRecruiterID:
-        item.JobReqRecruiterID,
+      status:
+        item.RecruiterActionStatus ||
+        "Pending",
 
-      Status:
-        "Approved",
-
-      Comment:
-        "",
+      comments:
+        item.Comments ||
+        ""
 
     });
 
@@ -168,31 +138,9 @@ const RecruiterApprovalPage: React.FC = () => {
 
 
 
-  // ================= HANDLE CHANGE =================
-
-
-  const handleInputChange = (
-    e: React.ChangeEvent<any>
-  ) => {
-
-
-    const {
-      id,
-      value
-    } = e.target;
-
-
-    setFormData(prev => ({
-      ...prev,
-      [id]: value
-    }));
-
-  };
-
-
-
-  // ================= SAVE APPROVAL =================
-
+  // ============================
+  // Save approve/reject
+  // ============================
 
   const handleSaveApproval = async (
     event: React.FormEvent<HTMLFormElement>
@@ -206,7 +154,6 @@ const RecruiterApprovalPage: React.FC = () => {
       event.currentTarget;
 
 
-
     if(form.checkValidity() === false){
 
       event.stopPropagation();
@@ -214,8 +161,16 @@ const RecruiterApprovalPage: React.FC = () => {
       setValidated(true);
 
       toast.warning(
-        "Please select status."
+        "Please select approval status"
       );
+
+      return;
+
+    }
+
+
+
+    if(!selectedRequest){
 
       return;
 
@@ -229,53 +184,47 @@ const RecruiterApprovalPage: React.FC = () => {
       const payload = {
 
         jobReqRecruiterID:
-          formData.JobReqRecruiterID,
+          selectedRequest.JobReqRecruiterID,
 
 
         recruiterActionStatus:
-          formData.Status,
+          formData.status,
 
 
         createdBy:
-          employeeName,
+          employeeName
 
       };
 
 
 
       await jobRequisitionService
-      .PostManageRecruiterActionAsync(
-        payload
-      );
+        .PostManageRecruiterActionAsync(payload);
 
 
 
       toast.success(
-        `Recruiter action ${formData.Status} completed`
+        `Requisition ${formData.status} successfully`
       );
 
 
 
       setShowModal(false);
 
-
       setValidated(false);
 
 
-      loadAssignedJobs();
+      loadRecruiterApprovals();
 
 
-
-    } catch(error){
-
+    }
+    catch(error){
 
       console.error(error);
 
-
       toast.error(
-        "Failed to update recruiter action."
+        "Failed to update requisition status"
       );
-
 
     }
 
@@ -283,261 +232,245 @@ const RecruiterApprovalPage: React.FC = () => {
 
 
 
-  // ================= NAME HELPERS =================
-
-
-  const getJobName = (
-    id:number
-  ) => {
-
-    return (
-      jobRequisitions.find(
-        x => x.id === id
-      )?.name || id
-    );
-
-  };
-
-
-
-  const getRecruiterName = (
-    id:number
-  ) => {
-
-    return (
-      recruiters.find(
-        x => x.id === id
-      )?.name || id
-    );
-
-  };
-
-
-
   return (
 
-    <div className="container mt-3">
+    <div className="container">
 
-
-      <h3>
+      <h3 className="mb-3">
         Recruiter Approval Page
       </h3>
 
 
 
-      {
-        loading ? (
+      <Table
+        className="table table-hover table-dark-custom"
+        responsive
+      >
 
-          <div className="text-center mt-5">
+        <thead>
 
-            <Spinner animation="border"/>
+          <tr>
 
-          </div>
+            <th>
+              Req No
+            </th>
 
-        ) : (
+            <th>
+              Position
+            </th>
+
+            <th>
+              Department
+            </th>
+
+            <th>
+              Branch
+            </th>
+
+            <th>
+              Requested By
+            </th>
+
+            <th>
+              Openings
+            </th>
+
+            <th>
+              Target Date
+            </th>
+
+            <th>
+              Status
+            </th>
+
+            <th>
+              Action
+            </th>
 
 
-        <Table
-          bordered
-          hover
-          className="mt-3"
-        >
+          </tr>
 
-          <thead>
+        </thead>
 
-            <tr>
 
-              <th>ID</th>
 
-              <th>
-                Job Requisition
-              </th>
+        <tbody>
 
-              <th>
-                Recruiter
-              </th>
 
-              <th>
-                Assigned Date
-              </th>
+        {
+          loading ?
 
-              <th>
-                Status
-              </th>
+          <tr>
 
-              <th>
-                Action
-              </th>
+            <td
+              colSpan={9}
+              className="text-center"
+            >
+
+              <Spinner animation="border"/>
+
+            </td>
+
+          </tr>
+
+
+          :
+
+          approvalList.length === 0 ?
+
+          <tr>
+
+            <td
+              colSpan={9}
+              className="text-center"
+            >
+
+              No requisitions found
+
+            </td>
+
+          </tr>
+
+
+          :
+
+
+          approvalList.map(item => (
+
+            <tr
+              key={
+                item.JobReqRecruiterID
+              }
+            >
+
+
+              <td>
+                {item.JobRequisitionNo}
+              </td>
+
+
+              <td>
+                {item.Position}
+              </td>
+
+
+              <td>
+                {item.Department}
+              </td>
+
+
+              <td>
+                {item.Branch}
+              </td>
+
+
+              <td>
+                {item.RequestedUser}
+              </td>
+
+
+              <td>
+                {item.NoOfOpenings}
+              </td>
+
+
+              <td>
+                {
+                  new Date(
+                    item.TargetStartDate
+                  )
+                  .toLocaleDateString()
+                }
+              </td>
+
+
+              <td>
+
+                <span
+                  className={
+                    `badge ${
+                      item.RecruiterActionStatus === "Approved"
+                      ?
+                      "bg-success"
+                      :
+                      item.RecruiterActionStatus === "Rejected"
+                      ?
+                      "bg-danger"
+                      :
+                      "bg-warning"
+                    }`
+                  }
+                >
+
+                  {
+                    item.RecruiterActionStatus ||
+                    "Pending"
+                  }
+
+                </span>
+
+              </td>
+
+
+              <td>
+
+                <Button
+
+                  size="sm"
+
+                  variant="outline-primary"
+
+                  onClick={() =>
+                    openApprovalModal(item)
+                  }
+
+                >
+
+                  Approve / Reject
+
+                </Button>
+
+
+              </td>
 
 
             </tr>
 
 
-          </thead>
+          ))
+
+        }
 
 
-
-          <tbody>
-
-
-          {
-            recruitersList.length === 0 ? (
-
-              <tr>
-
-                <td
-                  colSpan={6}
-                  className="text-center"
-                >
-                  No records found
-                </td>
-
-              </tr>
+        </tbody>
 
 
-            ) : (
-
-
-            recruitersList.map(item => (
-
-              <tr
-                key={
-                  item.JobReqRecruiterID
-                }
-              >
-
-
-                <td>
-                  {
-                    item.JobReqRecruiterID
-                  }
-                </td>
-
-
-                <td>
-                  {
-                    getJobName(
-                      item.JobRequisitionID
-                    )
-                  }
-                </td>
-
-
-                <td>
-                  {
-                    getRecruiterName(
-                      item.RecruiterUserID
-                    )
-                  }
-                </td>
-
-
-                <td>
-                  {
-                    item.AssignedDate
-                  }
-                </td>
-
-
-                <td>
-
-                  <span
-                    className={
-                      `badge ${
-                        item.Status==="Approved"
-                        ?"bg-success"
-                        :
-                        item.Status==="Rejected"
-                        ?"bg-danger"
-                        :
-                        "bg-warning"
-                      }`
-                    }
-                  >
-
-                    {
-                      item.Status
-                    }
-
-                  </span>
-
-                </td>
-
-
-
-                <td>
-
-
-                  {
-                    item.Status === "Pending" ||
-                    !item.Status ? (
-
-
-                    <Button
-                      size="sm"
-                      variant="primary"
-                      onClick={() =>
-                        openApprovalModal(item)
-                      }
-                    >
-
-                      Approve / Reject
-
-                    </Button>
-
-
-                    ) : (
-
-                      <span>
-                        Completed
-                      </span>
-
-                    )
-                  }
-
-
-                </td>
-
-
-
-              </tr>
-
-            ))
-
-            )
-
-          }
-
-
-          </tbody>
-
-
-        </Table>
-
-
-        )
-
-      }
+      </Table>
 
 
 
 
-      {/* ================= MODAL ================= */}
 
+      {/* Approval Modal */}
 
       <Modal
+
         show={showModal}
+
         onHide={() =>
           setShowModal(false)
         }
-      >
 
+      >
 
         <Modal.Header closeButton>
 
           <Modal.Title>
-            Approve / Reject Recruiter
+
+            Approve / Reject Requisition
+
           </Modal.Title>
+
 
         </Modal.Header>
 
@@ -547,10 +480,62 @@ const RecruiterApprovalPage: React.FC = () => {
 
 
         <Form
+
           noValidate
+
           validated={validated}
+
           onSubmit={handleSaveApproval}
+
         >
+
+
+          <Row className="mb-3">
+
+            <Col md={6}>
+
+              <Form.Label>
+                Requisition No
+              </Form.Label>
+
+              <Form.Control
+
+                disabled
+
+                value={
+                  selectedRequest?.JobRequisitionNo || ""
+                }
+
+              />
+
+            </Col>
+
+
+
+            <Col md={6}>
+
+              <Form.Label>
+                Position
+              </Form.Label>
+
+
+              <Form.Control
+
+                disabled
+
+                value={
+                  selectedRequest?.Position || ""
+                }
+
+              />
+
+
+            </Col>
+
+
+          </Row>
+
+
 
 
           <Row className="mb-3">
@@ -559,110 +544,116 @@ const RecruiterApprovalPage: React.FC = () => {
             <Col>
 
               <Form.Label>
-                Job Requisition
+                Status
               </Form.Label>
 
 
-              <Form.Control
-                disabled
+              <Form.Select
+
+                required
+
                 value={
-                  selectedRecruiter
-                  ?
-                  getJobName(
-                    selectedRecruiter.JobRequisitionID
-                  )
-                  :
-                  ""
+                  formData.status
                 }
-              />
+
+
+                onChange={(e)=>
+
+                  setFormData({
+
+                    ...formData,
+
+                    status:
+                      e.target.value
+
+                  })
+
+                }
+
+              >
+
+                <option value="">
+                  Select
+                </option>
+
+                <option value="Approved">
+                  Approve
+                </option>
+
+                <option value="Rejected">
+                  Reject
+                </option>
+
+
+              </Form.Select>
 
 
             </Col>
-
 
 
           </Row>
 
 
 
-          <Form.Group className="mb-3">
 
-            <Form.Label>
-              Status
-            </Form.Label>
+          <Row>
 
-
-            <Form.Select
-
-              id="Status"
-
-              value={
-                formData.Status
-              }
-
-              onChange={
-                handleInputChange
-              }
-
-              required
-
-            >
-
-              <option value="Approved">
-                Approve
-              </option>
+            <Col>
 
 
-              <option value="Rejected">
-                Reject
-              </option>
+              <Form.Label>
+                Comments
+              </Form.Label>
 
 
-            </Form.Select>
+              <Form.Control
+
+                as="textarea"
+
+                rows={3}
 
 
-          </Form.Group>
+                value={
+                  formData.comments
+                }
 
 
+                onChange={(e)=>
 
-          <Form.Group>
+                  setFormData({
 
-            <Form.Label>
-              Comment
-            </Form.Label>
+                    ...formData,
 
+                    comments:
+                      e.target.value
 
-            <Form.Control
+                  })
 
-              id="Comment"
-
-              as="textarea"
-
-              rows={3}
-
-              value={
-                formData.Comment
-              }
-
-              onChange={
-                handleInputChange
-              }
-
-            />
+                }
 
 
-          </Form.Group>
+              />
+
+
+            </Col>
+
+
+          </Row>
 
 
 
-          <Modal.Footer>
+
+          <Modal.Footer className="mt-3">
 
 
             <Button
+
               variant="secondary"
+
               onClick={() =>
                 setShowModal(false)
               }
+
             >
 
               Cancel
@@ -672,11 +663,14 @@ const RecruiterApprovalPage: React.FC = () => {
 
 
             <Button
-              variant="success"
+
               type="submit"
+
+              variant="primary"
+
             >
 
-              Submit
+              Save
 
             </Button>
 
@@ -695,9 +689,13 @@ const RecruiterApprovalPage: React.FC = () => {
 
 
 
+
       <ToastContainer
+
         position="top-right"
+
         autoClose={3000}
+
       />
 
 

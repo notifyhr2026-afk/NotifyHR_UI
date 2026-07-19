@@ -26,27 +26,24 @@ import candidateService from "../../services/candidateService";
 // ================= TYPES =================
 
 interface CandidateForm {
-  CandidateID:number;
-  OrganizationID:number;
-  FirstName:string;
-  LastName:string;
-  Email:string;
-  Phone:string;
-  LinkedInProfile:string;
-  ResumeFileName:string;
-  ResumePath:string;
-  CurrentStatus:string;
-  Skills:string;
-  TotalExperienceYears:number;
-  CurrentEmployer:string;
-  CurrentRole:string;
-  ExpectedMinSalary:number;
-  ExpectedMaxSalary:number;
-  CurrentSalary:number;
+  CandidateID: number;
+  OrganizationID: number;
+  FirstName: string;
+  LastName: string;
+  Email: string;
+  Phone: string;
+  LinkedInProfile: string;
+  ResumeFileName: string;
+  ResumePath: string;
+  CurrentStatus: string;
+  Skills: string;
+  TotalExperienceYears: number;
+  CurrentEmployer: string;
+  CurrentRole: string;
+  ExpectedMinSalary: number;
+  ExpectedMaxSalary: number;
+  CurrentSalary: number;
 }
-
-
-
 // ================= CONSTANTS =================
 
 const statusList = [
@@ -56,7 +53,6 @@ const statusList = [
   "Hired",
   "Rejected"
 ];
-
 
 const skillOptions = [
   "React",
@@ -69,16 +65,14 @@ const skillOptions = [
   "Python"
 ];
 
-
-
 // ================= COMPONENT =================
 
-const CandidateDetails:React.FC =()=>{
+const CandidateDetails: React.FC = () => {
 
   const {
     CandidateID
   } = useParams<{
-    CandidateID:string
+    CandidateID: string
   }>();
 
   const navigate =
@@ -92,234 +86,213 @@ const CandidateDetails:React.FC =()=>{
   const organizationID =
     user?.organizationID;
 
-  const [loading,setLoading] =
+  const [loading, setLoading] =
     useState(true);
 
-  const [saving,setSaving] =
+  const [saving, setSaving] =
     useState(false);
 
-  const [validated,setValidated] =
+  const [validated, setValidated] =
     useState(false);
 
-  const [skillSearch,setSkillSearch] =
+  const [skillSearch, setSkillSearch] =
     useState("");
 
-  const [showSkillDropdown,setShowSkillDropdown] =
+  const [showSkillDropdown, setShowSkillDropdown] =
     useState(false);
 
-  const [formData,setFormData] =
-  useState<CandidateForm>({
-    CandidateID:0,
-    OrganizationID:organizationID,
-    FirstName:"",
-    LastName:"",
-    Email:"",
-    Phone:"",
-    LinkedInProfile:"",
-    ResumeFileName:"",
-    ResumePath:"",
-    CurrentStatus:"New",
-    Skills:"",
-    TotalExperienceYears:0,
-    CurrentEmployer:"",
-    CurrentRole:"",
-    ExpectedMinSalary:0,
-    ExpectedMaxSalary:0,
-    CurrentSalary:0
-  });
-
+  const [formData, setFormData] =
+    useState<CandidateForm>({
+      CandidateID: 0,
+      OrganizationID: organizationID,
+      FirstName: "",
+      LastName: "",
+      Email: "",
+      Phone: "",
+      LinkedInProfile: "",
+      ResumeFileName: "",
+      ResumePath: "",
+      CurrentStatus: "New",
+      Skills: "",
+      TotalExperienceYears: 0,
+      CurrentEmployer: "",
+      CurrentRole: "",
+      ExpectedMinSalary: 0,
+      ExpectedMaxSalary: 0,
+      CurrentSalary: 0
+    });
 
   // ================= LOAD CANDIDATE =================
 
-
-  useEffect(()=>{
-
-    if(CandidateID){
+  useEffect(() => {
+    if (CandidateID) {
       loadCandidate();
     }
-  },[
+  }, [
     CandidateID
   ]);
 
-  const loadCandidate = async()=>{
+const loadCandidate = async () => {
+  try {
 
-    try{
-      setLoading(true);
-      const response =
-        await candidateService
-        .GetCandidateByIDAsync(
-          organizationID,
-          Number(CandidateID)
-        );
+    setLoading(true);
 
-      const data =
-        Array.isArray(response)
+    const response =
+      await candidateService.GetCandidateByIDAsync(
+        organizationID,
+        Number(CandidateID)
+      );
+
+
+    const data =
+      Array.isArray(response)
         ? response[0]
         : response;
 
-      if(!data){
 
-        toast.error(
-          "Candidate not found"
-        );
+    if (!data) {
 
-        navigate("/candidates");
+      toast.error(
+        "Candidate not found"
+      );
 
-        return;
+      navigate("/candidates");
 
-      }
+      return;
 
-
-
-
-      setFormData({
-
-        CandidateID:
-          data.candidateID,
-
-        OrganizationID:
-          data.organizationID,
+    }
 
 
-        FirstName:
-          data.firstName || "",
+
+    setFormData({
+
+      CandidateID:
+        data.CandidateID || 0,
 
 
-        LastName:
-          data.lastName || "",
+      OrganizationID:
+        data.OrganizationID || organizationID,
 
 
-        Email:
-          data.email || "",
+      FirstName:
+        data.FirstName || "",
 
 
-        Phone:
-          data.phone || "",
+      LastName:
+        data.LastName || "",
 
 
-        LinkedInProfile:
-          data.linkedInProfile || "",
+      Email:
+        data.Email || "",
 
 
-        ResumeFileName:
-          data.resumePath
+      Phone:
+        data.Phone || "",
+
+
+      LinkedInProfile:
+        data.LinkedInProfile || "",
+
+
+
+      ResumeFileName:
+        data.ResumePath
           ?
-          data.resumePath.split("/").pop()
+          data.ResumePath.split("/").pop()
           :
           "",
 
 
-        ResumePath:
-          data.resumePath || "",
 
-
-        CurrentStatus:
-          data.currentStatus || "New",
-
-
-        Skills:
-          data.skills || "",
-
-
-        TotalExperienceYears:
-          data.totalExperienceYears || 0,
-
-
-        CurrentEmployer:
-          data.currentEmployer || "",
-
-
-        CurrentRole:
-          data.currentRole || "",
-
-
-        ExpectedMinSalary:
-          data.expectedMinSalary || 0,
-
-
-        ExpectedMaxSalary:
-          data.expectedMaxSalary || 0,
-
-
-        CurrentSalary:
-          data.currentSalary || 0,
-
-
-      });
+      ResumePath:
+        data.ResumePath || "",
 
 
 
-    }
-    catch(error){
-
-
-      console.error(error);
-
-
-      toast.error(
-        "Unable to load candidate"
-      );
-
-
-    }
-    finally{
-
-
-      setLoading(false);
-
-
-    }
-
-
-  };
+      CurrentStatus:
+        data.CurrentStatus || "New",
 
 
 
+      Skills:
+        data.skills || "",
+
+
+
+      TotalExperienceYears:
+        data.TotalExperienceYears || 0,
+
+
+
+      CurrentEmployer:
+        data.CurrentEmployer || "",
+
+
+
+      CurrentRole:
+        data.CurrentRole || "",
+
+
+
+      ExpectedMinSalary:
+        data.ExpectedMinSalary || 0,
+
+
+
+      ExpectedMaxSalary:
+        data.ExpectedMaxSalary || 0,
+
+
+
+      CurrentSalary:
+        data.CurrentSalary || 0
+
+    });
+
+
+  }
+  catch(error){
+
+    console.error(error);
+
+    toast.error(
+      "Unable to load candidate"
+    );
+
+  }
+  finally{
+
+    setLoading(false);
+
+  }
+};
 
   // ================= INPUT CHANGE =================
-
-
   const handleChange =
-  (
-    e:React.ChangeEvent<any>
-  )=>{
-
-
-    const {
-      id,
-      value
-    } = e.target;
-
-
-
-    setFormData(prev=>({
-
-      ...prev,
-
-
-      [id]:
-
-        [
-          "TotalExperienceYears",
-          "ExpectedMinSalary",
-          "ExpectedMaxSalary",
-          "CurrentSalary"
-
-        ].includes(id)
-
-        ?
-
-        Number(value)
-
-        :
-
+    (
+      e: React.ChangeEvent<any>
+    ) => {
+      const {
+        id,
         value
+      } = e.target;
+      setFormData(prev => ({
+        ...prev,
+        [id]:
+          [
+            "TotalExperienceYears",
+            "ExpectedMinSalary",
+            "ExpectedMaxSalary",
+            "CurrentSalary"
+          ].includes(id)
+            ?
+            Number(value)
+            :
+            value
+      }));
 
 
-    }));
-
-
-  };
+    };
 
 
 
@@ -328,36 +301,36 @@ const CandidateDetails:React.FC =()=>{
 
 
   const handleResumeUpload =
-  (
-    e:React.ChangeEvent<HTMLInputElement>
-  )=>{
+    (
+      e: React.ChangeEvent<HTMLInputElement>
+    ) => {
 
 
-    const file =
-      e.target.files?.[0];
+      const file =
+        e.target.files?.[0];
 
 
-    if(file){
+      if (file) {
 
 
-      setFormData(prev=>({
+        setFormData(prev => ({
 
-        ...prev,
+          ...prev,
 
-        ResumeFileName:
-          file.name,
-
-
-        ResumePath:
-          file.name
+          ResumeFileName:
+            file.name,
 
 
-      }));
+          ResumePath:
+            file.name
 
-    }
+
+        }));
+
+      }
 
 
-  };
+    };
 
 
 
@@ -365,19 +338,18 @@ const CandidateDetails:React.FC =()=>{
   // ================= ADD SKILL =================
 
 
-  const addSkill=(skill:string)=>{
+  const addSkill = (skill: string) => {
 
 
     const existing =
       formData.Skills
-      .split(",")
-      .map(x=>x.trim())
-      .filter(Boolean);
+        .split(",")
+        .map(x => x.trim())
+        .filter(Boolean);
 
 
 
-    if(existing.includes(skill))
-    {
+    if (existing.includes(skill)) {
 
       return;
 
@@ -385,7 +357,7 @@ const CandidateDetails:React.FC =()=>{
 
 
 
-    setFormData(prev=>({
+    setFormData(prev => ({
 
       ...prev,
 
@@ -404,160 +376,160 @@ const CandidateDetails:React.FC =()=>{
 
 
   };
-    // ================= SAVE CANDIDATE =================
+  // ================= SAVE CANDIDATE =================
 
   const handleSaveCandidate =
-  async (
-    e: React.FormEvent<HTMLFormElement>
-  ) => {
+    async (
+      e: React.FormEvent<HTMLFormElement>
+    ) => {
 
 
-    e.preventDefault();
+      e.preventDefault();
 
 
-    const form =
-      e.currentTarget;
+      const form =
+        e.currentTarget;
 
 
 
-    if(!form.checkValidity()){
+      if (!form.checkValidity()) {
 
 
-      e.stopPropagation();
+        e.stopPropagation();
 
 
-      setValidated(true);
+        setValidated(true);
 
 
-      toast.warning(
-        "Please fill all required fields"
-      );
+        toast.warning(
+          "Please fill all required fields"
+        );
 
 
-      return;
+        return;
 
 
-    }
+      }
 
 
 
-    try{
+      try {
 
 
-      setSaving(true);
+        setSaving(true);
 
 
 
-      const payload = {
+        const payload = {
 
 
-        candidateID:
-          formData.CandidateID,
+          candidateID:
+            formData.CandidateID,
 
 
-        organizationID:
-          organizationID,
+          organizationID:
+            organizationID,
 
 
-        firstName:
-          formData.FirstName,
+          firstName:
+            formData.FirstName,
 
 
-        lastName:
-          formData.LastName,
+          lastName:
+            formData.LastName,
 
 
-        email:
-          formData.Email,
+          email:
+            formData.Email,
 
 
-        phone:
-          formData.Phone,
+          phone:
+            formData.Phone,
 
 
-        linkedInProfile:
-          formData.LinkedInProfile,
+          linkedInProfile:
+            formData.LinkedInProfile,
 
 
-        resumePath:
-          formData.ResumePath,
+          resumePath:
+            formData.ResumePath,
 
 
-        skills:
-          formData.Skills,
+          skills:
+            formData.Skills,
 
 
-        currentStatus:
-          formData.CurrentStatus,
+          currentStatus:
+            formData.CurrentStatus,
 
 
-        totalExperienceYears:
-          formData.TotalExperienceYears,
+          totalExperienceYears:
+            formData.TotalExperienceYears,
 
 
-        currentEmployer:
-          formData.CurrentEmployer,
+          currentEmployer:
+            formData.CurrentEmployer,
 
 
-        currentRole:
-          formData.CurrentRole,
+          currentRole:
+            formData.CurrentRole,
 
 
-        expectedMinSalary:
-          formData.ExpectedMinSalary,
+          expectedMinSalary:
+            formData.ExpectedMinSalary,
 
 
-        expectedMaxSalary:
-          formData.ExpectedMaxSalary,
+          expectedMaxSalary:
+            formData.ExpectedMaxSalary,
 
 
-        currentSalary:
-          formData.CurrentSalary
+          currentSalary:
+            formData.CurrentSalary
 
 
-      };
+        };
 
 
 
-      await candidateService.PutCandidateAsync(
-        payload
-      );
+        await candidateService.PutCandidateAsync(
+          payload
+        );
 
 
 
-      toast.success(
-        "Candidate updated successfully"
-      );
+        toast.success(
+          "Candidate updated successfully"
+        );
 
 
 
-      await loadCandidate();
+        await loadCandidate();
 
 
 
-    }
-    catch(error){
+      }
+      catch (error) {
 
 
-      console.error(error);
+        console.error(error);
 
 
-      toast.error(
-        "Failed to update candidate"
-      );
+        toast.error(
+          "Failed to update candidate"
+        );
 
 
-    }
-    finally{
+      }
+      finally {
 
 
-      setSaving(false);
+        setSaving(false);
 
 
-    }
+      }
 
 
-  };
+    };
 
 
 
@@ -565,7 +537,7 @@ const CandidateDetails:React.FC =()=>{
   // ================= LOADING =================
 
 
-  if(loading){
+  if (loading) {
 
 
     return (
@@ -573,7 +545,7 @@ const CandidateDetails:React.FC =()=>{
       <div className="text-center mt-5">
 
 
-        <Spinner animation="border"/>
+        <Spinner animation="border" />
 
 
       </div>
@@ -851,7 +823,7 @@ const CandidateDetails:React.FC =()=>{
 
 
         </Row>
-                {/* ================= EXPERIENCE ================= */}
+        {/* ================= EXPERIENCE ================= */}
 
         <Row className="mb-3">
 
@@ -1110,7 +1082,7 @@ const CandidateDetails:React.FC =()=>{
 
 
                 {
-                  statusList.map(status=>(
+                  statusList.map(status => (
 
                     <option
                       key={status}
@@ -1152,7 +1124,7 @@ const CandidateDetails:React.FC =()=>{
           <Col
             md={6}
             style={{
-              position:"relative"
+              position: "relative"
             }}
           >
 
@@ -1171,7 +1143,7 @@ const CandidateDetails:React.FC =()=>{
 
 
               onChange={
-                e=>{
+                e => {
 
                   setSkillSearch(
                     e.target.value
@@ -1199,7 +1171,7 @@ const CandidateDetails:React.FC =()=>{
                 className="border bg-white mt-1 position-absolute w-100"
 
                 style={{
-                  zIndex:1000
+                  zIndex: 1000
                 }}
 
               >
@@ -1209,47 +1181,47 @@ const CandidateDetails:React.FC =()=>{
 
                   skillOptions
 
-                  .filter(skill=>
+                    .filter(skill =>
 
-                    skill
-                    .toLowerCase()
-                    .includes(
-                      skillSearch
-                      .toLowerCase()
+                      skill
+                        .toLowerCase()
+                        .includes(
+                          skillSearch
+                            .toLowerCase()
+                        )
+
+                      &&
+
+                      !formData.Skills
+                        .includes(skill)
+
                     )
 
-                    &&
-
-                    !formData.Skills
-                    .includes(skill)
-
-                  )
-
-                  .map(skill=>(
+                    .map(skill => (
 
 
-                    <div
+                      <div
 
-                      key={skill}
+                        key={skill}
 
-                      className="p-2"
+                        className="p-2"
 
-                      style={{
-                        cursor:"pointer"
-                      }}
+                        style={{
+                          cursor: "pointer"
+                        }}
 
-                      onMouseDown={()=>
-                        addSkill(skill)
-                      }
+                        onMouseDown={() =>
+                          addSkill(skill)
+                        }
 
-                    >
+                      >
 
-                      {skill}
+                        {skill}
 
-                    </div>
+                      </div>
 
 
-                  ))
+                    ))
 
                 }
 
@@ -1324,7 +1296,7 @@ const CandidateDetails:React.FC =()=>{
 
             className="me-2"
 
-            onClick={()=>
+            onClick={() =>
               navigate("/candidates")
             }
 
@@ -1352,17 +1324,17 @@ const CandidateDetails:React.FC =()=>{
             {
               saving ?
 
-              <Spinner
+                <Spinner
 
-                animation="border"
+                  animation="border"
 
-                size="sm"
+                  size="sm"
 
-              />
+                />
 
-              :
+                :
 
-              "Update Candidate"
+                "Update Candidate"
 
             }
 

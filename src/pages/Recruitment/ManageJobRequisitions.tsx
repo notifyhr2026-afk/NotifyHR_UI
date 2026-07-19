@@ -30,6 +30,11 @@ interface JobRequisition {
   maxSalary: number;
   status: string;
   createdBy: number;
+  requestedUser: string;
+	branch: string;
+	position: string;
+	department: string;
+	employmentType: string;
 }
 
 interface Dropdown {
@@ -75,6 +80,11 @@ const ManageJobRequisitions: React.FC = () => {
   createdBy: x.CreatedBy,
   minSalary: x.MinSalary,
   maxSalary: x.MaxSalary,
+  requestedUser: x.RequestedUser,
+	branch: x.Branch,
+	position: x.Position,
+	department: x.Department,
+	employmentType: x.EmploymentType
 });
 
   const initialForm: JobRequisition = {
@@ -96,6 +106,11 @@ const ManageJobRequisitions: React.FC = () => {
     maxSalary: 0,
     status: "Open",
     createdBy: userID,
+    requestedUser: "",
+    branch: "",
+    position: "",
+    department: "",
+    employmentType: ""
   };
 
   const [formData, setFormData] = useState<JobRequisition>(initialForm);
@@ -198,14 +213,58 @@ setEmployees(
 const handleInputChange = (e: any) => {
   const { id, value } = e.target;
 
-  setFormData((prev: any) => ({
-    ...prev,
-    [id]:
-      typeof prev[id] === "number"
-        ? Number(value)
-        : value,
-  }));
+  setFormData((prev: any) => {
+    const nextValue = typeof prev[id] === "number" ? Number(value) : value;
+    const nextForm: any = {
+      ...prev,
+      [id]: nextValue,
+    };
+
+    if (id === "branchID") {
+      const branch = branches.find((b) => b.id === Number(value));
+      nextForm.branch = branch ? branch.name : "";
+    }
+
+    if (id === "positionID") {
+      const position = positions.find((p) => p.id === Number(value));
+      nextForm.position = position ? position.name : "";
+    }
+
+    if (id === "departmentID") {
+      const department = departments.find((d) => d.id === Number(value));
+      nextForm.department = department ? department.name : "";
+    }
+
+    if (id === "employmentTypeID") {
+      const employmentType = employmentTypes.find((e) => e.id === Number(value));
+      nextForm.employmentType = employmentType ? employmentType.name : "";
+    }
+
+    if (id === "requestedBy") {
+      const employee = employees.find((u) => u.id === Number(value));
+      nextForm.requestedUser = employee ? employee.name : "";
+    }
+
+    return nextForm;
+  });
 };
+
+  const resolveDisplayNames = (data: JobRequisition) => {
+    const branch = branches.find((b) => b.id === data.branchID)?.name || data.branch || "";
+    const position = positions.find((p) => p.id === data.positionID)?.name || data.position || "";
+    const department = departments.find((d) => d.id === data.departmentID)?.name || data.department || "";
+    const employmentType = employmentTypes.find((e) => e.id === data.employmentTypeID)?.name || data.employmentType || "";
+    const requestedUser = employees.find((u) => u.id === data.requestedBy)?.name || data.requestedUser || "";
+
+    return {
+      ...data,
+      branch,
+      position,
+      department,
+      employmentType,
+      requestedUser,
+    };
+  };
 
   // ================= SAVE =================
   const handleSave = async (e: React.FormEvent) => {
@@ -213,7 +272,7 @@ const handleInputChange = (e: any) => {
 
     try {
       const payload = {
-        ...formData,
+        ...resolveDisplayNames(formData),
         organizationID,
         createdBy: userID,
       };
@@ -226,7 +285,7 @@ const handleInputChange = (e: any) => {
           : "Updated successfully"
       );
 
-      fireAudit(formData.jobRequisitionID === 0 ? "CREATE" : "UPDATE", "JobRequisition", editRequisition, formData, organizationID, user?.name || user?.username || "Admin", "ManageJobRequisitions");
+      fireAudit(formData.jobRequisitionID === 0 ? "CREATE" : "UPDATE", "JobRequisition", editRequisition, payload, organizationID, user?.name || user?.username || "Admin", "ManageJobRequisitions");
 
       setShowModal(false);
       setFormData(initialForm);
@@ -282,7 +341,7 @@ const handleInputChange = (e: any) => {
             <th>Department</th>
             <th>Openings</th>
             <th>Status</th>
-            <th>Actions</th>
+            <th style={{ width: "100px" }}>Actions</th>
           </tr>
         </thead>
 
@@ -296,8 +355,8 @@ const handleInputChange = (e: any) => {
               <td>{r.noOfOpenings}</td>
               <td>{r.status}</td>
               <td>
-                <Button size="sm" onClick={() => handleEdit(r)}>Edit</Button>{" "}
-                <Button size="sm" variant="danger" onClick={() => handleDelete(r.jobRequisitionID)}>Delete</Button>
+                <button  className="btn btn-outline-primary btn-sm me-2"  onClick={() => handleEdit(r)}><i className="bi bi-pencil-square"></i></button>{" "}
+                <button  className="btn btn-outline-danger btn-sm me-2"   onClick={() => handleDelete(r.jobRequisitionID)}><i className="bi bi-trash"></i></button>
               </td>
             </tr>
           ))}
@@ -522,6 +581,7 @@ const handleInputChange = (e: any) => {
               <option value="">Select Status</option>
               <option value="Open">Open</option>
               <option value="Approved">Approved</option>
+              <option value="Rejected">Rejected</option>
               <option value="Assigned Recruiter">Assigned Recruiter</option>
               <option value="Recruiting">Recruiting</option>
               <option value="Closed">Closed</option>

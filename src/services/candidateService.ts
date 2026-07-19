@@ -108,7 +108,7 @@ const candidateService = {
       payload
     );
     return response.data;
-  },
+  }, 
 
 };
 
