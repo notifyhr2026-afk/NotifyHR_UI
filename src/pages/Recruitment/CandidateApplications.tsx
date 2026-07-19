@@ -1,12 +1,16 @@
-import React, { useState } from 'react';
-import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
+import React, { useEffect, useState } from 'react';
+import { Button, Table, Modal, Form, Row, Col, Spinner } from 'react-bootstrap';
+import { useParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import Select from 'react-select';
 import candidateService from '../../services/candidateService';
 
 /* ================== INTERFACES ================== */
 interface CandidateApplication {
   id: number;
-  candidateName: string;
+  applicationID?: number;
+  candidateID?: number;
+  candidateName?: string;
   jobRequisition: string;
   appliedDate: string;
   currentStage: string;
@@ -18,6 +22,7 @@ interface CandidateApplication {
 
 interface CandidateInterview {
   id: number;
+  interviewID?: number;
   applicationId: number;
   interviewDate: string;
   interviewer: string;
@@ -49,85 +54,133 @@ const roundOptions = [
   { value: 'HR Round', label: 'HR Round' },
 ];
 
-/* ================== COMPONENT ================== */
+const emptyApplication: CandidateApplication = {
+  id: 0,
+  candidateName: '',
+  jobRequisition: '',
+  appliedDate: '',
+  currentStage: '',
+  applicationStatus: '',
+  notes: '',
+  expectedMinSalary: 0,
+  expectedMaxSalary: 0,
+};
+
+const emptyInterview: CandidateInterview = {
+  id: 0,
+  applicationId: 0,
+  interviewDate: '',
+  interviewer: '',
+  interviewMode: '',
+  status: '',
+  feedback: '',
+  rating: '',
+  round: '',
+};
+
 const CandidateApplications: React.FC = () => {
-  /* ================== APPLICATION STATE ================== */
-  const [applications, setApplications] = useState<CandidateApplication[]>([
-    {
-      id: 1,
-      candidateName: 'John Doe',
-      jobRequisition: 'Software Engineer',
-      appliedDate: '2023-12-01',
-      currentStage: 'Interview',
-      applicationStatus: 'Interview Scheduled',
-      notes: 'Initial Interview Completed',
-      expectedMinSalary: 5,
-      expectedMaxSalary: 8,
-    },
-    {
-      id: 2,
-      candidateName: 'Jane Smith',
-      jobRequisition: 'Data Analyst',
-      appliedDate: '2023-11-15',
-      currentStage: 'Screening',
-      applicationStatus: 'Under Review',
-      notes: 'CV Review in Progress',
-      expectedMinSalary: 4,
-      expectedMaxSalary: 6,
-    },
-  ]);
+  const { CandidateID } = useParams<{ CandidateID: string }>();
+  const user = JSON.parse(localStorage.getItem('user') || 'null') || {};
+  const organizationID = user?.organizationID || 0;
 
+  const [applications, setApplications] = useState<CandidateApplication[]>([]);
+  const [loadingApplications, setLoadingApplications] = useState(false);
+  const [savingApplication, setSavingApplication] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [editApplication, setEditApplication] =
-    useState<CandidateApplication | null>(null);
+  const [editApplication, setEditApplication] = useState<CandidateApplication | null>(null);
+  const [formData, setFormData] = useState<CandidateApplication>(emptyApplication);
 
-  const [formData, setFormData] = useState<CandidateApplication>({
-    id: 0,
-    candidateName: '',
-    jobRequisition: '',
-    appliedDate: '',
-    currentStage: '',
-    applicationStatus: '',
-    notes: '',
-    expectedMinSalary: 0,
-    expectedMaxSalary: 0,
-  });
-
-  /* ================== INTERVIEW STATE ================== */
   const [showInterviewModal, setShowInterviewModal] = useState(false);
-  const [selectedApplication, setSelectedApplication] =
-    useState<CandidateApplication | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<CandidateApplication | null>(null);
+  const [interviews, setInterviews] = useState<CandidateInterview[]>([]);
+  const [loadingInterviews, setLoadingInterviews] = useState(false);
+  const [editInterview, setEditInterview] = useState<CandidateInterview | null>(null);
+  const [interviewForm, setInterviewForm] = useState<CandidateInterview>(emptyInterview);
+  const [savingInterview, setSavingInterview] = useState(false);
 
-  const [interviews, setInterviews] = useState<CandidateInterview[]>([
-    {
-      id: 1,
-      applicationId: 1,
-      interviewDate: '2023-12-05',
-      interviewer: 'EMP101',
-      interviewMode: 'Online',
-      status: 'Scheduled',
-      feedback: 'Good communication',
-      rating: '4',
-      round: '1st Round',
-    },
-  ]);
-
-  const [editInterview, setEditInterview] =
-    useState<CandidateInterview | null>(null);
-
-  const [interviewForm, setInterviewForm] = useState<CandidateInterview>({
-    id: 0,
-    applicationId: 0,
-    interviewDate: '',
-    interviewer: '',
-    interviewMode: '',
-    status: '',
-    feedback: '',
-    rating: '',
-    round: '',
+  const mapApplication = (item: any): CandidateApplication => ({
+    id: item.ApplicationID ?? item.applicationID ?? item.id ?? 0,
+    applicationID: item.ApplicationID ?? item.applicationID ?? item.id ?? 0,
+    candidateID: item.CandidateID ?? item.candidateID ?? Number(CandidateID) ?? 0,
+    candidateName: item.CandidateName ?? item.candidateName ?? '',
+    jobRequisition: item.JobRequisition ?? item.jobRequisition ?? item.JobTitle ?? '',
+    appliedDate: item.AppliedDate ?? item.appliedDate ?? '',
+    currentStage: item.CurrentStage ?? item.currentStage ?? '',
+    applicationStatus: item.ApplicationStatus ?? item.applicationStatus ?? '',
+    notes: item.Notes ?? item.notes ?? '',
+    expectedMinSalary: item.ExpectedMinSalary ?? item.expectedMinSalary ?? 0,
+    expectedMaxSalary: item.ExpectedMaxSalary ?? item.expectedMaxSalary ?? 0,
   });
 
-  /* ================== APPLICATION HANDLERS ================== */
+  const mapInterview = (item: any): CandidateInterview => ({
+    id: item.InterviewID ?? item.interviewID ?? item.id ?? Date.now(),
+    interviewID: item.InterviewID ?? item.interviewID ?? item.id ?? 0,
+    applicationId: item.ApplicationID ?? item.applicationID ?? item.applicationId ?? 0,
+    interviewDate: item.InterviewDate ?? item.interviewDate ?? '',
+    interviewer: item.Interviewer ?? item.interviewer ?? '',
+    interviewMode: item.InterviewMode ?? item.interviewMode ?? '',
+    status: item.Status ?? item.status ?? '',
+    feedback: item.Feedback ?? item.feedback ?? '',
+    rating: item.Rating ?? item.rating ?? '',
+    round: item.Round ?? item.round ?? '',
+  });
+
+  const loadApplications = async () => {
+    if (!CandidateID || !organizationID) {
+      return;
+    }
+
+    try {
+      setLoadingApplications(true);
+      const response = await candidateService.GetCandidateApplicationsAsync(
+        organizationID,
+        Number(CandidateID)
+      );
+      const result = Array.isArray(response) ? response : [response];
+      setApplications(result.map(mapApplication));
+    } catch (error) {
+      console.error(error);
+      toast.error('Unable to load applications.');
+    } finally {
+      setLoadingApplications(false);
+    }
+  };
+
+  const loadInterviews = async (applicationId: number) => {
+    if (!CandidateID || !organizationID || !applicationId) {
+      setInterviews([]);
+      return;
+    }
+
+    try {
+      setLoadingInterviews(true);
+      const response = await candidateService.GetCandidateInterviewsAsync(
+        organizationID,
+        Number(CandidateID),
+        applicationId
+      );
+      const result = Array.isArray(response) ? response : [response];
+      setInterviews(result.map(mapInterview));
+    } catch (error) {
+      console.error(error);
+      toast.error('Unable to load interviews.');
+    } finally {
+      setLoadingInterviews(false);
+    }
+  };
+
+  useEffect(() => {
+    loadApplications();
+  }, [CandidateID, organizationID]);
+
+  useEffect(() => {
+    if (selectedApplication?.id) {
+      loadInterviews(selectedApplication.id);
+    } else {
+      setInterviews([]);
+    }
+  }, [selectedApplication, CandidateID, organizationID]);
+
   const handleJobChange = (selected: any) => {
     setFormData((prev) => ({
       ...prev,
@@ -146,30 +199,44 @@ const CandidateApplications: React.FC = () => {
     }));
   };
 
-  const handleSave = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (editApplication) {
-      setApplications((prev) =>
-        prev.map((a) => (a.id === editApplication.id ? formData : a))
-      );
-    } else {
-      setApplications((prev) => [...prev, { ...formData, id: Date.now() }]);
+    if (!CandidateID || !organizationID) {
+      toast.error('Missing candidate or organization information.');
+      return;
     }
-    setShowModal(false);
+
+    try {
+      setSavingApplication(true);
+      const payload = {
+        applicationID: editApplication?.applicationID ?? 0,
+        candidateID: Number(CandidateID),
+        organizationID,
+        jobRequisition: formData.jobRequisition,
+        appliedDate: formData.appliedDate,
+        currentStage: formData.currentStage,
+        applicationStatus: formData.applicationStatus,
+        notes: formData.notes,
+        expectedMinSalary: formData.expectedMinSalary,
+        expectedMaxSalary: formData.expectedMaxSalary,
+      };
+
+      await candidateService.SaveCandidateApplicationAsync(payload);
+      toast.success('Application saved successfully.');
+      setShowModal(false);
+      setEditApplication(null);
+      setFormData(emptyApplication);
+      await loadApplications();
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to save application.');
+    } finally {
+      setSavingApplication(false);
+    }
   };
 
   const handleAdd = () => {
-    setFormData({
-      id: 0,
-      candidateName: '',
-      jobRequisition: '',
-      appliedDate: '',
-      currentStage: '',
-      applicationStatus: '',
-      notes: '',
-      expectedMinSalary: 0,
-      expectedMaxSalary: 0,
-    });
+    setFormData(emptyApplication);
     setEditApplication(null);
     setShowModal(true);
   };
@@ -180,19 +247,11 @@ const CandidateApplications: React.FC = () => {
     setShowModal(true);
   };
 
-  /* ================== INTERVIEW HANDLERS ================== */
   const handleScheduleInterview = (application: CandidateApplication) => {
     setSelectedApplication(application);
     setInterviewForm({
-      id: 0,
+      ...emptyInterview,
       applicationId: application.id,
-      interviewDate: '',
-      interviewer: '',
-      interviewMode: '',
-      status: '',
-      feedback: '',
-      rating: '',
-      round: '',
     });
     setEditInterview(null);
     setShowInterviewModal(true);
@@ -217,30 +276,51 @@ const CandidateApplications: React.FC = () => {
     }));
   };
 
-  const saveInterview = () => {
-    if (editInterview) {
-      setInterviews((prev) =>
-        prev.map((i) => (i.id === editInterview.id ? interviewForm : i))
-      );
-    } else {
-      setInterviews((prev) => [
-        ...prev,
-        { ...interviewForm, id: Date.now() },
-      ]);
+  const saveInterview = async () => {
+    if (!CandidateID || !organizationID || !selectedApplication) {
+      toast.error('Missing interview context.');
+      return;
     }
-    setEditInterview(null);
+
+    try {
+      setSavingInterview(true);
+      const payload = {
+        interviewID: editInterview?.interviewID ?? 0,
+        applicationID: selectedApplication.id,
+        candidateID: Number(CandidateID),
+        organizationID,
+        interviewDate: interviewForm.interviewDate,
+        interviewer: interviewForm.interviewer,
+        interviewMode: interviewForm.interviewMode,
+        status: interviewForm.status,
+        feedback: interviewForm.feedback,
+        rating: interviewForm.rating,
+        round: interviewForm.round,
+      };
+
+      await candidateService.SaveCandidateInterviewAsync(payload);
+      toast.success('Interview saved successfully.');
+      setEditInterview(null);
+      setInterviewForm({ ...emptyInterview, applicationId: selectedApplication.id });
+      await loadInterviews(selectedApplication.id);
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to save interview.');
+    } finally {
+      setSavingInterview(false);
+    }
   };
 
   const editInterviewRow = (interview: CandidateInterview) => {
     setEditInterview(interview);
     setInterviewForm(interview);
+    setShowInterviewModal(true);
   };
 
   const deleteInterview = (id: number) => {
     setInterviews((prev) => prev.filter((i) => i.id !== id));
   };
 
-  /* ================== UI ================== */
   return (
     <div className="candidate-applications-container">
       <div className="text-end mb-3">
@@ -249,49 +329,63 @@ const CandidateApplications: React.FC = () => {
         </Button>
       </div>
 
-      <Table className="table table-hover table-dark-custom">
-        <thead>
-          <tr>
-            <th>Job Requisition</th>
-            <th>Applied Date</th>
-            <th>Status</th>
-            <th>Expected Salary (Min - Max Lacs)</th>
-            <th>Notes</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {applications.map((application) => (
-            <tr key={application.id}>
-              <td>{application.jobRequisition}</td>
-              <td>{application.appliedDate}</td>
-              <td>{application.applicationStatus}</td>
-              <td>
-                {application.expectedMinSalary} - {application.expectedMaxSalary}
-              </td>
-              <td>{application.notes}</td>
-              <td>
-                <Button
-                  size="sm"
-                  variant="outline-primary"
-                  onClick={() => handleEdit(application)}
-                >
-                  Edit
-                </Button>{' '}
-                {application.applicationStatus === 'Interview Scheduled' && (
-                  <Button
-                    size="sm"
-                    variant="outline-success"
-                    onClick={() => handleScheduleInterview(application)}
-                  >
-                    Interview Scheduled
-                  </Button>
-                )}
-              </td>
+      {loadingApplications ? (
+        <div className="text-center py-4">
+          <Spinner animation="border" size="sm" /> Loading applications...
+        </div>
+      ) : (
+        <Table className="table table-hover table-dark-custom">
+          <thead>
+            <tr>
+              <th>Job Requisition</th>
+              <th>Applied Date</th>
+              <th>Status</th>
+              <th>Expected Salary (Min - Max Lacs)</th>
+              <th>Notes</th>
+              <th>Actions</th>
             </tr>
-          ))}
-        </tbody>
-      </Table>
+          </thead>
+          <tbody>
+            {applications.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="text-center">
+                  No applications found.
+                </td>
+              </tr>
+            ) : (
+              applications.map((application) => (
+                <tr key={application.id}>
+                  <td>{application.jobRequisition}</td>
+                  <td>{application.appliedDate}</td>
+                  <td>{application.applicationStatus}</td>
+                  <td>
+                    {application.expectedMinSalary} - {application.expectedMaxSalary}
+                  </td>
+                  <td>{application.notes}</td>
+                  <td>
+                    <Button
+                      size="sm"
+                      variant="outline-primary"
+                      onClick={() => handleEdit(application)}
+                    >
+                      Edit
+                    </Button>{' '}
+                    {application.applicationStatus === 'Interview Scheduled' && (
+                      <Button
+                        size="sm"
+                        variant="outline-success"
+                        onClick={() => handleScheduleInterview(application)}
+                      >
+                        Interview Scheduled
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </Table>
+      )}
 
       {/* ================== APPLICATION MODAL ================== */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">
@@ -306,12 +400,10 @@ const CandidateApplications: React.FC = () => {
               <Form.Label>Job Requisition</Form.Label>
               <Select
                 options={jobOptions}
-                value={jobOptions.find(
-                  (o) => o.value === formData.jobRequisition
-                )}
+                value={jobOptions.find((o) => o.value === formData.jobRequisition)}
                 onChange={handleJobChange}
                 className="org-select"
-          classNamePrefix="org-select"
+                classNamePrefix="org-select"
               />
             </Form.Group>
 
@@ -383,8 +475,8 @@ const CandidateApplications: React.FC = () => {
               <Button variant="secondary" onClick={() => setShowModal(false)}>
                 Cancel
               </Button>
-              <Button type="submit" variant="primary">
-                Save
+              <Button type="submit" variant="primary" disabled={savingApplication}>
+                {savingApplication ? 'Saving…' : 'Save'}
               </Button>
             </Modal.Footer>
           </Form>
@@ -415,12 +507,10 @@ const CandidateApplications: React.FC = () => {
               <Form.Label>Interviewer</Form.Label>
               <Select
                 options={employeeOptions}
-                value={employeeOptions.find(
-                  (o) => o.value === interviewForm.interviewer
-                )}
+                value={employeeOptions.find((o) => o.value === interviewForm.interviewer)}
                 onChange={handleInterviewerChange}
                 className="org-select"
-          classNamePrefix="org-select"
+                classNamePrefix="org-select"
               />
             </Col>
           </Row>
@@ -457,56 +547,70 @@ const CandidateApplications: React.FC = () => {
                 value={roundOptions.find((o) => o.value === interviewForm.round)}
                 onChange={handleRoundChange}
                 className="org-select"
-          classNamePrefix="org-select"
+                classNamePrefix="org-select"
               />
             </Col>
           </Row>
 
-          <Button className="mt-3" onClick={saveInterview}>
-            + Add Interview
+          <Button className="mt-3" onClick={saveInterview} disabled={savingInterview || !selectedApplication}>
+            {savingInterview ? 'Saving…' : '+ Add Interview'}
           </Button>
 
-          <Table bordered striped className="mt-3">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Interviewer</th>
-                <th>Round</th>
-                <th>Mode</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {interviews
-                .filter((i) => i.applicationId === selectedApplication?.id)
-                .map((i) => (
-                  <tr key={i.id}>
-                    <td>{i.interviewDate}</td>
-                    <td>{i.interviewer}</td>
-                    <td>{i.round}</td>
-                    <td>{i.interviewMode}</td>
-                    <td>{i.status}</td>
-                    <td>
-                      <Button
-                        size="sm"
-                        variant="outline-primary"
-                        onClick={() => editInterviewRow(i)}
-                      >
-                        Edit
-                      </Button>{' '}
-                      <Button
-                        size="sm"
-                        variant="outline-danger"
-                        onClick={() => deleteInterview(i.id)}
-                      >
-                        Delete
-                      </Button>
+          {loadingInterviews ? (
+            <div className="text-center py-4">
+              <Spinner animation="border" size="sm" /> Loading interviews...
+            </div>
+          ) : (
+            <Table bordered striped className="mt-3">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Interviewer</th>
+                  <th>Round</th>
+                  <th>Mode</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {interviews.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="text-center">
+                      No interviews scheduled.
                     </td>
                   </tr>
-                ))}
-            </tbody>
-          </Table>
+                ) : (
+                  interviews
+                    .filter((i) => i.applicationId === selectedApplication?.id)
+                    .map((i) => (
+                      <tr key={i.id}>
+                        <td>{i.interviewDate}</td>
+                        <td>{i.interviewer}</td>
+                        <td>{i.round}</td>
+                        <td>{i.interviewMode}</td>
+                        <td>{i.status}</td>
+                        <td>
+                          <Button
+                            size="sm"
+                            variant="outline-primary"
+                            onClick={() => editInterviewRow(i)}
+                          >
+                            Edit
+                          </Button>{' '}
+                          <Button
+                            size="sm"
+                            variant="outline-danger"
+                            onClick={() => deleteInterview(i.id)}
+                          >
+                            Delete
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                )}
+              </tbody>
+            </Table>
+          )}
         </Modal.Body>
       </Modal>
     </div>
