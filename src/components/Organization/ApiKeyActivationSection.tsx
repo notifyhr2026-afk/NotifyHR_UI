@@ -151,77 +151,37 @@ const ApiKeyActivationSection: React.FC = () => {
   }
 
   return (
-    <div>
-      {/* Section header */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          marginBottom: 20,
-          paddingBottom: 12,
-          borderBottom: "1px solid var(--border-color)",
-        }}
-      >
-        <div
-          style={{
-            width: 32,
-            height: 32,
-            borderRadius: 8,
-            background: "rgba(13, 110, 253, 0.1)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontSize: "1rem",
-            color: "var(--brand-primary, #0d6efd)",
-          }}
-        >
-          <i className="bi bi-key" />
-        </div>
-        <div>
-          <div style={{ fontWeight: 600, fontSize: "0.95rem" }}>
-            API Key Configuration
-          </div>
-          <div style={{ fontSize: "0.75rem", opacity: 0.5, marginTop: 1 }}>
-            Manage API access and domain whitelisting
-          </div>
+    <div className="org-settings-section">
+      <div className="org-settings-section-header">
+        <div className="org-settings-section-title">API Key Configuration</div>
+        <div className="org-settings-section-description">
+          Manage API access and domain whitelisting for organization integrations.
         </div>
       </div>
 
-      {/* Active alert */}
       {isApiKeyActivated && (
         <Alert
           variant="success"
-          style={{
-            borderRadius: 8,
-            padding: "10px 16px",
-            fontSize: "0.82rem",
-            marginBottom: 20,
-          }}
+          style={{ borderRadius: 14, padding: "14px 18px", fontSize: "0.9rem", marginBottom: 24 }}
         >
           <i className="bi bi-check-circle-fill me-2" />
-          API Key is <strong>active</strong> — requests from whitelisted domains
-          will be accepted.
+          API Key is <strong>active</strong> — requests from whitelisted domains will be accepted.
         </Alert>
       )}
 
       <Row className="g-4">
         <Col md={2}>
-          <Form.Group>
-            <Form.Label
-              style={{ fontWeight: 600, fontSize: "0.8rem", marginBottom: 6 }}
-            >
-              Active
-            </Form.Label>
+          <Form.Group className="org-settings-field">
+            <Form.Label className="org-settings-field-label">Active</Form.Label>
             <div
               style={{
                 display: "flex",
                 alignItems: "center",
                 gap: 10,
-                padding: "10px 14px",
-                border: "1px solid var(--border-color)",
-                borderRadius: 8,
-                background: "var(--card-bg)",
+                padding: "12px 16px",
+                border: "1px solid #E5E7EB",
+                borderRadius: 10,
+                background: "#ffffff",
               }}
             >
               <Form.Check
@@ -229,7 +189,7 @@ const ApiKeyActivationSection: React.FC = () => {
                 checked={isApiKeyActivated}
                 onChange={(e) => setIsApiKeyActivated(e.target.checked)}
               />
-              <span style={{ fontSize: "0.85rem" }}>
+              <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "#111827" }}>
                 {isApiKeyActivated ? "On" : "Off"}
               </span>
             </div>
@@ -237,22 +197,14 @@ const ApiKeyActivationSection: React.FC = () => {
         </Col>
 
         <Col md={4}>
-          <Form.Group>
-            <Form.Label
-              style={{ fontWeight: 600, fontSize: "0.8rem", marginBottom: 6 }}
-            >
-              API Key
-            </Form.Label>
+          <Form.Group className="org-settings-field">
+            <Form.Label className="org-settings-field-label">API Key</Form.Label>
             <Form.Control
               type="text"
               placeholder="Enter your API key"
               value={apiKey}
               onChange={(e) => setApiKey(e.target.value)}
-              style={{
-                borderRadius: 8,
-                padding: "10px 14px",
-                fontSize: "0.9rem",
-              }}
+              className="org-settings-input"
             />
           </Form.Group>
         </Col>

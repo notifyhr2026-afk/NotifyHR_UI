@@ -40,7 +40,6 @@ const MyProfile: React.FC = () => {
   const fetchEmployeeProfile = async () => {
     try {
       setLoading(true);
-      debugger;
       // Change this URL to your API endpoint
       const response = await employeeService.GetEmployeeProfileAsync(organizationID, EmployeeID);
         setEmployee(response[0]);

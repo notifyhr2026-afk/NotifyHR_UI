@@ -124,43 +124,16 @@ const UsersSection: React.FC = () => {
   return (
     <>
       {/* Table wrapper */}
-      <div
-        style={{
-          overflowX: "auto",
-          borderRadius: 8,
-          border: "1px solid var(--border-color)",
-        }}
-      >
-        <Table hover className="table-dark-custom" style={{ margin: 0 }}>
+      <div className="org-settings-table-wrapper">
+        <Table hover className="org-settings-table" style={{ margin: 0 }}>
           <thead>
             <tr>
-              <th style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
-                Full Name
-              </th>
-              <th style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
-                Email
-              </th>
-              <th style={{ padding: "12px 16px", whiteSpace: "nowrap" }}>
-                Phone
-              </th>
-              <th
-                style={{ padding: "12px 16px", whiteSpace: "nowrap" }}
-                className="text-center"
-              >
-                Password Reset
-              </th>
-              <th
-                style={{ padding: "12px 16px", whiteSpace: "nowrap" }}
-                className="text-center"
-              >
-                Status
-              </th>
-              <th
-                style={{ padding: "12px 16px", whiteSpace: "nowrap" }}
-                className="text-center"
-              >
-                Actions
-              </th>
+              <th>Full Name</th>
+              <th>Email</th>
+              <th>Phone</th>
+              <th className="text-center">Password Reset</th>
+              <th className="text-center">Status</th>
+              <th className="text-center">Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -185,23 +158,9 @@ const UsersSection: React.FC = () => {
             ) : (
               users.map((u) => (
                 <tr key={u.id}>
-                  <td style={{ padding: "12px 16px", fontWeight: 500 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <div
-                        style={{
-                          width: 32,
-                          height: 32,
-                          borderRadius: "50%",
-                          background: "linear-gradient(135deg, #1e73be, #6366f1)",
-                          color: "#fff",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                          fontSize: "0.75rem",
-                          fontWeight: 700,
-                          flexShrink: 0,
-                        }}
-                      >
+                  <td style={{ fontWeight: 500 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                      <div className="org-settings-avatar-badge">
                         {u.fullName
                           ?.split(" ")
                           .map((n) => n[0])
@@ -211,59 +170,22 @@ const UsersSection: React.FC = () => {
                       </div>
                       <div>
                         <div>{u.fullName}</div>
-                        {/* <div style={{ fontSize: "0.75rem", opacity: 0.5 }}>
-                          {u.username}
-                        </div> */}
                       </div>
                     </div>
                   </td>
-                  <td style={{ padding: "12px 16px", fontSize: "0.85rem" }}>
-                    {u.email}
+                  <td style={{ fontSize: "0.9rem" }}>{u.email}</td>
+                  <td style={{ fontSize: "0.9rem" }}>{u.phone || "-"}</td>
+                  <td className="text-center">
+                    <span className="org-settings-status-chip">
+                      {u.isPasswordReset ? "Reset Done" : "Pending"}
+                    </span>
                   </td>
-                  <td style={{ padding: "12px 16px", fontSize: "0.85rem" }}>
-                    {u.phone || "-"}
+                  <td className="text-center">
+                    <span className="org-settings-status-chip" style={{ background: u.isActive ? "#DCFCE7" : "#F3F4F6", color: u.isActive ? "#166534" : "#374151" }}>
+                      {u.isActive ? "Active" : "Inactive"}
+                    </span>
                   </td>
-                  <td className="text-center" style={{ padding: "12px 16px" }}>
-                    {u.isPasswordReset ? (
-                      <Badge
-                        bg="success"
-                        style={{ fontWeight: 500, fontSize: "0.75rem" }}
-                      >
-                        Reset Done
-                      </Badge>
-                    ) : (
-                      <Badge
-                        bg="warning"
-                        text="dark"
-                        style={{ fontWeight: 500, fontSize: "0.75rem" }}
-                      >
-                        Pending
-                      </Badge>
-                    )}
-                  </td>
-                  <td className="text-center" style={{ padding: "12px 16px" }}>
-                    {u.isActive ? (
-                      <Badge
-                        bg="success"
-                        style={{
-                          fontWeight: 500,
-                          fontSize: "0.75rem",
-                          background: "#22c55e",
-                          border: "none",
-                        }}
-                      >
-                        Active
-                      </Badge>
-                    ) : (
-                      <Badge
-                        bg="secondary"
-                        style={{ fontWeight: 500, fontSize: "0.75rem" }}
-                      >
-                        Inactive
-                      </Badge>
-                    )}
-                  </td>
-                  <td className="text-center" style={{ padding: "12px 16px" }}>
+                  <td className="text-center">
                     <Button
                       size="sm"
                       variant="outline-warning"
@@ -271,14 +193,8 @@ const UsersSection: React.FC = () => {
                         setSelectedUser(u);
                         setShowModal(true);
                       }}
-                      style={{
-                        borderRadius: 6,
-                        fontWeight: 500,
-                        fontSize: "0.78rem",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: 6,
-                      }}
+                      className="org-settings-btn org-settings-btn-secondary"
+                      style={{ padding: "0 14px", minHeight: 42 }}
                     >
                       <i className="bi bi-arrow-counterclockwise" />
                       Reset

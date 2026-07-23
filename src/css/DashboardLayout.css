@@ -15,28 +15,26 @@
 }
 
 .dashboard-main.sidebar-open {
-  margin-left: 250px;
+  margin-left: 270px;
 }
 
 .dashboard-main.sidebar-close {
-  margin-left: 60px;
+  margin-left: 72px;
 }
 
 /* ===== TOPBAR ===== */
 .dashboard-topbar {
-  height: 60px;
+  height: 72px;
   position: sticky;
   top: 0;
   z-index: 999;
-  background: linear-gradient(180deg, rgba(124, 58, 237, 0.08), var(--topbar-bg));
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-bottom: 1px solid rgba(124, 58, 237, 0.16);
+  background: var(--card-bg);
+  border-bottom: 1px solid var(--border-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
-  box-shadow: 0 10px 30px rgba(124, 58, 237, 0.06);
+  padding: 0 24px;
+  box-shadow: none;
 }
 
 /* ===== LEFT SECTION ===== */
@@ -50,22 +48,22 @@
 
 /* Animated Hamburger */
 .menu-btn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border: none;
   background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  border-radius: 8px;
-  transition: background 0.2s;
+  border-radius: 10px;
+  transition: background 200ms ease-in-out, transform 200ms ease-in-out;
   padding: 0;
   flex-shrink: 0;
 }
 
 .menu-btn:hover {
-  background: rgba(0, 0, 0, 0.05);
+  background: #F3F4F6;
 }
 
 body.dark-mode .menu-btn:hover {
@@ -107,15 +105,15 @@ body.dark-mode .menu-btn:hover {
 /* Org Name */
 .org-name {
   margin: 0;
-  font-weight: 700;
-  font-size: 1rem;
-  color: #4f46e5;
+  font-weight: 600;
+  font-size: 16px;
+  color: var(--text-main);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .org-name i {
@@ -214,10 +212,10 @@ body.dark-mode .icon-btn:hover {
 
 .search-input-wrapper {
   position: absolute;
-  right: 40px;
+  right: 48px;
   display: flex;
   align-items: center;
-  animation: searchSlideIn 0.2s ease;
+  animation: searchSlideIn 200ms ease-in-out;
 }
 
 @keyframes searchSlideIn {
@@ -232,15 +230,15 @@ body.dark-mode .icon-btn:hover {
 }
 
 .search-input {
-  width: 240px;
-  padding: 7px 32px 7px 12px;
+  width: 260px;
+  padding: 8px 36px 8px 12px;
   border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background: var(--card-bg);
-  color: var(--text-color);
-  font-size: 0.85rem;
+  border-radius: 999px;
+  background: #F3F4F6;
+  color: var(--text-main);
+  font-size: 14px;
   outline: none;
-  transition: all 0.2s;
+  transition: all 200ms ease-in-out;
 }
 
 .search-input:focus {
@@ -269,19 +267,19 @@ body.dark-mode .icon-btn:hover {
 
 .notification-badge {
   position: absolute;
-  top: 5px;
-  right: 5px;
-  background: #ef4444;
+  top: 4px;
+  right: 4px;
+  background: #EF4444;
   color: white;
-  font-size: 0.55rem;
+  font-size: 12px;
   font-weight: 700;
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--topbar-bg);
+  border: 2px solid var(--card-bg);
   line-height: 1;
 }
 
@@ -298,24 +296,24 @@ body.dark-mode .icon-btn:hover {
 }
 
 .avatar-circle {
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #1e73be, #6366f1);
+  width: 40px;
+  height: 40px;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #7C3AED, #C084FC);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
   position: relative;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 200ms ease-in-out, box-shadow 200ms ease-in-out;
 }
 
 .avatar-circle:hover {
-  transform: scale(1.05);
-  box-shadow: 0 2px 12px rgba(30, 115, 190, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 }
 
 body.dark-mode .avatar-circle:hover {
@@ -349,10 +347,10 @@ body.dark-mode .avatar-circle:hover {
 
 /* ===== PROFILE DROPDOWN ===== */
 .profile-dropdown {
-  min-width: 280px;
-  border-radius: 14px;
+  min-width: 300px;
+  border-radius: 12px;
   border: 1px solid var(--border-color);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-dropdown);
   padding: 8px;
   overflow: hidden;
   margin-top: 8px !important;
@@ -454,8 +452,8 @@ body.dark-mode .dropdown-header-card {
 /* ===== CONTENT ===== */
 .dashboard-content {
   flex: 1;
-  padding: 24px;
-  min-height: calc(100vh - 60px);
+  padding: 32px;
+  min-height: calc(100vh - 72px);
 }
 
 /* ===== RESPONSIVE ===== */

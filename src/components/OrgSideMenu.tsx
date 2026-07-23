@@ -305,12 +305,12 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen, isDarkMode }) => {
       </div>
 
       {/* SIDEBAR FOOTER — collapse hint */}
-      {isOpen && (
+      {/* {isOpen && (
         <div className="sidebar-footer" title="Collapse sidebar">
           <i className="bi bi-chevron-left sidebar-footer-icon" />
           <span className="sidebar-footer-label">Collapse</span>
         </div>
-      )}
+      )} */}
     </nav>
   );
 };

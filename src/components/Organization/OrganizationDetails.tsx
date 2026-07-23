@@ -200,295 +200,165 @@ const OrganizationDetails: React.FC = () => {
     <>
       <ToastContainer position="top-right" autoClose={3000} />
 
-      <Form noValidate validated={validated} onSubmit={handleSave}>
-        {/* Section header */}
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            marginBottom: 20,
-            paddingBottom: 12,
-            borderBottom: "1px solid var(--border-color)",
-          }}
-        >
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              borderRadius: 8,
-              background: "rgba(13, 110, 253, 0.1)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              fontSize: "1rem",
-              color: "var(--brand-primary, #0d6efd)",
-            }}
-          >
-            <i className="bi bi-info-circle" />
-          </div>
-          <div>
-            <div style={{ fontWeight: 600, fontSize: "0.95rem" }}>
-              General Information
-            </div>
-            <div
-              style={{
-                fontSize: "0.75rem",
-                opacity: 0.5,
-                marginTop: 1,
-              }}
-            >
-              Basic details about your organization
+      <Form noValidate validated={validated} onSubmit={handleSave} className="org-settings-page">
+        <div className="org-settings-section">
+          <div className="org-settings-section-header">
+            <div className="org-settings-section-title">Company Information</div>
+            <div className="org-settings-section-description">
+              Update your organization name, contact information, and entity details.
             </div>
           </div>
+
+          <Row className="g-4">
+            <Col md={6}>
+              <Form.Group className="org-settings-field">
+                <Form.Label className="org-settings-field-label">
+                  Organization Name <span style={{ color: "#dc3545" }}>*</span>
+                </Form.Label>
+                <Form.Control
+                  required
+                  type="text"
+                  name="OrganizationName"
+                  value={formData.OrganizationName}
+                  onChange={handleChange}
+                  disabled={loading}
+                  placeholder="e.g. Acme Corp"
+                  className="org-settings-input"
+                />
+                <Form.Control.Feedback type="invalid">
+                  Organization Name is required
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group className="org-settings-field">
+                <Form.Label className="org-settings-field-label">
+                  Email <span style={{ color: "#dc3545" }}>*</span>
+                </Form.Label>
+                <Form.Control
+                  required
+                  type="email"
+                  name="Email"
+                  value={formData.Email}
+                  onChange={handleChange}
+                  disabled={loading}
+                  placeholder="org@example.com"
+                  className="org-settings-input"
+                />
+                <Form.Control.Feedback type="invalid">
+                  Valid email is required
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group className="org-settings-field">
+                <Form.Label className="org-settings-field-label">Phone</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="Phone"
+                  value={formData.Phone}
+                  onChange={handleChange}
+                  disabled={loading}
+                  placeholder="+1 234 567 890"
+                  className="org-settings-input"
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group className="org-settings-field">
+                <Form.Label className="org-settings-field-label">Website</Form.Label>
+                <Form.Control
+                  type="text"
+                  name="Website"
+                  value={formData.Website}
+                  onChange={handleChange}
+                  disabled={loading}
+                  placeholder="https://acme.com"
+                  className="org-settings-input"
+                />
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group className="org-settings-field">
+                <Form.Label className="org-settings-field-label">
+                  Entity Type <span style={{ color: "#dc3545" }}>*</span>
+                </Form.Label>
+                <Form.Select
+                  required
+                  name="Industry"
+                  value={formData.Industry}
+                  onChange={handleChange}
+                  disabled={loading}
+                  className="org-settings-input"
+                >
+                  <option value="">Select Entity Type</option>
+                  <option value="Pvt Ltd">
+                    Private Limited Company (Pvt Ltd)
+                  </option>
+                  <option value="Public Ltd">Public Limited Company</option>
+                  <option value="LLP">Limited Liability Partnership (LLP)</option>
+                  <option value="OPC">One Person Company (OPC)</option>
+                  <option value="Sole Proprietorship">Sole Proprietorship</option>
+                  <option value="Partnership">Partnership Firm</option>
+                  <option value="Government">Government / Public Sector Undertaking</option>
+                  <option value="NGO">Non-Profit Organization / Section 8 Company</option>
+                  <option value="Trust">Trust / Society</option>
+                </Form.Select>
+                <Form.Control.Feedback type="invalid">
+                  Entity type is required
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+
+            <Col md={6}>
+              <Form.Group className="org-settings-field">
+                <Form.Label className="org-settings-field-label">
+                  Organization Type <span style={{ color: "#dc3545" }}>*</span>
+                </Form.Label>
+                <Form.Select
+                  required
+                  name="OrganizationTypeID"
+                  value={formData.OrganizationTypeID}
+                  onChange={handleChange}
+                  disabled={loading}
+                  className="org-settings-input"
+                >
+                  <option value="">Select Type</option>
+                  {orgTypes.map((type) => (
+                    <option
+                      key={type.OrganizationTypeID}
+                      value={type.OrganizationTypeID}
+                    >
+                      {type.OrganizationTypeName}
+                    </option>
+                  ))}
+                </Form.Select>
+                <Form.Control.Feedback type="invalid">
+                  Organization Type is required
+                </Form.Control.Feedback>
+              </Form.Group>
+            </Col>
+          </Row>
         </div>
 
-        <Row className="g-4">
-          <Col md={6}>
-            <Form.Group>
-              <Form.Label
-                style={{
-                  fontWeight: 600,
-                  fontSize: "0.8rem",
-                  marginBottom: 6,
-                }}
-              >
-                Organization Name <span style={{ color: "#dc3545" }}>*</span>
-              </Form.Label>
-              <Form.Control
-                required
-                type="text"
-                name="OrganizationName"
-                value={formData.OrganizationName}
-                onChange={handleChange}
-                disabled={loading}
-                placeholder="e.g. Acme Corp"
-                style={{
-                  borderRadius: 8,
-                  padding: "10px 14px",
-                  fontSize: "0.9rem",
-                }}
-              />
-              <Form.Control.Feedback type="invalid">
-                Organization Name is required
-              </Form.Control.Feedback>
-            </Form.Group>
-          </Col>
-
-          <Col md={6}>
-            <Form.Group>
-              <Form.Label
-                style={{
-                  fontWeight: 600,
-                  fontSize: "0.8rem",
-                  marginBottom: 6,
-                }}
-              >
-                Email <span style={{ color: "#dc3545" }}>*</span>
-              </Form.Label>
-              <Form.Control
-                required
-                type="email"
-                name="Email"
-                value={formData.Email}
-                onChange={handleChange}
-                disabled={loading}
-                placeholder="org@example.com"
-                style={{
-                  borderRadius: 8,
-                  padding: "10px 14px",
-                  fontSize: "0.9rem",
-                }}
-              />
-              <Form.Control.Feedback type="invalid">
-                Valid email is required
-              </Form.Control.Feedback>
-            </Form.Group>
-          </Col>
-
-          <Col md={6}>
-            <Form.Group>
-              <Form.Label
-                style={{
-                  fontWeight: 600,
-                  fontSize: "0.8rem",
-                  marginBottom: 6,
-                }}
-              >
-                Phone
-              </Form.Label>
-              <Form.Control
-                type="text"
-                name="Phone"
-                value={formData.Phone}
-                onChange={handleChange}
-                disabled={loading}
-                placeholder="+1 234 567 890"
-                style={{
-                  borderRadius: 8,
-                  padding: "10px 14px",
-                  fontSize: "0.9rem",
-                }}
-              />
-            </Form.Group>
-          </Col>
-
-          <Col md={6}>
-            <Form.Group>
-              <Form.Label
-                style={{
-                  fontWeight: 600,
-                  fontSize: "0.8rem",
-                  marginBottom: 6,
-                }}
-              >
-                Website
-              </Form.Label>
-              <Form.Control
-                type="text"
-                name="Website"
-                value={formData.Website}
-                onChange={handleChange}
-                disabled={loading}
-                placeholder="https://acme.com"
-                style={{
-                  borderRadius: 8,
-                  padding: "10px 14px",
-                  fontSize: "0.9rem",
-                }}
-              />
-            </Form.Group>
-          </Col>
-
-          <Col md={6}>
-            <Form.Group>
-              <Form.Label
-                style={{
-                  fontWeight: 600,
-                  fontSize: "0.8rem",
-                  marginBottom: 6,
-                }}
-              >
-                Entity Type <span style={{ color: "#dc3545" }}>*</span>
-              </Form.Label>
-              <Form.Select
-                required
-                name="Industry"
-                value={formData.Industry}
-                onChange={handleChange}
-                disabled={loading}
-                style={{
-                  borderRadius: 8,
-                  padding: "10px 14px",
-                  fontSize: "0.9rem",
-                }}
-              >
-                <option value="">Select Entity Type</option>
-                <option value="Pvt Ltd">
-                  Private Limited Company (Pvt Ltd)
-                </option>
-                <option value="Public Ltd">Public Limited Company</option>
-                <option value="LLP">
-                  Limited Liability Partnership (LLP)
-                </option>
-                <option value="OPC">
-                  One Person Company (OPC)
-                </option>
-                <option value="Sole Proprietorship">
-                  Sole Proprietorship
-                </option>
-                <option value="Partnership">Partnership Firm</option>
-                <option value="Government">
-                  Government / Public Sector Undertaking
-                </option>
-                <option value="NGO">
-                  Non-Profit Organization / Section 8 Company
-                </option>
-                <option value="Trust">Trust / Society</option>
-              </Form.Select>
-              <Form.Control.Feedback type="invalid">
-                Entity type is required
-              </Form.Control.Feedback>
-            </Form.Group>
-          </Col>
-
-          <Col md={6}>
-            <Form.Group>
-              <Form.Label
-                style={{
-                  fontWeight: 600,
-                  fontSize: "0.8rem",
-                  marginBottom: 6,
-                }}
-              >
-                Organization Type <span style={{ color: "#dc3545" }}>*</span>
-              </Form.Label>
-              <Form.Select
-                required
-                name="OrganizationTypeID"
-                value={formData.OrganizationTypeID}
-                onChange={handleChange}
-                disabled={loading}
-                style={{
-                  borderRadius: 8,
-                  padding: "10px 14px",
-                  fontSize: "0.9rem",
-                }}
-              >
-                <option value="">Select Type</option>
-                {orgTypes.map((type) => (
-                  <option
-                    key={type.OrganizationTypeID}
-                    value={type.OrganizationTypeID}
-                  >
-                    {type.OrganizationTypeName}
-                  </option>
-                ))}
-              </Form.Select>
-              <Form.Control.Feedback type="invalid">
-                Organization Type is required
-              </Form.Control.Feedback>
-            </Form.Group>
-          </Col>
-        </Row>
-
-        {/* Actions */}
-        <div
-          style={{
-            marginTop: 28,
-            paddingTop: 20,
-            borderTop: "1px solid var(--border-color)",
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: 10,
-          }}
-        >
-          {/* <Button
+        <div className="org-settings-actions">
+          <Button
             variant="outline-secondary"
             onClick={handleClear}
             disabled={loading}
-            style={{
-              borderRadius: 8,
-              padding: "8px 22px",
-              fontWeight: 500,
-              fontSize: "0.85rem",
-            }}
+            className="org-settings-btn org-settings-btn-secondary"
           >
-            Clear
-          </Button> */}
+            Cancel
+          </Button>
           <Button
             variant="primary"
             type="submit"
             disabled={loading}
-            style={{
-              borderRadius: 8,
-              padding: "8px 28px",
-              fontWeight: 600,
-              fontSize: "0.85rem",
-              display: "flex",
-              alignItems: "center",
-              gap: 8,
-            }}
+            className="org-settings-btn org-settings-btn-primary"
           >
             {loading ? (
               <>
@@ -496,10 +366,7 @@ const OrganizationDetails: React.FC = () => {
                 Saving...
               </>
             ) : (
-              <>
-                <i className="bi bi-check-lg" />
-                Save Changes
-              </>
+              "Save Changes"
             )}
           </Button>
         </div>

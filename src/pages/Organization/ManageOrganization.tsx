@@ -1,11 +1,12 @@
 import React, { useState } from "react";
-import { Container, Nav, Tab } from "react-bootstrap";
+import { Nav, Tab } from "react-bootstrap";
 import { useLocation } from "react-router-dom";
 
 import OrganizationDetails from "../../components/Organization/OrganizationDetails";
 import UsersSection from "../../components/Organization/UsersSection";
 import LoginActivationSection from "../../components/Organization/LoginActivationSection";
 import ApiKeyActivationSection from "../../components/Organization/ApiKeyActivationSection";
+import "../../css/OrganizationSettings.css";
 
 const TABS = [
   {
@@ -40,100 +41,49 @@ const ManageOrganization: React.FC = () => {
   const [activeKey, setActiveKey] = useState(state?.tab || "details");
 
   return (
-    <div className="page-container">
-      {/* Page Header */}
-      {/* <div
-        style={{
-          marginBottom: 24,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: 12,
-        }}
-      >
-        <div>
-          <h4
-            style={{
-              margin: 0,
-              fontWeight: 700,
-              fontSize: "1.25rem",
-              display: "flex",
-              alignItems: "center",
-              gap: 10,
-            }}
-          >
-            <i className="bi bi-buildings" style={{ color: "var(--brand-primary, #0d6efd)" }} />
-            Manage Organization
-          </h4>
-          <p
-            style={{
-              margin: "4px 0 0",
-              fontSize: "0.8rem",
-              opacity: 0.55,
-            }}
-          >
-            Configure your organization settings, users, and integrations
-          </p>
+    <div className="org-settings-page">
+      <div className="org-settings-card">
+        <div className="org-settings-card-header">
+          <div>
+            <div className="org-settings-breadcrumb">
+              <span>Settings</span>
+              <span className="separator">›</span>
+              <span>Organization</span>
+            </div>
+            <h1 className="org-settings-page-title">Organization Settings</h1>
+            <p className="org-settings-page-subtitle">
+              Basic company information, admin users, login access, and API
+              settings for your organization.
+            </p>
+          </div>
         </div>
-      </div> */}
 
-      {/* Tab Navigation */}
-      <Tab.Container activeKey={activeKey} onSelect={(k) => setActiveKey(k || "details")}>
-        <div
-          style={{
-            background: "var(--card-bg)",
-            borderRadius: 12,
-            border: "1px solid var(--border-color)",
-            overflow: "hidden",
-          }}
-        >
-          {/* Tabs Header */}
-          <Nav
-            variant="tabs"
-            style={{
-              padding: "8px 8px 0",
-              borderBottom: "1px solid var(--border-color)",
-              background: "var(--bg-color)",
-              gap: 2,
-            }}
-          >
+        <Tab.Container activeKey={activeKey} onSelect={(k) => setActiveKey(k || "details")}> 
+          <Nav className="org-settings-tabs">
             {TABS.map((tab) => (
               <Nav.Item key={tab.key}>
                 <Nav.Link
                   eventKey={tab.key}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 8,
-                    padding: "10px 18px",
-                    fontSize: "0.85rem",
-                    fontWeight: 500,
-                    border: "1px solid transparent",
-                    borderBottom: "none",
-                    borderRadius: "8px 8px 0 0",
-                    color: "var(--text-color)",
-                    opacity: activeKey === tab.key ? 1 : 0.6,
-                    transition: "all 0.15s",
-                  }}
+                  className={`org-settings-tab ${activeKey === tab.key ? "active" : ""}`}
                 >
-                  <i className={tab.icon} />
+                  <i className={tab.icon} style={{ fontSize: 20 }} />
                   {tab.title}
                 </Nav.Link>
               </Nav.Item>
             ))}
           </Nav>
 
-          {/* Tab Content */}
-          <Tab.Content style={{ padding: 24 }}>
+          <Tab.Content className="org-settings-tab-panel">
             {TABS.map((tab) => (
               <Tab.Pane eventKey={tab.key} key={tab.key}>
-                {tab.component}
+                <div className="org-settings-section">
+                  {tab.component}
+                </div>
               </Tab.Pane>
             ))}
           </Tab.Content>
-        </div>
-      </Tab.Container>
+        </Tab.Container>
+      </div>
     </div>
   );
 };
