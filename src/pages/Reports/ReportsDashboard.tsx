@@ -17,24 +17,192 @@ interface ReportLink {
   path: string;
 }
 
-// ================= DATA CONFIG =================
 const REPORTS: ReportLink[] = [
-  // Org Admin Reports
-  { id: 1, title: "Organization Master", description: "Entity & branch directory", icon: <FileText size={24}/>, roles: ["OrgAdmin"], path: "#" },
-  { id: 2, title: "Audit Trail", description: "System change logs", icon: <ShieldCheck size={24}/>, roles: ["OrgAdmin"], path: "#" },
-  
-  // HR Manager Reports
-  { id: 3, title: "Employee Master", description: "Complete staff directory", icon: <FileText size={24}/>, roles: ["OrgAdmin", "HRManager"], path: "#" },
-  { id: 4, title: "Leave Balance", description: "Accrued vs Used leave", icon: <Clock size={24}/>, roles: ["HRManager", "Employee"], path: "#" },
-  { id: 5, title: "Asset Register", description: "Company property tracking", icon: <Briefcase size={24}/>, roles: ["HRManager"], path: "#" },
-  
-  // Payroll Reports
-  { id: 6, title: "Salary Register", description: "Monthly Gross-to-Net", icon: <CreditCard size={24}/>, roles: ["OrgAdmin", "PayrollManager"], path: "#" },
-  { id: 7, title: "Statutory Reports", description: "PF, ESI & Tax Filing", icon: <FileText size={24}/>, roles: ["PayrollManager"], path: "#" },
-  
-  // Employee Reports
-  { id: 8, title: "My Payslips", description: "View/Download past slips", icon: <FileText size={24}/>, roles: ["Employee"], path: "#" },
+  // ================= ORG ADMIN =================
+  {
+    id: 1,
+    title: "Organization Master",
+    description: "Organization, Branches & Departments",
+    icon: <FileText size={24} />,
+    roles: ["OrgAdmin"],
+    path: "/reports/organization-master",
+  },
+  {
+    id: 2,
+    title: "Employee Master",
+    description: "Complete employee directory",
+    icon: <FileText size={24} />,
+    roles: ["OrgAdmin", "HRManager"],
+    path: "/reports/employee-master",
+  },
+  {
+    id: 3,
+    title: "Department Report",
+    description: "Department wise employees",
+    icon: <Briefcase size={24} />,
+    roles: ["OrgAdmin", "HRManager"],
+    path: "/reports/department-report",
+  },
+  {
+    id: 4,
+    title: "Audit Trail",
+    description: "System activity logs",
+    icon: <ShieldCheck size={24} />,
+    roles: ["OrgAdmin"],
+    path: "/reports/audit-trail",
+  },
+
+  // ================= HR =================
+  {
+    id: 5,
+    title: "Attendance Register",
+    description: "Monthly attendance",
+    icon: <Clock size={24} />,
+    roles: ["HRManager"],
+    path: "/reports/attendance-register",
+  },
+  {
+    id: 6,
+    title: "Leave Balance",
+    description: "Leave balance report",
+    icon: <Clock size={24} />,
+    roles: ["HRManager", "Employee"],
+    path: "/reports/leave-balance",
+  },
+  {
+    id: 7,
+    title: "Leave History",
+    description: "Applied leave history",
+    icon: <Clock size={24} />,
+    roles: ["HRManager"],
+    path: "/reports/leave-history",
+  },
+  {
+    id: 8,
+    title: "Asset Register",
+    description: "Assigned company assets",
+    icon: <Briefcase size={24} />,
+    roles: ["HRManager"],
+    path: "/reports/assets",
+  },
+  {
+    id: 9,
+    title: "Employee Directory",
+    description: "Contact directory",
+    icon: <FileText size={24} />,
+    roles: ["HRManager", "OrgAdmin"],
+    path: "/reports/employee-directory",
+  },
+
+  // ================= PAYROLL =================
+  {
+    id: 10,
+    title: "Salary Register",
+    description: "Monthly salary register",
+    icon: <CreditCard size={24} />,
+    roles: ["PayrollManager", "OrgAdmin"],
+    path: "/reports/salary-register",
+  },
+  {
+    id: 11,
+    title: "Payroll Summary",
+    description: "Payroll overview",
+    icon: <CreditCard size={24} />,
+    roles: ["PayrollManager", "OrgAdmin"],
+    path: "/reports/payroll-summary",
+  },
+  {
+    id: 12,
+    title: "Bank Transfer",
+    description: "Salary bank advice",
+    icon: <CreditCard size={24} />,
+    roles: ["PayrollManager"],
+    path: "/reports/bank-transfer",
+  },
+  {
+    id: 13,
+    title: "PF Report",
+    description: "Provident Fund",
+    icon: <FileText size={24} />,
+    roles: ["PayrollManager"],
+    path: "/reports/pf",
+  },
+  {
+    id: 14,
+    title: "ESI Report",
+    description: "Employee State Insurance",
+    icon: <FileText size={24} />,
+    roles: ["PayrollManager"],
+    path: "/reports/esi",
+  },
+  {
+    id: 15,
+    title: "Professional Tax",
+    description: "PT deduction report",
+    icon: <FileText size={24} />,
+    roles: ["PayrollManager"],
+    path: "/reports/professional-tax",
+  },
+  {
+    id: 16,
+    title: "TDS Report",
+    description: "Income tax deductions",
+    icon: <FileText size={24} />,
+    roles: ["PayrollManager"],
+    path: "/reports/tds",
+  },
+  // {
+  //   id: 17,
+  //   title: "Loan Deduction",
+  //   description: "Loan EMI report",
+  //   icon: <CreditCard size={24} />,
+  //   roles: ["PayrollManager"],
+  //   path: "/reports/loan-deduction",
+  // },
+  // {
+  //   id: 18,
+  //   title: "Bonus Report",
+  //   description: "Bonus & Incentives",
+  //   icon: <CreditCard size={24} />,
+  //   roles: ["PayrollManager"],
+  //   path: "/reports/bonus",
+  // },
+
+  // ================= EMPLOYEE =================
+  // {
+  //   id: 19,
+  //   title: "My Payslips",
+  //   description: "View and download payslips",
+  //   icon: <FileText size={24} />,
+  //   roles: ["Employee"],
+  //   path: "/employee/payslips",
+  // },
+  {
+    id: 20,
+    title: "Attendance Summary",
+    description: "Monthly attendance",
+    icon: <Clock size={24} />,
+    roles: ["Employee"],
+    path: "/employee/attendance",
+  },
+  {
+    id: 21,
+    title: "Leave Ledger",
+    description: "Leave applications",
+    icon: <Clock size={24} />,
+    roles: ["Employee"],
+    path: "/employee/leave-ledger",
+  },
+  {
+    id: 22,
+    title: "My Assets",
+    description: "Assigned assets",
+    icon: <Briefcase size={24} />,
+    roles: ["Employee"],
+    path: "/employee/assets",
+  },
 ];
+
 
 const ReportsDashboard: React.FC = () => {
   // In a real app, get this from your AuthContext or Redux

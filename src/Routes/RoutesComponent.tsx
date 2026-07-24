@@ -123,6 +123,26 @@ import ManageNoticePeriodPolicies from '../pages/Organization/ManageNoticePeriod
 import EmployeeTree from '../pages/Employee/EmployeeTree';
 import EmployeeData from '../pages/Employee/EmployeeData';
 
+import EmployeeMasterReport from '../pages/Reports/EmployeeMasterReport';
+import AttendanceRegisterReport from '../pages/Reports/AttendanceRegisterReport';
+import OrganizationMasterReport from '../pages/Reports/OrganizationMasterReport';
+import SalaryRegisterReport from '../pages/Reports/SalaryRegisterReport';
+import DepartmentReport from '../pages/Reports/DepartmentReport';
+import EmployeeDirectoryReport from '../pages/Reports/EmployeeDirectoryReport';
+import PayrollSummaryReport from '../pages/Reports/PayrollSummaryReport';
+import LeaveBalanceReport from '../pages/Reports/LeaveBalanceReport';
+import PFReport from '../pages/Reports/PFReport';
+import ESIReport from '../pages/Reports/ESIReport';
+import ProfessionalTaxReport from '../pages/Reports/ProfessionalTaxReport';
+import BankTransferStatement from '../pages/Reports/BankTransferStatement';
+import TDSReport from '../pages/Reports/TDSReport';
+import AuditTrailReport from '../pages/Reports/AuditTrailReport';
+import LeaveHistoryReport from '../pages/Reports/LeaveHistoryReport';
+import AssetRegisterReport from '../pages/Reports/AssetRegisterReport';
+import MyAssetsReport from '../pages/Reports/MyAssetsReport';
+import MyAttendanceReport from "../pages/Reports/MyAttendanceReport";
+import LeaveLedgerReport from "../pages/Reports/LeaveLedgerReport";
+
 const RoutesComponent: React.FC = () => {
   return (
     <Routes>
@@ -257,6 +277,28 @@ const RoutesComponent: React.FC = () => {
         <Route path="/resignation-approval" element={<ResignationApproval />} />
         <Route path="/employee-tree" element={<EmployeeTree />} />
         <Route path="/employee-data" element={<EmployeeData />} />
+
+        <Route path="reports/employee-master" element={<EmployeeMasterReport />} />
+        <Route path="reports/attendance-register" element={<AttendanceRegisterReport />} />
+        <Route path="reports/organization-master" element={<OrganizationMasterReport />} />
+        <Route path="reports/salary-register" element={<SalaryRegisterReport />} />
+        <Route path="reports/department-report" element={<DepartmentReport />} />
+        <Route path="reports/employee-directory" element={<EmployeeDirectoryReport />} />
+        <Route path="reports/payroll-summary" element={<PayrollSummaryReport />} />
+        <Route path="reports/leave-balance" element={<LeaveBalanceReport />} />
+        <Route path="reports/pf" element={<PFReport />} />
+        <Route path="reports/esi" element={<ESIReport />} />
+        <Route path="reports/professional-tax" element={<ProfessionalTaxReport />} />
+        <Route path="reports/bank-transfer" element={<BankTransferStatement />} />
+        <Route path="reports/tds" element={<TDSReport />} />
+        <Route path="reports/audit-trail" element={<AuditTrailReport />} />
+        <Route path="reports/leave-history" element={<LeaveHistoryReport />} />
+        <Route path="reports/assets" element={<AssetRegisterReport />} />
+        <Route path="employee/assets" element={<MyAssetsReport />} />
+        <Route path="employee/attendance" element={<MyAttendanceReport />} />
+        <Route path="employee/leave-ledger" element={<LeaveLedgerReport />} />
+        
+
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 
           path="Employees/manageEmployee/:employeeID"
