@@ -236,7 +236,7 @@ const ManagePositions: React.FC = () => {
           </div>
 
           <Button
-            variant="primary"
+            variant="outloine-primary"
             onClick={() => {
               setEditPosition(null);
               setPositionFormData(emptyForm);

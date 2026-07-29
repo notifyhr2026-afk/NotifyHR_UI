@@ -92,7 +92,7 @@ return (
     <div className="login-bg-shape shape-2">      
     </div>
   {/* MAIN */}
-  <main className="container login-container m-4">
+  <main className="container login-container w-100 mt-4">
     <div className="row justify-content-center w-100">
       <div className="col-xl-5 col-lg-6 col-md-8">
         
@@ -186,7 +186,7 @@ return (
             </div>
             <button
               type="submit"
-              className="btn btn-lp-primary w-100 py-3"
+              className="btn btn-lp-primary w-100 py-2"
               disabled={isSubmitting}
             >
               {isSubmitting ? (

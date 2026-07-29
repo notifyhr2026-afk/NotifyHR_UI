@@ -174,16 +174,25 @@ body.dark-mode .hover-link:hover {
 
 /* Active state */
 .menu-item.active {
-  background: var(--primary-light);
-  color: var(--primary);
+  background: #f3e8ff;
+  color: #7c3aed;
   font-weight: 600;
   box-shadow: none;
-  border-left: 4px solid #7C3AED;
+  border-left: 4px solid #7c3aed;
   padding-left: 12px; /* account for left indicator */
 }
 
+.menu-item.active .menu-icon {
+  color: #7c3aed;
+}
+
+.menu-item.active:hover {
+  background: #f3e8ff;
+}
+
 body.dark-mode .menu-item.active {
-  background: rgba(99, 102, 241, 0.2);
+  background: rgba(124, 58, 237, 0.18);
+  color: #ede9fe;
 }
 
 /* ===== MENU ICON ===== */
