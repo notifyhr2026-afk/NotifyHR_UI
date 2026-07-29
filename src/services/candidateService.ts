@@ -110,6 +110,22 @@ const candidateService = {
     return response.data;
   }, 
 
+  GetCandidateInterviewFeedback: async (
+    interviewerID: number
+  ) => {
+    const response = await axiosInstance.get(
+      `Candidate/GetCandidateInterviewFeedback?interviewerID=${interviewerID}`
+    );
+    return response.data;
+  },
+  SaveCandidateInterviewFeedbackAsync: async (payload: any) => {
+    const response = await axiosInstance.post(
+      "Candidate/SaveCandidateInterviewFeedbackAsync",
+      payload
+    );
+    return response.data;
+  }, 
+
 };
 
 

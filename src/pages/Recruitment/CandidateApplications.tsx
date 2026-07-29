@@ -4,6 +4,9 @@ import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import Select from 'react-select';
 import candidateService from '../../services/candidateService';
+import jobRequisitionService from "../../services/jobRequisitionService";
+import employeeService from "../../services/employeeService";
+
 
 /* ================== INTERFACES ================== */
 interface CandidateApplication {
@@ -11,7 +14,8 @@ interface CandidateApplication {
   applicationID?: number;
   candidateID?: number;
   candidateName?: string;
-  jobRequisition: string;
+  jobRequisitionID?: number;
+  jobRequisition?: string;
   appliedDate: string;
   currentStage: string;
   applicationStatus: string;
@@ -25,28 +29,18 @@ interface CandidateInterview {
   interviewID?: number;
   applicationId: number;
   interviewDate: string;
+  interviewerID?: number;
   interviewer: string;
   interviewMode: string;
   status: string;
   feedback: string;
-  rating: string;
-  round: string;
+  rating: number;
+  round: string;  
+  feedbackStatus?: string;
 }
 
 /* ================== DROPDOWN DATA ================== */
-const jobOptions = [
-  { value: 'Software Engineer', label: 'Software Engineer' },
-  { value: 'Data Analyst', label: 'Data Analyst' },
-  { value: 'UI/UX Designer', label: 'UI/UX Designer' },
-  { value: 'QA Engineer', label: 'QA Engineer' },
-  { value: 'Project Manager', label: 'Project Manager' },
-];
 
-const employeeOptions = [
-  { value: 'EMP101', label: 'EMP101 - Rahul' },
-  { value: 'EMP102', label: 'EMP102 - Anita' },
-  { value: 'EMP103', label: 'EMP103 - John' },
-];
 
 const roundOptions = [
   { value: '1st Round', label: '1st Round' },
@@ -71,10 +65,11 @@ const emptyInterview: CandidateInterview = {
   applicationId: 0,
   interviewDate: '',
   interviewer: '',
+  interviewerID: 0,
   interviewMode: '',
   status: '',
   feedback: '',
-  rating: '',
+  rating: 0,
   round: '',
 };
 
@@ -99,11 +94,20 @@ const CandidateApplications: React.FC = () => {
   const [savingInterview, setSavingInterview] = useState(false);
 
   const mapApplication = (item: any): CandidateApplication => ({
-    id: item.ApplicationID ?? item.applicationID ?? item.id ?? 0,
-    applicationID: item.ApplicationID ?? item.applicationID ?? item.id ?? 0,
-    candidateID: item.CandidateID ?? item.candidateID ?? Number(CandidateID) ?? 0,
-    candidateName: item.CandidateName ?? item.candidateName ?? '',
-    jobRequisition: item.JobRequisition ?? item.jobRequisition ?? item.JobTitle ?? '',
+   id: item.ApplicationID ?? item.applicationID ?? item.id ?? 0,
+  applicationID: item.ApplicationID ?? item.applicationID ?? item.id ?? 0,
+  candidateID: item.CandidateID ?? item.candidateID ?? Number(CandidateID) ?? 0,
+
+  jobRequisitionID:
+    item.JobRequisitionID ??
+    item.jobRequisitionID ??
+    0,
+
+  jobRequisition:
+    item.JobRequisition ??
+    item.jobRequisition ??
+    item.JobTitle ??
+    "",
     appliedDate: item.AppliedDate ?? item.appliedDate ?? '',
     currentStage: item.CurrentStage ?? item.currentStage ?? '',
     applicationStatus: item.ApplicationStatus ?? item.applicationStatus ?? '',
@@ -115,15 +119,64 @@ const CandidateApplications: React.FC = () => {
   const mapInterview = (item: any): CandidateInterview => ({
     id: item.InterviewID ?? item.interviewID ?? item.id ?? Date.now(),
     interviewID: item.InterviewID ?? item.interviewID ?? item.id ?? 0,
+    interviewer: item.Interviewer ?? item.interviewer ?? "",
     applicationId: item.ApplicationID ?? item.applicationID ?? item.applicationId ?? 0,
     interviewDate: item.InterviewDate ?? item.interviewDate ?? '',
-    interviewer: item.Interviewer ?? item.interviewer ?? '',
+    interviewerID: item.InterviewerID ?? item.interviewerID ?? 0,
     interviewMode: item.InterviewMode ?? item.interviewMode ?? '',
     status: item.Status ?? item.status ?? '',
     feedback: item.Feedback ?? item.feedback ?? '',
-    rating: item.Rating ?? item.rating ?? '',
+    feedbackStatus: item.FeedbackStatus ?? item.feedbackStatus ?? '',
+    rating: item.Rating ?? item.rating ?? 0,
     round: item.Round ?? item.round ?? '',
   });
+const [jobOptions, setJobOptions] = useState<
+  { value: number; label: string }[]
+>([]);
+
+const [employeeOptions, setEmployeeOptions] = useState<
+  { value: number; label: string }[]
+>([]);
+
+  const loadJobs = async () => {
+  try {
+    const response =
+      await jobRequisitionService.GetJobForAssignmentByOrganizationAsync(
+        organizationID
+      );
+
+    const jobs = response.Table ?? response ?? [];
+
+    setJobOptions(
+      jobs.map((item: any) => ({
+        value: item.JobRequisitionID,
+        label: `${item.JobRequisitionNo} - ${item.Position}`,
+      }))
+    );
+  } catch (error) {
+    console.error(error);
+    toast.error("Unable to load jobs.");
+  }
+};
+
+const loadEmployees = async () => {
+  try {
+    const response =
+      await employeeService.getEmployeesByOrganizationIdAsync(
+        organizationID
+      );
+
+    setEmployeeOptions(
+      (response || []).map((emp: any) => ({
+        value: emp.EmployeeID,
+        label: emp.EmployeeName,
+      }))
+    );
+  } catch (error) {
+    console.error(error);
+    toast.error("Unable to load employees.");
+  }
+};
 
   const loadApplications = async () => {
     if (!CandidateID || !organizationID) {
@@ -169,9 +222,15 @@ const CandidateApplications: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    loadApplications();
-  }, [CandidateID, organizationID]);
+useEffect(() => {
+  loadApplications();
+
+  if (organizationID) {
+    loadJobs();
+    loadEmployees();
+  }
+}, [CandidateID, organizationID]);
+
 
   useEffect(() => {
     if (selectedApplication?.id) {
@@ -181,12 +240,7 @@ const CandidateApplications: React.FC = () => {
     }
   }, [selectedApplication, CandidateID, organizationID]);
 
-  const handleJobChange = (selected: any) => {
-    setFormData((prev) => ({
-      ...prev,
-      jobRequisition: selected ? selected.value : '',
-    }));
-  };
+
 
   const handleInputChange = (e: React.ChangeEvent<any>) => {
     const { id, value } = e.target;
@@ -209,17 +263,19 @@ const CandidateApplications: React.FC = () => {
     try {
       setSavingApplication(true);
       const payload = {
-        applicationID: editApplication?.applicationID ?? 0,
-        candidateID: Number(CandidateID),
-        organizationID,
-        jobRequisition: formData.jobRequisition,
-        appliedDate: formData.appliedDate,
-        currentStage: formData.currentStage,
-        applicationStatus: formData.applicationStatus,
-        notes: formData.notes,
-        expectedMinSalary: formData.expectedMinSalary,
-        expectedMaxSalary: formData.expectedMaxSalary,
-      };
+              applicationID: editApplication?.applicationID ?? 0,
+              candidateID: Number(CandidateID),
+              organizationID,
+              jobRequisitionID: formData.jobRequisitionID,
+              appliedDate: formData.appliedDate,
+              currentStage: formData.currentStage,
+              applicationStatus: formData.applicationStatus,
+              notes: formData.notes,
+              expectedMinSalary: formData.expectedMinSalary,
+              expectedMaxSalary: formData.expectedMaxSalary,
+              updatedBy: user?.username || 'system',
+              };
+
 
       await candidateService.SaveCandidateApplicationAsync(payload);
       toast.success('Application saved successfully.');
@@ -262,12 +318,6 @@ const CandidateApplications: React.FC = () => {
     setInterviewForm((prev) => ({ ...prev, [id]: value }));
   };
 
-  const handleInterviewerChange = (selected: any) => {
-    setInterviewForm((prev) => ({
-      ...prev,
-      interviewer: selected ? selected.value : '',
-    }));
-  };
 
   const handleRoundChange = (selected: any) => {
     setInterviewForm((prev) => ({
@@ -285,18 +335,20 @@ const CandidateApplications: React.FC = () => {
     try {
       setSavingInterview(true);
       const payload = {
-        interviewID: editInterview?.interviewID ?? 0,
-        applicationID: selectedApplication.id,
-        candidateID: Number(CandidateID),
-        organizationID,
-        interviewDate: interviewForm.interviewDate,
-        interviewer: interviewForm.interviewer,
-        interviewMode: interviewForm.interviewMode,
-        status: interviewForm.status,
-        feedback: interviewForm.feedback,
-        rating: interviewForm.rating,
-        round: interviewForm.round,
-      };
+            interviewID: editInterview?.interviewID ?? 0,
+            applicationID: selectedApplication.id,
+            candidateID: Number(CandidateID),
+            organizationID,
+            interviewerID: interviewForm.interviewerID,
+            interviewer: interviewForm.interviewer,
+            interviewDate: interviewForm.interviewDate,
+            interviewMode: interviewForm.interviewMode,
+            status: interviewForm.status,
+            feedback: interviewForm.feedback,
+            rating: interviewForm.rating,
+            round: interviewForm.round
+        };
+
 
       await candidateService.SaveCandidateInterviewAsync(payload);
       toast.success('Interview saved successfully.');
@@ -356,7 +408,12 @@ const CandidateApplications: React.FC = () => {
               applications.map((application) => (
                 <tr key={application.id}>
                   <td>{application.jobRequisition}</td>
-                  <td>{application.appliedDate}</td>
+                  <td>
+  {application.appliedDate
+    ? new Date(application.appliedDate).toLocaleDateString()
+    : "-"}
+</td>
+
                   <td>{application.applicationStatus}</td>
                   <td>
                     {application.expectedMinSalary} - {application.expectedMaxSalary}
@@ -399,12 +456,19 @@ const CandidateApplications: React.FC = () => {
             <Form.Group>
               <Form.Label>Job Requisition</Form.Label>
               <Select
-                options={jobOptions}
-                value={jobOptions.find((o) => o.value === formData.jobRequisition)}
-                onChange={handleJobChange}
-                className="org-select"
-                classNamePrefix="org-select"
-              />
+  options={jobOptions}
+  value={jobOptions.find(
+    (o) => o.value === formData.jobRequisitionID
+  )}
+  onChange={(selected) =>
+    setFormData((prev) => ({
+      ...prev,
+      jobRequisitionID: selected?.value ?? 0,
+      jobRequisition: selected?.label ?? "",
+    }))
+  }
+/>
+
             </Form.Group>
 
             <Row className="mt-3">
@@ -453,10 +517,15 @@ const CandidateApplications: React.FC = () => {
                 onChange={handleInputChange}
               >
                 <option value="">Select</option>
-                <option value="Under Review">Under Review</option>
+                <option value="1">Draft</option>
                 <option value="Interview Scheduled">Interview Scheduled</option>
-                <option value="Completed">Completed</option>
-                <option value="Rejected">Rejected</option>
+                <option value="Interview Completed">Interview Completed</option>
+                <option value="On Hold">On Hold</option>
+                <option value="Selected">Selected(Ready for Offer)</option>
+                <option value="Offer Released">Offer Released</option>
+                <option value="Offer Accepted">Offer Accepted</option>
+                <option value="Offer Rejected">Offer Rejected</option>
+                <option value="Joining Confirmed">Joining Confirmed</option>
               </Form.Select>
             </Form.Group>
 
@@ -505,13 +574,21 @@ const CandidateApplications: React.FC = () => {
             </Col>
             <Col md={6}>
               <Form.Label>Interviewer</Form.Label>
-              <Select
-                options={employeeOptions}
-                value={employeeOptions.find((o) => o.value === interviewForm.interviewer)}
-                onChange={handleInterviewerChange}
-                className="org-select"
-                classNamePrefix="org-select"
-              />
+             <Select
+    options={employeeOptions}
+    value={employeeOptions.find(
+        x => x.value === interviewForm.interviewerID
+    )}
+    onChange={(selected) =>
+        setInterviewForm(prev => ({
+            ...prev,
+            interviewerID: selected?.value,
+            interviewer: selected?.label ?? ""
+        }))
+    }
+/>
+
+
             </Col>
           </Row>
 
@@ -568,7 +645,7 @@ const CandidateApplications: React.FC = () => {
                   <th>Interviewer</th>
                   <th>Round</th>
                   <th>Mode</th>
-                  <th>Status</th>
+                  <th>Feedback Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
@@ -588,7 +665,7 @@ const CandidateApplications: React.FC = () => {
                         <td>{i.interviewer}</td>
                         <td>{i.round}</td>
                         <td>{i.interviewMode}</td>
-                        <td>{i.status}</td>
+                        <td>{i.feedbackStatus}</td>
                         <td>
                           <Button
                             size="sm"

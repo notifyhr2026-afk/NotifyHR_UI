@@ -10,60 +10,39 @@ interface RecruiterApproval {
   JobReqRecruiterID: number;
   JobRequisitionID: number;
   JobRequisitionNo: string;
-
   Position: string;
   Department: string;
   Branch: string;
-
   NoOfOpenings: number;
-
   RequestedUser: string;
   RequestedDate: string;
   TargetStartDate: string;
-
   MinExperienceYears: number;
   MaxExperienceYears: number;
-
   MinSalary: number;
   MaxSalary: number;
-
   JobStatus: string;
-
   Comments?: string;
-
   RecruiterActionStatus?: string;
 }
-
-
 // ===== Component =====
 const RecruiterApprovalPage: React.FC = () => {
-
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-
   const employeeName =
     user?.name ||
     user?.username ||
     "";
-const EmployeeID = user?.employeeID || 0;
+  const EmployeeID = user?.employeeID || 0;
   const [approvalList, setApprovalList] = useState<RecruiterApproval[]>([]);
-
   const [loading, setLoading] = useState(false);
-
   const [showModal, setShowModal] = useState(false);
-
-  const [selectedRequest, setSelectedRequest] =
-    useState<RecruiterApproval | null>(null);
-
-
+  const [selectedRequest, setSelectedRequest] = useState<RecruiterApproval | null>(null);
   const [formData, setFormData] = useState({
     status: "",
     comments: "",
   });
 
-
   const [validated, setValidated] = useState(false);
-
-
 
   // ============================
   // Load recruiter assigned jobs
@@ -82,7 +61,7 @@ const EmployeeID = user?.employeeID || 0;
       setApprovalList(response || []);
 
     }
-    catch(error){
+    catch (error) {
 
       console.error(error);
 
@@ -91,7 +70,7 @@ const EmployeeID = user?.employeeID || 0;
       );
 
     }
-    finally{
+    finally {
 
       setLoading(false);
 
@@ -154,7 +133,7 @@ const EmployeeID = user?.employeeID || 0;
       event.currentTarget;
 
 
-    if(form.checkValidity() === false){
+    if (form.checkValidity() === false) {
 
       event.stopPropagation();
 
@@ -170,7 +149,7 @@ const EmployeeID = user?.employeeID || 0;
 
 
 
-    if(!selectedRequest){
+    if (!selectedRequest) {
 
       return;
 
@@ -218,7 +197,7 @@ const EmployeeID = user?.employeeID || 0;
 
 
     }
-    catch(error){
+    catch (error) {
 
       console.error(error);
 
@@ -268,18 +247,6 @@ const EmployeeID = user?.employeeID || 0;
             </th>
 
             <th>
-              Requested By
-            </th>
-
-            <th>
-              Openings
-            </th>
-
-            <th>
-              Target Date
-            </th>
-
-            <th>
               Status
             </th>
 
@@ -297,149 +264,126 @@ const EmployeeID = user?.employeeID || 0;
         <tbody>
 
 
-        {
-          loading ?
+          {
+            loading ?
 
-          <tr>
+              <tr>
 
-            <td
-              colSpan={9}
-              className="text-center"
-            >
-
-              <Spinner animation="border"/>
-
-            </td>
-
-          </tr>
-
-
-          :
-
-          approvalList.length === 0 ?
-
-          <tr>
-
-            <td
-              colSpan={9}
-              className="text-center"
-            >
-
-              No requisitions found
-
-            </td>
-
-          </tr>
-
-
-          :
-
-
-          approvalList.map(item => (
-
-            <tr
-              key={
-                item.JobReqRecruiterID
-              }
-            >
-
-
-              <td>
-                {item.JobRequisitionNo}
-              </td>
-
-
-              <td>
-                {item.Position}
-              </td>
-
-
-              <td>
-                {item.Department}
-              </td>
-
-
-              <td>
-                {item.Branch}
-              </td>
-
-
-              <td>
-                {item.RequestedUser}
-              </td>
-
-
-              <td>
-                {item.NoOfOpenings}
-              </td>
-
-
-              <td>
-                {
-                  new Date(
-                    item.TargetStartDate
-                  )
-                  .toLocaleDateString()
-                }
-              </td>
-
-
-              <td>
-
-                <span
-                  className={
-                    `badge ${
-                      item.RecruiterActionStatus === "Approved"
-                      ?
-                      "bg-success"
-                      :
-                      item.RecruiterActionStatus === "Rejected"
-                      ?
-                      "bg-danger"
-                      :
-                      "bg-warning"
-                    }`
-                  }
+                <td
+                  colSpan={9}
+                  className="text-center"
                 >
 
-                  {
-                    item.RecruiterActionStatus ||
-                    "Pending"
-                  }
+                  <Spinner animation="border" />
 
-                </span>
+                </td>
 
-              </td>
+              </tr>
 
 
-              <td>
+              :
 
-                <Button
+              approvalList.length === 0 ?
 
-                  size="sm"
+                <tr>
 
-                  variant="outline-primary"
+                  <td
+                    colSpan={9}
+                    className="text-center"
+                  >
 
-                  onClick={() =>
-                    openApprovalModal(item)
-                  }
+                    No requisitions found
 
-                >
+                  </td>
 
-                  Approve / Reject
-
-                </Button>
-
-
-              </td>
+                </tr>
 
 
-            </tr>
+                :
 
 
-          ))
+                approvalList.map(item => (
 
-        }
+                  <tr
+                    key={
+                      item.JobReqRecruiterID
+                    }
+                  >
+
+
+                    <td>
+                      {item.JobRequisitionNo}
+                    </td>
+
+
+                    <td>
+                      {item.Position}
+                    </td>
+
+
+                    <td>
+                      {item.Department}
+                    </td>
+
+
+                    <td>
+                      {item.Branch}
+                    </td>
+                    <td>
+
+                      <span
+                        className={
+                          `badge ${item.RecruiterActionStatus === "Approved"
+                            ?
+                            "bg-success"
+                            :
+                            item.RecruiterActionStatus === "Rejected"
+                              ?
+                              "bg-danger"
+                              :
+                              "bg-warning"
+                          }`
+                        }
+                      >
+
+                        {
+                          item.RecruiterActionStatus ||
+                          "Pending"
+                        }
+
+                      </span>
+
+                    </td>
+
+
+                    <td>
+
+                      <Button
+
+                        size="sm"
+
+                        variant="outline-primary"
+
+                        onClick={() =>
+                          openApprovalModal(item)
+                        }
+
+                      >
+
+                        Approve / Reject
+
+                      </Button>
+
+
+                    </td>
+
+
+                  </tr>
+
+
+                ))
+
+          }
 
 
         </tbody>
@@ -479,207 +423,271 @@ const EmployeeID = user?.employeeID || 0;
         <Modal.Body>
 
 
-        <Form
+          <div className="border rounded p-3 mb-3 bg-light">
+            <h6 className="mb-3">Job Information</h6>
 
-          noValidate
+            <Row className="mb-2">
+              <Col md={6}>
+                <strong>Requisition No:</strong><br />
+                {selectedRequest?.JobRequisitionNo}
+              </Col>
 
-          validated={validated}
+              <Col md={6}>
+                <strong>Position:</strong><br />
+                {selectedRequest?.Position}
+              </Col>
+            </Row>
 
-          onSubmit={handleSaveApproval}
+            <Row className="mb-2">
+              <Col md={6}>
+                <strong>Department:</strong><br />
+                {selectedRequest?.Department}
+              </Col>
 
-        >
+              <Col md={6}>
+                <strong>Branch:</strong><br />
+                {selectedRequest?.Branch}
+              </Col>
+            </Row>
 
+            <Row className="mb-2">
+              <Col md={6}>
+                <strong>Openings:</strong><br />
+                {selectedRequest?.NoOfOpenings}
+              </Col>
 
-          <Row className="mb-3">
+              <Col md={6}>
+                <strong>Target Date:</strong><br />
+                {selectedRequest?.TargetStartDate
+                  ? new Date(selectedRequest.TargetStartDate).toLocaleDateString()
+                  : "-"}
+              </Col>
+            </Row>
 
-            <Col md={6}>
+            <Row className="mb-2">
+              <Col md={6}>
+                <strong>Experience:</strong><br />
+                {selectedRequest?.MinExperienceYears} -{" "}
+                {selectedRequest?.MaxExperienceYears} Years
+              </Col>
 
-              <Form.Label>
-                Requisition No
-              </Form.Label>
+              <Col md={6}>
+                <strong>Salary:</strong><br />
+                ₹{selectedRequest?.MinSalary?.toLocaleString()} - ₹
+                {selectedRequest?.MaxSalary?.toLocaleString()}
+              </Col>
+            </Row>
 
-              <Form.Control
+            <Row>
+              <Col md={12}>
+                <strong>Job Status:</strong><br />
+                <span className="badge bg-info">
+                  {selectedRequest?.JobStatus}
+                </span>
+              </Col>
+            </Row>
+          </div>
 
-                disabled
+          <Form
 
-                value={
-                  selectedRequest?.JobRequisitionNo || ""
-                }
+            noValidate
 
-              />
+            validated={validated}
 
-            </Col>
+            onSubmit={handleSaveApproval}
 
-
-
-            <Col md={6}>
-
-              <Form.Label>
-                Position
-              </Form.Label>
-
-
-              <Form.Control
-
-                disabled
-
-                value={
-                  selectedRequest?.Position || ""
-                }
-
-              />
-
-
-            </Col>
-
-
-          </Row>
-
-
-
-
-          <Row className="mb-3">
-
-
-            <Col>
-
-              <Form.Label>
-                Status
-              </Form.Label>
-
-
-              <Form.Select
-
-                required
-
-                value={
-                  formData.status
-                }
+          >
 
 
-                onChange={(e)=>
+            <Row className="mb-3">
 
-                  setFormData({
+              <Col md={6}>
 
-                    ...formData,
+                <Form.Label>
+                  Requisition No
+                </Form.Label>
 
-                    status:
-                      e.target.value
+                <Form.Control
 
-                  })
+                  disabled
 
+                  value={
+                    selectedRequest?.JobRequisitionNo || ""
+                  }
+
+                />
+
+              </Col>
+
+
+
+              <Col md={6}>
+
+                <Form.Label>
+                  Position
+                </Form.Label>
+
+
+                <Form.Control
+
+                  disabled
+
+                  value={
+                    selectedRequest?.Position || ""
+                  }
+
+                />
+
+
+              </Col>
+
+
+            </Row>
+
+
+
+
+            <Row className="mb-3">
+
+
+              <Col>
+
+                <Form.Label>
+                  Status
+                </Form.Label>
+
+
+                <Form.Select
+
+                  required
+
+                  value={
+                    formData.status
+                  }
+
+
+                  onChange={(e) =>
+
+                    setFormData({
+
+                      ...formData,
+
+                      status:
+                        e.target.value
+
+                    })
+
+                  }
+
+                >
+
+                  <option value="">
+                    Select
+                  </option>
+
+                  <option value="Approved">
+                    Approve
+                  </option>
+
+                  <option value="Rejected">
+                    Reject
+                  </option>
+
+
+                </Form.Select>
+
+
+              </Col>
+
+
+            </Row>
+
+
+
+
+            <Row>
+
+              <Col>
+
+
+                <Form.Label>
+                  Comments
+                </Form.Label>
+
+
+                <Form.Control
+
+                  as="textarea"
+
+                  rows={3}
+
+
+                  value={
+                    formData.comments
+                  }
+
+
+                  onChange={(e) =>
+
+                    setFormData({
+
+                      ...formData,
+
+                      comments:
+                        e.target.value
+
+                    })
+
+                  }
+
+
+                />
+
+
+              </Col>
+
+
+            </Row>
+
+
+
+
+            <Modal.Footer className="mt-3">
+
+
+              <Button
+
+                variant="secondary"
+
+                onClick={() =>
+                  setShowModal(false)
                 }
 
               >
 
-                <option value="">
-                  Select
-                </option>
+                Cancel
 
-                <option value="Approved">
-                  Approve
-                </option>
-
-                <option value="Rejected">
-                  Reject
-                </option>
-
-
-              </Form.Select>
-
-
-            </Col>
-
-
-          </Row>
+              </Button>
 
 
 
+              <Button
 
-          <Row>
+                type="submit"
 
-            <Col>
+                variant="primary"
 
+              >
 
-              <Form.Label>
-                Comments
-              </Form.Label>
+                Save
 
-
-              <Form.Control
-
-                as="textarea"
-
-                rows={3}
+              </Button>
 
 
-                value={
-                  formData.comments
-                }
+            </Modal.Footer>
 
 
-                onChange={(e)=>
-
-                  setFormData({
-
-                    ...formData,
-
-                    comments:
-                      e.target.value
-
-                  })
-
-                }
-
-
-              />
-
-
-            </Col>
-
-
-          </Row>
-
-
-
-
-          <Modal.Footer className="mt-3">
-
-
-            <Button
-
-              variant="secondary"
-
-              onClick={() =>
-                setShowModal(false)
-              }
-
-            >
-
-              Cancel
-
-            </Button>
-
-
-
-            <Button
-
-              type="submit"
-
-              variant="primary"
-
-            >
-
-              Save
-
-            </Button>
-
-
-          </Modal.Footer>
-
-
-
-        </Form>
+          </Form>
 
 
         </Modal.Body>

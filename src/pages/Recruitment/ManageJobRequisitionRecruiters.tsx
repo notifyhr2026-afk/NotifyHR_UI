@@ -7,667 +7,1314 @@ import {
   Row,
   Col,
   Spinner,
+  Badge,
+  Collapse,
 } from "react-bootstrap";
-import { toast, ToastContainer } from "react-toastify";
+
+import {
+  toast,
+  ToastContainer,
+} from "react-toastify";
+
 import "react-toastify/dist/ReactToastify.css";
 
 import jobRequisitionService from "../../services/jobRequisitionService";
+import employeeService from "../../services/employeeService";
 
-// ========================= Interfaces =========================
 
-interface JobRecruiter {
-  JobReqRecruiterID: number;
-  JobRequisitionID: number;
-  RecruiterUserID: number;
-  AssignedDate?: string;
-  RevokedDate?: string;
-  Status: string;
-}
+// ================= Interfaces =================
+
 
 interface JobRequisition {
   JobRequisitionID: number;
   JobRequisitionNo: string;
+  Position: string;
+  Department: string;
+  RequestedUser: string;
+  NoOfOpenings: number;
+  TargetStartDate: string;
+  MinSalary: number;
+  MaxSalary: number;
+  Recruiters: RecruiterAssignment[];
 }
+
+interface ApiResponse {
+  Table: JobRequisition[];
+  Table1: RecruiterAssignment[];
+}
+
+
 
 interface Recruiter {
-  id: number;
-  name: string;
+
+  EmployeeID: number;
+
+  EmployeeName: string;
+
 }
 
-// ========================= Static Recruiters =========================
-// Replace with Employee/GetRecruiters API later
 
-const recruiters: Recruiter[] = [
-  {
-    id: 1,
-    name: "Recruiter 1",
-  },
-  {
-    id: 2,
-    name: "Recruiter 2",
-  },
-  {
-    id: 3,
-    name: "Recruiter 3",
-  },
-];
 
-const statuses = [
-  "Assign",
-  "Revoked",
-];
+interface RecruiterAssignment {
+  JobReqRecruiterID: number;
+  JobRequisitionID: number;
+  RecruiterUserID: number;
+  RecruiterUser: string;
+  AssignedDate?: string;
+  RevokedDate?: string;
+  RecruiterStatus: string;
+}
+
+
+
+
+// ================= Component =================
+
 
 const ManageJobRequisitionRecruiters: React.FC = () => {
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
 
-  const organizationID = user?.organizationID;
-  const employeeID = user?.employeeID;
-  const employeeName = user?.fullName;
+  const user =
+    JSON.parse(
+      localStorage.getItem("user") || "{}"
+    );
 
-  const [loading, setLoading] = useState(false);
 
-  const [jobRequisitions, setJobRequisitions] = useState<JobRequisition[]>([]);
+  const organizationID =
+    user?.organizationID;
 
-  const [recruitersList, setRecruitersList] = useState<JobRecruiter[]>([]);
 
-  const [showModal, setShowModal] = useState(false);
+  const employeeName =
+    user?.fullName;
 
-  const [validated, setValidated] = useState(false);
 
-  const [editRecruiter, setEditRecruiter] =
-    useState<JobRecruiter | null>(null);
 
-  const [confirmDelete, setConfirmDelete] =
-    useState(false);
+  const [loading, setLoading] =    useState(false);
+  const [jobs, setJobs] =    useState<JobRequisition[]>([]);
+  const [employees, setEmployees] =    useState<Recruiter[]>([]);
+  const [showModal, setShowModal] =    useState(false);
+  const [selectedJob, setSelectedJob] =   useState<JobRequisition | null>(null);
+  const [expandedJob, setExpandedJob] = useState<number | null>(null);  
+  const [validated, setValidated] =  useState(false);
 
-  const [recruiterToDelete, setRecruiterToDelete] =
-    useState<number | null>(null);
-
-  const [formData, setFormData] =
-    useState<JobRecruiter>({
+  const [formData, setFormData] =  useState({
       JobReqRecruiterID: 0,
       JobRequisitionID: 0,
       RecruiterUserID: 0,
-      AssignedDate: "",
-      RevokedDate: "",
-      Status: "Assign",
+      RecruiterUser: "",
+      Status: "Assign"
     });
+
+
+
+  // ================= Initial Load =================
+
 
   useEffect(() => {
 
+
     if (organizationID) {
-      loadJobRequisitions();
-    }
 
-    if (employeeID) {
-      loadAssignedJobs();
-    }
+      loadJobs();
 
-  }, []);
-
-  // ========================= Load Job Requisitions =========================
-
-  const loadJobRequisitions = async () => {
-
-    try {
-
-      const response =
-        await jobRequisitionService.GetJobForAssignmentByOrganizationAsync(
-          organizationID
-        );
-
-      setJobRequisitions(response || []);
-
-    } catch (error) {
-
-      console.log(error);
-
-      toast.error("Failed to load Job Requisitions.");
+      loadEmployees();
 
     }
 
-  };
 
-  // ========================= Load Assigned Jobs =========================
+  }, [organizationID]);
 
-  const loadAssignedJobs = async () => {
 
-    try {
 
-      setLoading(true);
 
-      const response =
-        await jobRequisitionService.GetRecruiterAssignedJobsAsync(
-          employeeID
-        );
+  // ================= Load Jobs =================
 
-      setRecruitersList(response || []);
 
-    } catch (error) {
+const loadJobs = async () => {
+  try {
+    setLoading(true);
 
-      console.log(error);
+ const response: ApiResponse =
+  await jobRequisitionService.GetJobForAssignmentByOrganizationAsync(
+    organizationID
+  );
 
-      toast.error("Failed to load assigned jobs.");
 
-    } finally {
+    const jobs = response.Table || [];
+    const recruiters = response.Table1 || [];
 
-      setLoading(false);
+  const mappedJobs: JobRequisition[] = jobs.map((job) => ({
+  ...job,
+  Recruiters: recruiters.filter(
+    (r) => r.JobRequisitionID === job.JobRequisitionID
+  ),
+}));
 
-    }
+    mappedJobs.sort((a: JobRequisition, b: JobRequisition) => {
 
-  };
+      const aAssigned = a.Recruiters.length > 0;
+      const bAssigned = b.Recruiters.length > 0;
 
-  // ========================= Handle Change =========================
+      if (!aAssigned && bAssigned) return -1;
+      if (aAssigned && !bAssigned) return 1;
 
-  const handleInputChange = (
-    e: React.ChangeEvent<
-      HTMLInputElement | HTMLSelectElement
-    >
-  ) => {
-
-    const { id, value } = e.target;
-
-    setFormData((prev) => ({
-
-      ...prev,
-
-      [id]:
-        id === "JobRequisitionID" ||
-        id === "RecruiterUserID"
-          ? Number(value)
-          : value,
-
-    }));
-
-  };
-
-  // ========================= Add =========================
-
-  const openAddModal = () => {
-
-    setEditRecruiter(null);
-
-    setValidated(false);
-
-    setFormData({
-
-      JobReqRecruiterID: 0,
-
-      JobRequisitionID: 0,
-
-      RecruiterUserID: 0,
-
-      AssignedDate: "",
-
-      RevokedDate: "",
-
-      Status: "Assign",
-
+      return 0;
     });
 
-    setShowModal(true);
+    setJobs(mappedJobs);
+  } catch (error) {
+    console.error(error);
+    toast.error("Unable to load job requisitions.");
+  } finally {
+    setLoading(false);
+  }
+};
 
-  };
 
-  // ========================= Edit =========================
 
-  const openEditModal = (
-    recruiter: JobRecruiter
-  ) => {
 
-    setEditRecruiter(recruiter);
+  // ================= Load Employees =================
 
-    setValidated(false);
 
-    setFormData(recruiter);
+  const loadEmployees = async () => {
 
-    setShowModal(true);
-
-  };
-    // ========================= Save =========================
-
-  const handleSave = async (
-    event: React.FormEvent<HTMLFormElement>
-  ) => {
-
-    event.preventDefault();
-
-    const form = event.currentTarget;
-
-    if (form.checkValidity() === false) {
-
-      event.stopPropagation();
-
-      setValidated(true);
-
-      toast.warning("Please fill all required fields.");
-
-      return;
-
-    }
 
     try {
 
-      const payload = {
 
-        jobReqRecruiterID: formData.JobReqRecruiterID,
+      const response =
+        await employeeService
+          .getEmployeesByOrganizationIdAsync(
+            organizationID
+          );
 
-        jobRequisitionID: formData.JobRequisitionID,
 
-        recruiterUserID: formData.RecruiterUserID,
 
-        status: formData.Status,
-
-        createdBy: employeeName,
-
-      };
-
-      await jobRequisitionService.PostManageJobRequisitionRecruiterAsync(
-        payload
+      setEmployees(
+        response || []
       );
 
-      toast.success(
-        editRecruiter
-          ? "Recruiter updated successfully."
-          : "Recruiter assigned successfully."
-      );
 
-      setShowModal(false);
+    }
+    catch (error) {
 
-      setValidated(false);
-
-      await loadAssignedJobs();
-
-    } catch (error) {
 
       console.error(error);
 
-      toast.error("Unable to save recruiter assignment.");
 
-    }
-
-  };
-
-  // ========================= Delete =========================
-
-  const confirmDeleteRecruiter = (id: number) => {
-
-    setRecruiterToDelete(id);
-
-    setConfirmDelete(true);
-
-  };
-
-  const handleDelete = async () => {
-
-    try {
-
-      /**
-       * If your API later provides
-       * DeleteJobRequisitionRecruiterAsync(id)
-       * call it here.
-       */
-
-      setRecruitersList((prev) =>
-        prev.filter(
-          (x) => x.JobReqRecruiterID !== recruiterToDelete
-        )
+      toast.error(
+        "Unable to load employees."
       );
 
-      toast.success("Recruiter assignment removed.");
-
-      setConfirmDelete(false);
-
-      setRecruiterToDelete(null);
-
-    } catch (error) {
-
-      console.error(error);
-
-      toast.error("Unable to delete assignment.");
 
     }
 
+
   };
 
-  // ========================= Helpers =========================
 
-  const getJobName = (id: number) => {
 
-    return (
-      jobRequisitions.find(
-        (x) => x.JobRequisitionID === id
-      )?.JobRequisitionNo ?? "-"
+
+  // ================= Add Recruiter =================
+
+
+  const openAssignModal =
+    (job: JobRequisition) => {
+      setSelectedJob(job);
+      setFormData({
+        JobReqRecruiterID: 0,
+        JobRequisitionID: job.JobRequisitionID,
+        RecruiterUserID: 0,
+        RecruiterUser: "",
+        Status: "Assign"
+      });
+      setValidated(false);      
+      setShowModal(true);
+    };
+
+
+
+
+  // ================= Revoke =================
+
+
+  const revokeRecruiter =
+    async (
+      assignment: RecruiterAssignment
+    ) => {
+
+
+      try {
+
+
+        const payload = {
+  jobReqRecruiterID: assignment.JobReqRecruiterID,
+  jobRequisitionID: assignment.JobRequisitionID,
+  recruiterUserID: assignment.RecruiterUserID,
+  recruiterUser: assignment.RecruiterUser,
+  status: "Revoked",
+  createdBy: employeeName,
+};
+
+
+
+
+        await jobRequisitionService
+          .PostManageJobRequisitionRecruiterAsync(
+            payload
+          );
+
+
+
+        toast.success(
+          "Recruiter revoked successfully."
+        );
+
+
+
+        loadJobs();
+
+
+      }
+      catch (error) {
+
+
+        console.error(error);
+
+
+        toast.error(
+          "Unable to revoke recruiter."
+        );
+
+
+      }
+
+
+    };
+
+
+
+  // ================= Input =================
+
+
+ const handleChange = (
+  e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+) => {
+  const { id, value } = e.target;
+
+  if (id === "RecruiterUserID") {
+    const recruiter = employees.find(
+      (x) => x.EmployeeID === Number(value)
     );
 
-  };
+    setFormData((prev) => ({
+      ...prev,
+      RecruiterUserID: Number(value),
+      RecruiterUser: recruiter?.EmployeeName ?? "",
+    }));
 
-  const getRecruiterName = (id: number) => {
+    return;
+  }
 
-    return (
-      recruiters.find(
-        (x) => x.id === id
-      )?.name ?? "-"
-    );
+  setFormData((prev) => ({
+    ...prev,
+    [id]: value,
+  }));
+};
 
-  };
 
-  const badgeClass = (status: string) => {
 
-    switch (status) {
 
-      case "Assign":
-        return "bg-success";
+  // ================= Save =================
 
-      case "Revoked":
-        return "bg-danger";
 
-      default:
-        return "bg-secondary";
+  const handleSave =
+    async (
+      event:
+        React.FormEvent<HTMLFormElement>
+    ) => {
 
-    }
 
-  };
+      event.preventDefault();
 
-  // ========================= Render =========================
+
+
+      const form =
+        event.currentTarget;
+
+
+
+      if (form.checkValidity() === false) {
+
+
+        event.stopPropagation();
+
+        setValidated(true);
+
+        return;
+
+
+      }
+
+
+
+      try {
+
+
+        const payload = {
+
+          jobReqRecruiterID: 0,
+          jobRequisitionID:formData.JobRequisitionID,          
+          recruiterUserID: formData.RecruiterUserID,
+          recruiterUser: formData.RecruiterUser,
+          status: formData.Status,
+          createdBy: employeeName
+        };
+
+
+
+        await jobRequisitionService
+          .PostManageJobRequisitionRecruiterAsync(
+            payload
+          );
+
+
+
+        toast.success(
+          "Recruiter assigned successfully."
+        );
+
+
+
+        setShowModal(false);
+
+
+
+        loadJobs();
+
+
+      }
+      catch (error) {
+
+
+        console.error(error);
+
+
+        toast.error(
+          "Unable to assign recruiter."
+        );
+
+
+      }
+
+
+
+    };
+  // ================= Render =================
+
 
   return (
 
     <div className="container mt-3">
 
+
       <div className="d-flex justify-content-between align-items-center mb-3">
 
-        <h3>Manage Job Requisition Recruiters</h3>
 
-        <Button
-          variant="success"
-          onClick={openAddModal}
-        >
-          + Add Recruiter
-        </Button>
+        <h3>
+          Manage Job Requisition Recruiters
+        </h3>
+
 
       </div>
-            {loading ? (
-        <div className="text-center mt-5">
-          <Spinner animation="border" />
-        </div>
-      ) : (
-        <Table
-          bordered
-          hover
-          responsive
-          className="align-middle"
-        >
-          <thead>
-  <tr>
-    <th>Req No</th>
-    <th>Position</th>
-    <th>Department</th>
-    <th>Requested By</th>
-    <th>Openings</th>
-    <th>Target Date</th>
-    <th>Salary</th>
-    <th style={{ width: "130px" }}>Actions</th>
-  </tr>
-</thead>
 
 
-       <tbody>
-  {recruitersList.length === 0 ? (
-    <tr>
-      <td colSpan={8} className="text-center">
-        No Records Found.
-      </td>
-    </tr>
-  ) : (
-    recruitersList.map((item: any) => (
-      <tr key={item.JobRequisitionID}>
-        <td>{item.JobRequisitionNo}</td>
 
-        <td>{item.Position}</td>
+      {
+        loading ? (
 
-        <td>{item.Department}</td>
 
-        <td>{item.RequestedUser}</td>
+          <div className="text-center mt-5">
 
-        <td>{item.NoOfOpenings}</td>
+            <Spinner animation="border" />
 
-        <td>
-          {new Date(item.TargetStartDate).toLocaleDateString()}
-        </td>
+          </div>
 
-        <td>
-          ₹{item.MinSalary.toLocaleString()} - ₹{item.MaxSalary.toLocaleString()}
-        </td>
 
-        <td>
-          <Button
-            size="sm"
-            variant="outline-primary"
-            className="me-2"
-            onClick={() => openEditModal(item)}
-          >
-            <i className="bi bi-pencil-square"></i>
-          </Button>
+        ) : (
 
-          <Button
-            size="sm"
-            variant="outline-danger"
-            onClick={() =>
-              confirmDeleteRecruiter(item.JobReqRecruiterID)
-            }
-          >
-            <i className="bi bi-trash"></i>
-          </Button>
-        </td>
-      </tr>
-    ))
-  )}
-</tbody>
 
-        </Table>
-      )}
-            {/* ================= ADD / EDIT MODAL ================= */}
+          <Table bordered hover responsive className="mt-3">
+            <thead>
+
+
+              <tr>
+
+                <th>
+                  Req No
+                </th>
+
+                <th>
+                  Position
+                </th>
+
+                <th>
+                  Department
+                </th>
+
+                <th>
+                  Requested By
+                </th>
+
+                <th>
+                  Openings
+                </th>
+
+                <th>
+                  Target Date
+                </th>
+
+                <th>
+                  Salary
+                </th>
+
+                <th>
+                  Status
+                </th>
+
+                <th>
+                  Action
+                </th>
+
+              </tr>
+
+
+            </thead>
+
+
+
+
+            <tbody>
+
+
+              {
+
+                jobs.length === 0 ? (
+
+
+                  <tr>
+
+                    <td
+
+                      colSpan={9}
+
+                      className="text-center"
+
+                    >
+
+                      No Job Requisitions Found
+
+                    </td>
+
+                  </tr>
+
+
+                ) : (
+
+
+                  jobs.map(job => (
+
+
+                    <React.Fragment
+
+                      key={
+                        job.JobRequisitionID
+                      }
+
+                    >
+
+
+                      <tr
+
+                        className={
+                          job.Recruiters.length === 0
+
+
+                            ?
+
+                            "table-warning"
+
+                            :
+
+                            ""
+
+                        }
+
+
+                      >
+
+
+                        <td>
+
+                          {job.JobRequisitionNo}
+
+                        </td>
+
+
+
+                        <td>
+
+                          {job.Position}
+
+                        </td>
+
+
+
+                        <td>
+
+                          {job.Department}
+
+                        </td>
+
+
+
+                        <td>
+
+                          {job.RequestedUser}
+
+                        </td>
+
+
+
+                        <td>
+
+                          {job.NoOfOpenings}
+
+                        </td>
+
+
+
+                        <td>
+
+
+                          {
+                            new Date(
+                              job.TargetStartDate
+                            )
+                              .toLocaleDateString()
+                          }
+
+
+                        </td>
+
+
+
+                        <td>
+
+
+                          ₹
+                          {job.MinSalary.toLocaleString()}
+
+                          -
+
+                          ₹
+                          {job.MaxSalary.toLocaleString()}
+
+
+                        </td>
+
+
+
+                        <td>
+
+
+                          {
+
+                            job.Recruiters.length === 0
+ ? (
+
+
+                              <Badge bg="warning" text="dark">
+
+                                Unassigned
+
+                              </Badge>
+
+
+                            ) : (
+
+
+                              <Badge bg="success">
+
+                                Assigned
+
+                              </Badge>
+
+
+                            )
+
+
+                          }
+
+
+
+                        </td>
+
+
+
+                        <td>
+
+
+                          <Button
+
+                            size="sm"
+
+                            variant="primary"
+
+                            className="me-2"
+
+                            onClick={() =>
+                              openAssignModal(job)
+                            }
+
+                          >
+
+
+                            +
+                            Assign
+
+
+                          </Button>
+
+
+
+                          <Button
+
+                            size="sm"
+
+                            variant="outline-secondary"
+
+                            onClick={() =>
+
+
+                              setExpandedJob(
+
+                                expandedJob ===
+                                  job.JobRequisitionID
+
+                                  ?
+
+                                  null
+
+                                  :
+
+                                  job.JobRequisitionID
+
+                              )
+
+                            }
+
+
+                          >
+
+                            View
+
+
+                          </Button>
+
+
+
+                        </td>
+
+
+
+                      </tr>
+
+
+
+
+
+                      <tr>
+
+
+                        <td
+
+                          colSpan={9}
+
+                          className="p-0"
+
+                        >
+
+
+
+                          <Collapse
+
+                            in={
+                              expandedJob ===
+                              job.JobRequisitionID
+                            }
+
+
+                          >
+
+
+                            <div
+
+                              className="p-3 bg-light"
+
+                            >
+
+
+                              <h6>
+
+                                Assigned Recruiters
+
+                              </h6>
+
+
+
+                              {
+
+                                job.Recruiters.length === 0 ? (
+
+
+                                  <div className="text-muted">
+
+                                    No recruiters assigned.
+
+                                  </div>
+
+
+                                ) : (
+
+
+                                  <Table
+
+                                    size="sm"
+
+                                    bordered
+
+                                  >
+
+
+                                    <thead>
+
+
+                                      <tr>
+
+                                        <th>
+                                          Recruiter
+                                        </th>
+
+                                        <th>
+                                          Assigned Date
+                                        </th>
+
+                                        <th>
+                                          Status
+                                        </th>
+
+                                        <th>
+                                          Action
+                                        </th>
+
+                                      </tr>
+
+
+                                    </thead>
+
+
+
+                                    <tbody>
+
+
+
+                                      {
+
+                                        job.Recruiters.map(
+                                          (rec) => (
+
+
+                                            <tr
+
+                                              key={
+                                                rec.JobReqRecruiterID
+                                              }
+
+                                            >
+
+
+                                              <td>
+
+                                                {
+                                                  rec.RecruiterUser ||
+                                                  "-"
+                                                }
+
+                                              </td>
+
+
+
+                                              <td>
+
+                                                {
+                                                  rec.AssignedDate
+                                                    ?
+
+                                                    new Date(
+                                                      rec.AssignedDate
+                                                    )
+                                                      .toLocaleDateString()
+
+                                                    :
+
+                                                    "-"
+
+                                                }
+
+                                              </td>
+
+
+
+
+                                              <td>
+
+
+                                                {
+
+                                                  rec.RecruiterStatus ===
+                                                    "Revoked"
+
+                                                    ?
+
+                                                    <Badge bg="danger">
+
+                                                      Revoked
+
+                                                    </Badge>
+
+
+                                                    :
+
+
+                                                    <Badge bg="success">
+
+                                                      Assigned
+
+                                                    </Badge>
+
+
+                                                }
+
+
+
+                                              </td>
+
+
+
+
+                                              <td>
+
+
+                                                {
+
+                                                  rec.RecruiterStatus !==
+                                                  "Revoked"
+
+                                                  &&
+
+
+                                                  <Button
+
+                                                    size="sm"
+
+                                                    variant="danger"
+
+                                                    onClick={() =>
+                                                      revokeRecruiter(rec)
+                                                    }
+
+                                                  >
+
+
+                                                    Revoke
+
+                                                  </Button>
+
+
+                                                }
+
+
+
+                                              </td>
+
+
+
+                                            </tr>
+
+
+                                          ))
+
+
+                                      }
+
+
+
+                                    </tbody>
+
+
+                                  </Table>
+
+
+                                )
+
+
+
+                              }
+
+
+
+                            </div>
+
+
+                          </Collapse>
+
+
+                        </td>
+
+
+                      </tr>
+
+
+
+
+                    </React.Fragment>
+
+
+                  ))
+
+
+                )
+
+
+              }
+
+
+
+            </tbody>
+
+
+          </Table>
+
+
+        )
+
+      }
+{/* 
+// ================= Assign Recruiter Modal ================= */}
+
 
       <Modal
+
         show={showModal}
+
         onHide={() => setShowModal(false)}
+
         centered
+
       >
+
 
         <Modal.Header closeButton>
 
+
           <Modal.Title>
-            {editRecruiter
-              ? "Edit Recruiter Assignment"
-              : "Assign Recruiter"}
+
+            Assign Recruiter
+
           </Modal.Title>
+
 
         </Modal.Header>
 
 
+
         <Modal.Body>
 
+
           <Form
+
             noValidate
+
             validated={validated}
+
             onSubmit={handleSave}
+
           >
+
 
             <Row className="mb-3">
 
+
               <Col md={12}>
 
-                <Form.Group controlId="JobRequisitionID">
+
+                <Form.Group
+
+                  controlId="JobRequisitionID"
+
+                >
+
 
                   <Form.Label>
+
                     Job Requisition
+
                   </Form.Label>
 
 
-                  <Form.Select
-                    required
+
+                  <Form.Control
+
+                    type="text"
+
                     value={
-                      formData.JobRequisitionID
+
+                      selectedJob
+
+                        ?
+
+                        `${selectedJob.JobRequisitionNo} - ${selectedJob.Position}`
+
+                        :
+
+                        ""
+
                     }
-                    onChange={handleInputChange}
-                  >
 
-                    <option value="">
-                      Select Job Requisition
-                    </option>
+                    disabled
 
-
-                    {jobRequisitions.map(
-                      (job) => (
-                        <option
-                          key={
-                            job.JobRequisitionID
-                          }
-                          value={
-                            job.JobRequisitionID
-                          }
-                        >
-                          {
-                            job.JobRequisitionNo
-                          }
-                        </option>
-                      )
-                    )}
-
-                  </Form.Select>
-
-
-                  <Form.Control.Feedback type="invalid">
-                    Please select job requisition.
-                  </Form.Control.Feedback>
+                  />
 
 
                 </Form.Group>
 
+
               </Col>
+
 
             </Row>
 
 
 
+
+
             <Row className="mb-3">
+
 
               <Col md={12}>
 
-                <Form.Group controlId="RecruiterUserID">
+
+                <Form.Group
+
+                  controlId="RecruiterUserID"
+
+                >
+
 
                   <Form.Label>
+
                     Recruiter
+
                   </Form.Label>
 
 
+
                   <Form.Select
+
                     required
+
                     value={
                       formData.RecruiterUserID
                     }
-                    onChange={handleInputChange}
+
+                    onChange={
+                      handleChange
+                    }
+
                   >
 
+
                     <option value="">
+
                       Select Recruiter
+
                     </option>
 
 
-                    {recruiters.map(
-                      (rec) => (
-                        <option
-                          key={rec.id}
-                          value={rec.id}
-                        >
-                          {rec.name}
-                        </option>
+
+                    {
+
+                      employees.map(
+                        (emp) => (
+
+
+                          <option
+
+                            key={
+                              emp.EmployeeID
+                            }
+
+                            value={
+                              emp.EmployeeID
+                            }
+
+                          >
+
+                            {
+                              emp.EmployeeName
+                            }
+
+                          </option>
+
+
+                        )
+
                       )
-                    )}
+
+                    }
+
 
                   </Form.Select>
 
 
-                  <Form.Control.Feedback type="invalid">
+
+                  <Form.Control.Feedback
+
+                    type="invalid"
+
+                  >
+
                     Please select recruiter.
+
                   </Form.Control.Feedback>
+
 
 
                 </Form.Group>
 
+
               </Col>
 
+
             </Row>
+
+
+
 
 
 
             <Row className="mb-3">
 
+
               <Col md={12}>
 
-                <Form.Group controlId="Status">
+
+                <Form.Group
+
+                  controlId="Status"
+
+                >
+
 
                   <Form.Label>
+
                     Status
+
                   </Form.Label>
 
 
+
                   <Form.Select
+
                     value={
                       formData.Status
                     }
-                    onChange={handleInputChange}
+
+                    onChange={
+                      handleChange
+                    }
+
                   >
 
-                    {statuses.map(
-                      (status) => (
-                        <option
-                          key={status}
-                          value={status}
-                        >
-                          {status}
-                        </option>
-                      )
-                    )}
+
+                    <option value="Assign">
+
+                      Assign
+
+                    </option>
+
+
+
+                    <option value="Revoked">
+
+                      Revoked
+
+                    </option>
+
+
 
                   </Form.Select>
 
 
                 </Form.Group>
 
+
               </Col>
 
+
             </Row>
+
+
 
 
 
             <Modal.Footer>
 
+
               <Button
+
                 variant="secondary"
+
                 onClick={() =>
                   setShowModal(false)
                 }
+
               >
+
                 Cancel
+
               </Button>
+
+
 
 
               <Button
+
                 variant="primary"
+
                 type="submit"
+
               >
 
-                {editRecruiter
-                  ? "Update"
-                  : "Save"}
+                Save
 
               </Button>
 
 
+
             </Modal.Footer>
+
 
 
           </Form>
@@ -680,64 +1327,17 @@ const ManageJobRequisitionRecruiters: React.FC = () => {
 
 
 
-      {/* ================= DELETE CONFIRMATION ================= */}
-
-      <Modal
-        show={confirmDelete}
-        onHide={() =>
-          setConfirmDelete(false)
-        }
-        centered
-      >
-
-        <Modal.Header closeButton>
-
-          <Modal.Title>
-            Confirm Delete
-          </Modal.Title>
-
-        </Modal.Header>
-
-
-        <Modal.Body>
-
-          Are you sure you want to remove this
-          recruiter assignment?
-
-        </Modal.Body>
-
-
-        <Modal.Footer>
-
-          <Button
-            variant="secondary"
-            onClick={() =>
-              setConfirmDelete(false)
-            }
-          >
-            Cancel
-          </Button>
-
-
-          <Button
-            variant="danger"
-            onClick={handleDelete}
-          >
-            Delete
-          </Button>
-
-
-        </Modal.Footer>
-
-
-      </Modal>
 
 
 
       <ToastContainer
+
         position="top-right"
+
         autoClose={3000}
+
       />
+
 
 
     </div>

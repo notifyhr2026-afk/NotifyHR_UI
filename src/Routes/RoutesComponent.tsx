@@ -142,6 +142,7 @@ import AssetRegisterReport from '../pages/Reports/AssetRegisterReport';
 import MyAssetsReport from '../pages/Reports/MyAssetsReport';
 import MyAttendanceReport from "../pages/Reports/MyAttendanceReport";
 import LeaveLedgerReport from "../pages/Reports/LeaveLedgerReport";
+import CandidateInterviewFeedback from '../pages/Recruitment/CandidateInterviewFeedback';
 
 const RoutesComponent: React.FC = () => {
   return (
@@ -297,7 +298,7 @@ const RoutesComponent: React.FC = () => {
         <Route path="employee/assets" element={<MyAssetsReport />} />
         <Route path="employee/attendance" element={<MyAttendanceReport />} />
         <Route path="employee/leave-ledger" element={<LeaveLedgerReport />} />
-        
+        <Route path="candidate-interview-feedback" element={<CandidateInterviewFeedback />} />
 
         {/* Wrapping Employee-related routes with the EmployeeProvider */}
         <Route 

@@ -120,7 +120,7 @@ const AdminResignationApproval: React.FC = () => {
       {loading ? (
         <p>Loading...</p>
       ) : (
-        <Table bordered hover responsive>
+        <Table bordered hover responsive className="mt-3">
           <thead>
             <tr>
               <th>Employee ID</th>
