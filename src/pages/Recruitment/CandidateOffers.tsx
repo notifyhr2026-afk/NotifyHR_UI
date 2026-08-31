@@ -341,46 +341,38 @@ const loadOffers = async (applicationID: number) => {
     if (mapped.length > 0) {
       const offer = mapped[0];
 
+      const toDateOnly = (v: any) => (v ? String(v).split("T")[0] : "");
+
       setFormData((prev) => ({
         ...prev,
 
-        OfferID: offer.OfferID,
+        OfferID: offer.OfferID ?? 0,
 
-        OfferedPositionID:
-          offer.OfferedPositionID || 0,
+        ApplicationID: String(offer.ApplicationID ?? prev.ApplicationID ?? ""),
 
-        OfferedPosition:
-          offer.OfferedPosition || "",
+        OfferedPositionID: offer.OfferedPositionID ?? 0,
 
-        OfferedCTC:
-          offer.OfferedCTC || "",
+        OfferedPosition: offer.OfferedPosition ?? "",
 
-        Currency:
-          offer.Currency || "INR",
+        OfferedCTC: String(offer.OfferedCTC ?? ""),
 
-        OfferDate:
-          offer.OfferDate || "",
+        Currency: offer.Currency || "INR",
 
-        OfferValidUntil:
-          offer.OfferValidUntil || "",
+        OfferDate: toDateOnly(offer.OfferDate),
 
-        JoiningDate:
-          offer.JoiningDate || "",
+        OfferValidUntil: toDateOnly(offer.OfferValidUntil),
 
-        OfferStatusID:
-          offer.OfferStatusID || "Pending",
+        JoiningDate: toDateOnly(offer.JoiningDate),
 
-        OfferApprovedByID:
-          offer.OfferApprovedByID || 0,
+        OfferStatusID: String(offer.OfferStatusID ?? "Pending"),
 
-        OfferApprovedBy:
-          offer.OfferApprovedBy || "",
+        OfferApprovedByID: offer.OfferApprovedByID ?? 0,
 
-        OfferLetterPath:
-          offer.OfferLetterPath || "",
+        OfferApprovedBy: offer.OfferApprovedBy ?? "",
 
-        Notes:
-          offer.Notes || "",
+        OfferLetterPath: offer.OfferLetterPath ?? "",
+
+        Notes: offer.Notes ?? "",
       }));
     } else {
       setFormData((prev) => ({
@@ -531,7 +523,7 @@ const handleSubmit = async (e: React.FormEvent) => {
     setSavingOffer(true);
 
     const payload = {
-      OfferID: formData.OfferID ?? 0,
+      OfferID: Number(formData.OfferID ?? 0),
 
       ApplicationID: Number(formData.ApplicationID),
 
@@ -539,10 +531,10 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       OrganizationID: organizationID,
 
-      OfferedPositionID: formData.OfferedPositionID,
+      OfferedPositionID: Number(formData.OfferedPositionID || 0),
       OfferedPosition: formData.OfferedPosition,
 
-      OfferedCTC: formData.OfferedCTC,
+      OfferedCTC: parseFloat(String(formData.OfferedCTC || '0')),
 
       Currency: formData.Currency,
 
@@ -552,9 +544,9 @@ const handleSubmit = async (e: React.FormEvent) => {
 
       JoiningDate: formData.JoiningDate,
 
-      OfferStatusID: formData.OfferStatusID,
+      OfferStatusID: Number(formData.OfferStatusID || 0),
 
-      OfferApprovedByID: formData.OfferApprovedByID,
+      OfferApprovedByID: Number(formData.OfferApprovedByID || 0),
       OfferApprovedBy: formData.OfferApprovedBy,
 
       OfferLetterPath: formData.OfferLetterPath,
@@ -593,7 +585,7 @@ return (
           {applications.map((app) => (
             <option
               key={app.ApplicationID}
-              value={app.ApplicationID}
+              value={String(app.ApplicationID)}
             >
               {app.jobRequisition} - {app.JobTitle}
             </option>

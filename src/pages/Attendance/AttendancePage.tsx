@@ -6,6 +6,8 @@ import employeeAttendanceService from "../../services/employeeAttendanceService"
 import LoggedInUser from "../../types/LoggedInUser";
 import "bootstrap-icons/font/bootstrap-icons.css";
 import { Button, Table, Modal, Form, Row, Col } from 'react-bootstrap';
+import { generatePDF } from "../Reports/components/PDFGenerator";
+import { exportExcel } from "../Reports/components/ExcelExporter";
 
 interface Employee {
   value: number;
@@ -30,6 +32,9 @@ const AttendancePage: React.FC = () => {
     : null;
 
   const organizationID = user?.organizationID ?? 0;
+  const organizationName =
+    (user as (LoggedInUser & { organizationName?: string }) | null)
+      ?.organizationName || "Organization";
 
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [selectedEmployee, setSelectedEmployee] =
@@ -169,6 +174,46 @@ const handleGetAttendance = async () => {
     setLoading(false);
   }
 };
+
+  const exportColumns = [
+    { key: "employeeName", label: "Name" },
+    { key: "attendanceDate", label: "Date" },
+    { key: "checkIn", label: "Check In" },
+    { key: "checkOut", label: "Check Out" },
+    { key: "workedHours", label: "Worked Hours" },
+    { key: "source", label: "Source" },
+    { key: "status", label: "Status" },
+  ];
+
+  const exportData = attendanceData.map((attendance: any) => ({
+    employeeName: attendance.EmployeeName || "",
+    attendanceDate: formatDate(attendance.AttendanceDate),
+    checkIn: formatISTTime(attendance.CheckInTime),
+    checkOut: formatISTTime(attendance.CheckOutTime),
+    workedHours: `${Number(attendance.WorkedHours || 0).toFixed(2)} hrs`,
+    source: attendance.Source || "",
+    status: attendance.AttendanceStatus || "",
+  }));
+
+  const downloadPDF = () => {
+    generatePDF({
+      title: "Employee Attendance",
+      organizationName,
+      columns: exportColumns,
+      data: exportData,
+      fileName: "Employee_Attendance",
+    });
+  };
+
+  const downloadExcel = () => {
+    exportExcel({
+      title: "Employee Attendance",
+      columns: exportColumns,
+      data: exportData,
+      fileName: "Employee_Attendance",
+    });
+  };
+
   return (
     <div className="container">
       <h3 className="text-center mb-4">
@@ -222,7 +267,16 @@ const handleGetAttendance = async () => {
           >
             GET
           </button>
-        </div>        
+        </div>
+      </div>
+
+      <div className="mb-3 d-flex gap-2">
+        <Button variant="primary" onClick={downloadPDF}>
+          Download PDF
+        </Button>
+        <Button variant="success" onClick={downloadExcel}>
+          Download Excel
+        </Button>
       </div>
 
       {/* Attendance Grid */}

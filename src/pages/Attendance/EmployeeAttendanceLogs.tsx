@@ -12,6 +12,8 @@ import {
 import employeeService from '../../services/employeeService';
 import employeeAttendanceService from '../../services/employeeAttendanceService';
 import LoggedInUser from '../../types/LoggedInUser';
+import { generatePDF } from '../Reports/components/PDFGenerator';
+import { exportExcel } from '../Reports/components/ExcelExporter';
 
 interface AttendanceLog {
   employeeID: string;
@@ -131,6 +133,39 @@ const EmployeeAttendanceLogs: React.FC = () => {
     setFilteredLogs(logs);
   };
 
+  const columns = [
+    { key: 'employeeID', label: 'Employee' },
+    { key: 'attendanceDate', label: 'Date' },
+    { key: 'attendanceTypeID', label: 'Type' },
+    { key: 'checkInTime', label: 'Check In' },
+    { key: 'checkOutTime', label: 'Check Out' },
+    { key: 'shiftID', label: 'Shift' },
+    { key: 'isLate', label: 'Late' },
+    { key: 'isHalfDay', label: 'Half Day' },
+    { key: 'isApproved', label: 'Approved' },
+    { key: 'source', label: 'Source' },
+    { key: 'remarks', label: 'Remarks' },
+  ];
+
+  const downloadPDF = () => {
+    generatePDF({
+      title: 'Employee Attendance Logs',
+      organizationName: 'HRMS Organization',
+      columns,
+      data: filteredLogs,
+      fileName: 'Employee_Attendance_Logs',
+    });
+  };
+
+  const downloadExcel = () => {
+    exportExcel({
+      title: 'Employee Attendance Logs',
+      columns,
+      data: filteredLogs,
+      fileName: 'Employee_Attendance_Logs',
+    });
+  };
+
   return (
     <div className="container">
       <h2 className="text-center mb-4">Employee Attendance Logs</h2>
@@ -163,6 +198,15 @@ const EmployeeAttendanceLogs: React.FC = () => {
           </InputGroup>
         </Col>
       </Row>
+
+      <div className="mb-3 d-flex gap-2">
+        <Button variant="primary" onClick={downloadPDF}>
+          Download PDF
+        </Button>
+        <Button variant="success" onClick={downloadExcel}>
+          Download Excel
+        </Button>
+      </div>
 
       {/* 📊 Table */}
       <div className="table-responsive">
