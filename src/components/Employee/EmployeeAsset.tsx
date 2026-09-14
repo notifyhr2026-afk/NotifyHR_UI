@@ -5,6 +5,7 @@ import { useParams } from "react-router-dom";
 interface AssetRecord {
   id: number;
   assetName: string;
+  assetIdentity: string;
   assignedDate: string;
   expectedReturnDate: string | null;
   actualReturnDate: string | null;
@@ -31,6 +32,7 @@ const EmployeeAsset: React.FC = () => {
       const formattedData = response.map((item: any) => ({
         id: item.AssetAssignmentID,
         assetName: item.AssetName,
+        assetIdentity: item.AssetIdentity,
         assignedDate: item.AssignedDate?.split("T")[0],
         expectedReturnDate: item.ExpectedReturnDate
           ? item.ExpectedReturnDate.split("T")[0]
@@ -71,6 +73,7 @@ const EmployeeAsset: React.FC = () => {
           <thead>
             <tr>
               <th>Asset Name</th>
+              <th>Asset Identity</th>
               <th>Assigned Date</th>
               <th>Expected Return Date</th>
               <th>Actual Return Date</th>
@@ -85,6 +88,7 @@ const EmployeeAsset: React.FC = () => {
             {data.map(row => (
               <tr key={row.id}>
                 <td>{row.assetName}</td>
+                <td>{row.assetIdentity}</td>
                 <td>{row.assignedDate}</td>
                 <td>{row.expectedReturnDate}</td>
                 <td>{row.actualReturnDate}</td>

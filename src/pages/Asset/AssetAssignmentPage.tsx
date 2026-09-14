@@ -14,6 +14,7 @@ import { fireAudit } from '../../utils/auditUtils';
 interface AssetAssignment {
   AssetAssignmentID: number;
   AssetID: number;
+  AssetIdentity: string;
   AssignedToEmployeeID: number;
   AssignedToDepartmentID: number;
   AssignedDate: string;
@@ -42,7 +43,7 @@ interface Department {
 /* ===========================
    Component
    =========================== */
-const AssetAssignmentPage: React.FC = () => {
+  const AssetAssignmentPage: React.FC = () => {
   const userString = localStorage.getItem('user');
   const user = userString ? JSON.parse(userString) : null;
   const organizationID = user?.organizationID ?? 0;
@@ -54,14 +55,15 @@ const AssetAssignmentPage: React.FC = () => {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
- const [employees, setEmployees] = useState<any[]>([]);
-// const [filteredEmployees, setFilteredEmployees] = useState<any[]>([]);
-const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
+  const [employees, setEmployees] = useState<any[]>([]);
+  // const [filteredEmployees, setFilteredEmployees] = useState<any[]>([]);
+  const [selectedEmployee, setSelectedEmployee] = useState<any>(null);
   const [selectedBranchID, setSelectedBranchID] = useState<number>(0);
 
   const [formData, setFormData] = useState<AssetAssignment>({
     AssetAssignmentID: 0,
     AssetID: 0,
+    AssetIdentity: '',
     AssignedToEmployeeID: 0,
     AssignedToDepartmentID: 0,
     AssignedDate: '',
@@ -161,6 +163,7 @@ const employeeOptions = employees.map(emp => ({
     setFormData({
       AssetAssignmentID: 0,
       AssetID: 0,
+      AssetIdentity: '',
       AssignedToEmployeeID: 0,
       AssignedToDepartmentID: 0,
       AssignedDate: '',
@@ -233,6 +236,7 @@ const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
         <thead>
           <tr>
             <th>Asset</th>
+            <th>Asset Identity</th>
             <th>Employee</th>
             <th>Department</th>
             <th>Assigned Date</th>
@@ -246,6 +250,7 @@ const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
           {assignments.map(a => (
             <tr key={a.AssetAssignmentID}>
               <td>{assets.find(x => x.AssetID === a.AssetID)?.AssetName}</td>
+              <td>{a.AssetIdentity}</td>
               <td>{employees.find(x => x.EmployeeID === a.AssignedToEmployeeID)?.EmployeeName}</td>
               <td>{departments.find(x => x.DepartmentID === a.AssignedToDepartmentID)?.DepartmentName}</td>
               <td>{a.AssignedDate}</td>
@@ -294,6 +299,17 @@ const handleSave = async (e: React.FormEvent<HTMLFormElement>) => {
                       </option>
                     ))}
                   </Form.Select>
+                </Form.Group>
+              </Col>
+
+              <Col md={4}>
+                <Form.Group controlId="AssetIdentity">
+                  <Form.Label>Asset Identity</Form.Label>
+                  <Form.Control
+                    type="text"
+                    value={formData.AssetIdentity}
+                    onChange={handleInputChange}
+                  />
                 </Form.Group>
               </Col>
 

@@ -345,6 +345,7 @@ const OrganizationLeavePolicies: React.FC = () => {
                 <thead>
                   <tr>
                     <th>Name</th>
+                     <th>Gender</th>
                     <th>Description</th>
                     {showAllLeaveTypes && <th>Status</th>}
                     {showAllLeaveTypes && <th className="text-end">Action</th>}
@@ -357,6 +358,7 @@ const OrganizationLeavePolicies: React.FC = () => {
                       .map((lt) => (
                         <tr key={lt.LeaveTypeID}>
                           <td className="fw-semibold">{lt.LeaveTypeName}</td>
+                          <td className="fw-semibold">{lt.GenderType}</td>
                           <td>{lt.Description || "—"}</td>
                           {showAllLeaveTypes && (
                             <td>

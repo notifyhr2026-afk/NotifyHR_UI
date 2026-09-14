@@ -7,6 +7,7 @@
  export default interface OrgLeaveType {
   OrgLeaveTypeID:number;
   OrganizationID:number;
+  GenderType: string;
   LeaveTypeID: number;
   LeaveTypeName: string;
   Description: string;

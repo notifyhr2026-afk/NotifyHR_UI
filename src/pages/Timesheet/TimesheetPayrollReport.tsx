@@ -4,6 +4,8 @@ import timesheetService from "../../services/timesheetService";
 import employeeService from "../../services/employeeService";
 import branchService from "../../services/branchService";
 import departmentService from "../../services/departmentService";
+import { generatePDF } from "../Reports/components/PDFGenerator";
+import { exportExcel } from "../Reports/components/ExcelExporter";
 
 interface Option {
   value: number;
@@ -35,6 +37,8 @@ interface PayrollSummary {
 const TimesheetPayrollReport: React.FC = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID = user?.organizationID || 0;
+  const organizationName =
+    user?.organizationName || "Organization";
 
   const [month, setMonth] = useState("2026-01");
   const [branch, setBranch] = useState<number | "All">("All");
@@ -175,6 +179,45 @@ const TimesheetPayrollReport: React.FC = () => {
     }
   };
 
+  const exportColumns = [
+    { key: "employeeName", label: "Employee" },
+    { key: "workingDays", label: "Working Days" },
+    { key: "leaveDays", label: "Leaves" },
+    { key: "unpaidLeaveDays", label: "Unpaid Leaves" },
+    { key: "holidays", label: "Holidays" },
+    { key: "totalHours", label: "Total Hours" },
+    { key: "status", label: "Status" },
+  ];
+
+  const exportData = report.map((row) => ({
+    employeeName: row.employeeName,
+    workingDays: row.workingDays,
+    leaveDays: row.leaveDays,
+    unpaidLeaveDays: row.unpaidLeaveDays,
+    holidays: row.holidays,
+    totalHours: row.totalHours,
+    status: row.status,
+  }));
+
+  const downloadPDF = () => {
+    generatePDF({
+      title: "Timesheet Payroll Report",
+      organizationName,
+      columns: exportColumns,
+      data: exportData,
+      fileName: "Timesheet_Payroll_Report",
+    });
+  };
+
+  const downloadExcel = () => {
+    exportExcel({
+      title: "Timesheet Payroll Report",
+      columns: exportColumns,
+      data: exportData,
+      fileName: "Timesheet_Payroll_Report",
+    });
+  };
+
   return (
     <Card className="p-4 shadow-sm border-0 rounded-4">
       <div className="d-flex justify-content-between align-items-center mb-4">
@@ -256,7 +299,7 @@ const TimesheetPayrollReport: React.FC = () => {
         </Col>
       </Row>
 
-      <div className="mb-3">
+      <div className="mb-3 d-flex gap-2">
         <Button variant="primary" onClick={generateReport} disabled={loading}>
           {loading ? (
             <>
@@ -266,6 +309,12 @@ const TimesheetPayrollReport: React.FC = () => {
           ) : (
             "Generate Report"
           )}
+        </Button>
+        <Button variant="primary" onClick={downloadPDF}>
+          Download PDF
+        </Button>
+        <Button variant="success" onClick={downloadExcel}>
+          Download Excel
         </Button>
       </div>
 

@@ -4,6 +4,8 @@ import { Table, Button, Form, Row, Col, Badge, Spinner } from "react-bootstrap";
 import taskService from "../../services/taskService";
 import employeeService from "../../services/employeeService";
 import departmentService from "../../services/departmentService";
+import { generatePDF } from "../Reports/components/PDFGenerator";
+import { exportExcel } from "../Reports/components/ExcelExporter";
 
 /* ===================== INTERFACE ===================== */
 
@@ -35,6 +37,7 @@ interface DepartmentOption {
 const VerifyEmployeeTasks: React.FC = () => {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const organizationID = user?.organizationID || 0;
+  const organizationName = user?.organizationName || "Organization";
 
   const [departments, setDepartments] = useState<DepartmentOption[]>([]);
   const [employees, setEmployees] = useState<EmployeeOption[]>([]);
@@ -152,6 +155,43 @@ const VerifyEmployeeTasks: React.FC = () => {
     }
   };
 
+  const exportColumns = [
+    { key: "employeeName", label: "Employee" },
+    { key: "projectName", label: "Project" },
+    { key: "taskTitle", label: "Task" },
+    { key: "taskDate", label: "Date" },
+    { key: "noOfHours", label: "Hours" },
+    { key: "status", label: "Status" },
+  ];
+
+  const exportData = tasks.map((task) => ({
+    employeeName: task.employeeName,
+    projectName: task.projectName,
+    taskTitle: task.taskTitle,
+    taskDate: task.taskDate,
+    noOfHours: task.noOfHours,
+    status: task.status,
+  }));
+
+  const downloadPDF = () => {
+    generatePDF({
+      title: "Verify Employee Tasks",
+      organizationName,
+      columns: exportColumns,
+      data: exportData,
+      fileName: "Verify_Employee_Tasks",
+    });
+  };
+
+  const downloadExcel = () => {
+    exportExcel({
+      title: "Verify Employee Tasks",
+      columns: exportColumns,
+      data: exportData,
+      fileName: "Verify_Employee_Tasks",
+    });
+  };
+
   /* ===================== RENDER ===================== */
 
   return (
@@ -227,6 +267,15 @@ const VerifyEmployeeTasks: React.FC = () => {
         </Col>
 
       </Row>
+
+      <div className="mb-3 d-flex gap-2">
+        <Button variant="primary" onClick={downloadPDF}>
+          Download PDF
+        </Button>
+        <Button variant="success" onClick={downloadExcel}>
+          Download Excel
+        </Button>
+      </div>
 
       {/* ===================== TABLE ===================== */}
 
