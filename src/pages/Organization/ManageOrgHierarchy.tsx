@@ -3,7 +3,7 @@ import { Button, Card, Col, Row, Modal, Spinner } from "react-bootstrap";
 import Select from "react-select";
 import { BsPlusLg, BsPencilSquare, BsTrash } from "react-icons/bs";
 import positionService from "../../services/positionService";
-import { Link } from "react-router-dom";
+import ViewOrgTree from "./ViewOrgTree";
 
 /* ================= ICON WRAPPER ================= */
 const Icon = (C: any, props: any = {}) => React.createElement(C, props);
@@ -32,6 +32,7 @@ const ManageOrgHierarchy: React.FC = () => {
   const [positions, setPositions] = useState<Position[]>([]);
   const [mappings, setMappings] = useState<HierarchyMapping[]>([]);
   const [showModal, setShowModal] = useState(false);
+  const [showTreeModal, setShowTreeModal] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
@@ -211,7 +212,7 @@ const ManageOrgHierarchy: React.FC = () => {
         <div style={{ display: "flex", gap: 10 }}>
   <Button
     variant="outline-primary"
-    onClick={() => window.location.href = "/ViewOrgTree"}
+    onClick={() => setShowTreeModal(true)}
     style={{ borderRadius: 8, fontWeight: 600 }}
   >
     View Hierarchy
@@ -274,6 +275,21 @@ const ManageOrgHierarchy: React.FC = () => {
           ))}
         </Row>
       </div>
+
+      <Modal
+        show={showTreeModal}
+        onHide={() => setShowTreeModal(false)}
+        size="xl"
+        centered
+        scrollable
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Organization Hierarchy</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="p-0">
+          <ViewOrgTree />
+        </Modal.Body>
+      </Modal>
 
       {/* MODAL */}
       <Modal show={showModal} onHide={() => setShowModal(false)} size="lg">

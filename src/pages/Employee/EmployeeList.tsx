@@ -69,6 +69,17 @@ const selectProps = {
   className: 'org-select',
   classNamePrefix: 'org-select',
 };
+
+interface EmployeeSummary {
+  EmployeeName?: string;
+  EmployeeCode?: string;
+  PersonalPhone?: string;
+  OfficialEmail?: string;
+  DateOfJoining?: string;
+  Gender?: string;
+  Status?: string;
+}
+
  const FormSection: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
     <div className="app-form-section">
       <div className="app-form-section-title">{title}</div>
@@ -104,6 +115,10 @@ const EmployeeList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [showEmployeeDataModal, setShowEmployeeDataModal] = useState(false);
+  const [employeeData, setEmployeeData] = useState<EmployeeSummary[]>([]);
+  const [employeeDataLoading, setEmployeeDataLoading] = useState(false);
+  const [employeeDataError, setEmployeeDataError] = useState('');
   const [validated, setValidated] = useState(false);
   const [saving, setSaving] = useState(false);
 
@@ -360,6 +375,22 @@ if (result?.value === 1) {
     setNewEmp(defaultNewEmp());
   };
 
+  const handleViewEmployeeData = async () => {
+    setShowEmployeeDataModal(true);
+    setEmployeeDataLoading(true);
+    setEmployeeDataError('');
+
+    try {
+      const data = await employeeService.GetEmployeeDataAsync(organizationID);
+      setEmployeeData(Array.isArray(data) ? data : data?.Table || []);
+    } catch {
+      setEmployeeData([]);
+      setEmployeeDataError('Failed to load employee data.');
+    } finally {
+      setEmployeeDataLoading(false);
+    }
+  };
+
   const hasActiveFilters =
     searchTerm !== '' ||
     selectedBranch !== '' ||
@@ -433,7 +464,7 @@ if (result?.value === 1) {
         <div className="employee-toolbar-actions">
            <Button
               variant="outline-primary"
-              onClick={() => window.location.href = "/employee-data"}
+              onClick={handleViewEmployeeData}
               style={{ borderRadius: 8, fontWeight: 600 }}
             >
               View Employee Data
@@ -560,6 +591,65 @@ if (result?.value === 1) {
           )}
         </div>
       )}
+
+      <Modal
+        show={showEmployeeDataModal}
+        onHide={() => setShowEmployeeDataModal(false)}
+        size="xl"
+        centered
+        scrollable
+      >
+        <Modal.Header closeButton>
+          <Modal.Title>Employee Data</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {employeeDataLoading ? (
+            <div className="employee-loading">
+              <Spinner animation="border" variant="primary" />
+              <span>Loading employee data...</span>
+            </div>
+          ) : employeeDataError ? (
+            <div className="alert alert-danger mb-0">{employeeDataError}</div>
+          ) : (
+            <div className="table-responsive">
+              <table className="table table-hover table-dark-custom mb-0">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                    <th>Code</th>
+                    <th>Phone</th>
+                    <th>Official Email</th>
+                    <th>Date of Joining</th>
+                    <th>Gender</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {employeeData.length > 0 ? (
+                    employeeData.map((emp, index) => (
+                      <tr key={`${emp.EmployeeCode || 'employee'}-${index}`}>
+                        <td>{emp.EmployeeName || '—'}</td>
+                        <td>{emp.EmployeeCode || '—'}</td>
+                        <td>{emp.PersonalPhone || '—'}</td>
+                        <td>{emp.OfficialEmail || '—'}</td>
+                        <td>{emp.DateOfJoining?.slice(0, 10) || '—'}</td>
+                        <td>{emp.Gender || '—'}</td>
+                        <td>{emp.Status || '—'}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={7} className="text-center py-4">
+                        No employee data found.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Modal.Body>
+      </Modal>
 
       {/* Filter Modal */}
       <Modal

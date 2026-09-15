@@ -50,6 +50,35 @@ const getMenuSection = (name: string): string => {
   return "";
 };
 
+const buildFeatureMenu = (items: MenuItem[]): MenuItem[] => {
+  const featureMap = new Map<number, MenuItem>();
+  const roots: MenuItem[] = [];
+
+  items.forEach((item) => {
+    if (item.featureID == null) return;
+
+    if (!featureMap.has(item.featureID)) {
+      featureMap.set(item.featureID, {
+        menuID: -item.featureID,
+        menuName: item.featureName || "Feature",
+        menuKey: `feature-${item.featureID}`,
+        menuIcon: item.menuIcon,
+        menuOrder: 0,
+        routeUrl: null,
+        isActive: true,
+        featureID: item.featureID,
+        featureIcon: item.featureIcon,
+        subMenu: [],
+      });
+      roots.push(featureMap.get(item.featureID)!);
+    }
+
+    featureMap.get(item.featureID)?.subMenu?.push(item);
+  });
+
+  return roots;
+};
+
 const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen, isDarkMode }) => {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
@@ -57,14 +86,11 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen, isDarkMode }) => {
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const location = useLocation();
-  const sidebarRef = useRef<HTMLDivElement>(null);
+  const sidebarRef = useRef<HTMLElement>(null);
 
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const userID = user?.userID;
 
-  const isDark = isDarkMode;
-
-  // Auto-close submenu when sidebar collapses
   useEffect(() => {
     if (isOpen) {
       setHoverIndex(null);
@@ -73,7 +99,6 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen, isDarkMode }) => {
     }
   }, [isOpen]);
 
-  // Keep hover submenu in viewport
   useEffect(() => {
     if (!isOpen && hoverIndex !== null && sidebarRef.current) {
       const wrapperEls = sidebarRef.current.querySelectorAll(".menu-wrapper");
@@ -91,6 +116,19 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen, isDarkMode }) => {
     }
   }, [hoverIndex, isOpen]);
 
+  useEffect(() => {
+    const fetchMenu = async () => {
+      if (!userID) return;
+      try {
+        const data: MenuItem[] = await GetByUserIDAsync(userID);
+        setMenu(buildFeatureMenu(data));
+      } catch {
+        // Menu stays empty on failure
+      }
+    };
+    fetchMenu();
+  }, [userID]);
+
   const clearHoverTimer = () => {
     if (hoverTimerRef.current) {
       clearTimeout(hoverTimerRef.current);
@@ -102,59 +140,16 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen, isDarkMode }) => {
     setOpenIndex((prev) => (prev === index ? null : index));
   };
 
-  // Build feature-grouped menu
-  const buildFeatureMenu = (items: MenuItem[]): MenuItem[] => {
-    const featureMap = new Map<number, MenuItem>();
-    const roots: MenuItem[] = [];
-
-    items.forEach((item) => {
-      if (item.featureID == null) return;
-
-      if (!featureMap.has(item.featureID)) {
-        featureMap.set(item.featureID, {
-          menuID: -item.featureID,
-          menuName: item.featureName || "Feature",
-          menuKey: `feature-${item.featureID}`,
-          menuIcon: item.menuIcon,
-          menuOrder: 0,
-          routeUrl: null,
-          isActive: true,
-          featureID: item.featureID,
-          featureIcon: item.featureIcon,
-          subMenu: [],
-        });
-        roots.push(featureMap.get(item.featureID)!);
-      }
-
-      featureMap.get(item.featureID)?.subMenu?.push(item);
-    });
-
-    return roots;
-  };
-
-  useEffect(() => {
-    const fetchMenu = async () => {
-      if (!userID) return;
-      try {
-        const data: MenuItem[] = await GetByUserIDAsync(userID);
-        setMenu(buildFeatureMenu(data));
-      } catch {
-        // silently fail — menu will just be empty
-      }
-    };
-    fetchMenu();
-  }, [userID]);
-
   const renderSubMenuItems = (subItems: MenuItem[]) =>
-    subItems.map((sub, subIdx) => (
-      <li key={subIdx}>
+    subItems.map((sub) => (
+      <li key={sub.menuID}>
         <Link
           to={sub.routeUrl || "#"}
           className={`submenu-link ${
             location.pathname === sub.routeUrl ? "active" : ""
           }`}
         >
-          <i className={`bi ${sub.menuIcon}`} />
+          <i className={`bi ${sub.menuIcon}`} aria-hidden="true" />
           <span>{sub.menuName}</span>
         </Link>
       </li>
@@ -164,22 +159,21 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen, isDarkMode }) => {
     <nav
       ref={sidebarRef}
       className={`org-sidebar ${isOpen ? "expanded" : "collapsed"}`}
+      aria-label="Main navigation"
     >
-      {/* LOGO */}
       <div className="sidebar-logo">
-        <Link to="#" className="logo-link">
+        <Link to="/dashboard" className="logo-link" aria-label="Go to dashboard">
           <NikuHRLogo
-            variant={isDark ? "dark" : "default"}
+            variant={isDarkMode ? "dark" : "default"}
             showWordmark={isOpen}
           />
         </Link>
       </div>
 
-      {/* MENU */}
-      <div className="sidebar-menu">
+      <div className="sidebar-menu scrollable-menu">
         {menu.length === 0 ? (
           <div className="sidebar-empty">
-            <i className="bi bi-menu-app" />
+            <i className="bi bi-menu-app" aria-hidden="true" />
             {isOpen && <span>No menu items</span>}
           </div>
         ) : (
@@ -189,27 +183,21 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen, isDarkMode }) => {
 
               const isActive =
                 location.pathname === item.routeUrl ||
-                item.subMenu?.some(
-                  (s) => s.routeUrl === location.pathname
-                );
+                item.subMenu?.some((s) => s.routeUrl === location.pathname);
 
-              const Wrapper: any = hasSub ? "div" : Link;
-              const wrapperProps = hasSub ? {} : { to: item.routeUrl };
-
-              // Show section label when section changes
               const section = getMenuSection(item.menuName);
               const prevSection =
                 idx > 0 ? getMenuSection(menu[idx - 1].menuName) : "";
               const showSectionLabel =
-                section &&
-                section !== prevSection &&
-                isOpen;
+                section && section !== prevSection && isOpen;
+
+              const menuIcon = item.featureIcon || item.menuIcon;
 
               return (
-                <React.Fragment key={idx}>
-                  {/* {showSectionLabel && (
+                <React.Fragment key={item.menuID}>
+                  {showSectionLabel && (
                     <li className="menu-section-label">{section}</li>
-                  )} */}
+                  )}
 
                   <li
                     className="menu-wrapper"
@@ -221,7 +209,6 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen, isDarkMode }) => {
                     }}
                     onMouseLeave={() => {
                       if (!isOpen) {
-                        // Delay dismiss so user can move to the flyout
                         clearHoverTimer();
                         hoverTimerRef.current = setTimeout(() => {
                           setHoverIndex(null);
@@ -229,67 +216,74 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen, isDarkMode }) => {
                       }
                     }}
                   >
-                    <OverlayTrigger
-                      placement="right"
-                      overlay={
-                        !isOpen && !hasSub ? (
-                          <Tooltip>{item.menuName}</Tooltip>
-                        ) : (
-                          <></>
-                        )
-                      }
-                    >
-                      <Wrapper
-                        {...wrapperProps}
+                    {hasSub ? (
+                      <button
+                        type="button"
                         className={`menu-item ${isActive ? "active" : ""}`}
-                        onClick={() => hasSub && toggleSubMenu(idx)}
+                        onClick={() => toggleSubMenu(idx)}
+                        aria-expanded={openIndex === idx}
                       >
-                        <i 
-                          className={`bi ${
-                            item.featureIcon || item.menuIcon
-                          } menu-icon`} />
-                        
-
+                        <span className="menu-icon-wrap" aria-hidden="true">
+                          <i className={`bi ${menuIcon} menu-icon`} />
+                        </span>
                         {isOpen && (
                           <span className="menu-label">{item.menuName}</span>
                         )}
-
-                        {hasSub && isOpen && (
+                        {isOpen && (
                           <i
-                            className={`bi bi-chevron-right submenu-arrow ${
+                            className={`bi bi-chevron-down submenu-arrow ${
                               openIndex === idx ? "open" : ""
                             }`}
+                            aria-hidden="true"
                           />
                         )}
-                      </Wrapper>
-                    </OverlayTrigger>
-
-                    {/* Expanded submenu */}
-                    {isOpen && hasSub && openIndex === idx && (
-                      <ul className="submenu">
-                        {renderSubMenuItems(item.subMenu!)}
-                      </ul>
+                      </button>
+                    ) : (
+                      <OverlayTrigger
+                        placement="right"
+                        overlay={
+                          !isOpen ? (
+                            <Tooltip>{item.menuName}</Tooltip>
+                          ) : (
+                            <></>
+                          )
+                        }
+                      >
+                        <Link
+                          to={item.routeUrl || "#"}
+                          className={`menu-item ${isActive ? "active" : ""}`}
+                        >
+                          <span className="menu-icon-wrap" aria-hidden="true">
+                            <i className={`bi ${menuIcon} menu-icon`} />
+                          </span>
+                          {isOpen && (
+                            <span className="menu-label">{item.menuName}</span>
+                          )}
+                        </Link>
+                      </OverlayTrigger>
                     )}
 
-                    {/* Hover flyout submenu (collapsed) — stays open while hovering on it */}
+                    {isOpen && hasSub && openIndex === idx && (
+                      <ul className="submenu">{renderSubMenuItems(item.subMenu!)}</ul>
+                    )}
+
                     {!isOpen && hasSub && hoverIndex === idx && (
                       <ul
                         className="hover-menu"
                         onMouseEnter={clearHoverTimer}
                         onMouseLeave={() => setHoverIndex(null)}
                       >
-                        {item.subMenu?.map((sub, subIdx) => (
-                          <li key={subIdx}>
+                        <li className="hover-menu-title">{item.menuName}</li>
+                        {item.subMenu?.map((sub) => (
+                          <li key={sub.menuID}>
                             <Link
                               to={sub.routeUrl || "#"}
                               className={`hover-link ${
-                                location.pathname === sub.routeUrl
-                                  ? "active"
-                                  : ""
+                                location.pathname === sub.routeUrl ? "active" : ""
                               }`}
                               onClick={() => setHoverIndex(null)}
                             >
-                              <i className={`bi ${sub.menuIcon}`} />
+                              <i className={`bi ${sub.menuIcon}`} aria-hidden="true" />
                               <span className="hover-label">{sub.menuName}</span>
                             </Link>
                           </li>
@@ -303,14 +297,6 @@ const OrgSideMenu: React.FC<SideMenuProps> = ({ isOpen, isDarkMode }) => {
           </ul>
         )}
       </div>
-
-      {/* SIDEBAR FOOTER — collapse hint */}
-      {/* {isOpen && (
-        <div className="sidebar-footer" title="Collapse sidebar">
-          <i className="bi bi-chevron-left sidebar-footer-icon" />
-          <span className="sidebar-footer-label">Collapse</span>
-        </div>
-      )} */}
     </nav>
   );
 };
