@@ -11,15 +11,22 @@ type FieldErrors = {
 };
 
 const Login: React.FC = () => {
-  const [username, setUsername] = useState("");
+  const [username, setUsername] = useState(() => {
+    return localStorage.getItem("niku_remembered_username") || "";
+  });
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => {
+    return !!localStorage.getItem("niku_remembered_username");
+  });
+  const [capsLockActive, setCapsLockActive] = useState(false);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  // Clear errors when the user edits
   const clearFieldError = (field: "username" | "password") => {
     setErrors((prev) => {
       if (!prev[field] && !prev.general) return prev;
@@ -31,15 +38,27 @@ const Login: React.FC = () => {
     });
   };
 
+  const checkCapsLock = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (typeof e.getModifierState === "function") {
+      setCapsLockActive(e.getModifierState("CapsLock"));
+    }
+  };
+
+  const handleQuickFill = (roleUsername: string) => {
+    setUsername(roleUsername);
+    setPassword("password123");
+    setErrors({});
+  };
+
   const validate = () => {
     const err: Pick<FieldErrors, "username" | "password"> = {};
 
     if (!username.trim()) {
-      err.username = "Username is required";
+      err.username = "Please enter your enterprise username or email";
     }
 
     if (!password) {
-      err.password = "Password is required";
+      err.password = "Please enter your account password";
     }
 
     return err;
@@ -73,7 +92,15 @@ const Login: React.FC = () => {
 
     try {
       setIsSubmitting(true);
-      await login(username, password);
+      await login(username.trim(), password);
+
+      // Handle Remember Me persistence
+      if (rememberMe) {
+        localStorage.setItem("niku_remembered_username", username.trim());
+      } else {
+        localStorage.removeItem("niku_remembered_username");
+      }
+
       navigate(resolvePostLoginUrl());
     } catch (err: unknown) {
       const message =
@@ -84,7 +111,7 @@ const Login: React.FC = () => {
               "message" in err &&
               typeof (err as { message: unknown }).message === "string"
             ? (err as { message: string }).message
-            : "Invalid username or password";
+            : "Invalid username or password. Please verify your credentials.";
 
       setErrors({ general: message });
     } finally {
@@ -94,152 +121,338 @@ const Login: React.FC = () => {
 
   return (
     <div className="login-page">
-      <div className="login-bg-shape shape-1" aria-hidden="true" />
-      <div className="login-bg-shape shape-2" aria-hidden="true" />
+      <div className="login-split-layout">
+        {/* ================= LEFT SHOWCASE PANEL ================= */}
+        <section className="login-showcase-panel" aria-label="Niku HR Features and Overview">
+          <div className="showcase-glow-1" aria-hidden="true" />
+          <div className="showcase-glow-2" aria-hidden="true" />
+          <div className="showcase-grid-texture" aria-hidden="true" />
 
-      <main className="container login-container w-100">
-        <div className="row justify-content-center w-100">
-          <div className="col-xl-5 col-lg-6 col-md-8">
-            <div className="login-card">
-              <div className="text-center mb-4">
-                <Link to="/" className="text-decoration-none" aria-label="Back to NikuHR home">
-                  <NikuHRLogo />
-                </Link>
+          {/* Top Branding in Showcase */}
+          <div className="showcase-top">
+            <Link to="/" className="text-decoration-none" aria-label="Niku HR Home">
+              <NikuHRLogo variant="light" />
+            </Link>
+            <div className="showcase-pill-badge">
+              <span className="showcase-pill-dot" aria-hidden="true" />
+              <span>Enterprise HCM Suite 3.4</span>
+            </div>
+          </div>
 
-                <h1 className="login-heading fw-bold mt-3">Sign In</h1>
-                <p className="text-muted mb-0">
-                  Enter your credentials to continue
-                </p>
+          {/* Center Showcase Narrative */}
+          <div className="showcase-content">
+            <h1 className="showcase-title">
+              The intelligent operating system for <span className="text-gradient">modern workforce</span> management.
+            </h1>
+            <p className="showcase-subtitle">
+              Automate payroll calculations, track real-time attendance with geofencing, manage shift schedules, and streamline talent recruitment from a unified dashboard.
+            </p>
+
+            <div className="showcase-features-list">
+              <div className="showcase-feature-item">
+                <div className="showcase-feature-icon-box" aria-hidden="true">
+                  <i className="bi bi-cash-stack" />
+                </div>
+                <div className="showcase-feature-text">
+                  <h4>Automated Payroll & Compliance</h4>
+                  <p>Flexible salary structures, automated deductions, tax declarations, and instant payslip generation.</p>
+                </div>
               </div>
 
-              {errors.general && (
-                <div className="alert alert-danger" role="alert">
-                  {errors.general}
+              <div className="showcase-feature-item">
+                <div className="showcase-feature-icon-box" aria-hidden="true">
+                  <i className="bi bi-clock-history" />
                 </div>
-              )}
-
-              <form onSubmit={handleSubmit} noValidate>
-                <div className="mb-3">
-                  <label htmlFor="login-username" className="form-label fw-semibold">
-                    Username
-                  </label>
-                  <div
-                    className={`input-group ${errors.username ? "is-invalid" : ""}`}
-                  >
-                    <span className="input-group-text">
-                      <i className="bi bi-person" aria-hidden="true" />
-                    </span>
-                    <input
-                      id="login-username"
-                      name="username"
-                      type="text"
-                      className="form-control"
-                      placeholder="Enter username"
-                      value={username}
-                      autoComplete="username"
-                      autoFocus
-                      aria-invalid={!!errors.username}
-                      aria-describedby={errors.username ? "login-username-error" : undefined}
-                      onChange={(e) => {
-                        setUsername(e.target.value);
-                        clearFieldError("username");
-                      }}
-                    />
-                  </div>
-                  {errors.username && (
-                    <div id="login-username-error" className="text-danger small mt-1">
-                      {errors.username}
-                    </div>
-                  )}
+                <div className="showcase-feature-text">
+                  <h4>Smart Attendance & Shift Patterns</h4>
+                  <p>Geofenced clock-in/out, biometric synchronization, shift rosters, and multi-tier leave workflows.</p>
                 </div>
+              </div>
 
-                <div className="mb-4">
-                  <label htmlFor="login-password" className="form-label fw-semibold">
-                    Password
-                  </label>
-                  <div
-                    className={`input-group ${errors.password ? "is-invalid" : ""}`}
-                  >
-                    <span className="input-group-text">
-                      <i className="bi bi-lock" aria-hidden="true" />
-                    </span>
-                    <input
-                      id="login-password"
-                      name="password"
-                      type={showPassword ? "text" : "password"}
-                      className="form-control"
-                      placeholder="Enter password"
-                      value={password}
-                      autoComplete="current-password"
-                      aria-invalid={!!errors.password}
-                      aria-describedby={errors.password ? "login-password-error" : undefined}
-                      onChange={(e) => {
-                        setPassword(e.target.value);
-                        clearFieldError("password");
-                      }}
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary password-toggle"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                      aria-pressed={showPassword}
-                    >
-                      <i
-                        className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </div>
-                  {errors.password && (
-                    <div id="login-password-error" className="text-danger small mt-1">
-                      {errors.password}
-                    </div>
-                  )}
+              <div className="showcase-feature-item">
+                <div className="showcase-feature-icon-box" aria-hidden="true">
+                  <i className="bi bi-graph-up-arrow" />
                 </div>
+                <div className="showcase-feature-text">
+                  <h4>Talent Acquisition & 360° Reviews</h4>
+                  <p>Job requisition pipelines, automated candidate approvals, continuous feedback, and performance appraisals.</p>
+                </div>
+              </div>
+            </div>
 
-                <button
-                  type="submit"
-                  className="btn btn-lp-primary w-100 py-2"
-                  disabled={isSubmitting}
-                  aria-busy={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                        aria-hidden="true"
-                      />
-                      Signing In...
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-box-arrow-in-right me-2" aria-hidden="true" />
-                      Sign In
-                    </>
-                  )}
-                </button>
-              </form>
-
-              <div className="login-footer-links">
-                <Link to="/" className="login-footer-link">
-                  <i className="bi bi-arrow-left me-1" aria-hidden="true" />
-                  Back to Home
-                </Link>
-                <span className="login-footer-sep" aria-hidden="true">
-                  ·
-                </span>
-                <Link to="/RequestDemo" className="login-footer-link">
-                  Request Demo
-                </Link>
+            {/* Testimonial Quote */}
+            <div className="showcase-quote-card">
+              <p className="showcase-quote-text">
+                "Niku HR completely streamlined our multi-branch operations. Our month-end payroll reconciliation time dropped by over 80%."
+              </p>
+              <div className="showcase-quote-author">
+                <div className="showcase-author-avatar">SC</div>
+                <div className="showcase-author-info">
+                  <span className="showcase-author-name">Sarah Chen</span>
+                  <span className="showcase-author-role">Chief People Officer, Apex Global Enterprises</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </main>
+
+          {/* Footer Security Badges in Showcase */}
+          <div className="showcase-footer">
+            <div className="showcase-trust-tags">
+              <span className="showcase-trust-tag">
+                <i className="bi bi-shield-check" aria-hidden="true" />
+                SOC 2 Type II
+              </span>
+              <span className="showcase-trust-tag">
+                <i className="bi bi-lock" aria-hidden="true" />
+                256-Bit SSL Encryption
+              </span>
+              <span className="showcase-trust-tag">
+                <i className="bi bi-activity" aria-hidden="true" />
+                99.99% Uptime SLA
+              </span>
+            </div>
+          </div>
+        </section>
+
+        {/* ================= RIGHT AUTHENTICATION PORTAL ================= */}
+        <main className="login-form-panel" id="main-content">
+          {/* Top utility row */}
+          <div className="form-panel-top">
+            <div className="mobile-brand-logo">
+              <Link to="/" className="text-decoration-none" aria-label="Niku HR Home">
+                <NikuHRLogo variant="default" />
+              </Link>
+            </div>
+            <div className="form-panel-nav">
+              <span>Need enterprise access?</span>
+              <Link to="/RequestDemo" id="login-request-demo-link">Request a Demo</Link>
+            </div>
+          </div>
+
+          {/* Form Content Area */}
+          <div className="form-panel-content">
+            <div className="form-header">
+              <h2 className="form-header-title">Welcome back</h2>
+              <p className="form-header-desc">
+                Sign in with your enterprise credentials to access your organization workspace.
+              </p>
+            </div>
+
+            {/* Quick Demo Role Pre-fills for Testing/Evaluation */}
+            <div className="demo-role-box" id="demo-role-selection">
+              <span className="demo-role-label">
+                <i className="bi bi-lightning-charge-fill text-warning" aria-hidden="true" />
+                Quick Fill Demo:
+              </span>
+              <div className="demo-role-chips">
+                <button
+                  type="button"
+                  className="demo-chip-btn"
+                  id="btn-quick-fill-admin"
+                  onClick={() => handleQuickFill("admin")}
+                  title="Fill Org Admin credentials"
+                >
+                  Org Admin
+                </button>
+                <button
+                  type="button"
+                  className="demo-chip-btn"
+                  id="btn-quick-fill-employee"
+                  onClick={() => handleQuickFill("employee1")}
+                  title="Fill Employee credentials"
+                >
+                  Employee
+                </button>
+                <button
+                  type="button"
+                  className="demo-chip-btn text-muted"
+                  id="btn-quick-clear"
+                  onClick={() => {
+                    setUsername("");
+                    setPassword("");
+                    setErrors({});
+                  }}
+                  title="Clear inputs"
+                >
+                  Clear
+                </button>
+              </div>
+            </div>
+
+            {/* General Error Banner */}
+            {errors.general && (
+              <div className="login-alert login-alert-danger" role="alert" id="login-general-error">
+                <i className="bi bi-exclamation-triangle-fill" aria-hidden="true" />
+                <span>{errors.general}</span>
+              </div>
+            )}
+
+            {/* Form Inputs */}
+            <form onSubmit={handleSubmit} noValidate id="login-form">
+              {/* Username Field */}
+              <div className="login-field-group">
+                <div className="login-label-row">
+                  <label htmlFor="login-username" className="login-field-label">
+                    Username or Enterprise Email
+                  </label>
+                </div>
+                <div className={`login-input-wrapper ${errors.username ? "has-error" : ""}`}>
+                  <i className="bi bi-person login-input-icon" aria-hidden="true" />
+                  <input
+                    id="login-username"
+                    name="username"
+                    type="text"
+                    className="login-input"
+                    placeholder="e.g. jsmith or jsmith@company.com"
+                    value={username}
+                    autoComplete="username"
+                    autoFocus={!username}
+                    aria-invalid={!!errors.username}
+                    aria-describedby={errors.username ? "login-username-error" : undefined}
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      clearFieldError("username");
+                    }}
+                  />
+                  {username && (
+                    <button
+                      type="button"
+                      className="login-input-action-btn"
+                      onClick={() => {
+                        setUsername("");
+                        clearFieldError("username");
+                      }}
+                      aria-label="Clear username input"
+                    >
+                      <i className="bi bi-x" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+                {errors.username && (
+                  <div id="login-username-error" className="field-error-msg">
+                    <i className="bi bi-exclamation-circle" aria-hidden="true" />
+                    <span>{errors.username}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Password Field */}
+              <div className="login-field-group">
+                <div className="login-label-row">
+                  <label htmlFor="login-password" className="login-field-label">
+                    Password
+                  </label>
+                  <Link to="/forgot-password" className="login-forgot-link" id="login-forgot-password-link">
+                    Forgot password?
+                  </Link>
+                </div>
+                <div className={`login-input-wrapper ${errors.password ? "has-error" : ""}`}>
+                  <i className="bi bi-lock login-input-icon" aria-hidden="true" />
+                  <input
+                    id="login-password"
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    className="login-input"
+                    placeholder="Enter your account password"
+                    value={password}
+                    autoComplete="current-password"
+                    aria-invalid={!!errors.password}
+                    aria-describedby={errors.password ? "login-password-error" : undefined}
+                    onKeyDown={checkCapsLock}
+                    onKeyUp={checkCapsLock}
+                    onBlur={() => setCapsLockActive(false)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      clearFieldError("password");
+                    }}
+                  />
+                  <button
+                    type="button"
+                    className="login-input-action-btn"
+                    id="btn-toggle-password-visibility"
+                    onClick={() => setShowPassword((prev) => !prev)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                  >
+                    <i
+                      className={`bi ${showPassword ? "bi-eye-slash" : "bi-eye"}`}
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+
+                {/* Caps Lock Alert */}
+                {capsLockActive && (
+                  <div className="caps-lock-warning" id="caps-lock-warning-alert" role="status">
+                    <i className="bi bi-capslock-fill" aria-hidden="true" />
+                    <span>Caps Lock is turned ON</span>
+                  </div>
+                )}
+
+                {errors.password && (
+                  <div id="login-password-error" className="field-error-msg">
+                    <i className="bi bi-exclamation-circle" aria-hidden="true" />
+                    <span>{errors.password}</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Remember Me Checkbox */}
+              <div className="login-remember-row">
+                <label className="custom-checkbox-container" htmlFor="login-remember-me">
+                  <input
+                    type="checkbox"
+                    id="login-remember-me"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
+                  <span>Remember username on this computer</span>
+                </label>
+              </div>
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                id="btn-login-submit"
+                className="login-submit-btn"
+                disabled={isSubmitting}
+                aria-busy={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <span
+                      className="spinner-border spinner-border-sm"
+                      role="status"
+                      aria-hidden="true"
+                    />
+                    <span>Authenticating...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>Sign In to Workspace</span>
+                    <i className="bi bi-arrow-right" aria-hidden="true" />
+                  </>
+                )}
+              </button>
+            </form>
+          </div>
+
+          {/* Form Bottom Links */}
+          <div className="form-panel-bottom">
+            <Link to="/" className="bottom-back-link" id="link-back-to-home">
+              <i className="bi bi-arrow-left" aria-hidden="true" />
+              <span>Back to Homepage</span>
+            </Link>
+            <div className="bottom-security-badge">
+              <i className="bi bi-shield-check" aria-hidden="true" />
+              <span>Encrypted with TLS 1.3</span>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
   );
 };
 
 export default Login;
+

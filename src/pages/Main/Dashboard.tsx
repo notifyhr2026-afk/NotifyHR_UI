@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import {
   BarChart, Bar,
   LineChart, Line,
@@ -7,6 +8,7 @@ import {
   XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer,
 } from "recharts";
+import "../../css/Dashboard.css";
 
 const Dashboard: React.FC = () => {
 
@@ -46,101 +48,217 @@ const Dashboard: React.FC = () => {
     <div className="dashboard-page">
       <div className="dashboard-container">
 
-        <h2>📊 Organization Admin Dashboard</h2>
+        {/* Dashboard Header */}
+        <div className="dashboard-header">
+          <div className="dashboard-title-group">
+            <h2>
+              <i className="bi bi-speedometer2 text-primary" aria-hidden="true" />
+              Organization Overview
+            </h2>
+            <p className="dashboard-subtitle">
+              Live workforce metrics, daily attendance, and talent pipeline insights
+            </p>
+          </div>
+          <div className="dashboard-header-actions">
+            <Link
+              to="/ViewOrgTree"
+              className="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2"
+              style={{ borderRadius: "8px", fontWeight: 600, fontSize: "0.82rem", padding: "6px 14px" }}
+            >
+              <i className="bi bi-diagram-3" /> Corporate Org Chart
+            </Link>
+            <span className="dashboard-badge-pill">
+              <span className="dashboard-badge-dot" aria-hidden="true" />
+              System Active
+            </span>
+          </div>
+        </div>
 
-        {/* KPI */}
+        {/* KPI Cards Grid */}
         <div className="dashboard-grid">
-          <Card title="Total Employees" value={stats.totalEmployees} />
-          <Card title="Active Employees" value={stats.activeEmployees} />
-          <Card title="New Joiners" value={stats.newJoiners} />
-          <Card title="Pending Leaves" value={stats.pendingLeaves} />
+          <Card
+            title="Total Employees"
+            value={stats.totalEmployees}
+            icon="bi-people"
+            color="blue"
+            trend="+5.2%"
+            trendUp={true}
+          />
+          <Card
+            title="Active Employees"
+            value={stats.activeEmployees}
+            icon="bi-person-check"
+            color="green"
+            trend="+3.1%"
+            trendUp={true}
+          />
+          <Card
+            title="New Joiners"
+            value={stats.newJoiners}
+            icon="bi-person-plus"
+            color="indigo"
+            trend="This month"
+            trendUp={true}
+          />
+          <Card
+            title="Pending Leaves"
+            value={stats.pendingLeaves}
+            icon="bi-calendar-event"
+            color="amber"
+            trend="Needs review"
+            trendUp={false}
+          />
         </div>
 
         {/* ROW 1 */}
         <div className="dashboard-row">
-
-          <Section title="Hiring vs Attrition">
-            <ResponsiveContainer width="100%" height={250}>
-              <BarChart data={monthlyReport}>
-                <CartesianGrid strokeDasharray="3 3" className="chart-grid" />
-                <XAxis dataKey="month" className="chart-axis" />
-                <YAxis className="chart-axis" />
-                <Tooltip />
-                <Bar dataKey="joined" fill="#3B82F6" />
-                <Bar dataKey="left" fill="#EF4444" />
-              </BarChart>
-            </ResponsiveContainer>
+          <Section title="Hiring vs Attrition" tag="Monthly">
+            <div className="chart-wrapper">
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={monthlyReport} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="chart-grid" opacity={0.3} />
+                  <XAxis dataKey="month" className="chart-axis" tick={{ fontSize: 12 }} />
+                  <YAxis className="chart-axis" tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Bar dataKey="joined" name="Joined" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="left" name="Resigned" fill="#EF4444" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </Section>
 
-          <Section title="Today's Attendance">
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={attendanceToday} dataKey="value" innerRadius={50} outerRadius={80}>
-                  {attendanceToday.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
+          <Section title="Today's Attendance" tag="Realtime">
+            <div className="chart-wrapper">
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={attendanceToday}
+                    dataKey="value"
+                    innerRadius={60}
+                    outerRadius={90}
+                    paddingAngle={4}
+                  >
+                    {attendanceToday.map((_, i) => (
+                      <Cell key={i} fill={i === 0 ? "#10B981" : "#EF4444"} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
           </Section>
-
         </div>
 
         {/* ROW 2 */}
         <div className="dashboard-row">
-
-          <Section title="Attendance Trend (%)">
-            <ResponsiveContainer width="100%" height={250}>
-              <LineChart data={monthlyReport}>
-                <CartesianGrid strokeDasharray="3 3" className="chart-grid" />
-                <XAxis dataKey="month" className="chart-axis" />
-                <YAxis className="chart-axis" />
-                <Tooltip />
-                <Line type="monotone" dataKey="attendance" stroke="#10B981" strokeWidth={3} />
-              </LineChart>
-            </ResponsiveContainer>
+          <Section title="Attendance Trend (%)" tag="Jan - Jun">
+            <div className="chart-wrapper">
+              <ResponsiveContainer width="100%" height={260}>
+                <LineChart data={monthlyReport} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" className="chart-grid" opacity={0.3} />
+                  <XAxis dataKey="month" className="chart-axis" tick={{ fontSize: 12 }} />
+                  <YAxis domain={[75, 100]} className="chart-axis" tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Line
+                    type="monotone"
+                    dataKey="attendance"
+                    stroke="#10B981"
+                    strokeWidth={3}
+                    dot={{ r: 4, fill: "#10B981" }}
+                    activeDot={{ r: 6 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
           </Section>
 
-          <Section title="Employee Growth">
-            <ResponsiveContainer width="100%" height={250}>
-              <AreaChart data={monthlyReport}>
-                <CartesianGrid strokeDasharray="3 3" className="chart-grid" />
-                <XAxis dataKey="month" className="chart-axis" />
-                <YAxis className="chart-axis" />
-                <Tooltip />
-                <Area type="monotone" dataKey="total" stroke="#6366F1" fill="#C7D2FE" />
-              </AreaChart>
-            </ResponsiveContainer>
+          <Section title="Total Headcount Growth" tag="Cumulative">
+            <div className="chart-wrapper">
+              <ResponsiveContainer width="100%" height={260}>
+                <AreaChart data={monthlyReport} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="growthGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#6366F1" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#6366F1" stopOpacity={0.0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" className="chart-grid" opacity={0.3} />
+                  <XAxis dataKey="month" className="chart-axis" tick={{ fontSize: 12 }} />
+                  <YAxis domain={[150, 260]} className="chart-axis" tick={{ fontSize: 12 }} />
+                  <Tooltip />
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke="#6366F1"
+                    strokeWidth={2.5}
+                    fillOpacity={1}
+                    fill="url(#growthGrad)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
           </Section>
-
         </div>
 
         {/* ROW 3 */}
         <div className="dashboard-row">
-
-          <Section title="Department Distribution">
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie data={departmentData} dataKey="value" outerRadius={90}>
-                  {departmentData.map((_, i) => (
-                    <Cell key={i} fill={COLORS[i % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </Section>
-
-          <Section title="Productivity Insight">
-            <div className="section-text">
-              <p>📈 Hiring is consistently higher than attrition — workforce is growing.</p>
-              <p>⚠ Attendance dropped in Mar → needs attention.</p>
-              <p>🚀 Strong growth trend from Apr–Jun.</p>
-              <p>💡 Engineering dominates workforce (largest team).</p>
+          <Section title="Department Distribution" tag="Headcount">
+            <div className="chart-wrapper">
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={departmentData}
+                    dataKey="value"
+                    outerRadius={95}
+                    innerRadius={45}
+                    paddingAngle={3}
+                  >
+                    {departmentData.map((_, i) => (
+                      <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
             </div>
           </Section>
 
+          <Section title="Workforce Health & Productivity" tag="Insights">
+            <ul className="insight-list">
+              <li className="insight-item">
+                <span className="insight-item-icon text-success">
+                  <i className="bi bi-graph-up-arrow" aria-hidden="true" />
+                </span>
+                <div>
+                  <strong>Net Workforce Growth:</strong> Monthly hiring continuously exceeds attrition rates (+65 net talent addition).
+                </div>
+              </li>
+              <li className="insight-item">
+                <span className="insight-item-icon text-warning">
+                  <i className="bi bi-exclamation-triangle" aria-hidden="true" />
+                </span>
+                <div>
+                  <strong>March Attendance Dip:</strong> Seasonal dip to 87% noted in March; recovered smoothly to 91% in June.
+                </div>
+              </li>
+              <li className="insight-item">
+                <span className="insight-item-icon text-primary">
+                  <i className="bi bi-rocket-takeoff" aria-hidden="true" />
+                </span>
+                <div>
+                  <strong>H2 Scaling Projection:</strong> Trajectory suggests reaching 280 team members by Q4 with current momentum.
+                </div>
+              </li>
+              <li className="insight-item">
+                <span className="insight-item-icon text-info">
+                  <i className="bi bi-pie-chart" aria-hidden="true" />
+                </span>
+                <div>
+                  <strong>Team Allocation:</strong> Engineering represents 49% of total workforce, followed by Sales (24%).
+                </div>
+              </li>
+            </ul>
+          </Section>
         </div>
 
       </div>
@@ -148,18 +266,49 @@ const Dashboard: React.FC = () => {
   );
 };
 
-/* COMPONENTS */
+/* HELPER COMPONENTS */
 
-const Card = ({ title, value }: any) => (
+interface CardProps {
+  title: string;
+  value: string | number;
+  icon: string;
+  color: "blue" | "green" | "indigo" | "amber";
+  trend?: string;
+  trendUp?: boolean;
+}
+
+const Card: React.FC<CardProps> = ({ title, value, icon, color, trend, trendUp }) => (
   <div className="dashboard-card">
-    <div className="card-title">{title}</div>
-    <div className="card-value">{value}</div>
+    <div className="card-top">
+      <h4 className="card-title">{title}</h4>
+      <div className={`card-icon-wrap ${color}`}>
+        <i className={`bi ${icon}`} aria-hidden="true" />
+      </div>
+    </div>
+    <div className="card-bottom">
+      <span className="card-value">{value}</span>
+      {trend && (
+        <span className={`card-trend ${trendUp ? "up" : "down"}`}>
+          {trendUp ? <i className="bi bi-arrow-up-short" aria-hidden="true" /> : null}
+          {trend}
+        </span>
+      )}
+    </div>
   </div>
 );
 
-const Section = ({ title, children }: any) => (
+interface SectionProps {
+  title: string;
+  tag?: string;
+  children: React.ReactNode;
+}
+
+const Section: React.FC<SectionProps> = ({ title, tag, children }) => (
   <div className="dashboard-section">
-    <h3>{title}</h3>
+    <div className="section-header">
+      <h3>{title}</h3>
+      {tag && <span className="section-header-tag">{tag}</span>}
+    </div>
     {children}
   </div>
 );

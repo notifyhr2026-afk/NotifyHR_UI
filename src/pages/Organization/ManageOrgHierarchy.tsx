@@ -280,14 +280,18 @@ const ManageOrgHierarchy: React.FC = () => {
         show={showTreeModal}
         onHide={() => setShowTreeModal(false)}
         size="xl"
+        fullscreen="lg-down"
         centered
-        scrollable
+        dialogClassName="org-tree-modal-dialog"
       >
-        <Modal.Header closeButton>
-          <Modal.Title>Organization Hierarchy</Modal.Title>
+        <Modal.Header closeButton className="border-bottom-0 pb-0 pt-3 px-3">
+          <Modal.Title className="fs-6 fw-bold text-muted">
+            <i className="bi bi-diagram-3 me-2 text-primary" />
+            Interactive Organization Structure
+          </Modal.Title>
         </Modal.Header>
-        <Modal.Body className="p-0">
-          <ViewOrgTree />
+        <Modal.Body className="p-0" style={{ height: "82vh", overflow: "hidden" }}>
+          <ViewOrgTree embedded={true} />
         </Modal.Body>
       </Modal>
 

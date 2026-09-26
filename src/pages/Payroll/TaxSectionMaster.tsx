@@ -28,7 +28,6 @@ interface TaxSection {
 const TaxSectionMaster: React.FC = () => {
   const [taxSections, setTaxSections] = useState<TaxSection[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
   const [alertMessage, setAlertMessage] = useState<string | null>(null);
   const [alertVariant, setAlertVariant] = useState<'success' | 'warning' | null>(null);
 
@@ -54,7 +53,8 @@ const TaxSectionMaster: React.FC = () => {
       const data = await payrollService.GetTaxSectionsAsync();
       setTaxSections(data);
     } catch (err) {
-      setError('Failed to load tax sections.');
+      setAlertMessage('Failed to load tax sections.');
+      setAlertVariant('warning');
     } finally {
       setLoading(false);
     }

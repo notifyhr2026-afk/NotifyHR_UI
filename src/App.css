@@ -36,11 +36,7 @@
     transform: rotate(360deg);
   }
 }
-/* Show dropdown on hover */
-.dropdown:hover .dropdown-menu {
-  display: block;
-}
-
+/* Dropdown styles */
 .scrollable-menu {
   scrollbar-width: thin; /* Firefox */
   scrollbar-color: #c6e6ff transparent;

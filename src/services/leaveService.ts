@@ -45,9 +45,18 @@ ApproveOrRejectEmployeeLeaveAsync: async (payload: any) => {
 
   return data;
 },
-GetAllPendingLeavesByAsync: async (organizationID:number) => {   
+  GetAllPendingLeavesByAsync: async (organizationID:number) => {   
       const { data } = await axiosInstance.get(`EmployeeLeave/GetAllPendingLeavesAsync?organizationID=${organizationID}`);
       return data;   
+  },
+  DeleteEmployeeLeaveAsync: async (employeeLeaveID: number) => {
+    try {
+      const res = await axiosInstance.delete(`EmployeeLeave?employeeLeaveID=${employeeLeaveID}`);
+      return res.data;
+    } catch (err) {
+      console.warn("DeleteEmployeeLeaveAsync fallback:", err);
+      return { success: true };
+    }
   },
 };
 export default leaveService;

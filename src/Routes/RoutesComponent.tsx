@@ -4,6 +4,7 @@ import { Routes, Route } from 'react-router-dom';
 import Home from '../pages/Main/Home';
 import RequestDemo from '../pages/Main/RequestDemo';
 import LoginPage from '../pages/Main/Login';
+import ForgotPassword from '../pages/Main/ForgotPassword';
 import Dashboard from '../pages/Main/Dashboard';
 import DashboardLayout from '../components/DashboardLayout';
 import Menus from '../pages/Features/Menus';
@@ -150,6 +151,9 @@ const RoutesComponent: React.FC = () => {
       {/* Public routes */}
       <Route path="/" element={<Home />} />
       <Route path="login" element={<LoginPage />} />
+      <Route path="forgot-password" element={<ForgotPassword />} />
+      <Route path="ForgotPassword" element={<ForgotPassword />} />
+      <Route path="/ResetPassword" element={<ForgotPassword />} />
       <Route path="/ResetPassword/:userId/:orgId" element={<ResetPassword />} />
       <Route path="RequestDemo" element={<RequestDemo />} />
       <Route path="/" element={<Home />} />

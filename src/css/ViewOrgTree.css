@@ -1,0 +1,607 @@
+/* ============================================================
+   Looker Studio UI/UX Design System:
+   Corporate Organization Chart Dashboard (Executive Light Mode)
+   ============================================================ */
+
+/* Root Container: Strictly Ultra-Clean Light Mode */
+.orgtree-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: calc(100vh - 110px);
+  background: #F8FAFC !important;
+  color: #0F172A !important;
+  font-family: "Plus Jakarta Sans", system-ui, -apple-system, sans-serif;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.orgtree-container.embedded-mode {
+  min-height: 640px;
+  height: 100%;
+  border-radius: 8px;
+  border: none;
+}
+
+/* 1. Header Toolbar (Looker Studio Executive Style) */
+.orgtree-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+  gap: 16px;
+  z-index: 10;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+  flex-wrap: wrap;
+}
+
+.orgtree-title-area {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.orgtree-icon-badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.12) 0%, rgba(6, 182, 212, 0.12) 100%);
+  color: #4F46E5;
+  font-size: 1.35rem;
+  border: 1px solid rgba(79, 70, 229, 0.2);
+}
+
+.orgtree-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0;
+  color: #0F172A;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.orgtree-live-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 7px;
+  border-radius: 20px;
+  background: #ECFDF5;
+  color: #059669;
+  border: 1px solid #A7F3D0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.orgtree-live-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #10B981;
+  box-shadow: 0 0 6px #10B981;
+}
+
+.orgtree-subtitle {
+  font-size: 0.8rem;
+  color: #64748B;
+  margin: 2px 0 0 0;
+}
+
+/* Action Controls */
+.orgtree-controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.orgtree-search-wrapper {
+  position: relative;
+  min-width: 240px;
+}
+
+.orgtree-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #94A3B8;
+  pointer-events: none;
+  font-size: 0.9rem;
+}
+
+.orgtree-search-input {
+  width: 100%;
+  padding: 7px 12px 7px 34px;
+  border-radius: 8px;
+  border: 1px solid #CBD5E1;
+  background: #F8FAFC;
+  color: #0F172A;
+  font-size: 0.84rem;
+  transition: all 0.2s ease;
+}
+
+.orgtree-search-input:focus {
+  outline: none;
+  border-color: #4F46E5;
+  background: #FFFFFF;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.12);
+}
+
+/* Looker Studio Pill Toggles */
+.orgtree-btn-group {
+  display: inline-flex;
+  border-radius: 8px;
+  background: #F1F5F9;
+  padding: 2px;
+  border: 1px solid #E2E8F0;
+}
+
+.orgtree-btn-toggle {
+  border: none;
+  background: transparent;
+  padding: 6px 11px;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #475569;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: all 0.15s ease;
+}
+
+.orgtree-btn-toggle:hover {
+  color: #0F172A;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.orgtree-btn-toggle.active {
+  background: #FFFFFF;
+  color: #4F46E5;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  font-weight: 700;
+}
+
+.orgtree-action-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid #E2E8F0;
+  background: #FFFFFF;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.15s ease;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.orgtree-action-btn:hover {
+  background: #F8FAFC;
+  color: #4F46E5;
+  border-color: #CBD5E1;
+}
+
+/* 2. Looker Studio Metric KPI & Filter Ribbon */
+.orgtree-ribbon-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 24px;
+  background: #FFFFFF;
+  border-bottom: 1px solid #E2E8F0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.orgtree-scorecards {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.orgtree-scorecard-pill {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 12px;
+  border-radius: 8px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  font-size: 0.78rem;
+  color: #475569;
+}
+
+.orgtree-scorecard-pill strong {
+  color: #0F172A;
+  font-weight: 700;
+}
+
+/* Department Branch Filter Chips */
+.orgtree-branch-filters {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.orgtree-filter-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #94A3B8;
+  margin-right: 4px;
+}
+
+.orgtree-branch-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.74rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #F1F5F9;
+  color: #475569;
+}
+
+.orgtree-branch-chip:hover {
+  transform: translateY(-1px);
+  filter: brightness(0.97);
+}
+
+.orgtree-branch-chip.active {
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
+}
+
+.orgtree-chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* 3. Canvas Area: Ultra-Clean Minimalist Soft Gray (#F8FAFC) */
+.orgtree-canvas-wrapper {
+  position: relative;
+  flex: 1;
+  width: 100%;
+  min-height: 580px;
+  height: calc(100vh - 220px);
+  background-color: #F8FAFC !important;
+  background-image: radial-gradient(circle, #E2E8F0 1px, transparent 1px);
+  background-size: 24px 24px;
+  overflow: hidden;
+  user-select: none;
+}
+
+/* 4. Strict 90-Degree Orthogonal Connecting Lines */
+.rd3t-link {
+  stroke: #94A3B8 !important;
+  stroke-width: 2px !important;
+  stroke-linecap: square !important;
+  stroke-linejoin: miter !important;
+  fill: none !important;
+  transition: stroke 0.2s ease, stroke-width 0.2s ease;
+  filter: drop-shadow(0 0.5px 1px rgba(15, 23, 42, 0.05));
+}
+
+.rd3t-link:hover {
+  stroke: #4F46E5 !important;
+  stroke-width: 2.5px !important;
+}
+
+/* 5. Crisp White Rectangular Cards (#FFFFFF) with 8px Corners & Micro-Shadow */
+.org-node-card {
+  width: 260px;
+  min-height: 100px;
+  border-radius: 8px !important;
+  background: #FFFFFF !important;
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.04) !important;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  position: relative;
+  user-select: none;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.org-node-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px -2px rgba(15, 23, 42, 0.12), 0 2px 4px -1px rgba(15, 23, 42, 0.06) !important;
+  border-color: #CBD5E1;
+}
+
+/* Top Vibrant Accent Anchor Bar (4px) */
+.org-node-top-bar {
+  height: 4px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Card Body */
+.org-node-body {
+  padding: 10px 12px 6px 12px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+}
+
+/* Avatar / Initial Anchor Box */
+.org-node-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+  border: 1px solid transparent;
+}
+
+.org-node-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.org-node-top-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 2px;
+}
+
+.org-node-branch-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  display: inline-block;
+}
+
+.org-node-children-count {
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #F1F5F9;
+  color: #475569;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  white-space: nowrap;
+}
+
+/* Typography Hierarchy */
+.org-node-person-name {
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #0F172A;
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
+}
+
+.org-node-role-title {
+  font-size: 0.74rem;
+  font-weight: 500;
+  color: #475569;
+  line-height: 1.3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Card Footer */
+.org-node-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px 8px 12px;
+  font-size: 0.7rem;
+  color: #64748B;
+  border-top: 1px solid #F1F5F9;
+  background: #FAFAFC;
+}
+
+.org-node-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.org-node-expand-pill {
+  font-size: 0.68rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  color: #4F46E5;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #EEF2FF;
+  transition: all 0.15s ease;
+}
+
+.org-node-expand-pill:hover {
+  background: #E0E7FF;
+}
+
+/* Matched & Selected States */
+.org-node-card.is-matched {
+  border-color: #F59E0B !important;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.25), 0 2px 4px rgba(15, 23, 42, 0.08) !important;
+}
+
+.org-node-card.is-selected {
+  border-color: #4F46E5 !important;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.25), 0 4px 8px rgba(15, 23, 42, 0.1) !important;
+}
+
+.org-node-card.is-dimmed {
+  opacity: 0.45;
+  filter: grayscale(0.2);
+}
+
+/* 6. Floating Zoom / Fit HUD (Bottom Right) */
+.orgtree-hud {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 5px;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  z-index: 20;
+}
+
+.orgtree-hud-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.12s ease;
+}
+
+.orgtree-hud-btn:hover {
+  background: #F1F5F9;
+  color: #4F46E5;
+}
+
+/* 7. Floating Color Palette Legend (Bottom Left) */
+.orgtree-legend {
+  position: absolute;
+  bottom: 24px;
+  left: 24px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.07);
+  z-index: 20;
+  font-size: 0.74rem;
+  color: #475569;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 340px;
+}
+
+.orgtree-legend-title {
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.68rem;
+  color: #94A3B8;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.orgtree-legend-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px 12px;
+}
+
+.orgtree-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.72rem;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.orgtree-legend-color-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.orgtree-legend-hints {
+  border-top: 1px solid #F1F5F9;
+  padding-top: 6px;
+  font-size: 0.68rem;
+  color: #94A3B8;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+/* 8. Empty & Loading States */
+.orgtree-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 520px;
+  gap: 12px;
+  text-align: center;
+  color: #64748B;
+}
+
+.orgtree-empty-icon {
+  font-size: 3rem;
+  color: #CBD5E1;
+}
+
+.spin-animation {
+  animation: orgTreeSpin 1s linear infinite;
+}
+
+@keyframes orgTreeSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}

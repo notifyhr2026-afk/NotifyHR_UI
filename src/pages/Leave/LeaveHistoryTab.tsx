@@ -1,190 +1,386 @@
-import React, { useEffect, useState } from "react";
-import { Table, Button, Badge, Spinner, Alert, Card } from "react-bootstrap";
-import { Leave } from "../../types/Leaves";
-import leaveService from "../../services/leaveService";
-import ApplyLeaveModal from "./ApplyLeaveModal";
+import React, { useEffect, useState, useMemo } from 'react';
+import { Table, Button, Badge, Spinner, Alert, OverlayTrigger, Tooltip } from 'react-bootstrap';
+import {
+  CalendarCheck,
+  CalendarEvent,
+  ClockHistory,
+  HourglassSplit,
+  CheckCircleFill,
+  XCircleFill,
+  PencilSquare,
+  Trash,
+  Search,
+  Filter,
+  PlusLg,
+  InfoCircle,
+} from 'react-bootstrap-icons';
+import { Leave, LeaveBalance } from '../../types/Leaves';
+import leaveService from '../../services/leaveService';
+import ApplyLeaveModal from './ApplyLeaveModal';
 
 interface Props {
-  employeeID: number;  
+  employeeID: number;
   onDelete: (id: number) => void;
+  onEdit?: (leave: Leave) => void;
+  refreshTrigger?: number;
+  onLeavesLoaded?: (leaves: Leave[]) => void;
+  onApplyNew?: () => void;
+  leaveBalances?: LeaveBalance[];
 }
 
 const formatDate = (date?: string | null) => {
-  if (!date) return "";
-  const [year, month, day] = date.split("-").map(Number);
-  return new Date(year, month - 1, day).toLocaleDateString();
+  if (!date) return '';
+  try {
+    const parts = date.split('-');
+    if (parts.length === 3) {
+      const [year, month, day] = parts.map(Number);
+      const d = new Date(year, month - 1, day);
+      return d.toLocaleDateString(undefined, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      });
+    }
+    return new Date(date).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  } catch {
+    return date;
+  }
 };
 
-const LeaveHistoryTab: React.FC<Props> = ({ employeeID, onDelete }) => {
+const LeaveHistoryTab: React.FC<Props> = ({
+  employeeID,
+  onDelete,
+  onEdit,
+  refreshTrigger,
+  onLeavesLoaded,
+  onApplyNew,
+  leaveBalances = [],
+}) => {
   const [leaves, setLeaves] = useState<Leave[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
+  const [error, setError] = useState('');
 
-  // ✅ Modal State
-  const [showModal, setShowModal] = useState(false);
-  const [editLeave, setEditLeave] = useState<Leave | null>(null);
+  // Search and Filter States
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('ALL');
+
+  // Fallback Internal Modal (if onEdit is not supplied)
+  const [showInternalModal, setShowInternalModal] = useState(false);
+  const [internalEditLeave, setInternalEditLeave] = useState<Leave | null>(null);
 
   useEffect(() => {
     fetchLeaves();
-  }, [employeeID]);
+  }, [employeeID, refreshTrigger]);
 
   const fetchLeaves = async () => {
+    if (!employeeID) return;
     try {
       setLoading(true);
       const data = await leaveService.GetEmployeeLeavesByAsync(employeeID);
 
-      const mapped: Leave[] = data.map((l: any) => ({
-        id: l.EmployeeLeaveID,
-        employeeID: String(l.EmployeeID),
+      const mapped: Leave[] = (data || []).map((l: any) => ({
+        id: l.EmployeeLeaveID || l.id,
+        employeeID: String(l.EmployeeID || employeeID),
         leaveTypeID: String(l.LeaveTypeID),
         startDate: l.StartDate,
         endDate: l.EndDate,
         numberOfDays: l.NumberOfDays,
         status:
           l.LeaveStatusID === 1
-            ? "Approved"
+            ? 'Approved'
             : l.LeaveStatusID === 2
-            ? "Rejected"
-            : "Pending",
+            ? 'Rejected'
+            : 'Pending',
         reason: l.Reason,
         isHalfDay: l.IsHalfDay,
         halfDayType: l.HalfDayType,
-        leaveTypeName : l.LeaveTypeName
+        leaveTypeName: l.LeaveTypeName || 'General Leave',
       }));
 
+      // Sort newest first
+      mapped.sort((a, b) => new Date(b.startDate || 0).getTime() - new Date(a.startDate || 0).getTime());
+
       setLeaves(mapped);
+      if (onLeavesLoaded) {
+        onLeavesLoaded(mapped);
+      }
     } catch {
-      setError("Failed to load leave history.");
+      setError('Failed to load your leave history. Please try refreshing.');
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "Approved":
-        return "success";
-      case "Rejected":
-        return "danger";
-      default:
-        return "warning";
+  const handleEditClick = (leave: Leave) => {
+    if (onEdit) {
+      onEdit(leave);
+    } else {
+      setInternalEditLeave(leave);
+      setShowInternalModal(true);
     }
   };
 
-  // ✅ Open Edit Modal
-  const handleEditClick = (leave: Leave) => {
-    setEditLeave(leave);
-    setShowModal(true);
-  };
-
-  // ✅ After Save (Create or Update)
-  const handleSave = (updatedLeave: Leave) => {
+  const handleInternalSave = (updatedLeave: Leave) => {
     setLeaves((prev) => {
       const exists = prev.some((l) => l.id === updatedLeave.id);
-
       if (exists) {
-        // update
-        return prev.map((l) =>
-          l.id === updatedLeave.id ? updatedLeave : l
-        );
-      } else {
-        // new
-        return [updatedLeave, ...prev];
+        return prev.map((l) => (l.id === updatedLeave.id ? updatedLeave : l));
       }
+      return [updatedLeave, ...prev];
     });
   };
 
-  if (loading)
+  // Status Filter Counts
+  const counts = useMemo(() => {
+    return {
+      all: leaves.length,
+      pending: leaves.filter((l) => l.status === 'Pending').length,
+      approved: leaves.filter((l) => l.status === 'Approved').length,
+      rejected: leaves.filter((l) => l.status === 'Rejected').length,
+    };
+  }, [leaves]);
+
+  const filteredLeaves = useMemo(() => {
+    return leaves.filter((l) => {
+      const matchesSearch =
+        !searchTerm.trim() ||
+        (l.leaveTypeName && l.leaveTypeName.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (l.reason && l.reason.toLowerCase().includes(searchTerm.toLowerCase()));
+
+      const matchesStatus =
+        statusFilter === 'ALL' || l.status.toUpperCase() === statusFilter.toUpperCase();
+
+      return matchesSearch && matchesStatus;
+    });
+  }, [leaves, searchTerm, statusFilter]);
+
+  if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center" style={{ height: 200 }}>
-        <Spinner animation="border" />
+      <div className="d-flex flex-column justify-content-center align-items-center py-5">
+        <Spinner animation="border" variant="primary" />
+        <span className="text-muted small mt-2">Loading leave history...</span>
       </div>
     );
+  }
 
-  if (error) return <Alert variant="danger">{error}</Alert>;
-  if (!leaves.length) return <Alert variant="info">No leaves applied yet.</Alert>;
+  if (error) {
+    return (
+      <Alert variant="danger" className="d-flex align-items-center justify-content-between">
+        <div>{error}</div>
+        <Button size="sm" variant="outline-danger" onClick={fetchLeaves}>
+          Retry
+        </Button>
+      </Alert>
+    );
+  }
 
   return (
     <>
-      <Card className="shadow-sm mb-4">
-        <Card.Body>
+      {/* Search and Filters Toolbar */}
+      <div className="al-toolbar-card">
+        <div className="al-search-group">
+          <Search className="al-search-icon" />
+          <input
+            type="text"
+            className="al-search-input"
+            placeholder="Search by leave type or reason..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <div className="al-filters-group">
+          <button
+            type="button"
+            className={`al-filter-chip ${statusFilter === 'ALL' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('ALL')}
+          >
+            All Requests ({counts.all})
+          </button>
+          <button
+            type="button"
+            className={`al-filter-chip ${statusFilter === 'PENDING' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('PENDING')}
+          >
+            Pending ({counts.pending})
+          </button>
+          <button
+            type="button"
+            className={`al-filter-chip ${statusFilter === 'APPROVED' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('APPROVED')}
+          >
+            Approved ({counts.approved})
+          </button>
+          <button
+            type="button"
+            className={`al-filter-chip ${statusFilter === 'REJECTED' ? 'active' : ''}`}
+            onClick={() => setStatusFilter('REJECTED')}
+          >
+            Rejected ({counts.rejected})
+          </button>
+        </div>
+      </div>
+
+      {/* Main Table / Empty State */}
+      {filteredLeaves.length === 0 ? (
+        <div className="al-empty-state bg-white rounded-3 border">
+          <div className="al-empty-icon">
+            <CalendarEvent />
+          </div>
+          <div className="al-empty-title">No Leave Applications Found</div>
+          <div className="al-empty-desc">
+            {searchTerm || statusFilter !== 'ALL'
+              ? 'No leave requests match your search query or selected filter.'
+              : 'You have not submitted any leave requests yet.'}
+          </div>
+          {onApplyNew && (
+            <button type="button" className="al-btn-primary" onClick={onApplyNew}>
+              <PlusLg /> Apply for Leave
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="al-table-card">
           <div className="table-responsive">
-            <Table className="table table-hover table-dark-custom">
+            <table className="al-table">
               <thead>
                 <tr>
                   <th>Leave Type</th>
-                  <th>Dates</th>
-                  <th>Days</th>
-                  <th>Reason</th>
+                  <th>Dates Requested</th>
+                  <th>Duration</th>
+                  <th>Reason / Context</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-
               <tbody>
-                {leaves.map((l) => (
+                {filteredLeaves.map((l) => (
                   <tr key={l.id}>
-                    <td>{l.leaveTypeName}
-                    </td> 
+                    <td>
+                      <span className="al-type-pill">
+                        <CalendarCheck /> {l.leaveTypeName || 'Leave'}
+                      </span>
+                    </td>
 
                     <td>
-                      {formatDate(l.startDate)}{" "}
-                      {l.startDate && l.endDate ? "→" : ""}{" "}
-                      {formatDate(l.endDate)}
+                      <div className="al-date-range">
+                        <span>{formatDate(l.startDate)}</span>
+                        {l.startDate !== l.endDate && l.endDate && (
+                          <>
+                            <span className="al-date-arrow">→</span>
+                            <span>{formatDate(l.endDate)}</span>
+                          </>
+                        )}
+                      </div>
+                    </td>
+
+                    <td>
+                      <span className="al-days-badge">
+                        {l.numberOfDays} {l.numberOfDays === 1 ? 'Day' : 'Days'}
+                      </span>
                       {l.isHalfDay && (
-                        <span className="text-muted ms-1">
-                          ({l.halfDayType === "FirstHalf" ? "Morning" : "Afternoon"})
+                        <span className="al-half-badge">
+                          {l.halfDayType === 'FirstHalf' ? 'Morning' : 'Afternoon'}
                         </span>
                       )}
                     </td>
 
-                    <td>{l.numberOfDays}</td>
-                    <td>{l.reason}</td>
-
                     <td>
-                      <Badge bg={getStatusBadge(l.status)}>{l.status}</Badge>
+                      <div
+                        className="text-truncate"
+                        style={{ maxWidth: '240px' }}
+                        title={l.reason}
+                      >
+                        {l.reason || <span className="text-muted italic">No reason provided</span>}
+                      </div>
                     </td>
 
-                    {/* ✅ Actions */}
                     <td>
-                      {l.status === "Pending" ? (
-                        <>
-                          <Button
-                            size="sm"
-                            variant="primary"
-                            className="me-2"
-                            onClick={() => handleEditClick(l)}
-                          >
-                            Edit
-                          </Button>
-
-                          <Button
-                            size="sm"
-                            variant="danger"
-                            onClick={() => onDelete(l.id)}
-                          >
-                            Delete
-                          </Button>
-                        </>
+                      {l.status === 'Approved' ? (
+                        <span className="al-status-badge approved">
+                          <CheckCircleFill /> Approved
+                        </span>
+                      ) : l.status === 'Rejected' ? (
+                        <span className="al-status-badge rejected">
+                          <XCircleFill /> Rejected
+                        </span>
                       ) : (
-                        <span className="text-muted">—</span>
+                        <span className="al-status-badge pending">
+                          <HourglassSplit /> Pending
+                        </span>
+                      )}
+                    </td>
+
+                    <td>
+                      {l.status === 'Pending' ? (
+                        <div className="al-action-btn-group">
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={<Tooltip>Edit Application</Tooltip>}
+                          >
+                            <button
+                              type="button"
+                              className="al-btn-action edit"
+                              onClick={() => handleEditClick(l)}
+                              aria-label="Edit"
+                            >
+                              <PencilSquare />
+                            </button>
+                          </OverlayTrigger>
+
+                          <OverlayTrigger
+                            placement="top"
+                            overlay={<Tooltip>Withdraw Application</Tooltip>}
+                          >
+                            <button
+                              type="button"
+                              className="al-btn-action delete"
+                              onClick={() => onDelete(l.id)}
+                              aria-label="Withdraw"
+                            >
+                              <Trash />
+                            </button>
+                          </OverlayTrigger>
+                        </div>
+                      ) : (
+                        <OverlayTrigger
+                          placement="top"
+                          overlay={
+                            <Tooltip>
+                              {l.status === 'Approved'
+                                ? 'Leave approved. Cannot modify.'
+                                : 'Request rejected.'}
+                            </Tooltip>
+                          }
+                        >
+                          <span className="text-muted small ps-2">
+                            <InfoCircle /> Locked
+                          </span>
+                        </OverlayTrigger>
                       )}
                     </td>
                   </tr>
                 ))}
               </tbody>
-            </Table>
+            </table>
           </div>
-        </Card.Body>
-      </Card>
+        </div>
+      )}
 
-      {/* ✅ Reusable Modal */}
-      <ApplyLeaveModal
-        show={showModal}
-        onHide={() => setShowModal(false)}
-        editLeave={editLeave}
-        onSave={handleSave}
-      />
+      {/* Internal Modal fallback */}
+      {!onEdit && (
+        <ApplyLeaveModal
+          show={showInternalModal}
+          onHide={() => setShowInternalModal(false)}
+          editLeave={internalEditLeave}
+          onSave={handleInternalSave}
+          leaveBalances={leaveBalances}
+        />
+      )}
     </>
   );
 };

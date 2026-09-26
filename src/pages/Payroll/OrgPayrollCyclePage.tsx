@@ -219,6 +219,9 @@ const OrgPayrollCyclePage: React.FC = () => {
       </Form.Group>
 
       {/* Cycles */}
+      {cyclesLoading && <p>Loading payroll cycles...</p>}
+      {cyclesError && <p className="text-danger">{cyclesError}</p>}
+
       <Row>
         {!cyclesLoading &&
           payrollCycles.map((cycle) => {

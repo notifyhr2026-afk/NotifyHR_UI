@@ -57,7 +57,9 @@ const avatarColors = ['#0d6efd', '#198754', '#6f42c1', '#fd7e14', '#dc3545', '#2
 
 const getInitials = (name?: string) => {
   if (!name) return '?';
-  const parts = name.trim().split(/\s+/);
+  const clean = name.replace(/undefined/gi, '').replace(/null/gi, '').trim();
+  if (!clean) return '?';
+  const parts = clean.split(/\s+/).filter(Boolean);
   if (parts.length >= 2) return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
   return parts[0].slice(0, 2).toUpperCase();
 };
@@ -516,7 +518,12 @@ if (result?.value === 1) {
             <tbody>
               {currentEmployees.length > 0 ? (
                 currentEmployees.map((emp) => {
-                  const displayName = emp.EmployeeName || `${emp.FirstName} ${emp.LastName}`.trim();
+                  const combinedName = [emp.FirstName, emp.LastName].filter(Boolean).join(' ').trim();
+                  const rawName = emp.EmployeeName || combinedName;
+                  const displayName = (rawName || `Employee #${emp.EmployeeID || ''}`)
+                    .replace(/undefined/gi, '')
+                    .replace(/null/gi, '')
+                    .trim() || `Employee #${emp.EmployeeID}`;
                   return (
                     <tr key={emp.EmployeeID}>
                       <td>

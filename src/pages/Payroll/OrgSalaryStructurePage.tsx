@@ -248,6 +248,7 @@ const OrgSalaryStructurePage: React.FC = () => {
             ))}
           </Form.Select>
           {errorStructures && <Alert variant="danger" className="mt-2">{errorStructures}</Alert>}
+          {errorComponents && <Alert variant="danger" className="mt-2">{errorComponents}</Alert>}
         </Col>
         <Col md={6} className="text-end d-flex align-items-end justify-content-end">
           <Button

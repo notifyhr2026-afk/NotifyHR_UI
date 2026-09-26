@@ -36,8 +36,10 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
+    "dev": "PORT=3000 HOST=0.0.0.0 DANGEROUSLY_DISABLE_HOST_CHECK=true BROWSER=none CI=false ESLINT_NO_DEV_ERRORS=true react-scripts start",
+    "start": "PORT=3000 HOST=0.0.0.0 DANGEROUSLY_DISABLE_HOST_CHECK=true BROWSER=none CI=false ESLINT_NO_DEV_ERRORS=true react-scripts start",
+    "build": "CI=false GENERATE_SOURCEMAP=false react-scripts build",
+    "lint": "tsc --noEmit",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
